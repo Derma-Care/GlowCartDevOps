@@ -362,6 +362,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                   ) : (
                     <SpinResultCard
                       prize={winnerPrize}
+                      form={form}
                       onReset={() => {
                         setShowWheel(true)
                         setWinnerPrize(null)

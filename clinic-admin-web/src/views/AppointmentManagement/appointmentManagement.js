@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { GetBookingByClinicIdData } from './appointmentAPI'
 import { GetBookingBy_ClinicId } from '../../baseUrl'
-import BookAppointmentModal from './BookAppointmentModal '
+ 
 
 import { COLORS } from '../../Constant/Themes'
 import { useGlobalSearch } from '../Usecontext/GlobalSearchContext'

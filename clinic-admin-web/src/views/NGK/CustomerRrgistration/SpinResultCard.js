@@ -7,21 +7,21 @@ import { showCustomToast } from '../../../Utils/Toaster'
 import { toast } from 'react-toastify'
 import LoadingIndicator from '../../../Utils/loader'
 
-export default function SpinResultCard({ prize, onReset, setInstagram }) {
+export default function SpinResultCard({ prize, onReset, setInstagram, form }) {
   const cardRef = useRef(null)
   const [loading, setLoading] = useState(false)
 
   const handleShare = async () => {
     try {
       setLoading(true) // start loader immediately
-
+      const instaTab = window.open('', '_blank')
       await navigator.clipboard.writeText(
         `I just won ${prize.option} an exciting gift from Neha's GlowKart! 🎁✨
 Thanks to Neha's GlowKart for the amazing surprises! 💖
 #GlowKartWinner #GlowKartGifts #LuckySpin`,
       )
 
-      const canvas = await html2canvas(cardRef.current, { scale: 2 })
+      const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true })
       const image = canvas.toDataURL('image/png')
 
       const link = document.createElement('a')
@@ -37,10 +37,9 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
 
       // ✨ Wait + show loader before redirecting
       setTimeout(() => {
-        const instaTab = window.open('https://instagram.com', '_blank')
-        if (!instaTab) toast.error('⚠️ Enable popups to continue.')
+        instaTab.location.href = 'https://instagram.com'
         setInstagram(true)
-        setLoading(false) // hide loader
+        setLoading(false)
       }, 5000)
     } catch (err) {
       setLoading(false)
@@ -129,7 +128,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
               >
                 Neha’s Glow Kart
               </h4>
-              <small style={{ color: '#999', fontSize: '14px', textAlign: 'center' }}>
+              <small style={{ color: '#FF7BBF', fontSize: '14px', textAlign: 'center' }}>
                 Beauty & Skin Essentials
               </small>
             </div>
@@ -162,7 +161,22 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
             Congratulations!
           </h3>
 
-          <p style={{ textAlign: 'center', fontSize: 15, marginTop: '30px' }}>You Won:</p>
+          <p
+            style={{
+              textAlign: 'center',
+              fontSize: 15,
+              marginTop: '10px',
+              display: 'inline-block',
+              padding: '5px 15px',
+              backgroundColor: '#ff4f9a', // or any color for the strip
+              color: 'white', // text color
+              borderRadius: '5px', // optional for rounded strip
+            }}
+          >
+            {form.fullName}
+          </p>
+
+          <p style={{ textAlign: 'center', fontSize: 15, marginTop: '10px' }}>You Won:</p>
 
           {/* PRIZE DISPLAY */}
           {prize.src ? (
@@ -182,13 +196,15 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 >
                   {prize.option}
                 </h4>
-                <p style={{
+                <p
+                  style={{
                     fontSize: '16px',
                     color: '#555',
                     marginTop: '5px',
                     marginLeft: '5%',
                     textAlign: 'center',
-                  }}>
+                  }}
+                >
                   a premium {prize.option} as a prize!
                 </p>
               </div>
