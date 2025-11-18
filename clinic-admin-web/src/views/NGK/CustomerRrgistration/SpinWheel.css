@@ -1,0 +1,66 @@
+.spin-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.wheel-wrapper {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Center Spin Button */
+.spin-btn {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: black;
+  color: white;
+  border: 4px solid white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.spin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Make text wrap inside wheel slices */
+.rw-text {
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: center !important;
+  line-height: 1.1;
+  padding: 0 6px;
+  font-size: 14px !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .wheel-wrapper {
+    width: 290px;
+    height: 290px;
+    /* padding: 10px; */
+  }
+
+  .spin-btn {
+    width: 70px;
+    height: 70px;
+    font-size: 14px;
+  }
+
+  .rw-text {
+    font-size: 12px !important;
+  }
+}
+.roulette-img {
+  width: 50px !important;
+  height: 50px !important;
+  object-fit: contain;
+}
