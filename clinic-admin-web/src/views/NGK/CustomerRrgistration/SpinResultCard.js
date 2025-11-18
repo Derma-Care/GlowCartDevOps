@@ -14,7 +14,7 @@ export default function SpinResultCard({ prize, onReset, setInstagram, form }) {
   const handleShare = async () => {
     try {
       setLoading(true) // start loader immediately
-      const instaTab = window.open('', '_blank')
+
       await navigator.clipboard.writeText(
         `I just won ${prize.option} an exciting gift from Neha's GlowKart! 🎁✨
 Thanks to Neha's GlowKart for the amazing surprises! 💖
@@ -37,50 +37,16 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
 
       // ✨ Wait + show loader before redirecting
       setTimeout(() => {
-        instaTab.location.href = 'https://instagram.com'
+        const instaTab = window.open('https://instagram.com', '_blank')
+        if (!instaTab) toast.error('⚠️ Enable popups to continue.')
         setInstagram(true)
-        setLoading(false)
+        setLoading(false) // hide loader
       }, 5000)
     } catch (err) {
       setLoading(false)
       toast.error('❌ Something went wrong.')
     }
   }
-
-  const convertToBase64 = async (url) => {
-    const sources = [url, `https://images.weserv.nl/?url=${encodeURIComponent(url)}`]
-
-    for (const src of sources) {
-      try {
-        const base64 = await new Promise((resolve) => {
-          const img = new Image()
-          img.crossOrigin = 'anonymous'
-          img.src = src + '?cache=' + Date.now()
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            canvas.width = img.width
-            canvas.height = img.height
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0)
-            resolve(canvas.toDataURL('image/png'))
-          }
-          img.onerror = () => resolve(null)
-        })
-        if (base64) return base64
-      } catch {}
-    }
-
-    console.error('❌ All image sources failed:', url)
-    return null
-  }
-
-  const [localImage, setLocalImage] = useState(null)
-
-  useEffect(() => {
-    if (prize?.src) {
-      convertToBase64(prize.src).then(setLocalImage)
-    }
-  }, [prize])
 
   return (
     <div
@@ -223,19 +189,16 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                   boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
                 }}
               >
-                {localImage ? (
-                  <img
-                    src={localImage}
-                    alt="Prize"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                    }}
-                  />
-                ) : (
-                  <p style={{ textAlign: 'center', color: '#999', fontSize: '14px' }}>Loading...</p>
-                )}
+                <img
+                  src={prize.src}
+                  alt="Prize"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                  }}
+                />
+                )
               </div>
             </div>
           ) : (
@@ -335,7 +298,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           gap: 10,
           color: 'white',
         }}
-        disabled={prize.src ? !localImage : false}
+        disabled={false}
         onClick={handleShare}
       >
         <img

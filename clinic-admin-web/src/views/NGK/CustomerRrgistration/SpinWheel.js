@@ -10,41 +10,41 @@ export default function SpinWheel({ onResult }) {
     {
       id: '1',
       option: '💄 Lipstick',
-      src: 'https://pngimg.com/uploads/lipstick/lipstick_PNG76258.png',
+      src: '/assets/images/1.png',
     },
     {
       id: '2',
       option: '💋 Liquid Matte Lipstick',
-      src: 'https://images.othoba.com/images/thumbs/1197732_imagic-lipgloss-waterproof-matte-liquid-lipstick-shade-49.png',
+      src: '/assets/images/2.png',
     },
     { id: '3', option: '5%' },
     {
       id: '4',
       option: '🧴 BB Cream',
-      src: 'https://png.pngtree.com/png-clipart/20211017/original/pngtree-bb-cream-for-your-skin-png-image_6853148.png',
+      src: '/assets/images/3.png',
     },
     { id: '5', option: '10%' },
     {
       id: '6',
       option: '👁️ Kajal / Eye Pencil',
-      src: 'https://png.pngtree.com/png-vector/20250101/ourmid/pngtree-kajal-with-beauty-product-makeup-female-png-image_15018801.png',
+      src: '/assets/images/4.png',
     },
     { id: '7', option: '15%' },
     {
       id: '8',
       option: '💅 Nail Polish',
-      src: 'https://www.pngmart.com/files/23/Make-Up-PNG-Image.png',
+      src: '/assets/images/5.png',
     },
     {
       id: '9',
       option: '🧖 Face Sheet Mask',
-      src: 'https://pngimg.com/uploads/lipstick/lipstick_PNG76258.png',
+      src: '/assets/images/6.png',
     },
     { id: '10', option: '20%' },
     {
       id: '11',
       option: '👜 Mini Makeup Kit',
-      src: 'https://www.pngmart.com/files/23/Make-Up-PNG-Image.png',
+      src: '/assets/images/6.png',
     },
     { id: '12', option: '25%' }, // ⬅️ Wrapped into 2 lines
   ]
