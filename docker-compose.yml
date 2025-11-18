@@ -173,7 +173,25 @@ services:
     networks:
       - app-network
   
+  clinic-admin-web:
+    build: ./clinic-admin-web
+    container_name: clinic-admin-web-container
+    ports:
+      - "3000:80"
+    environment:
+      - HOST=43.205.96.147
+      - PORT=3000
+      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
+    networks:
+      - app-network
+    depends_on:
+      - apigateway
+    restart: always
   
+ 
+
+  
+
 networks:
   app-network:
     driver: bridge
