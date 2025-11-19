@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: admin-service
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/glowkart_admin}
+      database: ${SPRING_DATA_MONGODB_DATABASE:glowkart_admin}
+
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME}       # Removed hardcoded email
+    password: ${SPRING_MAIL_PASSWORD}       # Removed hardcoded password
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            enable: false
+        debug: false
+
+server:
+  port: 8082
+
+# Feign configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+
+async:
+  core-pool-size: 5
+  max-pool-size: 20
+  queue-capacity: 50
+
+# Twilio credentials removed
+# twilio:
+#   account-sid: ${TWILIO_ACCOUNT_SID}
+#   auth-token: ${TWILIO_AUTH_TOKEN}
+#   whatsapp-from: ${TWILIO_WHATSAPP_FROM}
+
+app:
+  token-expiry-minutes: ${APP_TOKEN_EXPIRY_MINUTES:60}
+
+notification:
+  default-from-email: ${NOTIFICATION_FROM_EMAIL:no-reply@glowkart.com}
+
+# Eureka configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
