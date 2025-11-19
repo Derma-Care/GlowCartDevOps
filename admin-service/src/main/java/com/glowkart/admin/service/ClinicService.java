@@ -1,0 +1,28 @@
+package com.glowkart.admin.service;
+
+import java.util.List;
+
+
+import com.glowkart.admin.dto.ClinicRegistrationDTO;
+import com.glowkart.admin.model.Clinic;
+
+public interface ClinicService {
+    Clinic registerClinic(ClinicRegistrationDTO dto);
+
+    void startVerificationProcess(String clinicId);
+
+    void verifyClinic(String clinicId);
+
+    void rejectClinic(String clinicId, String reason);
+    
+    // NEW
+    List<Clinic> getAll();
+
+    Clinic getById(String clinicId);
+
+    Clinic updateClinic(String clinicId, ClinicRegistrationDTO dto);
+
+    void deleteClinic(String clinicId);
+
+    Clinic login(String username, String password);
+}

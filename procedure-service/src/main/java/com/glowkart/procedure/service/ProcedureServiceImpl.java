@@ -1,0 +1,78 @@
+package com.glowkart.procedure.service;
+
+import com.glowkart.procedure.dto.ProcedureDTO;
+import com.glowkart.procedure.model.Procedure;
+import com.glowkart.procedure.repo.ProcedureRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class ProcedureServiceImpl implements ProcedureService {
+
+    private final ProcedureRepository repo;
+
+    public ProcedureServiceImpl(ProcedureRepository repo) {
+        this.repo = repo;
+    }
+
+    private ProcedureDTO mapToDTO(Procedure procedure) {
+        ProcedureDTO dto = new ProcedureDTO();
+        dto.setProcedureId(procedure.getId()); // updated
+        dto.setProcedureName(procedure.getProcedureName());
+        dto.setCreatedAt(procedure.getCreatedAt());
+        dto.setUpdatedAt(procedure.getUpdatedAt());
+        return dto;
+    }
+
+    @Override
+    public ProcedureDTO create(ProcedureDTO dto) {
+        if (repo.existsByProcedureName(dto.getProcedureName().trim())) {
+            throw new RuntimeException("Procedure name already exists");
+        }
+
+        Procedure procedure = new Procedure();
+        procedure.setProcedureName(dto.getProcedureName().trim());
+
+        Procedure saved = repo.save(procedure);
+        return mapToDTO(saved);
+    }
+
+    @Override
+    public ProcedureDTO update(String procedureId, ProcedureDTO dto) {
+        Procedure existing = repo.findById(procedureId)
+                .orElseThrow(() -> new RuntimeException("Procedure not found"));
+
+        if (!existing.getProcedureName().equalsIgnoreCase(dto.getProcedureName()) &&
+            repo.existsByProcedureName(dto.getProcedureName().trim())) {
+            throw new RuntimeException("Procedure name already exists");
+        }
+
+        existing.setProcedureName(dto.getProcedureName().trim());
+        Procedure updated = repo.save(existing);
+        return mapToDTO(updated);
+    }
+
+    @Override
+    public ProcedureDTO getById(String procedureId) {
+        Procedure procedure = repo.findById(procedureId)
+                .orElseThrow(() -> new RuntimeException("Procedure not found"));
+        return mapToDTO(procedure);
+    }
+
+    @Override
+    public List<ProcedureDTO> getAll() {
+        return repo.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void delete(String procedureId) {
+        if (!repo.existsById(procedureId)) {
+            throw new RuntimeException("Procedure not found");
+        }
+        repo.deleteById(procedureId);
+    }
+}
