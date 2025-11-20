@@ -77,7 +77,6 @@ export default function PrizePostDetails({ form, setForm, onSubmit }) {
     navigate('/onboard-success', {
       state: {
         name: form.fullName,
-      
       },
     })
     console.log('/onboard-success')
@@ -91,7 +90,6 @@ export default function PrizePostDetails({ form, setForm, onSubmit }) {
       <CCard
         style={{
           width: '100%',
-          marginTop: 250,
           borderRadius: 16,
           padding: 20,
           border: 'none',
@@ -231,7 +229,9 @@ export default function PrizePostDetails({ form, setForm, onSubmit }) {
               gap: 10,
               fontSize: 16,
             }}
-            onClick={() => window.open('https://www.instagram.com/glowkaart?igsh=Yjc0MGF1bXJibW5p', '_blank')}
+            onClick={() =>
+              window.open('https://www.instagram.com/glowkaart?igsh=Yjc0MGF1bXJibW5p', '_blank')
+            }
           >
             <img
               src="https://cdn-icons-png.flaticon.com/512/174/174855.png"

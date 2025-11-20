@@ -20,6 +20,10 @@ import { serviceDataH } from '../../ProcedureManagement/ProcedureManagementAPI'
 import Select from 'react-select'
 import { showCustomToast } from '../../../Utils/Toaster'
 import LoadingIndicator from '../../../Utils/loader'
+
+import { registerCustomer } from '../APIs/registerCustomerApi'
+import { verifyRegistrationCode } from '../APIs/verifyRegistrationCode'
+import { fileToBase64 } from '../Utills/FileToBase64'
 export default function NGlowKartPatientRegistration_CoreUI() {
   const today = new Date()
   const maxToday = today.toISOString().split('T')[0]
@@ -40,6 +44,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const [isRegistration, setIsRegistration] = useState(true)
   const [spinWhell, setSpinWhell] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [verifyLoading, setVerifyLoading] = useState(false)
+
   const [form, setForm] = useState({
     fullName: '',
     mobile: '',
@@ -55,7 +62,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     registraionCode: '',
     referBy: '',
     Aadhar: '',
-    priscription: '',
+    prescription: '',
 
     // ⭐ ADD THESE TWO NEW FIELDS
     spinRewardId: '',
@@ -140,31 +147,38 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   // Handle input change
   const handleRefChange = (e) => {
-    const value = e.target.value.toUpperCase() // auto uppercase
-    setError('') // reset error while typing
+    const value = e.target.value.toUpperCase()
+    setError('')
     setForm((prev) => ({ ...prev, registraionCode: value }))
-    setIsRegistration(value.trim().length > 0)
   }
 
-  const handleSubmitReferralCode = () => {
-    if (!form.registraionCode.trim()) {
+  const handleSubmitReferralCode = async () => {
+    const code = form.registraionCode.trim()
+
+    if (!code) {
       setError('⚠️ Please enter your registration code.')
       return
     }
 
-    if (form.registraionCode.trim().toUpperCase() !== regCode.toUpperCase()) {
-      setError('❌ Invalid registration code. Please try again.')
-      return
+    try {
+      setVerifyLoading(true)
+      setError('')
+
+      const result = await verifyRegistrationCode(code)
+
+      if (!result.success) {
+        setError('❌ Invalid registration code. Please try again.')
+        return
+      }
+
+      showCustomToast('🎉 Registration code verified successfully!')
+      setIsRegistration(false)
+    } catch (err) {
+      console.error('Verify Code Error:', err)
+      setError('⚠️ Something went wrong. Try again.')
+    } finally {
+      setVerifyLoading(false)
     }
-
-    // PASSING VALIDATION
-    setError('')
-    setIsRegistration(false)
-
-    console.log('Referral Code Submitted:', form.registraionCode)
-
-    // Optional success alert
-    showCustomToast('🎉 Registration code verified successfully!')
   }
 
   function validate() {
@@ -191,16 +205,65 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       }
 
       if (!form.serviceType) e.serviceType = 'Service required'
+      if (!form.prescription)
+        e.prescription = 'Please upload your prescription or bill (PDF, JPG, JPEG, or PNG).'
     }
 
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  function handleSubmit(e) {
+  // function handleSubmit(e) {
+  //   e.preventDefault()
+  //   if (!validate()) return
+  //   setSubmitted(true)
+  // }
+
+  async function handleSubmit(e) {
     e.preventDefault()
+
     if (!validate()) return
-    setSubmitted(true)
+
+    const payload = {
+      fullName: form.fullName,
+      mobile: form.mobile,
+      email: form.email,
+      city: form.city,
+      dob: form.dob,
+      clinicName: form.clinicName,
+      clinicCityArea: form.clinicCityArea,
+      dateOfLastVisit: form.dateOfLastVisit,
+      serviceType: form.serviceType[0],
+      blood: form.Blood,
+      registrationCode: form.registraionCode,
+      referBy: form.referBy,
+      aadharNumber: form.Aadhar,
+      prescription: form.prescription, // File or text
+    }
+
+    try {
+      setLoading(true)
+
+      const result = await registerCustomer(payload)
+
+      if (!result.success) {
+        showCustomToast('❌ Registration failed!', 'error')
+        return
+      }
+
+      showCustomToast('🎉 Data Submitted successful!', 'success')
+      setSubmitted(true)
+      const id = result.data.customerId
+      console.log('Customer Registered ID:', id)
+
+      // TODO: Navigate to next step or page
+      // navigate(`/customer/${id}`);
+    } catch (error) {
+      console.error('Registration Error:', error)
+      showCustomToast('⚠️ Something went wrong! Please try again.', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   console.log('instagram :: ', instagram)
@@ -211,21 +274,11 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       className="d-flex justify-content-center align-items-center"
       style={{
         height: '100vh',
-        background: '#f8f0ee',
+        // background: '#f8f0ee',NGK-18518356
         overflow: 'hidden',
       }}
     >
-      <div
-        className="d-flex w-100"
-        style={{
-          height: '95vh',
-          maxWidth: 1200,
-          background: '#fff',
-          overflow: 'hidden',
-          borderRadius: 12,
-          boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
-        }}
-      >
+      <div className="d-flex w-100 bgCard">
         {/* LEFT IMAGE */}
         <div
           className="d-none d-md-block left-image"
@@ -271,312 +324,374 @@ export default function NGlowKartPatientRegistration_CoreUI() {
           </div>
 
           {/* SUCCESS MESSAGE */}
-          {submitted ? (
-            <div
-              className="d-flex flex-column justify-content-center align-items-center"
-              style={{
-                height: '80%', // Full height of parent container
-                minHeight: '60vh', // Ensures good centering even on small screens
-                width: '100%',
-                textAlign: 'center',
-              }}
-            >
-              {/* Spin Wheel appears BELOW the message */}
-              {showWheel ? (
-                <>
-                  {!spinWhell ? (
-                    <div>
-                      <h3 className="fw-bold">🎉 Verification Pending</h3>
-                      <p className="mt-2" style={{ maxWidth: 380 }}>
-                        Thanks for joining N Glow Kart! We’re reviewing your information. Your
-                        referral credit will be activated within **48 hours** once verified.
-                      </p>
-
-                      <div className="text-center mt-4">
-                        {/* Pink Button */}
-                        <CButton
-                          className="btn"
-                          style={{
-                            background: '#ff2e85',
-                            border: 'none',
-                            padding: '14px 25px',
-                            borderRadius: '10px',
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#fff',
-                            boxShadow: '0 4px 12px rgba(255,46,133,0.4)',
-                            width: '220px',
-                          }}
-                          onClick={() => setSpinWhell(true)}
-                        >
-                          🎡 Spin The Wheel
-                        </CButton>
-
-                        {/* Bottom Text */}
-                        <p
-                          style={{
-                            marginTop: '10px',
-                            color: '#ff2e85',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Spin the wheel and get a gift 🎁
-                          <br />
-                          Complete your registration to claim it!
+          <div>
+            {submitted ? (
+              <div
+                className="d-flex flex-column justify-content-center align-items-center"
+                style={{
+                  // height: '80%', // Full height of parent container
+                  minHeight: '60vh', // Ensures good centering even on small screens
+                  width: '100%',
+                  textAlign: 'center',
+                }}
+              >
+                {/* Spin Wheel appears BELOW the message */}
+                {showWheel ? (
+                  <>
+                    {!spinWhell ? (
+                      <div>
+                        <h3 className="fw-bold">🎉 Verification Pending</h3>
+                        <p className="mt-2" style={{ maxWidth: 380 }}>
+                          Thanks for joining N Glow Kart! We’re reviewing your information. Your
+                          referral credit will be activated within **48 hours** once verified.
                         </p>
+
+                        <div className="text-center mt-4">
+                          {/* Pink Button */}
+                          <CButton
+                            className="btn"
+                            style={{
+                              background: '#ff2e85',
+                              border: 'none',
+                              padding: '14px 25px',
+                              borderRadius: '10px',
+                              fontSize: '18px',
+                              fontWeight: '600',
+                              color: '#fff',
+                              boxShadow: '0 4px 12px rgba(255,46,133,0.4)',
+                              width: '220px',
+                            }}
+                            onClick={() => setSpinWhell(true)}
+                          >
+                            🎡 Spin The Wheel
+                          </CButton>
+
+                          {/* Bottom Text */}
+                          <p
+                            style={{
+                              marginTop: '10px',
+                              color: '#ff2e85',
+                              fontSize: '14px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Spin the wheel and get a gift 🎁
+                            <br />
+                            Complete your registration to claim it!
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="w-100">
-                      <SpinWheel
-                        onResult={(winner) => {
-                          console.log('WON:', winner)
+                    ) : (
+                      <div className="w-100">
+                        <SpinWheel
+                          onResult={(winner) => {
+                            console.log('WON:', winner)
 
-                          setForm((prev) => ({
-                            ...prev,
-                            spinRewardId: winner.id,
-                            spinRewardValue: winner.option,
-                            spinRewardImage: winner.src,
-                          }))
+                            setForm((prev) => ({
+                              ...prev,
+                              spinRewardId: winner.id,
+                              spinRewardValue: winner.option,
+                              spinRewardImage: winner.src,
+                            }))
 
-                          setWinnerPrize(winner)
-                          setShowWheel(false) // HIDE WHEEL
+                            setWinnerPrize(winner)
+                            setShowWheel(false) // HIDE WHEEL
+                          }}
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-100">
+                    {instagram ? (
+                      <PrizePostDetails
+                        form={form}
+                        setForm={setForm}
+                        onSubmit={(data) => {
+                          console.log('Address from user:', form)
+                          // send data to backend or continue next step
                         }}
                       />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="w-100">
-                  {instagram ? (
-                    <PrizePostDetails
-                      form={form}
-                      setForm={setForm}
-                      onSubmit={(data) => {
-                        console.log('Address from user:', form)
-                        // send data to backend or continue next step
-                      }}
-                    />
-                  ) : (
-                    <SpinResultCard
-                      prize={winnerPrize}
-                      form={form}
-                      onReset={() => {
-                        setShowWheel(true)
-                        setWinnerPrize(null)
-                      }}
-                      setInstagram={setInstagram}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <CForm onSubmit={handleSubmit}>
-              {isRegistration ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '100%',
-                    minHeight: '70vh',
-                    padding: '20px 0',
-                    background: '#fff',
-                  }}
-                >
+                    ) : (
+                      <SpinResultCard
+                        prize={winnerPrize}
+                        form={form}
+                        onReset={() => {
+                          setShowWheel(true)
+                          setWinnerPrize(null)
+                        }}
+                        setInstagram={setInstagram}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <CForm onSubmit={handleSubmit}>
+                {isRegistration ? (
                   <div
                     style={{
-                      width: 360,
-                      textAlign: 'left',
-                      background: '#ffffff',
-                      padding: '28px 26px',
-                      borderRadius: 18,
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                      border: '1px solid #f4e7f9',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '100%',
+                      minHeight: '70vh',
+                      padding: '20px 0',
+                   
                     }}
                   >
-                    <h3
+                    <div
                       style={{
-                        fontSize: 20,
-                        marginBottom: 14,
-                        fontWeight: 700,
-                        color: '#d81b60',
-                        textAlign: 'center',
+                        width: 360,
+                        textAlign: 'left',
+                        background: '#ffffff',
+                        padding: '28px 26px',
+                        borderRadius: 18,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                        border: '1px solid #f4e7f9',
                       }}
                     >
-                      Enter Your Registration Code
-                    </h3>
-
-                    <CFormInput
-                      name="registraionCode"
-                      value={form.registraionCode}
-                      onChange={handleRefChange}
-                      placeholder="Enter Registration Code"
-                      style={{
-                        borderRadius: 12,
-                        height: 45,
-                        border: '1px solid #e1cbe9',
-                        background: '#faf8ff',
-                        transition: '0.25s',
-                        fontWeight: '500',
-                      }}
-                    />
-
-                    {/* Error message */}
-                    {error && (
-                      <p
+                      <h3
                         style={{
-                          color: '#ff2e85',
-                          fontSize: 13,
-                          fontWeight: 600,
-                          marginTop: 6,
-                          marginBottom: 0,
+                          fontSize: 20,
+                          marginBottom: 14,
+                          fontWeight: 700,
+                          color: '#d81b60',
                           textAlign: 'center',
                         }}
                       >
-                        {error}
-                      </p>
-                    )}
+                        Enter Your Registration Code
+                      </h3>
 
-                    <CButton
-                      color="primary"
-                      style={{
-                        marginTop: 18,
-                        width: '100%',
-                        borderRadius: 12,
-                        fontWeight: '600',
-                        fontSize: 16,
-                        padding: '12px 0',
-                        background: isRegistration
-                          ? 'linear-gradient(90deg, #e33de9ff, #b26ad8)'
-                          : '#c8c6d9',
-                        border: 'none',
-                        cursor: isRegistration ? 'pointer' : 'not-allowed',
-                        boxShadow: isRegistration ? '0 4px 12px rgba(106,90,224,0.35)' : 'none',
-                        transition: '0.25s',
-                      }}
-                      onClick={handleSubmitReferralCode}
-                      disabled={!isRegistration}
-                    >
-                      Submit Registration Code
-                    </CButton>
-
-                    <p
-                      style={{
-                        marginTop: 10,
-                        fontSize: 13,
-                        textAlign: 'center',
-                        color: '#999',
-                      }}
-                    >
-                      You'll unlock an exclusive gift after submitting 💝
-                    </p>
-                   
-                  </div>
-                </div>
-              ) : (
-                <CRow className="g-4 mt-2">
-                  {/* Full Name + Mobile */}
-                  <CCol md={6}>
-                    <CFormLabel>
-                      Full Name (as Per Aadhar Crad) <span className="text-danger">*</span>
-                    </CFormLabel>
-                    <CFormInput
-                      name="fullName"
-                      value={form.fullName}
-                      onChange={handleChange}
-                      placeholder="Enter Full Name"
-                    />
-                    {errors.fullName && <CAlert color="danger">{errors.fullName}</CAlert>}
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>
-                      Mobile <span className="text-danger">*</span>
-                    </CFormLabel>
-                    <CFormInput
-                      name="mobile"
-                      placeholder="Enter Mobile Number"
-                      maxLength={10}
-                      value={form.mobile}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '')
-                        handleChange({ target: { name: 'mobile', value } })
-                      }}
-                    />
-                    {errors.mobile && <CAlert color="danger">{errors.mobile}</CAlert>}
-                  </CCol>
-
-                  {/* DOB + City */}
-                  <CCol md={6}>
-                    <CFormLabel>
-                      DOB <span className="text-danger">*</span>
-                    </CFormLabel>
-                    <CFormInput
-                      type="date"
-                      name="dob"
-                      max={maxToday}
-                      value={form.dob}
-                      onFocus={(e) => {
-                        const input = e.target
-                        input.value = oneYearAgoISO
-                        input.showPicker?.()
-                        setTimeout(() => {
-                          if (!form.dob) input.value = ''
-                        }, 0)
-                      }}
-                      onChange={handleChange}
-                    />
-                    {errors.dob && <CAlert color="danger">{errors.dob}</CAlert>}
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>
-                      City <span className="text-danger">*</span>
-                    </CFormLabel>
-                    <CFormInput
-                      name="city"
-                      value={form.city}
-                      onChange={handleChange}
-                      placeholder="Enter City"
-                    />
-                    {errors.city && <CAlert color="danger">{errors.city}</CAlert>}
-                  </CCol>
-
-                  {/* Email + Blood */}
-                  <CCol md={6}>
-                    <CFormLabel>Email (Optional)</CFormLabel>
-                    <CFormInput
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="Enter Email"
-                    />
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>Blood Group (Optional)</CFormLabel>
-                    <CFormSelect name="Blood" value={form.Blood} onChange={handleChange}>
-                      <option value="">Select Blood Group</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                    </CFormSelect>
-                  </CCol>
-                  <CCol md={12}>
-                    <CFormLabel>
-                      Aadhaar Card Number <span className="text-danger">*</span>
-                    </CFormLabel>
-
-                    <div className="d-flex align-items-center" style={{ gap: '10px' }}>
                       <CFormInput
+                        name="registraionCode"
+                        value={form.registraionCode}
+                        onChange={handleRefChange}
+                        placeholder="Enter Registration Code"
+                        style={{
+                          borderRadius: 12,
+                          height: 45,
+                          border: '1px solid #e1cbe9',
+                          background: '#faf8ff',
+                          transition: '0.25s',
+                          fontWeight: '500',
+                        }}
+                      />
+
+                      {/* Error message */}
+                      {error && (
+                        <p
+                          style={{
+                            color: '#ff2e85',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            marginTop: 6,
+                            marginBottom: 0,
+                            textAlign: 'center',
+                          }}
+                        >
+                          {error}
+                        </p>
+                      )}
+
+                      <CButton
+                        type="button"
+                        color="primary"
+                        style={{
+                          marginTop: 18,
+                          width: '100%',
+                          borderRadius: 12,
+                          fontWeight: '600',
+                          fontSize: 16,
+                          padding: '12px 0',
+                          background: isRegistration
+                            ? 'linear-gradient(90deg, #e33de9ff, #b26ad8)'
+                            : '#c8c6d9',
+                          border: 'none',
+                          cursor: isRegistration ? 'pointer' : 'not-allowed',
+                          boxShadow: isRegistration ? '0 4px 12px rgba(106,90,224,0.35)' : 'none',
+                          transition: '0.25s',
+                        }}
+                        onClick={handleSubmitReferralCode}
+                        disabled={!isRegistration || verifyLoading}
+                      >
+                        {verifyLoading ? 'Verifying...' : 'Submit Registration Code'}
+                      </CButton>
+
+                      <p
+                        style={{
+                          marginTop: 10,
+                          fontSize: 13,
+                          textAlign: 'center',
+                          color: '#999',
+                        }}
+                      >
+                        You'll unlock an exclusive gift after submitting 💝
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <CRow className="g-4 mt-2">
+                    {/* Full Name + Mobile */}
+                    <CCol md={6}>
+                      <CFormLabel>
+                        Full Name (as Per Aadhar Crad) <span className="text-danger">*</span>
+                      </CFormLabel>
+                      <CFormInput
+                        name="fullName"
+                        value={form.fullName}
+                        onChange={handleChange}
+                        placeholder="Enter Full Name"
+                      />
+                      {errors.fullName && (
+                        <p
+                          style={{
+                            color: '#ff2e85',
+                          }}
+                        >
+                          {errors.fullName}
+                        </p>
+                      )}
+                    </CCol>
+
+                    <CCol md={6}>
+                      <CFormLabel>
+                        Mobile <span className="text-danger">*</span>
+                      </CFormLabel>
+                      <CFormInput
+                        name="mobile"
+                        placeholder="Enter Mobile Number"
+                        maxLength={10}
+                        value={form.mobile}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          handleChange({ target: { name: 'mobile', value } })
+                        }}
+                      />
+                      {errors.mobile && (
+                        <p
+                          style={{
+                            color: '#ff2e85',
+                          }}
+                        >
+                          {errors.mobile}
+                        </p>
+                      )}
+                    </CCol>
+
+                    {/* DOB + City */}
+                    <CCol md={6}>
+                      <CFormLabel>
+                        DOB <span className="text-danger">*</span>
+                      </CFormLabel>
+                      <CFormInput
+                        type="date"
+                        name="dob"
+                        max={maxToday}
+                        value={form.dob}
+                        onFocus={(e) => {
+                          const input = e.target
+                          input.value = oneYearAgoISO
+                          input.showPicker?.()
+                          setTimeout(() => {
+                            if (!form.dob) input.value = ''
+                          }, 0)
+                        }}
+                        onChange={handleChange}
+                      />
+                      {errors.dob && (
+                        <p
+                          style={{
+                            color: '#ff2e85',
+                          }}
+                        >
+                          {errors.dob}
+                        </p>
+                      )}
+                    </CCol>
+
+                    <CCol md={6}>
+                      <CFormLabel>
+                        City <span className="text-danger">*</span>
+                      </CFormLabel>
+                      <CFormInput
+                        name="city"
+                        value={form.city}
+                        onChange={handleChange}
+                        placeholder="Enter City"
+                      />
+                      {errors.city && (
+                        <p
+                          style={{
+                            color: '#ff2e85',
+                          }}
+                        >
+                          {errors.city}
+                        </p>
+                      )}
+                    </CCol>
+
+                    {/* Email + Blood */}
+                    <CCol md={6}>
+                      <CFormLabel>Email (Optional)</CFormLabel>
+                      <CFormInput
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="Enter Email"
+                      />
+                    </CCol>
+
+                    <CCol md={6}>
+                      <CFormLabel>Blood Group (Optional)</CFormLabel>
+                      <CFormSelect name="Blood" value={form.Blood} onChange={handleChange}>
+                        <option value="">Select Blood Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                      </CFormSelect>
+                    </CCol>
+                    <CCol md={12}>
+                      <CFormLabel>
+                        Aadhaar Card Number <span className="text-danger">*</span>
+                      </CFormLabel>
+
+                      <div className="d-flex align-items-center" style={{ gap: '10px' }}>
+                        <CFormInput
+                          name="Aadhar"
+                          maxLength={12}
+                          value={form.Aadhar}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '') // Only digits
+                            handleChange({ target: { name: 'Aadhar', value } })
+
+                            // If user typed all 12 digits
+                            if (value.length === 12) {
+                              setErrors((prev) => ({ ...prev, Aadhar: null }))
+                              setAadharVerified(true)
+                            } else {
+                              setAadharVerified(false)
+
+                              // Show error only when user enters something but not 12 digits
+                              if (value.length > 0 && value.length < 12) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  Aadhar: 'Aadhaar must be exactly 12 digits',
+                                }))
+                              } else {
+                                setErrors((prev) => ({ ...prev, Aadhar: null }))
+                              }
+                            }
+                          }}
+                          placeholder="Enter 12-digit Aadhaar number"
+                        />
+
+                        {/* <CFormInput
                         name="Aadhar"
                         maxLength={12}
                         disabled={aadharVerified} // Disable after verification
@@ -602,9 +717,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           }
                         }}
                         placeholder="Enter 12-digit Aadhaar number"
-                      />
+                      /> */}
 
-                      {aadharVerified && (
+                        {/* {aadharVerified && (
                         <span
                           style={{
                             background: '#ff4f9a',
@@ -617,142 +732,207 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         >
                           Verified
                         </span>
-                      )}
-                    </div>
+                      )} */}
+                      </div>
 
-                    {/* Error */}
-                    {errors.Aadhar && !aadharVerified && (
-                      <CAlert color="danger">{errors.Aadhar}</CAlert>
-                    )}
-                  </CCol>
-
-                  {/* Consent */}
-                  <CCol md={12}>
-                    <CFormCheck
-                      className="custom-checkbox"
-                      name="confirmedVisit"
-                      checked={form.confirmedVisit}
-                      onChange={handleChange}
-                      label="I confirm that I have availed dermatology or cosmetic services from a verified clinic within the last 12 months and agree to N Glow Kart’s verification and data privacy policy"
-                    />
-                  </CCol>
-
-                  {/* Conditional fields */}
-                  {form.confirmedVisit && (
-                    <>
-                      <CCol md={6}>
-                        <CFormLabel>
-                          Clinic Name <span className="text-danger">*</span>
-                        </CFormLabel>
-                        <CFormInput
-                          name="clinicName"
-                          placeholder="Enter Clinic Name"
-                          value={form.clinicName}
-                          onChange={handleChange}
-                        />
-                      </CCol>
-
-                      <CCol md={6}>
-                        <CFormLabel>
-                          Clinic Area <span className="text-danger">*</span>
-                        </CFormLabel>
-                        <CFormInput
-                          name="clinicCityArea"
-                          placeholder="Enter Clinic City/Area"
-                          value={form.clinicCityArea}
-                          onChange={handleChange}
-                        />
-                      </CCol>
-
-                      <CCol md={6}>
-                        <CFormLabel>
-                          Last Visit <span className="text-danger">*</span>
-                        </CFormLabel>
-                        <CFormInput
-                          type="date"
-                          name="dateOfLastVisit"
-                          max={maxToday}
-                          min={minDate12Months}
-                          value={form.dateOfLastVisit}
-                          onChange={handleChange}
-                        />
-                      </CCol>
-
-                      <CCol md={6}>
-                        <CFormLabel>
-                          Service Availed <span className="text-danger">*</span>
-                        </CFormLabel>
-                        <Select
-                          options={procedureOptions}
-                          isMulti
-                          placeholder="Select services received..."
-                          onChange={handleProcedureChange}
-                          value={procedureOptions.filter((opt) =>
-                            form.serviceType?.includes(opt.value),
-                          )}
-                        />
-
-                        {/* Other input */}
-                        {showOtherInput && (
-                          <div style={{ marginTop: 10 }}>
-                            <CFormLabel>Specify Other Service</CFormLabel>
-                            <CFormInput
-                              placeholder="Enter Service Name"
-                              value={form.otherServiceName || ''}
-                              onChange={(e) =>
-                                setForm((prev) => ({ ...prev, otherServiceName: e.target.value }))
-                              }
-                            />
-                          </div>
-                        )}
-                      </CCol>
-                      <div style={{ marginBottom: 25 }}>
-                        <CFormLabel>
-                          Upload your last visit bill or prescription{' '}
-                          <span className="text-danger">*</span>
-                        </CFormLabel>
-
-                        <label
+                      {/* Error */}
+                      {errors.Aadhar && (
+                        <p
                           style={{
-                            border: '2px dashed #ff95c9',
-                            borderRadius: 12,
-                            padding: '18px',
-                            width: '100%',
-                            textAlign: 'center',
-                            display: 'block',
-                            cursor: 'pointer',
-                            background: '#fff8fc',
                             color: '#ff2e85',
-                            fontWeight: '500',
-                            fontSize: 15,
                           }}
                         >
-                          📁 Tap to upload Prescription / Bill
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => updateForm('priscription', e.target.files[0])}
-                            style={{ display: 'none' }}
-                          />
-                        </label>
-                      </div>
-                    </>
-                  )}
+                          {errors.Aadhar}
+                        </p>
+                      )}
+                    </CCol>
 
-                  {/* Submit */}
-                  <CCol md={12} className="mt-3 d-flex justify-content-end">
-                    <CButton
-                      style={{ background: '#ff4f9a', color: '#fff' }}
-                      disabled={!form.confirmedVisit}
-                      type="submit"
-                    >
-                      Register
-                    </CButton>
-                  </CCol>
-                </CRow>
-              )}
-            </CForm>
-          )}
+                    {/* Consent */}
+                    <CCol md={12}>
+                      <CFormCheck
+                        className="custom-checkbox"
+                        name="confirmedVisit"
+                        checked={form.confirmedVisit}
+                        onChange={handleChange}
+                        label="I confirm that I have availed dermatology or cosmetic services from a verified clinic within the last 12 months and agree to N Glow Kart’s verification and data privacy policy"
+                      />
+                    </CCol>
+
+                    {/* Conditional fields */}
+                    {form.confirmedVisit && (
+                      <>
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Clinic Name <span className="text-danger">*</span>
+                          </CFormLabel>
+                          <CFormInput
+                            name="clinicName"
+                            placeholder="Enter Clinic Name"
+                            value={form.clinicName}
+                            onChange={handleChange}
+                          />
+                          {errors.clinicName && (
+                            <p
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.clinicName}
+                            </p>
+                          )}
+                        </CCol>
+
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Clinic Area <span className="text-danger">*</span>
+                          </CFormLabel>
+                          <CFormInput
+                            name="clinicCityArea"
+                            placeholder="Enter Clinic City/Area"
+                            value={form.clinicCityArea}
+                            onChange={handleChange}
+                          />
+                          {errors.clinicCityArea && (
+                            <p
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.clinicCityArea}
+                            </p>
+                          )}
+                        </CCol>
+
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Last Visit <span className="text-danger">*</span>
+                          </CFormLabel>
+                          <CFormInput
+                            type="date"
+                            name="dateOfLastVisit"
+                            max={maxToday}
+                            min={minDate12Months}
+                            value={form.dateOfLastVisit}
+                            onChange={handleChange}
+                          />
+                          {errors.dateOfLastVisit && (
+                            <p
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.dateOfLastVisit}
+                            </p>
+                          )}
+                        </CCol>
+
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Service Availed <span className="text-danger">*</span>
+                          </CFormLabel>
+                          <Select
+                            options={procedureOptions}
+                            isMulti
+                            placeholder="Select services received..."
+                            onChange={handleProcedureChange}
+                            value={procedureOptions.filter((opt) =>
+                              form.serviceType?.includes(opt.value),
+                            )}
+                          />
+                          {errors.serviceType && (
+                            <p
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.serviceType}
+                            </p>
+                          )}
+                          {/* Other input */}
+                          {showOtherInput && (
+                            <div style={{ marginTop: 10 }}>
+                              <CFormLabel>Specify Other Service</CFormLabel>
+                              <CFormInput
+                                placeholder="Enter Service Name"
+                                value={form.otherServiceName || ''}
+                                onChange={(e) =>
+                                  setForm((prev) => ({ ...prev, otherServiceName: e.target.value }))
+                                }
+                              />
+                            </div>
+                          )}
+                        </CCol>
+                        <div>
+                          <CFormLabel>
+                            Upload your last visit bill or prescription{' '}
+                            <span className="text-danger">*</span>
+                          </CFormLabel>
+
+                          <label
+                            style={{
+                              border: '2px dashed #ff95c9',
+                              borderRadius: 12,
+                              padding: '18px',
+                              width: '100%',
+                              textAlign: 'center',
+                              display: 'block',
+                              cursor: 'pointer',
+                              background: '#fff8fc',
+                              color: '#ff2e85',
+                              fontWeight: '500',
+                              fontSize: 15,
+                            }}
+                          >
+                            📁 Tap to upload Prescription / Bill
+                            <input
+                              type="file"
+                              accept="image/*, application/pdf"
+                              onChange={async (e) => {
+                                const file = e.target.files[0]
+                                if (!file) return
+
+                                const base64 = await fileToBase64(file)
+                                updateForm('prescription', base64)
+                              }}
+                              style={{ display: 'none' }}
+                            />
+                          </label>
+                        </div>
+                        <small style={{ color: '#888', display: 'block' }}>
+                          Accepted formats: PDF, JPG, JPEG, PNG
+                        </small>
+
+                        {errors.prescription && (
+                          <div
+                            style={{
+                              color: '#ff2e85',
+                            }}
+                          >
+                            {errors.prescription}
+                          </div>
+                        )}
+
+                        {/* {errors.serviceType && (
+                          <CAlert color="danger">{errors.serviceType}</CAlert>
+                        )} */}
+                      </>
+                    )}
+
+                    {/* Submit */}
+                    <CCol md={12} className="mt-3 d-flex justify-content-end">
+                      <CButton
+                        style={{ background: '#ff4f9a', color: '#fff' }}
+                        disabled={!form.confirmedVisit}
+                        type="submit"
+                      >
+                        {loading ? 'Submitting...' : 'Submit'}
+                      </CButton>
+                    </CCol>
+                  </CRow>
+                )}
+              </CForm>
+            )}
+          </div>
         </div>
       </div>
     </div>

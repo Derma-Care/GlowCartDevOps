@@ -9,8 +9,8 @@ spring:
   mail:
     host: ${SPRING_MAIL_HOST:smtp.gmail.com}
     port: ${SPRING_MAIL_PORT:465}
-    username: ${SPRING_MAIL_USERNAME}     # No hardcoded email
-    password: ${SPRING_MAIL_PASSWORD}     # No hardcoded password
+    username: ${SPRING_MAIL_USERNAME:itsmesai0427@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:exccsapctjcuagkd}
     protocol: smtp
     properties:
       mail:

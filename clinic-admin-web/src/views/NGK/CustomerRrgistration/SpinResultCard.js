@@ -6,7 +6,7 @@ import bg from '../../../assets/images/bg.png'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { toast } from 'react-toastify'
 import LoadingIndicator from '../../../Utils/loader'
-
+import './SpinWheel.css'
 export default function SpinResultCard({ prize, onReset, setInstagram, form }) {
   const cardRef = useRef(null)
   const [loading, setLoading] = useState(false)
@@ -153,13 +153,14 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       {/* CARD */}
       <CCard
         ref={cardRef}
+        className="spin-result-card"
         style={{
           width: '100%',
           borderRadius: 22,
           border: 'none',
           background: 'linear-gradient(135deg, #ffe6f1, #ffd8ec)',
           boxShadow: '0 8px 30px rgba(255, 0, 102, 0.15)',
-          marginTop: '120px',
+
           backgroundImage: `url(${bg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -270,6 +271,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 </p>
               </div>
               <div
+                className="prize-circle"
                 style={{
                   width: 120, // Increased container size (optional)
                   height: 120,

@@ -2,10 +2,10 @@
 // export let wifiUrl = 'localhost'
 //-------------------------
 // Dev
-export let wifiUrl = 'http://35.154.152.61:8080'
+// export let wifiUrl = 'http://3.6.119.57:9090'
 //----------------------------
-//GlowKart
-// export let wifiUrl = 'http://35.154.152.61:9090'
+// GlowKart
+export let wifiUrl = 'http://35.154.152.61:8080'
 //-----------------------------
 // Production
 // export let wifiUrl = 'https://api.aesthetech.life'
