@@ -72,6 +72,7 @@ const ClinicRegistration = () => {
     address: '',
     city: '',
     contactNumber: '',
+    whatsappNumber: '',
     openingTime: '',
     closingTime: '',
     hospitalLogo: null,
@@ -89,7 +90,7 @@ const ClinicRegistration = () => {
     clinicType: '',                           // (Existing)
     medicinesSoldOnSite: false,
     drugLicenseCertificate: null,
-    drugLicenseFormType: null,
+    drugLicenseFormType: "",
     hasPharmacist: '',
     pharmacistCertificate: null,
     biomedicalWasteManagementAuth: null,
@@ -139,20 +140,16 @@ const ClinicRegistration = () => {
     fetchTimings()
   }, [])
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await CategoryData()
-
-        if (response?.data) {
-          setCategories(response.data)
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-      }
-    }
-    fetchCategories()
-  }, [])
+  // FILE TO BASE64
+  const convertIfExists = async (file) => {
+    if (!file) return null;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   const preventNumberInput = (e) => {
     const isNumber = /[0-9]/.test(e.key)
@@ -179,7 +176,14 @@ const ClinicRegistration = () => {
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required'
     }
-
+    if (selectedOption === "Yes") {
+      if (!formData.drugLicenseCertificate) {
+        newErrors.drugLicenseCertificate = "Please upload Drug License Certificate";
+      }
+      if (!formData.drugLicenseFormType) {
+        newErrors.drugLicenseFormType = "Please enter Form Type (20/21)";
+      }
+    }
     // City validation
     if (!formData.city?.trim()) {
       newErrors.city = 'City is required'
@@ -208,7 +212,16 @@ const ClinicRegistration = () => {
         newErrors.contactNumber = 'Contact number must start with a digit between 5 and 9'
       }
     }
-
+    if (!formData.whatsappNumber?.trim()) {
+      newErrors.whatsappNumber = 'whatsappNumber is required'
+    } else {
+      const whatsappNumber = formData.whatsappNumber.trim()
+      if (whatsappNumber.length !== 10) {
+        newErrors.whatsappNumber = 'whatsappNumber must be exactly 10 digits long'
+      } else if (!phoneRegex.test(whatsappNumber)) {
+        newErrors.whatsappNumber = 'whatsappNumber must start with a digit between 5 and 9'
+      }
+    }
     // Time validation
     // Time validation
     if (!formData.openingTime) {
@@ -274,9 +287,7 @@ const ClinicRegistration = () => {
     if (!formData.businessRegistrationCertificate) {
       newErrors.businessRegistrationCertificate = 'Please upload at least one document'
     }
-    if (!formData.drugLicenseCertificate && selectedOption === 'Yes') {
-      newErrors.drugLicenseCertificate = 'Please upload at least one document'
-    }
+
     if (!formData.drugLicenseFormType && selectedOption === 'Yes') {
       newErrors.drugLicenseFormType = 'Please upload at least one document'
     }
@@ -637,11 +648,15 @@ const ClinicRegistration = () => {
 
     setIsSubmitting(true);
 
-    const { emailAddress, contactNumber, licenseNumber } = formData;
+    const { emailAddress, contactNumber, licenseNumber, whatsappNumber } = formData;
     const safeExistingDoctors = Array.isArray(existingDoctors) ? existingDoctors : [];
 
+    // Duplicate checks
     const isEmailDuplicate = safeExistingDoctors.some(
       (doc) => doc.emailAddress?.toLowerCase() === emailAddress?.toLowerCase()
+    );
+    const isWhatsAppNumberDuplicate = safeExistingDoctors.some(
+      (doc) => doc.whatsappNumber === whatsappNumber
     );
     const isMobileDuplicate = safeExistingDoctors.some(
       (doc) => doc.contactNumber === contactNumber
@@ -653,33 +668,27 @@ const ClinicRegistration = () => {
     if (isEmailDuplicate || isMobileDuplicate || isLicenseDuplicate) {
       const newErrors = {};
 
-      if (isEmailDuplicate) {
-        newErrors.emailAddress = "Email already exists";
-      }
-      if (isMobileDuplicate) {
-        newErrors.contactNumber = "Mobile number already exists";
-      }
-      if (isLicenseDuplicate) {
-        newErrors.licenseNumber = "License Number already exists";
-      }
+      if (isEmailDuplicate) newErrors.emailAddress = "Email already exists";
+      if (isMobileDuplicate) newErrors.contactNumber = "Mobile number already exists";
+      if (isWhatsAppNumberDuplicate) newErrors.whatsappNumber = "WhatsApp number already exists";
+      if (isLicenseDuplicate) newErrors.licenseNumber = "License Number already exists";
 
       setErrors((prev) => ({ ...prev, ...newErrors }));
       setIsSubmitting(false);
       return;
     }
 
-
     try {
-      // 🔹 Helper functions
+      // Convert helper
       const convertIfExists = async (file) => {
         if (!file) return "";
         if (file instanceof Blob) return await convertFileToBase64(file);
-        return file; // already Base64
+        return file;
       };
 
       const convertMultipleIfExists = async (files) => {
         if (!Array.isArray(files)) return [];
-        return Promise.all(
+        return await Promise.all(
           files.map(async (file) => {
             if (file?.base64) return file.base64;
             if (file instanceof Blob) return await convertFileToBase64(file);
@@ -688,35 +697,30 @@ const ClinicRegistration = () => {
         );
       };
 
-      // 🔹 Convert files
+      // FILE conversions
       const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
       const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
       const hospitalContractBase64 = await convertIfExists(formData.contractorDocuments);
-      const clinicalEstablishmentCertificateBase64 = await convertIfExists(
-        formData.clinicalEstablishmentCertificate
-      );
-      const businessRegistrationCertificateBase64 = await convertIfExists(
-        formData.businessRegistrationCertificate
-      );
-      const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);
-      const drugLicenseFormTypeBase64 = await convertIfExists(formData.drugLicenseFormType);
+      const clinicalEstablishmentCertificateBase64 = await convertIfExists(formData.clinicalEstablishmentCertificate);
+      const businessRegistrationCertificateBase64 = await convertIfExists(formData.businessRegistrationCertificate);
+      const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);   // FILE
       const pharmacistCertificateBase64 = await convertIfExists(formData.pharmacistCertificate);
-      const biomedicalWasteManagementAuthBase64 = await convertIfExists(
-        formData.biomedicalWasteManagementAuth
-      );
+      const biomedicalWasteManagementAuthBase64 = await convertIfExists(formData.biomedicalWasteManagementAuth);
       const tradeLicenseBase64 = await convertIfExists(formData.tradeLicense);
       const fireSafetyCertificateBase64 = await convertIfExists(formData.fireSafetyCertificate);
-      const professionalIndemnityInsuranceBase64 = await convertIfExists(
-        formData.professionalIndemnityInsurance
-      );
-      const gstRegistrationCertificateBase64 = await convertIfExists(
-        formData.gstRegistrationCertificate
-      );
+      const professionalIndemnityInsuranceBase64 = await convertIfExists(formData.professionalIndemnityInsurance);
+      const gstRegistrationCertificateBase64 = await convertIfExists(formData.gstRegistrationCertificate);
       const othersBase64 = await convertMultipleIfExists(formData.others);
+
+      // FIXED: drugLicenseFormType must be TEXT — NOT Base64
+      const drugLicenseFormTypeValue = formData.drugLicenseFormType;
+
+      // Collect token
       const onboardingToken = localStorage.getItem("onboardingToken");
-      // 🔹 Prepare payload
+
+      // Final Payload
       const clinicData = {
-        token: onboardingToken,                              // ✅ REQUIRED
+        token: onboardingToken,
         contractorDocuments: hospitalContractBase64,
         address: formData.address,
         alternateContactNumber: formData.alternateContactNumber,
@@ -736,16 +740,19 @@ const ClinicRegistration = () => {
           ? `${formData.consultationExpiration} days`
           : "",
         contactNumber: formData.contactNumber,
+        whatsappNumber: formData.whatsappNumber,
         designation: formData.designation,
+
+        // FIXED AREA
         drugLicenseCertificate: drugLicenseCertificateBase64,
-        drugLicenseFormType: drugLicenseFormTypeBase64,
+        drugLicenseFormType: drugLicenseFormTypeValue,   // TEXT as required
+
         emailAddress: formData.emailAddress,
         facebookHandle: formData.facebookHandle,
         fireSafetyCertificate: fireSafetyCertificateBase64,
         freeFollowUps: formData.freeFollowUps,
         gstRegistrationCertificate: gstRegistrationCertificateBase64,
         hasPharmacist: selectedPharmacistOption,
-
         hospitalDocuments: hospitalDocumentsBase64,
         hospitalLogo: hospitalLogoBase64,
         ifscCode: formData.ifscCode,
@@ -769,25 +776,21 @@ const ClinicRegistration = () => {
         twitterHandle: formData.twitterHandle,
         upiId: formData.upiId,
         walkthrough: formData.walkthrough,
-        website: normalizeWebsite(formData.website.trim())
+        website: normalizeWebsite(formData.website.trim()),
       };
 
-
-
-      // 🔹 API Call
+      // API CALL
       const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
-
       const savedClinicData = response.data;
-      // ✅ Get token correctly
+
       const apiToken = savedClinicData?.data?.token;
-      console.log("API Token:", apiToken);
       localStorage.setItem("apiToken", apiToken);
+
       if (savedClinicData.success) {
         toast.success(savedClinicData.message || "Clinic Added Successfully", {
           position: "top-right",
         });
 
-        // 🔹 Send onboarding email + navigate after small delay
         setTimeout(() => {
           sendDermaCareOnboardingEmail({
             name: formData.name,
@@ -797,10 +800,7 @@ const ClinicRegistration = () => {
           });
 
           navigate("/clinic-management", {
-            state: {
-              refresh: true,
-              newClinic: savedClinicData,
-            },
+            state: { refresh: true, newClinic: savedClinicData },
           });
         }, 1000);
       } else {
@@ -815,6 +815,7 @@ const ClinicRegistration = () => {
       setIsSubmitting(false);
     }
   };
+
 
 
   return (
@@ -1056,10 +1057,28 @@ const ClinicRegistration = () => {
                   <CFormFeedback invalid>{errors.clinicType}</CFormFeedback>
                 )}
               </CCol>
-
-
             </CRow>
-
+            <CRow className="mb-3">
+              <CCol md={4}>
+                <CFormLabel>
+                  WhatsAppNumber <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="tel"
+                  name="whatsappNumber"
+                  value={formData.whatsappNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    handleInputChange({ target: { name: 'whatsappNumber', value } });
+                  }}
+                  maxLength={10}
+                  invalid={!!errors.whatsappNumber}
+                />
+                {errors.whatsappNumber && (
+                  <CFormFeedback invalid>{errors.whatsappNumber}</CFormFeedback>
+                )}
+              </CCol>
+            </CRow>
             <h5 className="mb-3 text-primary mt-6">Clinic Contact Details</h5>
             <CRow className="mb-3">
               <CCol md={6}>
@@ -1595,10 +1614,40 @@ const ClinicRegistration = () => {
                 inputRef={refs.professionalIndemnityInsurance}
                 required={false}  // <-- makes it optional
               />
+              {/* ---------------- DRUG LICENSE SECTION ---------------- */}
+
+              <CRow className="mb-3">
+                <CCol md={6}>
+                  <CFormLabel>Do you have a Drug License?</CFormLabel>
+                  <CFormSelect
+                    value={selectedOption}
+                    onChange={(e) => {
+                      setSelectedOption(e.target.value);
+                      if (e.target.value === "No") {
+                        setFormData((prev) => ({
+                          ...prev,
+                          drugLicenseCertificate: null,
+                          drugLicenseFormType: "",
+                        }));
+                      }
+                    }}
+                  >
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </CFormSelect>
+                  {errors.drugLicenseCertificate && (
+                    <p className="text-danger">{errors.drugLicenseCertificate}</p>
+                  )}
+                </CCol>
+              </CRow>
+
               {selectedOption === "Yes" && (
                 <CRow className="mb-3">
+
+                  {/* Drug License Certificate */}
                   <FileInput
-                    label="Drug Licence Certificate"
+                    label="Drug License Certificate"
                     name="drugLicenseCertificate"
                     formData={formData}
                     setFormData={setFormData}
@@ -1607,21 +1656,31 @@ const ClinicRegistration = () => {
                     inputRef={refs.drugLicenseCertificate}
                   />
 
-                  <FileInput
-                    label="Drug Licence Form Type 20/21"
-                    name="drugLicenseFormType"
-                    formData={formData}
-                    setFormData={setFormData}
-                    errors={errors}
-                    setErrors={setErrors}
-                    inputRef={refs.drugLicenseFormType}
-                  />
+                  {/* Drug License Form Type */}
+                  <CCol md={6}>
+                    <CFormLabel>Drug License Form Type (20 / 21)</CFormLabel>
+                    <CFormSelect
+                      name="drugLicenseFormType"
+                      value={formData.drugLicenseFormType || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          drugLicenseFormType: e.target.value,
+                        }))
+                      }
+                      ref={refs.drugLicenseFormType}
+                    >
+                      <option value="">Select Form Type</option>
+                      <option value="Form 20">Form 20</option>
+                      <option value="Form 21">Form 21</option>
+                    </CFormSelect>
+                    {errors.drugLicenseFormType && (
+                      <p className="text-danger">{errors.drugLicenseFormType}</p>
+                    )}
+                  </CCol>
                 </CRow>
               )}
-
             </CRow>
-
-
 
             <h5 className="mb-3 text-primary mt-6">Virtual Tour & Branch Info</h5>
             <CRow className="mb-3">
