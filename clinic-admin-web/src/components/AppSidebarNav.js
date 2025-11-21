@@ -35,11 +35,7 @@ export const AppSidebarNav = ({ items }) => {
     return (
       <Component as="div" key={index}>
         {rest.to || rest.href ? (
-          <CNavLink
-            {...(rest.to && { as: NavLink })}
-            {...rest}
-            style={{ color: 'var(--color-black)' }}
-          >
+          <CNavLink {...(rest.to && { as: NavLink })} {...rest}>
             {navLink(name, icon, badge, indent)}
           </CNavLink>
         ) : (
@@ -63,9 +59,8 @@ export const AppSidebarNav = ({ items }) => {
 
   return (
     <CSidebarNav as={SimpleBar}>
-      {Array.isArray(items) && items.length
-        ? items.map((item, index) => (item.items ? navGroup(item, index) : navItem(item, index)))
-        : null}
+      {items &&
+        items.map((item, index) => (item.items ? navGroup(item, index) : navItem(item, index)))}
     </CSidebarNav>
   )
 }

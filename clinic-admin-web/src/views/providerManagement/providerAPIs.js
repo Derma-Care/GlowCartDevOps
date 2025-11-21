@@ -20,11 +20,10 @@ import {
   Verification,
   updateVerification,
 } from '../../baseUrl'
-import { http } from '../../Utils/Interceptors'
 
 export const providerData = async () => {
   try {
-    const response = await http.get(`/${ProviderAllData}`)
+    const response = await axios.get(`${BASE_URL}/${ProviderAllData}`)
     console.log(response)
   
 
@@ -40,7 +39,7 @@ export const providerData = async () => {
 
 export const CustomerData = async (id) => {
   try {
-    const response = await http.get(`/${BasicDetails}/${id}`);
+    const response = await axios.get(`${BASE_URL}/${BasicDetails}/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching customer data:', error);
@@ -52,7 +51,7 @@ export const CustomerData = async (id) => {
 
 export const updateBasicData = async (id, providerData) => {
   try {
-    const response = await http.put(`/${updateBasic}/${id}`, providerData, {
+    const response = await axios.put(`${BASE_URL}/${updateBasic}/${id}`, providerData, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -70,7 +69,7 @@ export const updateBasicData = async (id, providerData) => {
 
 export const getBasicProfileByID = async (id) => {
   try {
-    const response = await http.get(`/${BasicProfile}/${id}`)
+    const response = await axios.get(`${BASE_URL}/${BasicProfile}/${id}`)
     return response.data
   } catch (error) {
     console.error('Error fetching basic profile data by ID:', error)
@@ -84,7 +83,7 @@ export const updateProviderData = async (id, providerData) => {
 
     console.log('Provider Data being sent (without id):', dataWithoutId);
 
-    const response = await http.put(`/${UpdateBasicProfile}/${id}`, dataWithoutId, {
+    const response = await axios.put(`${BASE_URL}/${UpdateBasicProfile}/${id}`, dataWithoutId, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -103,7 +102,7 @@ export const updateProviderData = async (id, providerData) => {
 
 export const getQualificationID = async (id) => {
   try {
-    const response = await http.get(`/${qualification}/${id}`)
+    const response = await axios.get(`${BASE_URL}/${qualification}/${id}`)
     return response.data
   } catch (error) {
     console.error('Error fetching basic profile data by ID:', error)
@@ -115,7 +114,7 @@ export const getQualificationID = async (id) => {
 export const updateQualificationData = async (id, providerData) => {
   try {
     const { id: removedId, ...dataWithoutId } = providerData; 
-    const response = await http.put(`/${updateQualification}/${id}`, dataWithoutId, {
+    const response = await axios.put(`${BASE_URL}/${updateQualification}/${id}`, dataWithoutId, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -132,7 +131,7 @@ export const updateQualificationData = async (id, providerData) => {
 
 export const getExperienceID = async (id) => {
   try {
-    const response = await http.get(`/${Experience}/${id}`)
+    const response = await axios.get(`${BASE_URL}/${Experience}/${id}`)
     return response.data
   } catch (error) {
     console.error('Error fetching basic profile data by ID:', error)
@@ -147,7 +146,7 @@ export const postExperienceData = async (id, providerData) => {
     };
     console.log('Sending data to API:', id, requestData); 
 
-    const response = await http.post(`/${AddExperience}/${id}`, requestData, {
+    const response = await axios.post(`${BASE_URL}/${AddExperience}/${id}`, requestData, {
       headers: {
         'Content-Type': 'application/json', 
       },
@@ -173,8 +172,8 @@ export const updateExperienceData = async (mobileNumber, index, experienceData) 
 
     console.log('Experience Data being sent:', experienceData);
 
-    const response = await http.put(
-      `/${updateExperience}/${mobileNumber}/${index}`,
+    const response = await axios.put(
+      `${BASE_URL}/${updateExperience}/${mobileNumber}/${index}`,
       experienceData,
       {
         headers: {
@@ -195,8 +194,8 @@ export const updateExperienceData = async (mobileNumber, index, experienceData) 
 
 export const deleteExperienceData = async (mobileNumber, index) => {
   try {
-    const response = await http.delete(
-      `/${DeleteExperience}/${mobileNumber}/${index}`
+    const response = await axios.delete(
+      `${BASE_URL}/${DeleteExperience}/${mobileNumber}/${index}`
     );
 
     if (response.status === 200) {
@@ -215,7 +214,7 @@ export const deleteExperienceData = async (mobileNumber, index) => {
 
 export const getCourseCertification = async (id) => {
   try {
-    const response = await http.get(`/${courseCertification}/${id}`)
+    const response = await axios.get(`${BASE_URL}/${courseCertification}/${id}`)
     return response.data
   } catch (error) {
     console.error('Error fetching basic profile data by ID:', error)
@@ -235,8 +234,8 @@ export const postCourseData = async (mobileNumber, providerData) => {
 
     console.log('Sending course data to API:', requestData);
 
-    const response = await http.post(
-      `/providers/addCourseCertification/${mobileNumber}`,
+    const response = await axios.post(
+      `${BASE_URL}/providers/addCourseCertification/${mobileNumber}`,
       requestData,
       {
         headers: {
@@ -267,8 +266,8 @@ export const updateCourseData = async (mobileNumber, index, courseList) => {
 
     console.log('Final Course Data being sent to API:', JSON.stringify(requestData, null, 2));
 
-    const response = await http.put(
-      `/updateCourseCertification/${mobileNumber}/${index}`, 
+    const response = await axios.put(
+      `${BASE_URL}/updateCourseCertification/${mobileNumber}/${index}`, 
       requestData,
       {
         headers: {
@@ -292,8 +291,8 @@ export const updateCourseData = async (mobileNumber, index, courseList) => {
 
 export const deleteCourseData = async (mobileNumber, index) => {
   try {
-    const response = await http.delete(
-      `/${deleteCourse}/${mobileNumber}/${index}`
+    const response = await axios.delete(
+      `${BASE_URL}/${deleteCourse}/${mobileNumber}/${index}`
     );
 
     if (response.status === 200) {
@@ -314,7 +313,7 @@ export const deleteCourseData = async (mobileNumber, index) => {
 
 export const getBankID = async (id) => {
   try {
-    const response = await http.get(`/${Bank}/${id}`)
+    const response = await axios.get(`${BASE_URL}/${Bank}/${id}`)
     return response.data
   } catch (error) {
     console.error('Error fetching basic profile data by ID:', error)
@@ -327,7 +326,7 @@ export const updateBankData = async (id, providerData) => {
     const { id: removedId, ...dataWithoutId } = providerData; 
 
     // Sending the data as JSON
-    const response = await http.put(`/${updateBank}/${id}`, dataWithoutId, {
+    const response = await axios.put(`${BASE_URL}/${updateBank}/${id}`, dataWithoutId, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -345,7 +344,7 @@ export const updateBankData = async (id, providerData) => {
 
 export const getVerificationID = async (mobileNumber) => {
   try {
-    const response = await http.get(`/${Verification}/${mobileNumber}`)
+    const response = await axios.get(`${BASE_URL}/${Verification}/${mobileNumber}`)
     return response.data
   } catch (error) {
     console.error('Error fetching verfiyProvider  data by ID:', error)
@@ -359,8 +358,8 @@ export const updateVerificationData = async (mobileNumber, providerData) => {
   console.log('Sending data to API:', mobileNumber, dataWithoutId); 
 
   try {
-    const response = await http.put(
-      `/${updateVerification}/${mobileNumber}`,
+    const response = await axios.put(
+      `${BASE_URL}/${updateVerification}/${mobileNumber}`,
       dataWithoutId,
     );
 
@@ -380,7 +379,7 @@ export const updateVerificationData = async (mobileNumber, providerData) => {
 
 export const getProviderAppointment = async (mobileNumber) => {
   try {
-    const response = await http.get(`/providers/appointments/${mobileNumber}`)
+    const response = await axios.get(`${BASE_URL}/providers/appointments/${mobileNumber}`)
     console.log(response.data)
     return response.data
   } catch (error) {

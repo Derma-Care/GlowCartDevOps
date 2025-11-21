@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import axios from 'axios'
+
 import { Modal, Button } from 'react-bootstrap'
 import './Doctor.css'
 import Select from 'react-select'
@@ -38,12 +39,13 @@ import { format, addDays, startOfToday } from 'date-fns'
 import { FaTrash } from 'react-icons/fa'
 import { BASE_URL } from '../../baseUrl'
 import capitalizeWords from '../../Utils/capitalizeWords'
-import { useNavigate } from 'react-router-dom'
-import { useHospital } from '../Usecontext/HospitalContext'
-import { GetClinicBranches, handleDeleteToggle } from '../Doctors/DoctorAPI'
+import { useParams, useNavigate } from 'react-router-dom'
+// import { useHospital } from '../../Usecontext/HospitalContext'
+import { GetClinicBranches, handleDeleteToggle, UpdateDoctorById } from './DoctorAPI'
 import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
+import { getCustomerByMobile } from '../customerManagement/CustomerAPI'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { COLORS } from '../../Constant/Themes'
@@ -52,28 +54,23 @@ import ConfirmationModal from '../../components/ConfirmationModal'
 import { http } from '../../Utils/Interceptors'
 import {
   CategoryData,
-  getSubServiceById,
   serviceData,
-  serviceDataH,
   subServiceData,
-} from '../ProcedureManagement/ProcedureManagementAPI'
-import { fetchDoctorSlots } from '../../APIs/GenerateSlots'
-import { showCustomToast } from '../../Utils/Toaster'
+} from '../ProcedureManagement/ProcedureAPI'
 
 const DoctorDetailsPage = () => {
   const [categoryOptions, setCategoryOptions] = useState([])
   const [serviceOptions, setServiceOptions] = useState([])
   const [subServiceOptions, setSubServiceOptions] = useState([])
-  const [delloading, setDelLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedServices, setSelectedServices] = useState([])
   const [selectedSubServices, setSelectedSubServices] = useState([])
-  const [saveloading, setSaveLoading] = useState(false)
-
   const { state } = useLocation()
   const [doctorData, setDoctorData] = useState(state?.doctor || {})
-  const { fetchHospitalDetails, selectedHospital, fetchDoctors } = useHospital()
+  // const { fetchHospitalDetails } = useHospital()
   const navigate = useNavigate()
+  const branchId = state?.branchId
+  console.log(state)
   const [activeKey, setActiveKey] = useState(1)
   const minDate = format(startOfToday(), 'yyyy-MM-dd')
   const maxDate = format(addDays(startOfToday(), 14), 'yyyy-MM-dd')
@@ -109,24 +106,22 @@ const DoctorDetailsPage = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
   const [deleteMode, setDeleteMode] = useState(null)
   // can be 'selected' or 'all' to know which button triggered
-  const [isSubServiceComplete, setIsSubServiceComplete] = useState(true)
 
   const handleEditToggle = () => setIsEditing(!isEditing)
-
   const handleDeleteToggleE = async (id) => {
-    setDelLoading(true)
     setShowModal(false) // Close modal after confirmation
     const isDeleted = await handleDeleteToggle(id)
     console.log(isDeleted)
     if (isDeleted) {
-      navigate('/employee-management/doctor')
-      fetchDoctors()
-      showCustomToast('Doctor deleted successfully', 'success')
+      navigate(`/branch-details/${branchId}?tab=1`)
+
+      toast.success('Doctor deleted successfully')
     } else {
-      setDelLoading(false)
       // toast.error(`${isDeleted.message}` || 'Failed to delete doctor')
     }
   }
+
+  // To show existing image or preview if new selected
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -137,19 +132,22 @@ const DoctorDetailsPage = () => {
   }
   // inside useEffect
   useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        const res = await http.get(`/getDoctorById/${doctorId}`)
+        console.log("helolookjafkj", branchId)
+        setDoctorData(res.data)
+        setFormData(res.data)
+
+      } catch (err) {
+        console.error('Error fetching doctor', err)
+      }
+    }
+
     if (!doctorData?.doctorId) {
       fetchDoctor()
     }
   }, [doctorData?.doctorId])
-  const fetchDoctor = async () => {
-    try {
-      const res = await http.get(`/getDoctorById/${doctorId}`)
-      setDoctorData(res.data)
-      setFormData(res.data)
-    } catch (err) {
-      console.error('Error fetching doctor', err)
-    }
-  }
 
   const [showModal, setShowModal] = useState(false)
   const isToday = selectedDate === new Date().toISOString().split('T')[0]
@@ -179,13 +177,18 @@ const DoctorDetailsPage = () => {
     return slots
   }
 
-  // const handleGenerate = () => {
-  //   const newSlots = generateTimeSlots(interval, isToday)
-  //   setTimeSlots(newSlots) // temporary for modal
-  //   setSlots(newSlots) // if you want in main grid
-  //   setSelectedSlots([]) // reset selected
-  //   toast.success(`Generated ${newSlots.length} slots of ${interval} minutes`)
-  // }
+  const handleGenerate = () => {
+    const newSlots = generateTimeSlots(interval, isToday).map((s) => ({
+      slot: s,
+      available: true, // or logic if unavailable
+    }))
+    setTimeSlots(newSlots) // temporary for modal
+    setSlots(newSlots)
+    setSelectedSlots([])
+    console.log(newSlots)
+    toast.success(`Generated ${newSlots.length} slots of ${interval} minutes`)
+  }
+
 
   const [availableSlots, setAvailableSlots] = useState(generateTimeSlots())
 
@@ -198,63 +201,45 @@ const DoctorDetailsPage = () => {
   }
   const handleUpdate = async () => {
     try {
-      setSaveLoading(true)
       const payload = {
         ...formData,
-        branches:
+        branch:
           formData.branch?.map((b) => ({
             branchId: b.branchId,
             branchName: b.branchName,
           })) || [],
-
         category: formData.category || [], // already an array from useEffect
 
         subCategory: formData.subCategory
           ? {
-              subCategoryId: formData.subCategory.subCategoryId,
-              subCategoryName: formData.subCategory.subCategoryName,
-            }
+            subCategoryId: formData.subCategory.subCategoryId,
+            subCategoryName: formData.subCategory.subCategoryName,
+          }
           : null,
-        service:
+        services:
           formData.services?.map((s) => ({
             serviceId: s.serviceId,
             serviceName: s.serviceName,
           })) || [],
       }
 
-      const res = await http.put(`/updateDoctor/${doctorData.doctorId}`, payload)
+      const res = await UpdateDoctorById(doctorData.doctorId, payload);
 
-      if (res.data.success) {
+      if (res.success) {
+        toast.success(res.data.message || 'Doctor updated successfully')
         setDoctorData(res.data.updatedDoctor)
         setFormData(res.data.updatedDoctor)
         setIsEditing(false)
+        navigate(`/branch-details/${branchId}?tab=1`)
 
-        navigate(`/employee-management/doctor`)
-        await fetchDoctors()
-        showCustomToast(res.data.message || 'Doctor updated successfully', 'success')
       } else {
-        showCustomToast('Failed to update doctor', 'error')
+        toast.error('Failed to update doctor')
       }
     } catch (err) {
       console.error('Update error:', err)
-      showCustomToast('Error while updating doctor', 'error')
-    } finally {
-      setSaveLoading(false)
+      toast.error('Error while updating doctor')
     }
   }
-
-  useEffect(() => {
-    if (doctorData && !isEditing) {
-      setFormData({
-        ...doctorData,
-        branch:
-          doctorData.branches?.map((b) => ({
-            branchId: b.branchId || b.id,
-            branchName: b.branchName || b.name,
-          })) || [],
-      })
-    }
-  }, [doctorData, isEditing])
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0] // Format: YYYY-MM-DD
@@ -286,49 +271,96 @@ const DoctorDetailsPage = () => {
     generateUpcomingDays()
   }, [])
 
+  const timeRegex = /^(0?[1-9]|1[0-2]):(00|30) ?(AM|PM)$/i
+
+  const addTimeSlot = () => {
+    const formatted = timeInput.trim().toUpperCase()
+    const timeRegex = /^(0?[1-9]|1[0-2]):(00|30) ?(AM|PM)$/i
+
+    if (!timeRegex.test(formatted)) {
+      alert('❌ Invalid format. Please use hh:mm AM/PM (e.g., 09:00 AM, 03:30 PM)')
+      return
+    }
+
+    //  Convert "hh:mm AM/PM" to 24-hour Date object
+    const [time, period] = formatted.split(' ')
+    let [hours, minutes] = time.split(':').map(Number)
+
+    if (period === 'PM' && hours !== 12) hours += 12
+    if (period === 'AM' && hours === 12) hours = 0
+
+    const slotDate = new Date(
+      `${selectedDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`,
+    )
+    const now = new Date()
+
+    //  Block past time if selectedDate is today
+    const isToday = selectedDate === format(now, 'yyyy-MM-dd')
+    if (isToday && slotDate <= now) {
+      alert('❌ You cannot add a time slot in the past for today.')
+      return
+    }
+
+    if (!timeSlots.includes(formatted)) {
+      setTimeSlots([...timeSlots, formatted])
+      setTimeInput('')
+    } else {
+      alert('⚠️ This time slot is already added.')
+    }
+  }
+
+  const deleteSlot = (slot) => {
+    setTimeSlots(timeSlots.filter((t) => t !== slot))
+  }
+
   const handleAddSlot = async () => {
+    if (!doctorData?.doctorId || !branchId || !state?.doctor?.hospitalId) {
+      toast.error('❌ Missing required IDs to add slots.');
+      return;
+    }
+
     const newSlots = selectedSlots.filter(
       (slot) =>
         !slotsData.some(
           (existingSlot) => existingSlot.slot === slot && existingSlot.date === selectedDate,
         ),
-    )
+    );
 
     if (newSlots.length === 0) {
-      alert('No new slots to add!')
-      return
+      toast.info('No new slots to add!');
+      return;
     }
 
     const payload = {
-      doctorId: doctorData?.doctorId,
+      doctorId: doctorData.doctorId,
       date: selectedDate,
-      availableSlots: newSlots.map((slot) => ({
-        slot,
-        slotbooked: false,
-      })),
-    }
+      availableSlots: newSlots.map((slot) => ({ slot, slotbooked: false })),
+    };
+
+    const hospitalId = state.doctor.hospitalId;
 
     try {
-      const hospitalId = localStorage.getItem('HospitalId')
-      const branchId = localStorage.getItem('branchId')
-      const res = await http.post(
-        `/addDoctorSlots/${hospitalId}/${branchId}/${doctorData.doctorId}`,
-        payload,
-      )
+      // Using proxy (for dev only)
+      const res = await axios.post(
+        `${BASE_URL}/admin/addDoctorSlots/${hospitalId}/${branchId}/${doctorData.doctorId}`,
+        payload
+      );
 
       if (res.data.success) {
-        // alert(' Slots added successfully')
-        showCustomToast('Slots added successfully', 'success')
-        setVisibleSlot(false)
-        setVisible(false)
-        setSelectedSlots([])
-        fetchSlots()
+        toast.success('✅ Slots added successfully!');
+        setVisibleSlot(false);
+        setVisible(false);
+        setSelectedSlots([]);
+        fetchSlots();
+      } else {
+        toast.error(res.data.message || 'Failed to add slots.');
       }
     } catch (err) {
-      console.error(err)
-      alert('Error adding slots')
+      console.error('Error adding slots:', err);
+      toast.error('❌ Network error. Check backend or CORS.');
     }
-  }
+  };
+
 
   const slotsForSelectedDate =
     (Array.isArray(allSlots) ? allSlots.find((slotData) => slotData.date === selectedDate) : null)
@@ -342,11 +374,8 @@ const DoctorDetailsPage = () => {
 
   const fetchSlots = async () => {
     try {
-      const hospitalId = localStorage.getItem('HospitalId')
-      const branchId = localStorage.getItem('branchId')
-      const response = await http.get(
-        `/getDoctorSlots/${hospitalId}/${branchId}/${doctorData.doctorId}`,
-      )
+      var hospitalId = state?.doctor.hospitalId
+      const response = await http.get(`/clinic-admin/getDoctorSlots/${hospitalId}/${branchId}/${doctorData.doctorId}`)
 
       if (response.data.success) {
         console.log('Fetched Slots Data:', response.data.data)
@@ -362,8 +391,8 @@ const DoctorDetailsPage = () => {
   useEffect(() => {
     const fetchDoctorRatings = async () => {
       try {
-        const hospitalId = localStorage.getItem('HospitalId')
-        const response = await http.get(`/getAverageRatingsByDoctorId/${doctorData.doctorId}`)
+
+        const response = await http.get(`/averageRatings/${hospitalId}/${doctorData.doctorId}`)
 
         if (!response.data.success) {
           setError('Failed to fetch ratings')
@@ -410,8 +439,7 @@ const DoctorDetailsPage = () => {
       setSelectedSlots((prev) => [...prev, slot])
     }
   }
-
-  console.log(customerDetails)
+  // console.log(customerDetails)
 
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
@@ -420,26 +448,16 @@ const DoctorDetailsPage = () => {
       reader.onload = () => resolve(reader.result)
       reader.onerror = (error) => reject(error)
     })
+
   function formatTimeAgo(dateString) {
-    // Parse DD-MM-YYYY hh:mm:ss AM/PM manually
-    const [datePart, timePart, meridian] = dateString.split(' ')
-    const [day, month, year] = datePart.split('-').map(Number)
-    let [hours, minutes, seconds] = timePart.split(':').map(Number)
-
-    if (meridian === 'PM' && hours !== 12) hours += 12
-    if (meridian === 'AM' && hours === 12) hours = 0
-
-    const date = new Date(year, month - 1, day, hours, minutes, seconds)
-
-    const diff = Math.floor((new Date() - date) / 60000) // minutes
+    const diff = Math.floor((new Date() - new Date(dateString)) / 60000) // minutes
     if (diff < 1) return 'Just now'
     if (diff < 60) return `${diff} minute${diff > 1 ? 's' : ''} ago`
-    const hoursDiff = Math.floor(diff / 60)
-    if (hoursDiff < 24) return `${hoursDiff} hour${hoursDiff > 1 ? 's' : ''} ago`
-    const days = Math.floor(hoursDiff / 24)
+    const hours = Math.floor(diff / 60)
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`
+    const days = Math.floor(hours / 24)
     return `${days} day${days > 1 ? 's' : ''} ago`
   }
-
   useEffect(() => {
     if (doctorData?.doctorId) {
       fetchSlots()
@@ -448,7 +466,7 @@ const DoctorDetailsPage = () => {
 
   if (!doctorData) return <p>No doctor data found.</p>
 
-  console.log(customerDetails)
+  // console.log(customerDetails)
   const validateForm = () => {
     let newErrors = {}
 
@@ -471,6 +489,12 @@ const DoctorDetailsPage = () => {
     if (!/^[A-Za-z\s]+$/.test(formData.qualification.trim())) {
       newErrors.qualification = 'Qualification should contain only letters.'
     }
+    // if (!/^[A-Za-z\s]+$/.test(formData.qualification.trim())) {
+    //   newErrors.qualification = 'Qualification should contain only letters.'
+    // }
+    // if (!/^[A-Za-z\s]+$/.test(formData.qualification.trim())) {
+    //   newErrors.qualification = 'Qualification should contain only letters.'
+    // }
 
     // Specialization
     if (!/^[A-Za-z\s]+$/.test(formData.specialization.trim())) {
@@ -528,7 +552,7 @@ const DoctorDetailsPage = () => {
       const success = await handleUpdate() // make sure handleUpdate returns a success status
       if (success) {
         // ✅ show toast after update is actually done
-        showCustomToast('Doctor details updated successfully!', 'success', {
+        toast.success('Doctor details updated successfully!', {
           position: 'top-right',
           autoClose: 3000,
         })
@@ -538,120 +562,52 @@ const DoctorDetailsPage = () => {
 
   useEffect(() => {
     const fetchBranches = async () => {
-      try {
-        const clinicId = localStorage.getItem('HospitalId')
-        const response = await GetClinicBranches(clinicId)
+      if (!doctorData?.clinicId) {
+        console.warn("❌ No clinicId yet, waiting for doctorData...");
+        return;
+      }
 
-        const branches = response?.data || [] // API gives array?
+      try {
+        console.log("✅ Fetching branches for clinicId:", doctorData.clinicId);
+        const response = await GetClinicBranches(doctorData.clinicId);
+
+        const branches = response?.data || [];
+        console.log('test branches', branches)
         const formatted = branches.map((b) => ({
           value: b.branchId || b.id,
           label: b.branchName || b.name,
-        }))
+        }));
 
-        setBranchOptions(formatted)
+        setBranchOptions(formatted);
       } catch (err) {
-        console.error('Error fetching branches:', err)
-        setBranchOptions([])
+        console.error("❌ Error fetching branches:", err);
+        setBranchOptions([]);
       }
-    }
+    };
 
-    fetchBranches()
-  }, [])
+    fetchBranches();
+  }, [doctorData?.clinicId]); // ✅ runs only when clinicId becomes available
+
   // Sync category into formData
   // Category → formData
-  // useEffect(() => {
-  //   if (selectedCategory) {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       category: [
-  //         {
-  //           categoryId: selectedCategory.value,
-  //           categoryName: selectedCategory.label,
-  //         },
-  //       ],
-  //     }))
-  //   } else {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       category: [],
-  //     }))
-  //   }
-  // }, [selectedCategory])
-  // ✅ When Category changes → update formData + fetch services
-  // 🔹 Fetch Categories on mount
-  // Categories fetched on mount
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await CategoryData()
-        const categories = res?.data || []
-        setCategoryOptions(categories.map((c) => ({ value: c.categoryId, label: c.categoryName })))
-      } catch (err) {
-        console.error(err)
-        setCategoryOptions([])
-      }
-    }
-    fetchCategories()
-  }, [])
-
-  // 🔹 Handle category change manually
-  const handleCategoryChange = async (selectedCategories) => {
-    setSelectedCategory(selectedCategories)
-
-    if (!selectedCategories || selectedCategories.length === 0) {
-      setServiceOptions([])
-      setSubServiceOptions([])
-      setSelectedServices([])
-      setSelectedSubServices([])
-      setFormData((prev) => ({ ...prev, category: [], services: [], subServices: [] }))
-      return
-    }
-
-    try {
-      const allServicesMap = new Map(serviceOptions.map((s) => [s.value, s])) // keep existing
-      for (let cat of selectedCategories) {
-        const res = await serviceData(cat.value) // fetch services for category
-        const services = res?.data || []
-
-        services.forEach((s) => {
-          if (!allServicesMap.has(s.serviceId)) {
-            allServicesMap.set(s.serviceId, { value: s.serviceId, label: s.serviceName })
-          }
-        })
-      }
-
-      const formattedServices = Array.from(allServicesMap.values())
-      setServiceOptions(formattedServices)
-
-      // Keep previously selected services if still available
-      const filteredSelectedServices = selectedServices.filter((s) =>
-        formattedServices.some((fs) => fs.value === s.value),
-      )
-      setSelectedServices(filteredSelectedServices)
-
-      // Keep subservices for still-selected services
-      const filteredSubServices = selectedSubServices.filter((ss) =>
-        filteredSelectedServices.some((s) => (ss.serviceId ? ss.serviceId === s.value : true)),
-      )
-      setSelectedSubServices(filteredSubServices)
-
+    if (selectedCategory) {
       setFormData((prev) => ({
         ...prev,
-        category: selectedCategories.map((c) => ({ categoryId: c.value, categoryName: c.label })),
-        services: filteredSelectedServices.map((s) => ({
-          serviceId: s.value,
-          serviceName: s.label,
-        })),
-        subServices: filteredSubServices.map((ss) => ({
-          subServiceId: ss.value,
-          subServiceName: ss.label,
-        })),
+        category: [
+          {
+            categoryId: selectedCategory.value,
+            categoryName: selectedCategory.label,
+          },
+        ],
       }))
-    } catch (err) {
-      console.error('❌ Error fetching services:', err)
-      setServiceOptions([])
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        category: [],
+      }))
     }
-  }
+  }, [selectedCategory])
 
   // Services → formData
   useEffect(() => {
@@ -684,71 +640,59 @@ const DoctorDetailsPage = () => {
     const prefillData = async () => {
       if (!doctorData) return
 
-      // Prefill categories
-      const selectedCats = doctorData.category.map((c) => ({
-        value: c.categoryId,
-        label: c.categoryName,
-      }))
-      setSelectedCategory(selectedCats)
+      // ✅ Prefill category
+      if (doctorData.category?.length > 0) {
+        const cat = doctorData.category[0]
+        setSelectedCategory({ value: cat.categoryId, label: cat.categoryName })
 
-      // Fetch all services for all categories
-      const allServicesMap = new Map()
-      for (let cat of doctorData.category) {
-        const res = await serviceData(cat.categoryId)
-        const services = res?.data || []
-        services.forEach((s) => {
-          if (!allServicesMap.has(s.serviceId)) {
-            allServicesMap.set(s.serviceId, {
-              value: s.serviceId,
-              label: s.serviceName,
-              categoryId: cat.categoryId,
-            })
-          }
-        })
-      }
-      const allServices = Array.from(allServicesMap.values())
-      setServiceOptions(allServices)
+        // Fetch all services
+        const allServicesRes = await serviceData()
+        const allServices = allServicesRes?.data || []
 
-      // Prefill selected services
-      const selectedSvcs = doctorData.service.map((s) => ({
-        value: s.serviceId,
-        label: s.serviceName,
-      }))
-      setSelectedServices(selectedSvcs)
+        // Filter services belonging to category
+        const filteredServices = allServices.filter((s) => s.categoryId === cat.categoryId)
 
-      // Fetch subservices for all selected services
-      const subRes = await Promise.all(selectedSvcs.map((s) => subServiceData(s.value)))
-      const allSubservices = subRes.flatMap((res) => res?.data?.[0]?.subServices || [])
-
-      // Prefill subservices
-      const selectedSubSvc = doctorData.subServices
-        .filter((ss) => allSubservices.some((s) => s.subServiceId === ss.subServiceId)) // keep only valid subservices
-        .map((ss) => ({
-          value: ss.subServiceId,
-          label: ss.subServiceName,
-          serviceId: allSubservices.find((s) => s.subServiceId === ss.subServiceId)?.serviceId,
+        const formattedServices = filteredServices.map((s) => ({
+          value: s.serviceId,
+          label: s.serviceName,
         }))
+        setServiceOptions(formattedServices)
 
-      setSubServiceOptions(
-        allSubservices.map((ss) => ({
-          value: ss.subServiceId,
-          label: ss.subServiceName,
-          serviceId: ss.serviceId,
-        })),
-      )
-      setSelectedSubServices(selectedSubSvc)
+        // ✅ Prefill services
+        if (doctorData.service?.length > 0) {
+          const selectedServiceObjs = doctorData.service.map((s) => ({
+            value: s.serviceId,
+            label: s.serviceName,
+          }))
+          setSelectedServices(selectedServiceObjs)
+
+          // Fetch all subservices for those services
+          const allSubserviceResponses = await Promise.all(
+            selectedServiceObjs.map((s) => subServiceData(s.value)),
+          )
+
+          const allSubservices = allSubserviceResponses.flatMap((res) => res?.data || [])
+
+          const formattedSubServices = allSubservices.map((ss) => ({
+            value: ss.subServiceId,
+            label: ss.subServiceName,
+          }))
+          setSubServiceOptions(formattedSubServices)
+
+          // ✅ Prefill subServices
+          if (doctorData.subServices?.length > 0) {
+            const selectedSubServiceObjs = doctorData.subServices.map((ss) => ({
+              value: ss.subServiceId,
+              label: ss.subServiceName,
+            }))
+            setSelectedSubServices(selectedSubServiceObjs)
+          }
+        }
+      }
     }
 
     prefillData()
   }, [doctorData])
-
-  // When interval changes
-  const handleIntervalChange = (newInterval) => {
-    setInterval(newInterval)
-    setSlots([]) // clear previously generated slots
-    setTimeSlots([]) // if using timeSlots for modal
-    setSelectedSlots([]) // clear selection
-  }
 
   // 🔹 Fetch subServices when services change
   useEffect(() => {
@@ -758,190 +702,151 @@ const DoctorDetailsPage = () => {
       return
     }
 
-    // const fetchSubServices = async () => {
-    //   try {
-    //     const responses = await Promise.all(selectedServices.map((s) => subServiceData(s.value)))
+    const fetchSubServices = async () => {
+      try {
+        const responses = await Promise.all(selectedServices.map((s) => subServiceData(s.value)))
 
-    //     // API may return array or object with `subServices`
-    //     const all = responses.flatMap((res) => {
-    //       const subList = res?.data || []
-    //       if (Array.isArray(subList)) {
-    //         return subList.flatMap((item) => item.subServices || [])
-    //       } else if (subList?.subServices) {
-    //         return subList.subServices
-    //       }
-    //       return []
-    //     })
+        // API may return array or object with `subServices`
+        const all = responses.flatMap((res) => {
+          const subList = res?.data || []
+          if (Array.isArray(subList)) {
+            return subList.flatMap((item) => item.subServices || [])
+          } else if (subList?.subServices) {
+            return subList.subServices
+          }
+          return []
+        })
 
-    //     // Remove duplicates
-    //     const unique = Array.from(new Map(all.map((ss) => [ss.subServiceId, ss])).values())
+        // Remove duplicates
+        const unique = Array.from(new Map(all.map((ss) => [ss.subServiceId, ss])).values())
 
-    //     setSubServiceOptions(
-    //       unique.map((ss) => ({
-    //         value: ss.subServiceId,
-    //         label: ss.subServiceName,
-    //       })),
-    //     )
-    //   } catch (err) {
-    //     console.error('Error fetching subservices:', err)
-    //     setSubServiceOptions([])
-    //   }
-    // }
-
-    // fetchSubServices()
-  }, [selectedServices])
-
-  // 🔹 Fetch Categories on mount
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const res = await CategoryData()
-  //       const categories = res?.data || []
-  //       setCategoryOptions(
-  //         categories.map((c) => ({
-  //           value: c.categoryId,
-  //           label: c.categoryName,
-  //         })),
-  //       )
-  //     } catch (err) {
-  //       console.error('Error fetching categories:', err)
-  //       setCategoryOptions([])
-  //     }
-  //   }
-
-  //   fetchCategories()
-  // }, [])
-
-  // const handleCategoryChange = async (selectedCategory) => {
-  //   setSelectedCategory(selectedCategory)
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     category: selectedCategory
-  //       ? { categoryId: selectedCategory.value, categoryName: selectedCategory.label }
-  //       : null,
-  //     services: [],
-  //     subServices: [],
-  //   }))
-
-  //   if (!selectedCategory) {
-  //     setServiceOptions([])
-  //     setSubServiceOptions([])
-  //     return
-  //   }
-
-  //   try {
-  //     const res = await serviceDataH() // fetch all services
-  //     const services = res?.data || []
-
-  //     // ✅ filter by category
-  //     const filtered = services.filter((s) => s.categoryId === selectedCategory.value)
-
-  //     // ✅ deduplicate services
-  //     const uniqueServices = Array.from(new Map(filtered.map((s) => [s.serviceId, s])).values())
-
-  //     setServiceOptions(
-  //       uniqueServices.map((s) => ({
-  //         value: s.serviceId,
-  //         label: s.serviceName,
-  //       })),
-  //     )
-  //     setSubServiceOptions([])
-  //   } catch (err) {
-  //     console.error('Error fetching services:', err)
-  //     setServiceOptions([])
-  //   }
-  // }
-
-  // const branchOptions = allBranches.map((b) => ({
-  //   value: b.branchId,
-  //   label: b.branchName,
-  // }))
-
-  const handleServiceChange = async (selectedSvc) => {
-    // Remove duplicates
-    const uniqueServices = Array.from(new Map(selectedSvc.map((s) => [s.value, s])).values())
-    setSelectedServices(uniqueServices)
-
-    // Fetch new subservices for newly selected services
-    const newServiceIds = uniqueServices.map((s) => s.value)
-    const subRes = await Promise.all(newServiceIds.map((id) => subServiceData(id)))
-    const newSubservices = subRes
-      .flatMap((res) => res?.data?.[0]?.subServices || [])
-      .map((ss) => ({ value: ss.subServiceId, label: ss.subServiceName, serviceId: ss.serviceId }))
-
-    // Merge with existing prefilled subservices (keep everything)
-    const mergedSubMap = new Map([
-      ...subServiceOptions.map((s) => [s.value, s]),
-      ...newSubservices.map((s) => [s.value, s]),
-    ])
-    setSubServiceOptions(Array.from(mergedSubMap.values()))
-
-    // Keep previously selected subservices
-    const filteredSubServices = selectedSubServices.filter((ss) => mergedSubMap.has(ss.value))
-    setSelectedSubServices(filteredSubServices)
-
-    // Update formData
-    setFormData((prev) => ({
-      ...prev,
-      services: uniqueServices.map((s) => ({ serviceId: s.value, serviceName: s.label })),
-      subServices: filteredSubServices.map((ss) => ({
-        subServiceId: ss.value,
-        subServiceName: ss.label,
-      })),
-    }))
-  }
-
-  console.log(interval)
-  const handleGenerate = async () => {
-    console.log(selectedHospital.data.openingTime)
-
-    if (
-      !selectedHospital ||
-      !selectedHospital.data.openingTime ||
-      !selectedHospital.data.closingTime
-    ) {
-      console.warn('Hospital timings not loaded yet:', selectedHospital)
-      return
-    }
-
-    const doctorId = doctorData?.doctorId
-    const branchId = localStorage.getItem('branchId')
-    const date = selectedDate // from calendar
-    const intervaltime = interval
-    // const start = selectedHospital.data.openingTime // ✅ directly from object
-
-    // const end = selectedHospital.data.closingTime // ✅ directly from object
-    // ✅ directly from object
-    const availableTimes = doctorData?.availableTimes || `${start} - ${end}` // fallback
-
-    const [start, end] = availableTimes.split('-').map((time) => time.trim())
-
-    console.log(start) // "09:00 AM"
-    console.log(end) // "04:00 PM"
-
-    const slots = await fetchDoctorSlots(doctorId, branchId, date, intervaltime, start, end)
-    console.log(slots)
-
-    setSlots(slots) // grid
-    setTimeSlots(slots) // modal
-    setSelectedSlots([]) // reset selection
-
-    showCustomToast(`Generated ${slots.length} slots`, 'success')
-  }
-
-  const checkSubServiceDetails = async (ids) => {
-    console.log(ids)
-    let incomplete = false
-    const hospitalId = localStorage.getItem('HospitalId')
-    for (const id of ids) {
-      const data = await getSubServiceById(hospitalId, id) // Use actual hospitalId
-      if (!data || !data.price || !data.finalCost) {
-        incomplete = true
-        break
+        setSubServiceOptions(
+          unique.map((ss) => ({
+            value: ss.subServiceId,
+            label: ss.subServiceName,
+          })),
+        )
+      } catch (err) {
+        console.error('Error fetching subservices:', err)
+        setSubServiceOptions([])
       }
     }
 
-    setIsSubServiceComplete(!incomplete)
+    fetchSubServices()
+  }, [selectedServices])
+
+  // 🔹 Fetch Categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await CategoryData()
+        const categories = res?.data || []
+        setCategoryOptions(
+          categories.map((c) => ({
+            value: c.categoryId,
+            label: c.categoryName,
+          })),
+        )
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+        setCategoryOptions([])
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+
+
+  const handleCategoryChange = async (selectedCategory) => {
+    setSelectedCategory(selectedCategory)
+    setFormData((prev) => ({
+      ...prev,
+      category: selectedCategory
+        ? { categoryId: selectedCategory.value, categoryName: selectedCategory.label }
+        : null,
+      services: [],
+      subServices: [],
+    }))
+
+    if (!selectedCategory) {
+      setServiceOptions([])
+      setSubServiceOptions([])
+      return
+    }
+
+    try {
+      const res = await serviceData() // fetch all services
+      const services = res?.data || []
+
+      // ✅ filter by category
+      const filtered = services.filter((s) => s.categoryId === selectedCategory.value)
+
+      // ✅ deduplicate services
+      const uniqueServices = Array.from(new Map(filtered.map((s) => [s.serviceId, s])).values())
+
+      setServiceOptions(
+        uniqueServices.map((s) => ({
+          value: s.serviceId,
+          label: s.serviceName,
+        })),
+      )
+      setSubServiceOptions([])
+    } catch (err) {
+      console.error('Error fetching services:', err)
+      setServiceOptions([])
+    }
+  }
+
+  const handleServiceChange = async (selectedServices) => {
+    // ✅ remove duplicates from user selections
+    const uniqueServices = Array.from(
+      new Map((selectedServices || []).map((s) => [s.value, s])).values(),
+    )
+
+    setSelectedServices(uniqueServices)
+    setFormData((prev) => ({
+      ...prev,
+      services: uniqueServices.map((s) => ({
+        serviceId: s.value,
+        serviceName: s.label,
+      })),
+      subServices: [],
+    }))
+
+    if (uniqueServices.length === 0) {
+      setSubServiceOptions([])
+      return
+    }
+
+    try {
+      const allSubservicesMap = new Map()
+
+      for (let svc of uniqueServices) {
+        const res = await subServiceData(svc.value)
+        const subs = res?.data || []
+
+        subs.forEach((ss) => {
+          if (!allSubservicesMap.has(ss.subServiceId)) {
+            allSubservicesMap.set(ss.subServiceId, {
+              value: ss.subServiceId,
+              label: ss.subServiceName,
+            })
+          }
+        })
+      }
+
+      setSubServiceOptions(Array.from(allSubservicesMap.values()))
+    } catch (err) {
+      console.error('Error fetching subservices:', err)
+      setSubServiceOptions([])
+    }
+  }
+  const handleIntervalChange = (newInterval) => {
+    setInterval(newInterval)
+    setSlots([]) // clear previously generated slots
+    setTimeSlots([]) // if using timeSlots for modal
+    setSelectedSlots([]) // clear selection
   }
   return (
     <div className="doctor-details-page" style={{ padding: '1rem' }}>
@@ -1031,7 +936,6 @@ const DoctorDetailsPage = () => {
                           <CCol md={6}>
                             <strong>Category:</strong>
                             <Select
-                              isMulti
                               options={categoryOptions}
                               value={selectedCategory}
                               onChange={handleCategoryChange}
@@ -1068,88 +972,63 @@ const DoctorDetailsPage = () => {
                                     subServiceName: s.label,
                                   })),
                                 }))
-                                const ids = ss.map((opt) => opt.value)
-                                checkSubServiceDetails(ids)
                               }}
                               placeholder="Select Procedures"
                             />
                           </CCol>
                         </CRow>
-                        {!isSubServiceComplete && (
-                          <div className="text-danger mt-1 mb-2">
-                            Some selected Procedures are missing details like price or final cost.
-                            <br />
-                            <a href="/procedure-Management" className="text-primary">
-                              Please add Procedure details
-                            </a>
-                          </div>
-                        )}
                       </>
                     )}
 
                     {isEditing && (
-                      <CRow className="mb-4 justify-content-between align-content-center align-items-center">
-                        <CCol md={3}>
-                          {/* Preview Box */}
-                          {formData.doctorPicture ? (
-                            <img
-                              src={formData.doctorPicture}
-                              alt="Doctor"
-                              className="w-100 rounded border border-secondary"
-                              style={{ maxHeight: '120px', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <div
-                              className="w-100 d-flex align-items-center justify-content-center border border-dashed border-secondary rounded"
-                              style={{ height: '120px', color: '#888' }}
-                            >
-                              Preview
-                            </div>
-                          )}
-                        </CCol>
+                      <div className="mb-3">
+                        {/* Show image preview */}
+                        <img
+                          src={formData.doctorPicture}
+                          alt="Doctor Preview"
+                          style={{
+                            width: '150px',
+                            height: '150px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '2px solid #ccc',
+                            marginBottom: '10px',
+                            marginRight: '10pxs',
+                          }}
+                        />
+                        {/* Upload and convert image */}
 
-                        <CCol md={3}>
-                          {/* File Input Button */}
-                          <label
-                            className="btn mt-3 text-white"
-                            style={{ cursor: 'pointer', backgroundColor: 'var(--color-black)' }}
-                          >
-                            Select Image
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="d-none"
-                              onChange={async (e) => {
-                                const file = e.target.files[0]
-                                const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2 MB
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files[0]
+                            const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2 MB
 
-                                if (file) {
-                                  if (file.size > MAX_FILE_SIZE) {
-                                    showCustomToast('File size exceeds 2 MB!', 'error')
-                                    e.target.value = ''
-                                    return
-                                  }
+                            if (file) {
+                              if (file.size > MAX_FILE_SIZE) {
+                                showCustomToast('File size exceeds 2 MB!', 'success')
 
-                                  try {
-                                    const base64 = await toBase64(file)
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      doctorPicture: base64,
-                                    }))
-                                    e.target.value = '' // reset input
-                                  } catch (err) {
-                                    console.error(err)
-                                    e.target.value = ''
-                                  }
-                                }
-                              }}
-                            />
-                          </label>
-                          <p className="text-muted mt-2 mb-0" style={{ fontSize: '0.85rem' }}>
-                            JPG/PNG, Max 2 MB
-                          </p>
-                        </CCol>
-                      </CRow>
+                                e.target.value = '' // clear input
+                                return
+                              }
+
+                              try {
+                                const base64 = await toBase64(file)
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  doctorPicture: base64,
+                                }))
+
+                                e.target.value = '' // clear input after successful processing
+                              } catch (err) {
+                                console.error(err)
+                                e.target.value = ''
+                              }
+                            }
+                          }}
+                        />
+                      </div>
                     )}
 
                     <CRow className="mb-4" style={{ color: 'var(--color-black)' }}>
@@ -1470,7 +1349,7 @@ const DoctorDetailsPage = () => {
                           // View-only mode
                           <div>
                             {Array.isArray(doctorData.branches) &&
-                            doctorData.branches.length > 0 ? (
+                              doctorData.branches.length > 0 ? (
                               doctorData.branches.map((b, idx) => <p key={idx}>{b.branchName}</p>)
                             ) : (
                               <p>No branches assigned</p>
@@ -1695,11 +1574,11 @@ const DoctorDetailsPage = () => {
                                   return
                                 }
 
-                                const MAX_SIZE = 200 * 1024 // 200 KB
+                                const MAX_SIZE = 500 * 1024 // 250 KB
                                 if (file.size > MAX_SIZE) {
                                   setErrors((prev) => ({
                                     ...prev,
-                                    doctorSignature: 'File size must be less than 200 KB',
+                                    doctorSignature: 'File size must be less than 500 KB',
                                   }))
                                   return
                                 }
@@ -1788,45 +1667,24 @@ const DoctorDetailsPage = () => {
                     <div className="text-end mt-4">
                       {isEditing ? (
                         <>
-                          {/* Cancel Button */}
                           <CButton className="me-2" color="secondary" onClick={handleEditToggle}>
                             Cancel
                           </CButton>
-
-                          {/* Update Button with loading spinner */}
                           <CButton
-                            style={{ backgroundColor: 'var(--color-black)' }}
+                            color="success"
                             className="text-white"
                             onClick={handleUpdateWithValidation}
-                            disabled={saveloading || !isSubServiceComplete}
                           >
-                            {saveloading ? (
-                              <>
-                                <span
-                                  className="spinner-border spinner-border-sm me-2 text-white"
-                                  role="status"
-                                />
-                                Updating...
-                              </>
-                            ) : (
-                              'Update'
-                            )}
+                            Update
                           </CButton>
                         </>
                       ) : (
                         <div>
-                          {/* Edit Button */}
-
-                          {/* Delete Button */}
-                          <CButton color="danger " className="text-white" onClick={handleShow}>
-                            Delete
-                          </CButton>
-                          <CButton
-                            style={{ backgroundColor: 'var(--color-black)' }}
-                            className="text-white ms-2"
-                            onClick={handleEditToggle}
-                          >
+                          <CButton color="info" className="text-white" onClick={handleEditToggle}>
                             Edit
+                          </CButton>
+                          <CButton color="danger ms-2" className="text-white" onClick={handleShow}>
+                            Delete
                           </CButton>
                         </div>
                       )}
@@ -1836,19 +1694,7 @@ const DoctorDetailsPage = () => {
                       isVisible={showModal}
                       title="Delete Doctor"
                       message="Are you sure you want to delete this doctor? This action cannot be undone."
-                      confirmText={
-                        delloading ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-2 text-white"
-                              role="status"
-                            />
-                            Deleting...
-                          </>
-                        ) : (
-                          'Yes, Delete'
-                        )
-                      }
+                      confirmText="Yes, Delete"
                       cancelText="Cancel"
                       confirmColor="danger"
                       cancelColor="secondary"
@@ -1908,51 +1754,41 @@ const DoctorDetailsPage = () => {
                         {slotsForSelectedDate.map((slotObj, i) => {
                           const isSelected = selectedSlots.includes(slotObj.slot)
                           const isBooked = slotObj?.slotbooked
-                          const now = new Date()
-                          const slotTime = new Date(`${selectedDate} ${slotObj.slot}`)
-                          const today = format(now, 'yyyy-MM-dd') === selectedDate
 
-                          // ✅ Only allow future slots for current date, all slots for other days
-                          const isPastTime = !today || slotTime > now
                           return (
-                            isPastTime && (
-                              <div
-                                key={i}
-                                className={`slot-item text-center border rounded   ${
-                                  isBooked
-                                    ? 'bg-danger text-white' // booked = red
-                                    : isSelected
-                                      ? 'text-white'
-                                      : 'bg-light'
+                            <div
+                              key={i}
+                              className={`slot-item text-center border rounded   ${isBooked
+                                ? 'bg-danger text-white' // booked = red
+                                : isSelected
+                                  ? 'text-white'
+                                  : 'bg-light'
                                 }`}
-                                onClick={() => {
-                                  if (isBooked) return // ❌ Prevent click for booked slots
-                                  if (isSelected) {
-                                    setSelectedSlots((prev) =>
-                                      prev.filter((s) => s !== slotObj.slot),
-                                    )
-                                  } else {
-                                    setSelectedSlots((prev) => [...prev, slotObj.slot])
-                                  }
-                                }}
-                                style={{
-                                  padding: '10px 0',
-                                  borderRadius: '8px',
-                                  cursor: isBooked ? 'not-allowed' : 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  opacity: isBooked ? 0.7 : 1,
-                                  color: 'var(--color-black)',
-                                  backgroundColor: isBooked
-                                    ? 'red'
-                                    : isSelected
-                                      ? 'var(--color-black)'
-                                      : undefined,
-                                }}
-                                title={isBooked ? 'Booked' : 'Not Booked'}
-                              >
-                                {slotObj?.slot}
-                              </div>
-                            )
+                              onClick={() => {
+                                if (isBooked) return // ❌ Prevent click for booked slots
+                                if (isSelected) {
+                                  setSelectedSlots((prev) => prev.filter((s) => s !== slotObj.slot))
+                                } else {
+                                  setSelectedSlots((prev) => [...prev, slotObj.slot])
+                                }
+                              }}
+                              style={{
+                                padding: '10px 0',
+                                borderRadius: '8px',
+                                cursor: isBooked ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s ease',
+                                opacity: isBooked ? 0.7 : 1,
+                                color: 'var(--color-black)',
+                                backgroundColor: isBooked
+                                  ? 'red'
+                                  : isSelected
+                                    ? 'var(--color-black)'
+                                    : undefined,
+                              }}
+                              title={isBooked ? 'Booked' : 'Not Booked'}
+                            >
+                              {slotObj?.slot}
+                            </div>
                           )
                         })}
                       </div>
@@ -2241,7 +2077,7 @@ const DoctorDetailsPage = () => {
                 const handleClick = () => {
                   if (!slotObj.available) {
                     if (slotObj.reason) showCustomToast(`Cannot book: ${slotObj.reason}`, 'warning')
-                    else showCustomToast('This slot is unavailable', 'warning')
+                    else toast.info('This slot is unavailable', 'warning')
                     return
                   }
                   toggleSlot(slotObj.slot)
@@ -2291,6 +2127,8 @@ const DoctorDetailsPage = () => {
         visible={showDeleteConfirmModal}
         onClose={() => setShowDeleteConfirmModal(false)}
         alignment="center"
+        className="custom-modal"
+        backdrop="static"
       >
         <CModalHeader closeButton>
           <CModalTitle style={{ color: 'var(--color-black)' }}>Confirm Delete</CModalTitle>
@@ -2318,13 +2156,13 @@ const DoctorDetailsPage = () => {
           <CButton
             style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
             onClick={async () => {
-              const branchid = localStorage.getItem('branchId')
+              // const branchId = localStorage.getItem('branchId')
               try {
                 if (deleteMode === 'selected') {
                   // delete selected
                   for (const slot of selectedSlots) {
                     await http.delete(
-                      `/doctorId/${doctorData?.doctorId}/branchId/${branchid}/date/${selectedDate}/slot/${slot}`,
+                      `${BASE_URL}/doctorId/${doctorData?.doctorId}/branchId/${branchId}/date/${selectedDate}/slot/${slot}`,
                     )
                   }
                   showCustomToast(' Selected slots deleted successfully.', 'success')
@@ -2333,7 +2171,7 @@ const DoctorDetailsPage = () => {
                 } else if (deleteMode === 'all') {
                   // delete all for date
                   await http.delete(
-                    `/delete-by-date/${doctorData?.doctorId}/${branchid}/${selectedDate}`,
+                    `${BASE_URL}/delete-by-date/${doctorData?.doctorId}/${branchId}/${selectedDate}`,
                   )
                   showCustomToast(` All slots for ${selectedDate} deleted.`, 'success')
                   setSelectedSlots([])
@@ -2353,32 +2191,32 @@ const DoctorDetailsPage = () => {
       </CModal>
 
       <style>{`
-        .doctor-info {
-          display: flex;
-          gap: 40px;
-          flex-wrap: wrap;
-          margin-top: 20px;
-        }
-        .doctor-info > div {
-          flex: 1;
-          min-width: 250px;
-        }
-        .slot-btn {
-          padding: 10px 15px;
-          border-radius: 8px;
-          font-weight: 500;
-        }
-        @media (max-width: 768px) {
-          .doctor-info {
-            gap: 20px;
-          }
-        }
-          .navhover{
-          cursor:pointer;
-
-          }
-          
-      `}</style>
+           .doctor-info {
+             display: flex;
+             gap: 40px;
+             flex-wrap: wrap;
+             margin-top: 20px;
+           }
+           .doctor-info > div {
+             flex: 1;
+             min-width: 250px;
+           }
+           .slot-btn {
+             padding: 10px 15px;
+             border-radius: 8px;
+             font-weight: 500;
+           }
+           @media (max-width: 768px) {
+             .doctor-info {
+               gap: 20px;
+             }
+           }
+             .navhover{
+             cursor:pointer;
+   
+             }
+             
+         `}</style>
     </div>
   )
 }

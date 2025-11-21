@@ -85,24 +85,12 @@ const Carousels = () => {
               <CCarousel controls indicators>
                 <CCarouselItem>
                   <img className="d-block w-100" src={ReactImg} alt="slide 1" />
-                  <CCarouselCaption className="d-none d-md-block">
-                    <h5>React Slide</h5>
-                    <p>This is the React framework slide</p>
-                  </CCarouselCaption>
                 </CCarouselItem>
                 <CCarouselItem>
                   <img className="d-block w-100" src={AngularImg} alt="slide 2" />
-                  <CCarouselCaption className="d-none d-md-block">
-                    <h5>Angular Slide</h5>
-                    <p>This is the Angular framework slide</p>
-                  </CCarouselCaption>
                 </CCarouselItem>
                 <CCarouselItem>
                   <img className="d-block w-100" src={VueImg} alt="slide 3" />
-                  <CCarouselCaption className="d-none d-md-block">
-                    <h5>Vue Slide</h5>
-                    <p>This is the Vue framework slide</p>
-                  </CCarouselCaption>
                 </CCarouselItem>
               </CCarousel>
             </DocsExample>
@@ -124,7 +112,7 @@ const Carousels = () => {
               <code>.d-md-block</code>.
             </p>
             <DocsExample href="components/carousel/#with-captions">
-              <CCarousel controls indicators interval={3000}>
+              <CCarousel controls indicators>
                 <CCarouselItem>
                   <img className="d-block w-100" src={ReactImg} alt="slide 1" />
                   <CCarouselCaption className="d-none d-md-block">

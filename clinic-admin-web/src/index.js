@@ -6,23 +6,14 @@ import 'core-js'
 import App from './App'
 import './App.css'
 import store from './store'
-import { HospitalProvider } from './views/Usecontext/HospitalContext'
 import { GlobalSearchProvider } from './views/Usecontext/GlobalSearchContext'
+import { HospitalProvider } from './views/Usecontext/HospitalContext'   // ✅ add this import
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { attachInterceptors } from './Utils/Interceptors' // <-- interceptor file
+import { attachInterceptors } from './Utils/Interceptors'
 import './views/Style/toastify.css'
-import { NavigationProvider } from './views/Usecontext/NavigationProvider'
-import { BrowserRouter } from 'react-router-dom'
-import NGlowKartPatientRegistration_CoreUI from './views/NGK/CustomerRrgistration/CustomerRegistration'
-import PrizePostDetails from './views/NGK/CustomerRrgistration/PrizePostDetails'
-import OnboardSuccess from './views/NGK/CustomerRrgistration/OnboardSuccess'
+
 function Root() {
-  // attach interceptors once when app mounts
-  // useEffect(() => {
-  //   const detach = attachInterceptors(() => localStorage.getItem('token'))
-  //   return () => detach()
-  // }, [])
   useEffect(() => {
     const detach = attachInterceptors()
     return () => detach()
@@ -30,27 +21,20 @@ function Root() {
 
   return (
     <Provider store={store}>
-      <BrowserRouter>
-        <NavigationProvider>
-          <GlobalSearchProvider>
-            <HospitalProvider>
-              {/* ✅ Toast container globally */}
-              <ToastContainer
-                position="top-right"
-                limit={3}
-                theme="dark" // base dark theme
-                toastStyle={{
-                  backgroundColor: 'var(--color-black)',
-                  color: 'white',
-                }}
-              />
-              <App />
-              {/* <OnboardSuccess /> */}
-              {/* <NGlowKartPatientRegistration_CoreUI /> */}
-            </HospitalProvider>
-          </GlobalSearchProvider>
-        </NavigationProvider>
-      </BrowserRouter>
+      <HospitalProvider> {/* ✅ wrap the app inside HospitalProvider */}
+        <GlobalSearchProvider>
+          <App />
+          <ToastContainer
+            position="top-right"       // ✅ fixed typo (was top-rignt)
+            limit={3}
+            theme="dark"
+            toastStyle={{
+              backgroundColor: 'var(--color-black)',
+              color: 'white',
+            }}
+          />
+        </GlobalSearchProvider>
+      </HospitalProvider>
     </Provider>
   )
 }

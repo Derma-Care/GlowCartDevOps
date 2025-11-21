@@ -43,7 +43,6 @@ import {
 } from './providerAPIs'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { showCustomToast } from '../../Utils/Toaster'
 
 const PersonalViewDetails = () => {
   const { id } = useParams()
@@ -318,7 +317,7 @@ const PersonalViewDetails = () => {
         console.error('Mobile number (ID) is undefined or invalid')
       }
     } catch (error) {
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
       setError('Failed to update caregiver details.')
     } finally {
       setLoading(false)
@@ -384,7 +383,7 @@ const PersonalViewDetails = () => {
     const hasErrors = Object.values(errors).some((error) => error !== '')
 
     if (hasErrors) {
-      showCustomToast('Please correct validation errors before submitting.', { position: 'top-right' },'error')
+      toast.error('Please correct validation errors before submitting.', { position: 'top-right' })
       return
     }
 
@@ -413,7 +412,7 @@ const PersonalViewDetails = () => {
       fetchAllData(id)
     } catch (error) {
       console.error('Error updating Basic details:', error.response ? error.response.data : error)
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -504,7 +503,7 @@ const PersonalViewDetails = () => {
   const handleQualificationUpdateClick = async () => {
     const hasErrors = Object.values(QulErrors).some((error) => error !== '')
     if (hasErrors) {
-      showCustomToast('Please correct validation errors before submitting.', { position: 'top-right' },'error')
+      toast.error('Please correct validation errors before submitting.', { position: 'top-right' })
       return
     }
 
@@ -536,7 +535,7 @@ const PersonalViewDetails = () => {
       setEditQualificationMode(false)
       fetchAllData(id)
 
-      showCustomToast('Qualification details updated successfully!','success', {
+      toast.success('Qualification details updated successfully!', {
         position: 'top-right',
         autoClose: 3000,
       })
@@ -545,7 +544,7 @@ const PersonalViewDetails = () => {
         'Error updating Qualifications details:',
         error.response ? error.response.data : error,
       )
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -635,7 +634,7 @@ const PersonalViewDetails = () => {
   const handleUpdateExperience = async (index, id) => {
     const hasErrors = Object.values(expError).some((error) => error !== '')
     if (hasErrors) {
-     showCustomToast('Please correct validation errors before submitting.', { position: 'top-right' },'error')
+      toast.error('Please correct validation errors before submitting.', { position: 'top-right' })
       return
     }
 
@@ -686,12 +685,13 @@ const PersonalViewDetails = () => {
 
       fetchAllData(id) // Refresh data
 
-      showCustomToast('Experience details updated successfully!','showCustomToast', {
+      toast.success('Experience details updated successfully!', {
         position: 'top-right',
         autoClose: 3000,
       })
     } catch (error) {
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      console.error('Error updating experience data:', error.response?.data || error.message)
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -734,7 +734,7 @@ const PersonalViewDetails = () => {
         const updatedEditMode = editExperienceMode.filter((_, i) => i !== index)
         setEditExperienceMode(updatedEditMode)
 
-        showCustomToast('Experience details deleted successfully!','success', {
+        toast.success('Experience details deleted successfully!', {
           position: 'top-right',
           autoClose: 3000,
         })
@@ -744,7 +744,7 @@ const PersonalViewDetails = () => {
       }
     } catch (error) {
       console.error('Error removing experience:', error)
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -852,7 +852,7 @@ const PersonalViewDetails = () => {
     setErrors(validationErrors)
 
     if (Object.keys(validationErrors).length > 0) {
-      showCustomToast('Fill all the fields!', { position: 'top-right' },'error')
+      toast.error('Fill all the fields!', { position: 'top-right' })
       return
     }
 
@@ -889,7 +889,7 @@ const PersonalViewDetails = () => {
         })
 
         setIsAddingNewExperience(false)
-        showCustomToast('Experience Added successfully!','success', {
+        toast.success('Experience Added successfully!', {
           position: 'top-right',
           autoClose: 3000,
         })
@@ -906,7 +906,7 @@ const PersonalViewDetails = () => {
         await fetchAllData(id)
       }
     } catch (error) {
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
 
       if (error.response) {
         console.error('API response error:', error.response.data)
@@ -1019,18 +1019,18 @@ const PersonalViewDetails = () => {
       alert('Please fix the errors before submitting.');
       return;
     }
-  
+
     // Ensure course data exists before updating
     const courseData = editedCourse[index] || course[index];
-  
+
     if (!courseData) {
       console.error('No course data available for index:', index);
       alert('Course data is not available for update.');
       return;
     }
-  
+
     const courseFile = CourseFileName?.[index] || null;
-  
+
     // Validate course details and preserve existing data
     const updatedCourseList = [
       {
@@ -1039,52 +1039,52 @@ const PersonalViewDetails = () => {
         duration: courseData.duration || '',
         specialization: courseData.specialization || '',
         yearOfPassing: courseData.yearOfPassing || '',
-  
+
         uploadCourseCertificates: courseFile?.base64File
           ? [courseFile.base64File]
           : courseData.uploadCourseCertificates || null,
-  
+
         uploadCourseCertificateNames: courseFile?.name
           ? [courseFile.name]
           : courseData.uploadCourseCertificateNames || null,
-  
+
         uploadCourseCertificateTypes: courseFile?.type
           ? [courseFile.type]
           : courseData.uploadCourseCertificateTypes || null,
       },
     ];
-  
+
     // Ensure courseList is not empty before API call
     if (!updatedCourseList || updatedCourseList.length === 0) {
       console.error('Error: Course data is empty');
       alert('No course data available to update.');
       return;
     }
-  
+
     // Structure request data
     const CourseData = { courseList: updatedCourseList };
-  
+
     console.log('Course Data Before API Call:', JSON.stringify(CourseData, null, 2));
     console.log('Index:', index);
     console.log('Mobile Number:', id);
-  
+
     try {
       const updatedCourseResponse = await updateCourseData(id, index, CourseData);
-  
+
       if (updatedCourseResponse.success) {
         setCourse((prevCourses) => {
           const updatedCourses = [...prevCourses];
           updatedCourses[index] = CourseData.courseList[0];
           return updatedCourses;
         });
-  
+
         setEditCourseMode((prevModes) => {
           const updatedModes = [...prevModes];
           updatedModes[index] = false;
           return updatedModes;
         });
-  
-        showCustomToast('Course updated successfully!','success', {
+
+        toast.success('Course updated successfully!', {
           position: 'top-right',
           autoClose: 3000,
         });
@@ -1093,10 +1093,10 @@ const PersonalViewDetails = () => {
       }
     } catch (error) {
       console.error('Error updating course:', error.response?.data || error.message);
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   };
-  
+
 
   const handleCourseCancelClick = (index) => {
     const newEditCourseMode = [...editCourseMode]
@@ -1138,7 +1138,7 @@ const PersonalViewDetails = () => {
 
         const updatedEditMode = editCourseMode.filter((_, i) => i !== index)
         setEditCourseMode(updatedEditMode)
-        showCustomToast('Course details deleted successfully!', 'success',{
+        toast.success('Course details deleted successfully!', {
           position: 'top-right',
           autoClose: 3000,
         })
@@ -1147,7 +1147,7 @@ const PersonalViewDetails = () => {
       }
     } catch (error) {
       console.error('Error removing course:', error)
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -1205,7 +1205,7 @@ const PersonalViewDetails = () => {
     const validationErrors = validateNewCourseForm()
     setCourseError(validationErrors)
     if (Object.keys(validationErrors).length > 0) {
-      showCustomToast('Fill all the fields!', { position: 'top-right' },'error')
+      toast.error('Fill all the fields!', { position: 'top-right' })
       return
     }
 
@@ -1242,14 +1242,14 @@ const PersonalViewDetails = () => {
         })
 
         setIsAddingNewCourse(false)
-        showCustomToast('Course details added successfully!','success', {
+        toast.success('Course details added successfully!', {
           position: 'top-right',
           autoClose: 3000,
         })
         await fetchAllData(id)
       }
     } catch (error) {
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
 
       if (error.response) {
         console.error('API response error:', error.response.data)
@@ -1395,7 +1395,7 @@ const PersonalViewDetails = () => {
   const handleBankUpdateClick = async () => {
     const hasErrors = Object.values(bankError).some((error) => error !== '')
     if (hasErrors) {
-     showCustomToast('Please correct validation errors before submitting.', { position: 'top-right' },'error')
+      toast.error('Please correct validation errors before submitting.', { position: 'top-right' })
       return
     }
 
@@ -1416,13 +1416,13 @@ const PersonalViewDetails = () => {
 
       setEditBankMode(false)
       fetchAllData(id)
-     showCustomToast('Bank details updated successfully!','success', {
+      toast.success('Bank details updated successfully!', {
         position: 'top-right',
         autoClose: 3000,
       })
     } catch (error) {
       console.error('Error updating bank details:', error.response ? error.response.data : error)
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -1487,7 +1487,7 @@ const PersonalViewDetails = () => {
       }))
 
       await fetchAllData(id)
-      showCustomToast('Verification details updated successfully!','success', {
+      toast.success('Verification details updated successfully!', {
         position: 'top-right',
         autoClose: 3000,
       })
@@ -1497,7 +1497,7 @@ const PersonalViewDetails = () => {
         'Error updating Verification details:',
         error.response ? error.response.data : error,
       )
-      showCustomToast(error.message, { position: 'top-right' },'error')
+      toast.error(error.message, { position: 'top-right' })
     }
   }
 
@@ -1589,12 +1589,12 @@ const PersonalViewDetails = () => {
               <strong>Services Added : </strong>{' '}
               {appointment.servicesAdded && appointment.servicesAdded.length > 0
                 ? appointment.servicesAdded.map((service, serviceIndex) => (
-                    <div key={`service-${serviceIndex}`}>
-                      <span>
-                        {service.serviceName} - ${service.price}
-                      </span>
-                    </div>
-                  ))
+                  <div key={`service-${serviceIndex}`}>
+                    <span>
+                      {service.serviceName} - ${service.price}
+                    </span>
+                  </div>
+                ))
                 : 'NA'}
             </div>
             <div>
@@ -1746,7 +1746,8 @@ const PersonalViewDetails = () => {
 
   return (
     <div>
-      <CModal visible={!!previewUrl} onClose={() => setPreviewUrl(null)}>
+      <CModal visible={!!previewUrl} onClose={() => setPreviewUrl(null)}  className="custom-modal"
+        backdrop="static">
         <CModalHeader>
           <CModalTitle>Preview Certificate </CModalTitle>
         </CModalHeader>
@@ -1775,14 +1776,21 @@ const PersonalViewDetails = () => {
                   >
                     Basic Details
                   </CNavLink>
+                  <CNavLink
+                    href="#"
+                    active={activeTab === 'basic'}
+                    onClick={() => handleTabClick('basic')}
+                  >
+                    Additional Details
+                  </CNavLink>
                 </CNavItem>
                 <CNavItem>
                   <CNavLink
                     href="#"
-                    active={activeTab === 'address'}
-                    onClick={() => handleTabClick('address')}
+                    active={activeTab === 'doctorsDetails'}
+                    onClick={() => handleTabClick('doctorsDetails')}
                   >
-                    Address
+                    Doctor's Details
                   </CNavLink>
                 </CNavItem>
                 <CNavItem>
@@ -1835,54 +1843,71 @@ const PersonalViewDetails = () => {
                           gap: '20px',
                         }}
                       >
+                        {/* Clinic ID (Read-only) */}
                         <div>
-                          <strong>Full Name : </strong>
+                          <strong>Clinic ID : </strong>
+                          {Basic.clinicId || 'NA'}
+                        </div>
+
+                        {/* Clinic Name */}
+                        <div>
+                          <strong>Clinic Name {editBasicMode && <span style={{ color: 'red' }}>*</span>} : </strong>
                           {editBasicMode ? (
                             <CFormInput
-                              name="fullName"
-                              value={editBasic.fullName || ''}
+                              name="clinicName"
+                              value={editBasic.clinicName || ''}
                               onChange={handleEditBasic}
                             />
                           ) : (
-                            Basic.fullName || 'NA'
+                            Basic.clinicName || 'NA'
                           )}
                         </div>
 
+                        {/* Email */}
                         <div>
-                          <strong>DOB: </strong>
+                          <strong>Email {editBasicMode && <span style={{ color: 'red' }}>*</span>} : </strong>
                           {editBasicMode ? (
                             <CFormInput
-                              type="date"
-                              name="dob"
-                              value={editBasic.dob ? formatDateForStorage(editBasic.dob) : ''}
-                              onChange={(e) => {
-                                const formattedDate = formatDateForDisplay(e.target.value)
-                                handleEditBasic({ target: { name: 'dob', value: formattedDate } })
-                              }}
+                              type="email"
+                              name="email"
+                              value={editBasic.email || ''}
+                              onChange={handleEditBasic}
                             />
-                          ) : Basic.dob ? (
-                            formatDateForDisplay(Basic.dob)
                           ) : (
-                            'NA'
+                            Basic.email || 'NA'
                           )}
                         </div>
 
+                        {/* Contact Number */}
                         <div>
-                          <strong>Gender: </strong>
+                          <strong>Contact Number {editBasicMode && <span style={{ color: 'red' }}>*</span>} : </strong>
                           {editBasicMode ? (
-                            <CFormSelect
-                              name="gender"
-                              value={editBasic.gender || ''}
+                            <CFormInput
+                              type="tel"
+                              name="contactNumber"
+                              value={editBasic.contactNumber || ''}
                               onChange={handleEditBasic}
-                            >
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                            </CFormSelect>
+                            />
                           ) : (
-                            Basic?.gender || 'NA'
+                            Basic.contactNumber || 'NA'
+                          )}
+                        </div>
+
+                        {/* Location */}
+                        <div>
+                          <strong>Location {editBasicMode && <span style={{ color: 'red' }}>*</span>} : </strong>
+                          {editBasicMode ? (
+                            <CFormInput
+                              name="location"
+                              value={editBasic.location || ''}
+                              onChange={handleEditBasic}
+                            />
+                          ) : (
+                            Basic.location || 'NA'
                           )}
                         </div>
                       </div>
+
                     </>
                   ) : (
                     <div
@@ -1900,1524 +1925,93 @@ const PersonalViewDetails = () => {
                 </CAccordionBody>
               </CAccordionItem>
 
-              <CAccordionItem itemKey={2}>
-                <CAccordionHeader>
-                  <span>Basic Information</span>
-                </CAccordionHeader>
-                <CAccordionBody>
-                  <div className="mt-3">
-                    {editMode ? (
-                      <>
-                        <CButton color="primary" onClick={handleUpdateClick}>
-                          Update
-                        </CButton>
-                        <CButton
-                          color="warning"
-                          style={{ marginLeft: '10px', color: 'white', marginLeft: '75%' }}
-                          onClick={handleCancelClick}
-                        >
-                          Cancel
-                        </CButton>
-                      </>
-                    ) : (
-                      <CButton color="secondary" onClick={handleEditClick}>
-                        Edit
-                      </CButton>
-                    )}
-                  </div>
-
-                  <div
-                    className="personal-details-grid mt-3"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: '20px',
-                    }}
-                  >
-                    <div>
-                      <strong>Father Name : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="fatherName"
-                          value={editedPersonal.fatherName || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.fatherName || 'NA'
-                      )}
-                      {errors && <span style={{ color: 'red' }}>{errors.fatherName}</span>}
-                    </div>
-
-                    <div>
-                      <strong>Aadhaar Card Number : </strong>
-                      {editMode ? (
-                        <>
-                          <CFormInput
-                            name="aadhaarCardNumber"
-                            value={editedPersonal.aadhaarCardNumber || ''}
-                            onChange={handleInputChange}
-                          />
-                          {errors && (
-                            <span style={{ color: 'red' }}>{errors.aadhaarCardNumber}</span>
-                          )}
-                        </>
-                      ) : (
-                        Personal?.aadhaarCardNumber || 'NA'
-                      )}
-                    </div>
-
-                    <div>
-                      <strong>Language : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="languages"
-                          value={editedPersonal.languages || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.languages || 'NA'
-                      )}
-                    </div>
-
-                    {/* Field for Email */}
-                    <div>
-                      <strong>Email : </strong>
-                      {editMode ? (
-                        <>
-                          <CFormInput
-                            name="emailId"
-                            value={editedPersonal.emailId || ''}
-                            onChange={handleInputChange}
-                          />
-                          {errors && <span style={{ color: 'red' }}>{errors.emailId}</span>}
-                        </>
-                      ) : (
-                        Personal?.emailId || 'NA'
-                      )}
-                    </div>
-
-                    {/* Field for Address Line 1 */}
-                    <div>
-                      <strong>Address Line 1 : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="addressLine1"
-                          value={editedPersonal.addressLine1 || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.addressLine1 || 'NA'
-                      )}
-                    </div>
-
-                    {/* Field for Address Line 2 */}
-                    <div>
-                      <strong>Address Line 2 : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="addressLine2"
-                          value={editedPersonal.addressLine2 || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.addressLine2 || 'NA'
-                      )}
-                    </div>
-
-                    {/* Field for Street */}
-                    <div>
-                      <strong>Street : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="street"
-                          value={editedPersonal.street || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.street || 'NA'
-                      )}
-                    </div>
-
-                    {/* Field for City */}
-                    <div>
-                      <strong>City : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="city"
-                          value={editedPersonal.city || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.city || 'NA'
-                      )}
-                      {errors && <span style={{ color: 'red' }}>{errors.city}</span>}
-                    </div>
-
-                    {/* Field for State */}
-                    <div>
-                      <strong>State : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="state"
-                          value={editedPersonal.state || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.state || 'NA'
-                      )}
-                      {errors && <span style={{ color: 'red' }}>{errors.state}</span>}
-                    </div>
-
-                    {/* Field for PinCode */}
-                    <div>
-                      <strong>Pin Code : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="pinCode"
-                          value={editedPersonal.pinCode || ''}
-                          onChange={handleInputChange}
-                        />
-                      ) : (
-                        Personal?.pinCode || 'NA'
-                      )}
-                      {errors && <span style={{ color: 'red' }}>{errors.pinCode}</span>}
-                    </div>
-                    <div>
-                      <strong>Upload Aadhaar Card Name : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="uploadAadharCardName"
-                          value={uploadedFile?.name || ''}
-                          disabled
-                        />
-                      ) : (
-                        Personal?.uploadAadharCardName || 'NA'
-                      )}
-                    </div>
-
-                    <div>
-                      <strong>Aadhaar Card Type : </strong>
-                      {editMode ? (
-                        <CFormInput
-                          name="uploadAadharCardType"
-                          value={uploadedFile?.type || ''}
-                          disabled
-                        />
-                      ) : (
-                        Personal?.uploadAadharCardType || 'NA'
-                      )}
-                    </div>
-
-                    {editMode && (
-                      <div style={{ gridColumn: 'span 3' }}>
-                        <strong>Upload Aadhaar Card : </strong>
-                        <CFormInput
-                          type="file"
-                          name="certificationFile"
-                          accept=".pdf, .doc, .docx"
-                          onChange={handleFileChange}
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <strong>Aadhaar Card : </strong>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          marginTop: '10px',
-                        }}
-                      >
-                        <CButton color="secondary" onClick={preview}>
-                          Preview
-                        </CButton>
-
-                        <CButton color="info" onClick={download}>
-                          Download
-                        </CButton>
-                      </div>
-                    </div>
-                  </div>
-                </CAccordionBody>
-              </CAccordionItem>
-
-              <CAccordionItem itemKey={3}>
-                <CAccordionHeader>
-                  <span>Qualification Details</span>
-                </CAccordionHeader>
-                <CAccordionBody>
-                  <div className="mt-3">
-                    {editQualificationMode ? (
-                      <>
-                        <CButton color="primary" onClick={handleQualificationUpdateClick}>
-                          Update
-                        </CButton>
-                        <CButton
-                          color="warning"
-                          style={{ marginLeft: '80%', color: 'white' }}
-                          onClick={handleQualificationCancelClick}
-                        >
-                          Cancel
-                        </CButton>
-                      </>
-                    ) : (
-                      <CButton color="secondary" onClick={handleQualificationEditClick}>
-                        Edit
-                      </CButton>
-                    )}
-                  </div>
-
-                  <div
-                    className="qualification-details-grid mt-4"
-                    style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}
-                  >
-                    <div style={{ flex: '1 1 30%' }}>
-                      <strong>Institution : </strong>
-                      {editQualificationMode ? (
-                        <>
-                          <CFormInput
-                            name="institution"
-                            value={editedQualification?.institution || ''}
-                            onChange={(e) => handleQualificationInputChange(undefined, e)}
-                          />
-                          {QulErrors.institution && (
-                            <span style={{ color: 'red' }}>{QulErrors.institution}</span>
-                          )}
-                        </>
-                      ) : (
-                        Qualification?.institution || 'NA'
-                      )}
-                    </div>
-
-                    {/* Highest Qualification Field */}
-                    <div style={{ flex: '1 1 30%' }}>
-                      <strong>Highest Qualification : </strong>
-                      {editQualificationMode ? (
-                        <>
-                          <CFormInput
-                            name="highestQualification"
-                            value={editedQualification?.highestQualification || ''}
-                            onChange={(e) => handleQualificationInputChange(undefined, e)}
-                          />
-                          {QulErrors.highestQualification && (
-                            <span style={{ color: 'red' }}>{QulErrors.highestQualification}</span>
-                          )}
-                        </>
-                      ) : (
-                        Qualification?.highestQualification || 'NA'
-                      )}
-                    </div>
-
-                    {/* Specialization Field */}
-                    <div style={{ flex: '1 1 30%' }}>
-                      <strong>Specialization : </strong>
-                      {editQualificationMode ? (
-                        <>
-                          <CFormInput
-                            name="specialization"
-                            value={editedQualification?.specialization || ''}
-                            onChange={(e) => handleQualificationInputChange(undefined, e)}
-                          />
-                          {QulErrors.specialization && (
-                            <span style={{ color: 'red' }}>{QulErrors.specialization}</span>
-                          )}
-                        </>
-                      ) : (
-                        Qualification?.specialization || 'NA'
-                      )}
-                    </div>
-
-                    <div style={{ flex: '1 1 30%' }}>
-                      <strong>Year of Passing : </strong>
-                      {editQualificationMode ? (
-                        <>
-                          <CFormSelect
-                            name="yearOfPassing"
-                            value={editedQualification?.yearOfPassing || ''}
-                            onChange={(e) => handleQualificationInputChange(undefined, e)}
-                          >
-                            <option value="">Select Year</option>
-                            {[...Array(new Date().getFullYear() - 1969).keys()].map((i) => {
-                              const year = new Date().getFullYear() - i
-                              return (
-                                <option key={year} value={year}>
-                                  {year}
-                                </option>
-                              )
-                            })}
-                          </CFormSelect>
-                          {QulErrors.yearOfPassing && (
-                            <span style={{ color: 'red' }}>{QulErrors.yearOfPassing}</span>
-                          )}
-                        </>
-                      ) : (
-                        Qualification?.yearOfPassing || 'NA'
-                      )}
-                    </div>
-
-                    <div style={{ flex: '1 1 30%' }}>
-                      <strong>Certification Name : </strong>
-                      {editQualificationMode ? (
-                        <CFormInput
-                          name="uploadQualificationCertificateNames"
-                          value={Qualification?.uploadQualificationCertificateNames?.[0] || ''}
-                          disabled
-                        />
-                      ) : (
-                        Qualification?.uploadQualificationCertificateNames?.[0] || 'NA'
-                      )}
-                    </div>
-
-                    <div style={{ flex: '1 1 30%' }}>
-                      <strong>Certification Type : </strong>
-                      {editQualificationMode ? (
-                        <CFormInput
-                          name="uploadQualificationCertificateTypes"
-                          value={Qualification?.uploadQualificationCertificateTypes?.[0] || ''}
-                          disabled
-                        />
-                      ) : (
-                        Qualification?.uploadQualificationCertificateTypes?.[0] || 'NA'
-                      )}
-                    </div>
-                    <div style={{ gridColumn: 'span 3' }}>
-                      <strong>Uploaded Certificates : </strong>
-                      <div>
-                        {Qualification?.uploadQualificationCertificateNames?.map(
-                          (fileName, index) => (
-                            <div
-                              key={index}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: '10px',
-                              }}
-                            >
-                              <div style={{ display: 'flex', gap: '10px' }}>
-                                {/* Download Button */}
-                                <CButton
-                                  color="info"
-                                  onClick={() =>
-                                    handleDownload(
-                                      Qualification?.uploadQualificationCertificates[index],
-                                    )
-                                  }
-                                >
-                                  Download
-                                </CButton>
-
-                                {/* Preview Button */}
-                                <CButton
-                                  color="secondary"
-                                  onClick={() => {
-                                    {
-                                      handlePreview(
-                                        Qualification?.uploadQualificationCertificates[index],
-                                        Qualification?.uploadQualificationCertificateTypes[index],
-                                      )
-                                    }
-                                  }}
-                                >
-                                  Preview
-                                </CButton>
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ flex: '1 1 30%' }}>
-                      {editQualificationMode && (
-                        <p>
-                          <strong>Upload Certification: </strong>
-                          <CFormInput
-                            type="file"
-                            name="certificationFile"
-                            accept=".pdf, .doc, .docx"
-                            onChange={handleQulFileChange}
-                          />
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </CAccordionBody>
-              </CAccordionItem>
-
-              <CAccordionItem itemKey={4}>
-                <CAccordionHeader>
-                  <span>Experience Details</span>
-                </CAccordionHeader>
-                <CAccordionBody>
-                  <div style={{ float: 'right' }}>
-                    <CButton color="success" onClick={addNewExperience}>
-                      + Add Experience
-                    </CButton>
-                  </div>
-                  <div style={{ marginTop: '50px' }}>
-                    {isAddingNewExperience && (
-                      <CCard style={{ marginBottom: '1rem' }}>
-                        <CCardBody>
-                          <div
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(3, 1fr)',
-                              gap: '1rem',
-                              marginTop: '1rem',
-                            }}
-                          >
-                            <div
-                              style={{
-                                gridColumn: 'span 3',
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                              }}
-                            >
-                              <CButton
-                                color="warning"
-                                style={{ marginRight: '10px' }}
-                                onClick={handleCancelAddExperience}
-                              >
-                                Cancel
-                              </CButton>
-                              <CButton color="primary" onClick={handleSaveNewExperience}>
-                                Save
-                              </CButton>
-                            </div>
-
-                            {/* Experience Fields */}
-                            <div>
-                              <strong>Job Title Role : </strong>
-                              <CFormInput
-                                type="text"
-                                name="jobTitleRole"
-                                value={newExperience.jobTitleRole}
-                                onChange={handleExperienceInputChanges}
-                              />
-                              {errors.jobTitleRole && (
-                                <div style={{ color: 'red' }}>{errors.jobTitleRole}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Organization Name : </strong>
-                              <CFormInput
-                                type="text"
-                                name="organizationName"
-                                value={newExperience.organizationName}
-                                onChange={handleExperienceInputChanges}
-                              />
-                              {errors.organizationName && (
-                                <div style={{ color: 'red' }}>{errors.organizationName}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Years of Experience : </strong>
-                              <CFormInput
-                                type="text"
-                                name="yearsOfExperience"
-                                value={newExperience.yearsOfExperience}
-                                onChange={handleExperienceInputChanges}
-                              />
-                              {errors.yearsOfExperience && (
-                                <div style={{ color: 'red' }}>{errors.yearsOfExperience}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Start Date : </strong>
-                              <CFormInput
-                                type="date"
-                                name="startDate"
-                                value={newExperience.startDate}
-                                onChange={handleDateChange}
-                              />
-                              {errors.startDate && (
-                                <div style={{ color: 'red' }}>{errors.startDate}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>End Date : </strong>
-                              <CFormInput
-                                type="date"
-                                name="endDate"
-                                value={newExperience.endDate}
-                                onChange={handleDateChange}
-                              />
-                              {errors.endDate && (
-                                <div style={{ color: 'red' }}>{errors.endDate}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Experience Certification:</strong>
-                              <CFormInput type="file" onChange={handleNewExpFileChange} />
-                            </div>
-
-                            <div>
-                              <strong>Certification Name : </strong>
-                              <CFormInput
-                                type="text"
-                                name="uploadExperienceCertificateNames"
-                                value={newExperience.uploadExperienceCertificateNames || ''}
-                                disabled
-                              />
-                            </div>
-
-                            <div>
-                              <strong>Certification Type : </strong>
-                              <CFormInput
-                                type="text"
-                                name="uploadExperienceCertificateTypes"
-                                value={newExperience.uploadExperienceCertificateTypes || ''}
-                                disabled
-                              />
-                            </div>
-                          </div>
-                        </CCardBody>
-                      </CCard>
-                    )}
-                  </div>
-
-                  {Array.isArray(experience) && experience.length > 0 ? (
-                    experience.map((exp, index) => (
-                      <CCard key={index} style={{ marginBottom: '1rem' }}>
-                        <CCardBody>
-                          <div
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 1fr 1fr',
-                              gap: '15px',
-                              marginBottom: '10px',
-                            }}
-                          >
-                            {/* Edit & Action Buttons */}
-                            {!editExperienceMode[index] && (
-                              <div style={{ gridColumn: 'span 3', marginBottom: '10px' }}>
-                                <CButton
-                                  color="secondary"
-                                  onClick={() => handleExperienceEditClick(index)}
-                                >
-                                  Edit
-                                </CButton>
-                              </div>
-                            )}
-
-                            {editExperienceMode[index] && (
-                              <div
-                                style={{
-                                  gridColumn: 'span 3',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  marginTop: '10px',
-                                }}
-                              >
-                                <CButton
-                                  color="primary"
-                                  onClick={() => handleUpdateExperience(index, id)}
-                                >
-                                  Update
-                                </CButton>
-                                <CButton
-                                  color="warning"
-                                  style={{ color: 'white' }}
-                                  onClick={() => handleExperienceCancelClick(index)}
-                                >
-                                  Cancel
-                                </CButton>
-                              </div>
-                            )}
-
-                            {/* Experience Fields */}
-                            <div>
-                              <strong>Job Title: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  name="jobTitleRole"
-                                  value={editedExperience[index]?.jobTitleRole || ''}
-                                  onChange={(e) => handleExperienceInputChange(index, e)}
-                                />
-                              ) : (
-                                exp.jobTitleRole || 'NA'
-                              )}
-                              <span style={{ color: 'red' }}>{expError.jobTitleRole}</span>
-                            </div>
-
-                            <div>
-                              <strong>Organization Name: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  name="organizationName"
-                                  value={editedExperience[index]?.organizationName || ''}
-                                  onChange={(e) => handleExperienceInputChange(index, e)}
-                                />
-                              ) : (
-                                exp.organizationName || 'NA'
-                              )}
-                              <span style={{ color: 'red' }}>{expError.organizationName}</span>
-                            </div>
-
-                            <div>
-                              <strong>Years of Experience: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  name="yearsOfExperience"
-                                  value={editedExperience[index]?.yearsOfExperience || ''}
-                                  onChange={(e) => handleExperienceInputChange(index, e)}
-                                />
-                              ) : (
-                                exp.yearsOfExperience || 'NA'
-                              )}
-                              <span style={{ color: 'red' }}>{expError.yearsOfExperience}</span>
-                            </div>
-
-                            {/* Start Date Field */}
-                            <div>
-                              <strong>Start Date: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  type="date"
-                                  name="startDate"
-                                  value={
-                                    editedExperience[index]?.startDate
-                                      ? formatDateForStorage(editedExperience[index].startDate)
-                                      : ''
-                                  }
-                                  onChange={(e) =>
-                                    handleExperienceInputChange(index, {
-                                      target: {
-                                        name: e.target.name,
-                                        value: formatDateForDisplay(e.target.value),
-                                      },
-                                    })
-                                  }
-                                />
-                              ) : (
-                                formatDateForDisplay(exp.startDate) || 'NA'
-                              )}
-                            </div>
-
-                            {/* End Date Field */}
-                            <div>
-                              <strong>End Date: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  type="date"
-                                  name="endDate"
-                                  value={
-                                    editedExperience[index]?.endDate
-                                      ? formatDateForStorage(editedExperience[index].endDate)
-                                      : ''
-                                  }
-                                  onChange={(e) =>
-                                    handleExperienceInputChange(index, {
-                                      target: {
-                                        name: e.target.name,
-                                        value: formatDateForDisplay(e.target.value),
-                                      },
-                                    })
-                                  }
-                                />
-                              ) : (
-                                formatDateForDisplay(exp.endDate) || 'NA'
-                              )}
-                            </div>
-
-                            {/* Experience Certification Fields */}
-                            <div>
-                              <strong>Certification Name: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  name="uploadExperienceCertificateNames"
-                                  value={
-                                    uploadedFile?.[index]?.name ||
-                                    exp?.uploadExperienceCertificateNames ||
-                                    ''
-                                  }
-                                  disabled
-                                />
-                              ) : (
-                                exp?.uploadExperienceCertificateNames || 'NA'
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Certification Type: </strong>
-                              {editExperienceMode[index] ? (
-                                <CFormInput
-                                  name="uploadExperienceCertificateTypes"
-                                  value={
-                                    uploadedFile?.[index]?.type ||
-                                    exp?.uploadExperienceCertificateTypes ||
-                                    ''
-                                  }
-                                  disabled
-                                />
-                              ) : (
-                                exp?.uploadExperienceCertificateTypes || 'NA'
-                              )}
-                            </div>
-
-                            {/* Upload Certification */}
-                            <div style={{ flex: '1 1 30%' }}>
-                              {editExperienceMode[index] && (
-                                <p>
-                                  <strong>Upload Certification: </strong>
-                                  <CFormInput
-                                    type="file"
-                                    name="experienceCertificate"
-                                    accept=".pdf, .doc, .docx"
-                                    onChange={(e) => handleExpFileChange(e, index)}
-                                  />
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Experience Certificates List */}
-                            <div style={{ gridColumn: 'span 3', marginTop: '10px' }}>
-                              <h6>Experience Certificates:</h6>
-                              {exp?.uploadExperienceCertificateNames?.map((fileName, certIndex) => (
-                                <div
-                                  key={certIndex}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginBottom: '10px',
-                                  }}
-                                >
-                                  <div style={{ display: 'flex', gap: '10px' }}>
-                                    {/* Download Button */}
-                                    <CButton
-                                      color="info"
-                                      onClick={() =>
-                                        handleDownload(
-                                          exp?.uploadExperienceCertificates[certIndex],
-                                          fileName,
-                                        )
-                                      }
-                                    >
-                                      Download
-                                    </CButton>
-
-                                    {/* Preview Button */}
-                                    <CButton
-                                      color="secondary"
-                                      onClick={() =>
-                                        handlePreview(exp?.uploadExperienceCertificates[certIndex])
-                                      }
-                                    >
-                                      Preview
-                                    </CButton>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Remove Experience Button */}
-                            <div style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
-                              <CButton
-                                color="danger"
-                                style={{ marginLeft: '10px' }}
-                                onClick={() => removeExperience(index)}
-                              >
-                                Remove
-                              </CButton>
-                            </div>
-                          </div>
-                        </CCardBody>
-                      </CCard>
-                    ))
-                  ) : (
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        padding: '1rem',
-                        fontSize: '1.2rem',
-                        color: 'gray',
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      {experience && !Array.isArray(experience)
-                        ? 'No Experience Added'
-                        : 'No experience data available.'}
-                    </div>
-                  )}
-                </CAccordionBody>
-              </CAccordionItem>
-
-              <CAccordionItem itemKey={5}>
-                <CAccordionHeader>
-                  <span>Course Certification</span>
-                </CAccordionHeader>
-                <CAccordionBody>
-                  <div style={{ float: 'right' }}>
-                    <CButton color="success" onClick={addNewCourse}>
-                      + Add Course
-                    </CButton>
-                  </div>
-                  <div style={{ marginTop: '50px' }}>
-                    {isAddingNewCourse && (
-                      <CCard style={{ marginBottom: '1rem' }}>
-                        <CCardBody>
-                          <div
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(3, 1fr)',
-                              gap: '1rem',
-                              marginTop: '1rem',
-                            }}
-                          >
-                            <div
-                              style={{
-                                gridColumn: 'span 3',
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                              }}
-                            >
-                              <CButton
-                                color="warning"
-                                style={{ marginRight: '10px' }}
-                                onClick={handleCancelAddCourse}
-                              >
-                                Cancel
-                              </CButton>
-                              <CButton color="primary" onClick={handleSaveNewCourse}>
-                                Save
-                              </CButton>
-                            </div>
-
-                            <div>
-                              <strong>Course Certification : </strong>
-                              <CFormInput
-                                type="text"
-                                name="courseCertification"
-                                value={newCourse.courseCertification}
-                                onChange={handleCourseInputChanges}
-                              />
-                              {NewCourseErrors.courseCertification && (
-                                <div style={{ color: 'red' }}>
-                                  {NewCourseErrors.courseCertification}
-                                </div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Institution : </strong>
-                              <CFormInput
-                                type="text"
-                                name="institution"
-                                value={newCourse.institution}
-                                onChange={handleCourseInputChanges}
-                              />
-                              {NewCourseErrors.institution && (
-                                <div style={{ color: 'red' }}>{NewCourseErrors.institution}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Duration : </strong>
-                              <CFormInput
-                                type="text"
-                                name="duration"
-                                value={newCourse.duration}
-                                onChange={handleCourseInputChanges}
-                              />
-                              {NewCourseErrors.duration && (
-                                <div style={{ color: 'red' }}>{NewCourseErrors.duration}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Specialization : </strong>
-                              <CFormInput
-                                type="text"
-                                name="specialization"
-                                value={newCourse.specialization}
-                                onChange={handleCourseInputChanges}
-                              />
-                              {NewCourseErrors.specialization && (
-                                <div style={{ color: 'red' }}>{NewCourseErrors.specialization}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Year of Passing: </strong>
-                              <CFormSelect
-                                name="yearOfPassing"
-                                value={newCourse.yearOfPassing || ''}
-                                onChange={handleCourseInputChanges}
-                              >
-                                <option value="">Select Year</option>
-                                {Array.from({ length: 50 }, (_, i) => {
-                                  const year = new Date().getFullYear() - i
-                                  return (
-                                    <option key={year} value={year}>
-                                      {year}
-                                    </option>
-                                  )
-                                })}
-                              </CFormSelect>
-
-                              {NewCourseErrors.yearOfPassing && (
-                                <div style={{ color: 'red' }}>{NewCourseErrors.yearOfPassing}</div>
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Course Certification : </strong>
-                              <CFormInput type="file" onChange={handleCourseFileChange} />
-                            </div>
-                            <div>
-                              <strong>Certification Name : </strong>
-                              <CFormInput
-                                type="text"
-                                name="uploadCourseCertificateNames"
-                                value={newCourse.uploadCourseCertificateNames}
-                                disabled
-                              />
-                            </div>
-                            <div>
-                              <strong>certificate type : </strong>
-                              <CFormInput
-                                type="text"
-                                name="uploadCourseCertificateTypes"
-                                value={newCourse.uploadCourseCertificateTypes}
-                                disabled
-                              />
-                            </div>
-                          </div>
-                        </CCardBody>
-                      </CCard>
-                    )}
-                  </div>
-                  {Array.isArray(course) && course.length > 0 ? (
-                    course.map((courses, index) => (
-                      <CCard key={index} style={{ marginBottom: '1rem' }}>
-                        <CCardBody>
-                          <div
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 1fr 1fr',
-                              gap: '15px',
-                              marginBottom: '10px',
-                            }}
-                          >
-                            {!editCourseMode[index] && (
-                              <div style={{ gridColumn: 'span 3', marginBottom: '10px' }}>
-                                <CButton
-                                  color="secondary"
-                                  onClick={() => handleCourseEditClick(index)}
-                                >
-                                  Edit
-                                </CButton>
-                              </div>
-                            )}
-
-                            {editCourseMode[index] && (
-                              <div
-                                style={{
-                                  gridColumn: 'span 3',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  marginTop: '10px',
-                                }}
-                              >
-                                <CButton color="primary" onClick={() => handleUpdateCourse(index)}>
-                                  Update
-                                </CButton>
-                                <CButton
-                                  color="warning"
-                                  style={{ color: 'white' }}
-                                  onClick={() => handleCourseCancelClick(index)}
-                                >
-                                  Cancel
-                                </CButton>
-                              </div>
-                            )}
-
-                            {/* Fields */}
-                            <div>
-                              <strong>Job Title : </strong>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  name="courseCertification"
-                                  value={editedCourse[index]?.courseCertification || ''}
-                                  onChange={(e) => handleCourseInputChange(index, e)}
-                                />
-                              ) : (
-                                courses.courseCertification || 'NA'
-                              )}
-                              <span style={{ color: 'red' }}>{expError.jobTitleRole}</span>
-                            </div>
-
-                            <div>
-                              <strong>Institution Name : </strong>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  name="institution"
-                                  value={editedCourse[index]?.institution || ''}
-                                  onChange={(e) => handleCourseInputChange(index, e)}
-                                />
-                              ) : (
-                                courses.institution || 'NA'
-                              )}
-                              <span style={{ color: 'red' }}>{expError.organizationName}</span>
-                            </div>
-
-                            <div>
-                              <strong>Duration : </strong>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  name="duration"
-                                  value={editedCourse[index]?.duration || ''}
-                                  onChange={(e) => handleCourseInputChange(index, e)}
-                                />
-                              ) : (
-                                courses.duration || 'NA'
-                              )}
-                              <span style={{ color: 'red' }}>{expError.yearsOfExperience}</span>
-                            </div>
-
-                            <div>
-                              <strong>Specialization : </strong>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  name="specialization"
-                                  value={editedCourse[index]?.specialization || ''}
-                                  onChange={(e) => handleCourseInputChange(index, e)}
-                                />
-                              ) : (
-                                courses.specialization || 'NA'
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Year of Passing : </strong>
-                              {editCourseMode[index] ? (
-                                <CFormSelect
-                                  name="yearOfPassing"
-                                  value={editedCourse[index]?.yearOfPassing || ''}
-                                  onChange={(e) => handleCourseInputChange(index, e)}
-                                >
-                                  <option value="">Select Year</option>
-                                  {Array.from({ length: 50 }, (_, i) => {
-                                    const year = new Date().getFullYear() - i
-                                    return (
-                                      <option key={year} value={year}>
-                                        {year}
-                                      </option>
-                                    )
-                                  })}
-                                </CFormSelect>
-                              ) : (
-                                courses.yearOfPassing || 'NA'
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Certification Name:</strong>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  name="uploadCourseCertificateNames"
-                                  value={
-                                    CourseFileName?.[index]?.name ||
-                                    courses?.uploadCourseCertificateNames ||
-                                    ''
-                                  }
-                                  disabled
-                                />
-                              ) : (
-                                courses.uploadCourseCertificateNames || 'NA'
-                              )}
-                            </div>
-
-                            <div>
-                              <strong>Certificate Type:</strong>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  name="uploadCourseCertificateTypes"
-                                  value={
-                                    CourseFileName?.[index]?.type ||
-                                    courses?.uploadCourseCertificateTypes ||
-                                    ''
-                                  }
-                                  disabled
-                                />
-                              ) : (
-                                courses.uploadCourseCertificateTypes || 'NA'
-                              )}
-                            </div>
-
-                            <div>
-                              {editCourseMode[index] ? (
-                                <CFormInput
-                                  type="file"
-                                  name="uploadCourseCertificates"
-                                  accept=".pdf, .doc, .docx"
-                                  onChange={(e) => handleCourseFileChanges(e, index)}
-                                />
-                              ) : null}
-                            </div>
-                            <div style={{ gridColumn: 'span 3', marginTop: '10px' }}>
-                              <h6>Experience Certificates:</h6>
-                              {courses?.uploadCourseCertificates?.map((fileName, certIndex) => (
-                                <div
-                                  key={certIndex}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginBottom: '10px',
-                                  }}
-                                >
-                                  <div style={{ display: 'flex', gap: '10px' }}>
-                                    {/* Download Button */}
-                                    <CButton
-                                      color="info"
-                                      onClick={() =>
-                                        handleDownload(
-                                          courses?.uploadCourseCertificates[certIndex],
-                                          fileName,
-                                        )
-                                      }
-                                    >
-                                      Download
-                                    </CButton>
-
-                                    {/* Preview Button */}
-                                    <CButton
-                                      color="secondary"
-                                      onClick={() =>
-                                        handlePreview(courses?.uploadCourseCertificates[certIndex])
-                                      }
-                                    >
-                                      Preview
-                                    </CButton>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            <div style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
-                              <CButton
-                                color="danger"
-                                style={{ marginLeft: '10px' }}
-                                onClick={() => removeCourse(index)}
-                              >
-                                Remove
-                              </CButton>
-                            </div>
-                          </div>
-                        </CCardBody>
-                      </CCard>
-                    ))
-                  ) : (
-                    <div>No Course data available</div>
-                  )}
-                </CAccordionBody>
-              </CAccordionItem>
-
-              <CAccordionItem itemKey={6}>
-                <CAccordionHeader>
-                  <span>Bank Details</span>
-                </CAccordionHeader>
-                <CAccordionBody>
-                  <div className="mt-3">
-                    {editBankMode ? (
-                      <>
-                        <CButton color="primary" onClick={handleBankUpdateClick}>
-                          Update
-                        </CButton>
-                        <CButton
-                          color="warning"
-                          style={{ marginLeft: '80%', color: 'white' }}
-                          onClick={handleBankCancelClick}
-                        >
-                          Cancel
-                        </CButton>
-                      </>
-                    ) : (
-                      <CButton color="secondary" onClick={handleBankEditClick}>
-                        Edit
-                      </CButton>
-                    )}
-                  </div>
-
-                  <div className="Bank-details-grid mt-4" style={gridStyle}>
-                    <p>
-                      <strong>Account Holder Name : </strong>
-                      {editBankMode ? (
-                        <CFormInput
-                          name="accountHolderName"
-                          value={editedBank?.accountHolderName || ''}
-                          onChange={handleBankInputChange}
-                        />
-                      ) : (
-                        bank?.accountHolderName || 'NA'
-                      )}
-                      {bankError.accountHolderName && (
-                        <span style={{ color: 'red' }}>{bankError.accountHolderName}</span>
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>Bank Account Number : </strong>
-                      {editBankMode ? (
-                        <CFormInput
-                          name="bankAccountNumber"
-                          value={editedBank?.bankAccountNumber || ''}
-                          onChange={handleBankInputChange}
-                        />
-                      ) : (
-                        bank?.bankAccountNumber || 'NA'
-                      )}
-                      {bankError.bankAccountNumber && (
-                        <span style={{ color: 'red' }}>{bankError.bankAccountNumber}</span>
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>Confirm Bank Account Number : </strong>
-                      {editBankMode ? (
-                        <CFormInput
-                          name="confirmBankAccountNumber"
-                          value={editedBank?.confirmBankAccountNumber || ''}
-                          onChange={handleBankInputChange}
-                        />
-                      ) : (
-                        bank?.confirmBankAccountNumber || 'NA'
-                      )}
-                      {bankError.confirmBankAccountNumber && (
-                        <span style={{ color: 'red' }}>{bankError.confirmBankAccountNumber}</span>
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>Bank Name : </strong>
-                      {editBankMode ? (
-                        <CFormInput
-                          name="bankName"
-                          value={editedBank?.bankName || ''}
-                          onChange={handleBankInputChange}
-                        />
-                      ) : (
-                        bank?.bankName || 'NA'
-                      )}
-                      {bankError.bankName && (
-                        <span style={{ color: 'red' }}>{bankError.bankName}</span>
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>IFSC Code : </strong>
-                      {editBankMode ? (
-                        <CFormInput
-                          name="ifscCode"
-                          value={editedBank?.ifscCode || ''}
-                          onChange={handleBankInputChange}
-                        />
-                      ) : (
-                        bank?.ifscCode || 'NA'
-                      )}
-                      {bankError.ifscCode && (
-                        <span style={{ color: 'red' }}>{bankError.ifscCode}</span>
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>PAN Card Number : </strong>
-                      {editBankMode ? (
-                        <CFormInput
-                          name="pancardNumber"
-                          value={editedBank?.pancardNumber || ''}
-                          onChange={handleBankInputChange}
-                        />
-                      ) : (
-                        bank?.pancardNumber || 'NA'
-                      )}
-                      {bankError.pancardNumber && (
-                        <span style={{ color: 'red' }}>{bankError.pancardNumber}</span>
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>PanCard Name: </strong>
-                      {editBankMode ? (
-                        <span>{editedBank?.uploadPanCardName || 'No file uploaded'}</span>
-                      ) : (
-                        bank?.uploadPanCardName || 'NA'
-                      )}
-                    </p>
-
-                    <p>
-                      <strong>PanCard Type: </strong>
-                      {editBankMode ? (
-                        <span>{editedBank?.uploadPanCardType || 'No file uploaded'}</span>
-                      ) : (
-                        bank?.uploadPanCardType || 'NA'
-                      )}
-                    </p>
-
-                    {!editBankMode && bank?.uploadPanCardName && (
-                      <div style={{ marginTop: '10px' }}>
-                        <strong>PanCard Actions:</strong>
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-                          {/* Download Button */}
-                          <CButton
-                            color="info"
-                            onClick={() =>
-                              handleDownload(bank?.uploadPanCard, bank?.uploadPanCardName)
-                            }
-                          >
-                            Download
-                          </CButton>
-
-                          {/* Preview Button */}
-                          <CButton
-                            color="secondary"
-                            onClick={() => {
-                              if (isImageOrPdf(bank?.uploadPanCardType)) {
-                                handlePreview(bank?.uploadPanCard, bank?.uploadPanCardType)
-                              } else {
-                                handleAllPreview(bank?.uploadPanCard, bank?.uploadPanCardType)
-                              }
-                            }}
-                          >
-                            Preview
-                          </CButton>
-                        </div>
-                      </div>
-                    )}
-
-                    {editBankMode && (
-                      <p>
-                        <strong>Upload PAN Card : </strong>
-                        <CFormInput
-                          type="file"
-                          name="certificationFile"
-                          accept=".pdf, .doc, .docx"
-                          onChange={handleBankFileChange}
-                        />
-                        {bankError.uploadPanCard && (
-                          <span style={{ color: 'red' }}>{bankError.uploadPanCard}</span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </CAccordionBody>
-              </CAccordionItem>
-
-              <CAccordionItem itemKey={7}>
-                <CAccordionHeader>
-                  <span>Verification Status</span>
-                </CAccordionHeader>
-                <CAccordionBody>
-                  <div className="mt-3">
-                    {editVerificationMode ? (
-                      <>
-                        <CButton color="primary" onClick={handleVerificationUpdateClick}>
-                          Update
-                        </CButton>
-                        <CButton
-                          color="warning"
-                          style={{ marginLeft: '80%', color: 'white' }}
-                          onClick={handleVerificationCancelClick}
-                        >
-                          Cancel
-                        </CButton>
-                      </>
-                    ) : (
-                      <CButton color="secondary" onClick={handleVerificationEditClick}>
-                        Edit
-                      </CButton>
-                    )}
-                  </div>
-
-                  <div
-                    className="Verification-details-grid mt-4"
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
-                  >
-                    {/* Basic Details */}
-                    <p>
-                      <strong>Basic Details : </strong>
-                      {editVerificationMode ? (
-                        <CFormSelect
-                          name="basicProfileStatus"
-                          value={editedVerification?.basicProfileStatus || ''}
-                          onChange={handleVerificationInputChange}
-                        >
-                          <option value="">Select Status</option>
-                          <option value="verified">verified</option>
-                          <option value="pending">pending</option>
-                          <option value="rejected">rejected</option>
-                        </CFormSelect>
-                      ) : (
-                        Verification?.basicProfileStatus || 'NA'
-                      )}
-                    </p>
-
-                    {/* Qualification Details */}
-                    <p>
-                      <strong>Qualification Details : </strong>
-                      {editVerificationMode ? (
-                        <CFormSelect
-                          name="experienceStatus"
-                          value={editedVerification?.experienceStatus || ''}
-                          onChange={handleVerificationInputChange}
-                        >
-                          <option value="">Select Status</option>
-                          <option value="verified">verified</option>
-                          <option value="pending">pending</option>
-                          <option value="rejected">rejected</option>
-                        </CFormSelect>
-                      ) : (
-                        Verification?.experienceStatus || 'NA'
-                      )}
-                    </p>
-
-                    {/* Experience Details */}
-                    <p>
-                      <strong>Experience Details : </strong>
-                      {editVerificationMode ? (
-                        <CFormSelect
-                          name="qualificationStatus"
-                          value={editedVerification?.qualificationStatus || ''}
-                          onChange={handleVerificationInputChange}
-                        >
-                          <option value="">Select Status</option>
-                          <option value="verified">verified</option>
-                          <option value="pending">pending</option>
-                          <option value="rejected">rejected</option>
-                        </CFormSelect>
-                      ) : (
-                        Verification?.qualificationStatus || 'NA'
-                      )}
-                    </p>
-
-                    {/* Remarks */}
-                    <p>
-                      <strong>Remarks : </strong>
-                      {editVerificationMode ? (
-                        <CFormInput
-                          name="reason"
-                          value={editedVerification?.reason || ''}
-                          onChange={handleVerificationInputChange}
-                        />
-                      ) : (
-                        Verification?.reason || 'NA'
-                      )}
-                    </p>
-                  </div>
-                </CAccordionBody>
-              </CAccordionItem>
+              
             </CAccordion>
           )}
+
+
+
+{activeTab === 'doctorsDetails' && (
+  <CAccordion className="mt-4" activeItemKey={1}>
+    <CAccordionItem itemKey={0}>
+      <CAccordionHeader>
+        <span>Clinic Details</span>
+      </CAccordionHeader>
+      <CAccordionBody>
+        {Basic && Object.keys(Basic).length > 0 ? (
+          <div
+            className="clinic-details-grid mt-3"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '20px',
+            }}
+          >
+            {/* Administrator Name */}
+            <div>
+              <strong>Administrator Name:</strong><br />
+              {Basic.adminName || 'NA'}
+            </div>
+
+            {/* Clinic Registration No */}
+            <div>
+              <strong>Clinic Registration No:</strong><br />
+              {Basic.registrationNo || 'NA'}
+            </div>
+
+            {/* GST No */}
+            <div>
+              <strong>GST No:</strong><br />
+              {Basic.gstNumber || 'NA'}
+            </div>
+
+            {/* Clinic Logo */}
+            <div>
+              <strong>Clinic Logo:</strong><br />
+              {Basic.logoUrl ? (
+                <img src={Basic.logoUrl} alt="Clinic Logo" style={{ width: '100px', height: '100px' }} />
+              ) : (
+                'No Logo Available'
+              )}
+            </div>
+
+            {/* Clinic Description */}
+            <div>
+              <strong>Clinic Description:</strong><br />
+              {Basic.description || 'NA'}
+            </div>
+
+            {/* Working Days & Timings */}
+            <div>
+              <strong>Working Days & Timings:</strong><br />
+              {Basic.workingHours || 'NA'}
+            </div>
+
+            {/* Status */}
+            <div>
+              <strong>Status:</strong><br />
+              {Basic.status || 'NA'}
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '1rem',
+              fontSize: '1.2rem',
+              color: 'gray',
+              fontStyle: 'italic',
+            }}
+          >
+            No clinic details available.
+          </div>
+        )}
+      </CAccordionBody>
+    </CAccordionItem>
+  </CAccordion>
+)}
+
+          
 
           {activeTab === 'Appointments' && (
             <CAccordion className="mt-4" activeItemKey={0}>

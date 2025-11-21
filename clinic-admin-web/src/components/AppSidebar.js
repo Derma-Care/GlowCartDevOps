@@ -1,27 +1,31 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { useHospital } from '../views/Usecontext/HospitalContext'
+import { useLocation } from 'react-router-dom'
+import Logo from './header/GlowKaart.png'
 
-import { CSidebar, CSidebarHeader, CSidebarFooter, CSidebarToggler } from '@coreui/react'
+import {
+  CSidebar,
+  CSidebarFooter,
+  CSidebarHeader,
+  CSidebarToggler,
+} from '@coreui/react'
 
 import { AppSidebarNav } from './AppSidebarNav'
-import { getNavigation } from '../_nav'
-import { useNavigate } from 'react-router-dom'
 import './sidebar.css'
 import { COLORS } from '../Constant/Themes'
+
+// sidebar nav config
+import navigation from '../_nav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
-  const { selectedHospital, hydrated, user } = useHospital()
-  const navigate = useNavigate()
+  const location = useLocation() // get current path
 
-  if (!hydrated) return null // show spinner if needed
+  // Hide sidebar only on /clinicRegistration
+  if (location.pathname === '/clinic-Registration') return null
 
-  const hospitalName = selectedHospital?.data.name || 'Hospital Name'
-  const hospitalLogo = selectedHospital?.data.hospitalLogo || null
-  const navItems = getNavigation(user?.permissions || {})
   return (
     <CSidebar
       className="border-end"
@@ -35,53 +39,34 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom">
-        <div
-          className="d-flex flex-column align-items-center justify-content-center"
-          style={{ width: '100%', padding: '12px 0', textAlign: 'center' }}
-        >
-          {hospitalLogo ? (
+        <div to="/">
+          <div className="d-flex justify-content-center">
             <img
-              className="profile-image"
-              src={
-                hospitalLogo.startsWith('data:')
-                  ? hospitalLogo
-                  : `data:image/jpeg;base64,${hospitalLogo}`
-              }
-              alt={hospitalName}
-              style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-                marginBottom: '8px',
-              }}
+              src={Logo}
+              alt="Glowkart Logo"
+              style={{ width: '140px', height: '120px', marginBottom: '0px', marginLeft: '30px' }}
             />
-          ) : (
-            <p>Loading logo...</p>
-          )}
-
+          </div>
           <div
-            className="clinic-header"
-            onClick={() => navigate('/dashboard')}
-            style={{
-              width: '80%',
-              wordWrap: 'break-word',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: '1.2rem',
-              lineHeight: '1.2',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
+            className="d-flex justify-content-center underline-none"
+            style={{ marginLeft: '20px' }}
           >
-            {hospitalName}
+            <h1
+              style={{
+                fontSize: '30px',
+                background: 'linear-gradient(to right, #0072CE, #00AEEF)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontWeight: 'bold',
+              }}
+            >
+              GlowKaart
+            </h1>
           </div>
         </div>
       </CSidebarHeader>
 
-      <AppSidebarNav items={navItems} />
+      <AppSidebarNav items={navigation} />
 
       <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })} />

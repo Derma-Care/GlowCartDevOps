@@ -29,7 +29,7 @@ COPY --from=build /app/build .
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 3000 for the Nginx server
-EXPOSE 3000
+EXPOSE 4000
 
 # Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]

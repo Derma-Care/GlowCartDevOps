@@ -1,79 +1,69 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilCalendar,
-  cilSpeedometer,
-  cilUser,
-  cilWarning,
-  cilClipboard,
-  cilHealing,
-  cilSettings,
-  cilDescription,
-  cilTablet,
-  cilNoteAdd,
-  cilNotes,
-  cilWallet,
-  cilLightbulb,
-  cilBell,
-  cilPeople,
-} from '@coreui/icons'
 import { CNavItem } from '@coreui/react'
-import { NavLink } from 'react-router-dom'
+import {
+  cilUser,
+  cilHospital,
+  cilList,
+  cilGift,
+  cilGroup,
+  cilBullhorn,
+  cilBell,
+  cilWallet,
+  cilTask,
+  cibGoogleAds,
+} from '@coreui/icons'
 
-export const getNavigation = (permissions = {}) => {
-  const allNav = [
+const _nav = [
     {
-      component: CNavItem,
-      name: 'Dashboard',
-      to: '/dashboard',
-      as: NavLink,
-      icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    },
-    // {
-    //   component: CNavItem,
-    //   name: 'Appointments',
-    //   to: '/Appointment-Management',
-    //   as: NavLink,
-    //   icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-    // },
-    {
-      component: CNavItem,
-      to: '/doctor',
-      name: 'Employee management',
-      as: NavLink,
-      icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
-    },
+    component: CNavItem,
+    name: 'Clinic Management',
+    to: '/clinic-management',
+    icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Customer Management',
+    to: '/customer-management',
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+  },
 
-    {
-      component: CNavItem,
-      to: '/Procedure-Management',
-      name: 'Procedure Management',
-      as: NavLink,
-      icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
-    },
+  {
+    component: CNavItem,
+    name: 'Procedure Management',
+    to: '/procedure-management',
+    icon: <CIcon icon={cilTask} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Package Management',
+    to: '/package-management',
+    icon: <CIcon icon={cilGift} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Membership Management',
+    to: '/membership-management',
+    icon: <CIcon icon={cilGroup} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Ads Management',
+    to: '/ads-management',
+    icon: <CIcon icon={cibGoogleAds} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Push Notifications',
+    to: '/push-notifications',
+    icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Payouts',
+    to: '/payouts',
+    icon: <CIcon icon={cilWallet} customClassName="nav-icon" />,
+  },
+]
 
-    {
-      component: CNavItem,
-      to: '/payouts',
-      name: 'Payouts',
-      as: NavLink,
-      icon: <CIcon icon={cilWallet} customClassName="nav-icon" />,
-    },
-
-    {
-      component: CNavItem,
-      to: '/help',
-      name: 'Help',
-      as: NavLink,
-      icon: <CIcon icon={cilLightbulb} customClassName="nav-icon" />,
-    },
-  ]
-
-  // Only include items if permission exists
-  if (!permissions || typeof permissions !== 'object') return []
-
-  // return allNav.filter((item) => permissions[item.name])
-  return allNav.filter((item) => permissions[item.name] || item.name === 'Patient Management')
-}
-
-// ✅ Optional: filter based on permissions if needed
+export default _nav

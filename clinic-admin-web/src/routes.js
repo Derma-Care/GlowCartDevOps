@@ -1,50 +1,48 @@
 import React from 'react'
 
-const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
-const Doctors = React.lazy(() => import('./views/Doctors/DoctorManagement'))
+// Lazy-loaded components
+const Login = React.lazy(() => import('./views/pages/login/Login'))
+const serviceManagement = React.lazy(() => import('./views/servicesManagement/serviceManagement'))
+const CustomerViewDetails = React.lazy(() => import('./views/customerManagement/CustomerViewDetails'))
+const ClinicManagement = React.lazy(() => import('./views/clinicManagement/ClinicManagement'))
+const procedureManagement = React.lazy(() => import('./views/ProcedureManagement/ProcedureManagement'))
+const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/ClinicDetails'))
+const AddClinic = React.lazy(() => import('./views/clinicManagement/AddClinic'))
+const ClinicRegistration = React.lazy(() => import('./views/clinicManagement/ClinicRegistration'))
+const categoryManagement = React.lazy(() => import('./views/categoryManagement/categoryManagement'))
+const customerManagement = React.lazy(() => import('./views/customerManagement/CustomerManagement'))
+const PatientManagement = React.lazy(() => import('./views/providerManagement/ProviderManagement'))
+const PatientViewDetails = React.lazy(() => import('./views/providerManagement/ProviderViewDetails'))
+const BranchManagement = React.lazy(() => import('./views/clinicManagement/AddBranchForm'))
+const AdsManagement = React.lazy(() => import('./views/AdsManagement/AdsManagement'))
+const DoctorDetailsPage = React.lazy(() => import('./views/Doctors/DoctorDetailsPage'))
+const MembershipManagement = React.lazy(() => import('./views/MembershipManagement/MembershipManagement'))
+const PackageManagement = React.lazy(() => import('./views/PackageManagement/PackageManagement'))
+const Payouts = React.lazy(() => import('./views/Payouts/Payout'))
+const BranchDetails = React.lazy(() => import('./views/clinicManagement/BranchDetails'))
 
-const ProcedureManagement = React.lazy(
-  () => import('./views/ProcedureManagement/ProcedureManagement'),
-)
-const Payouts = React.lazy(() => import('./views/Payouts/Payoutmanagement'))
-const Help = React.lazy(() => import('./views/Help/Help'))
-const Resetpassword = React.lazy(() => import('./views/Resetpassword'))
-const DoctorDetailspage = React.lazy(() => import('./views/Doctors/DoctorDetailspage'))
-const AppointmentManagement = React.lazy(
-  () => import('./views/AppointmentManagement/appointmentManagement'),
-)
-const AppointmentDetailsPage = React.lazy(
-  () => import('./views/AppointmentManagement/AppointmentDeatils'),
-)
-
-const NGlowKartPatientRegistration = React.lazy(
-  () => import('./views/NGK/CustomerRrgistration/CustomerRegistration'),
-)
-
- 
 const routes = [
-  { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/doctor', name: 'Doctors', element: Doctors },
-
-  { path: '/procedure-management', name: 'Procedure Management', element: ProcedureManagement },
-
+  { path: '/', exact: true, name: 'Home' },
+  { path: '/login', name: 'Login', element: Login },
+  { path: '/category-management', name: 'Category Management', element: categoryManagement },
+  { path: '/service-management', name: 'Service Management', element: serviceManagement },
+  { path: '/customer-management/:mobileNumber', name: 'Customer View Details', element: CustomerViewDetails },
+  { path: '/customer-management', name: 'Customer Management', element: customerManagement },
+  { path: '/procedure-management', name: 'Procedure Management', element: procedureManagement },
+  { path: '/clinic-management', name: 'Clinic Management', element: ClinicManagement },
+  { path: '/add-clinic', name: 'Add Clinic', element: AddClinic },
+  { path: '/clinic-registration', name: 'Clinic Registration', element: ClinicRegistration }, // updated route
+  { path: '/doctor/:doctorId', name: 'Doctor Details', element: DoctorDetailsPage },
+  { path: '/patients-management', name: 'Patient Management', element: PatientManagement },
+  { path: '/clinic-management/:hospitalId', name: 'Clinic Details', element: ClinicManagementDetails },
+  { path: '/branch-details/:branchId', name: 'Branch Details', element: BranchDetails },
+  { path: '/ads-management', name: 'Ads Management', element: AdsManagement },
   { path: '/payouts', name: 'Payouts', element: Payouts },
-
-  // { path: '/help', name: 'Help', element: Help },
-  { path: '/help', name: 'Help', element: NGlowKartPatientRegistration },
-
-  { path: '/reset-password', name: 'Reset Password', element: Resetpassword },
-
-  { path: '/doctor/:id', name: 'Doctor Details', element: DoctorDetailspage },
-
-  { path: '/appointment-management', name: 'Appointments', element: AppointmentManagement },
-  {
-    path: '/appointment-details/:id',
-    name: 'Appointment Details',
-    element: AppointmentDetailsPage,
-  },
-
- 
+  { path: '/provider-management/:id', name: 'Patient View Details', element: PatientViewDetails },
+  { path: '/clinicDetails', name: 'ClinicDetails', element: ClinicManagementDetails },
+  { path: '/branchManagement', name: 'BranchManagement', element: BranchManagement },
+  { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
+  { path: '/package-management', name: 'PackageManagement', element: PackageManagement },
 ]
 
 export default routes

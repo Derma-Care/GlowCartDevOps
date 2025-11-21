@@ -1,14 +1,31 @@
-export const features = [
-  'Dashboard',
-  'Employee management',
- 
-   
-  'Appointments',
-  
-  'Procedure Management',
-  'Payouts',
-  'Help',
-   
+ export const features = [
+  "Dashboard",
+  "Appointments",
+  "Employee management",
+  "Disease-Management",
+  "Tests",
+  "Treatments",
+  "Procedure Management",
+  "Reports",
+  "Payouts",
+  "Help",
+  "Customer Management",
+  "ConsentForms",
+  "Doctors",
+  "Nurses",
+  "Pharmacist",
+  "Laboratory",
+  "Admin",
+  "FrontDesk",
+  "Security",
+  "OtherStaff",
+  "Vendor Management",
+  "Pharmacy Management",
+  "Inventory Management",
+  "Support",
+  "Billing",
+  "Analytics",
+  "Tax reports",
 ]
 
-export const actions = ['create', 'read', 'update', 'delete']
+export const actions = ["create", "read", "update", "delete"]

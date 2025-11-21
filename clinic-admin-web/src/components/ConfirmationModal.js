@@ -11,10 +11,9 @@ const ConfirmationModal = ({
   cancelText = 'Cancel',
   confirmColor = 'danger',
   cancelColor = 'secondary',
-  isLoading = false, // <-- new prop
 }) => {
   return (
-    <CModal visible={isVisible} onClose={onCancel} alignment="center" backdrop="static">
+    <CModal visible={isVisible} onClose={onCancel} alignment="center" backdrop="static" className='custom-modal'>
       {/* Header */}
       <CModalHeader>
         <CModalTitle style={{ color: 'var(--color-black)' }}>⚠ {title}</CModalTitle>
@@ -34,19 +33,11 @@ const ConfirmationModal = ({
           onClick={onConfirm}
           style={{
             minWidth: '100px',
-            color: 'white',
+            color: 'red',
             backgroundColor: 'var(--color-black)',
           }}
-          disabled={isLoading} // disable while deleting
         >
-          {isLoading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
-              Deleting...
-            </>
-          ) : (
-            confirmText
-          )}
+          {confirmText}
         </CButton>
       </CModalFooter>
     </CModal>

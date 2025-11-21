@@ -23,45 +23,25 @@ import {
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
-import { useHospital } from '../../views/Usecontext/HospitalContext'
-import '../header/AppHear.css'
+
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
-  const { selectedHospital } = useHospital()
+
   const handleLogout = () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('user')
-    localStorage.removeItem('HospitalId')
-    localStorage.removeItem('HospitalName')
-    localStorage.clear()
+    localStorage.removeItem('AdminId')
+    localStorage.clear('')
+
     navigate('/login')
   }
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0 " caret={false}>
-        <div to="/">
-          <div className="d-flex justify-content-center">
-            {selectedHospital?.data.hospitalLogo ? (
-              <img
-                className="profile-image"
-                src={
-                  selectedHospital?.data.hospitalLogo.startsWith('data:')
-                    ? selectedHospital?.data.hospitalLogo
-                    : `data:image/jpeg;base64,${selectedHospital?.data.hospitalLogo}`
-                }
-                alt={selectedHospital?.data.name || 'Hospital Logo'}
-                style={{ width: '40px', height: '40px', marginBottom: '0px' }}
-              />
-            ) : (
-              <div className="spinner"></div>
-            )}
-          </div>
-
-          <div
-            className="d-flex justify-content-center underline-none"
-            style={{ marginLeft: '20px' }}
-          ></div>
-        </div>
+      <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
+        <CAvatar
+          src="https://img.freepik.com/premium-vector/man-with-headphones-tie-that-says-air-pilot_1134108-36618.jpg"
+          size="md"
+        />
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownItem href="#">
@@ -71,7 +51,7 @@ const AppHeaderDropdown = () => {
             42
           </CBadge> */}
         </CDropdownItem>
-        <CDropdownItem href="#" onClick={handleLogout}>
+        <CDropdownItem onClick={handleLogout}>
           <CIcon icon={cilAccountLogout} className="me-2" />
           Logout
           {/* <CBadge color="info" className="ms-2">

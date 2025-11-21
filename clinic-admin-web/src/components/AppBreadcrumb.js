@@ -1,14 +1,13 @@
 import React from 'react'
-import { useLocation } from 'react-router-dom'
-
+import { useLocation, useNavigate } from 'react-router-dom'
 import routes from '../routes'
-
-import { CBreadcrumb, CBreadcrumbItem } from '@coreui/react'
+import { CBreadcrumb, CBreadcrumbItem, CButton } from '@coreui/react'
+import { ArrowLeft } from 'lucide-react'
 import { COLORS } from '../Constant/Themes'
-import BackButton from '../views/widgets/BackButton'
 
 const AppBreadcrumb = () => {
   const currentLocation = useLocation().pathname
+  const navigate = useNavigate()
 
   const getRouteName = (pathname, routes) => {
     const currentRoute = routes.find((route) => route.path === pathname)
@@ -20,12 +19,13 @@ const AppBreadcrumb = () => {
     location.split('/').reduce((prev, curr, index, array) => {
       const currentPathname = `${prev}/${curr}`
       const routeName = getRouteName(currentPathname, routes)
-      routeName &&
+      if (routeName) {
         breadcrumbs.push({
           pathname: currentPathname,
           name: routeName,
-          active: index + 1 === array.length ? true : false,
+          active: index + 1 === array.length,
         })
+      }
       return currentPathname
     })
     return breadcrumbs
@@ -33,25 +33,57 @@ const AppBreadcrumb = () => {
 
   const breadcrumbs = getBreadcrumbs(currentLocation)
 
+  // ✅ Show Back button for all /employee-management subroutes,
+  // but NOT on the main /employee-management page
+  const showBackButton =
+    currentLocation.startsWith('/employee-management') &&
+    currentLocation !== '/employee-management'
+
+  const handleBack = () => {
+    if (window.history.length > 2) {
+      navigate(-1) // Go to previous page if history exists
+    } else {
+      navigate('/branch-details') // Fallback route
+    }
+  }
+
   return (
-    <div className="d-flex justify-content-between align-items-center align-content-center  w-100">
-      <CBreadcrumb className="my-0 custom-breadcrumb mb-0">
+    <div
+      className="d-flex justify-content-between align-items-center"
+      style={{ width: '100%' }}
+    >
+      {/* Breadcrumb Section */}
+      <CBreadcrumb className="my-0 custom-breadcrumb">
         <CBreadcrumbItem href="/">Home</CBreadcrumbItem>
         {breadcrumbs.map((breadcrumb, index) => (
           <CBreadcrumbItem
-            key={index}
-            {...(breadcrumb.active ? { active: true } : { href: breadcrumb.pathname })}
             style={{ color: 'var(--color-black)' }}
+            {...(breadcrumb.active ? { active: true } : { href: breadcrumb.pathname })}
+            key={index}
           >
             {breadcrumb.name}
           </CBreadcrumbItem>
         ))}
       </CBreadcrumb>
 
-      {/* 🟢 Back Button aligned at the right end */}
-      <div className="ms-auto ">
-        <BackButton />
-      </div>
+      {/* ✅ Back Button (only on subpages) */}
+      {showBackButton && (
+        <CButton
+          size="sm"
+          style={{
+            background: '#fff',
+            color: '#00838F',
+            border: 'none',
+            fontWeight: '600',
+            borderRadius: '8px',
+            padding: '6px 14px',
+          }}
+          onClick={handleBack}
+        >
+
+          Back
+        </CButton>
+      )}
     </div>
   )
 }

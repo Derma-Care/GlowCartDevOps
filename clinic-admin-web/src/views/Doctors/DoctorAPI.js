@@ -1,44 +1,41 @@
 // doctorUtils.js
 
 import axios from 'axios'
-import { BASE_URL, getAllDoctors, getDoctorByClinicId, doctorAvailableUrl, GetBranches_ByClinicId, GetBy_DoctorId } from '../../baseUrl'
+import { ClinicBase_url, getAllDoctors,deleteDoctor, getDoctorByClinicId, doctorAvailableUrl, addDoctorUrl, GetBranches_ByClinicId, getDoctorsByHospitalIdAndBranchId, UpdateDoctor,GetBy_DoctorId, BASE_URL } from '../../baseUrl'
 import { toast } from 'react-toastify'
-import { http } from '../../Utils/Interceptors'
-import { showCustomToast } from '../../Utils/Toaster'
 
-// 🆕 Update Doctor Availability (true/false)
 export const updateDoctorAvailability = async (doctorId, isAvailable) => {
   try {
-    const url = `/${doctorAvailableUrl}/${doctorId}/availability`
-    console.log('Updating availability:', doctorId, isAvailable)
+    const url = `${ClinicBase_url}/doctor/${doctorId}/availability`;  // FIXED URL
 
-    const response = await http.post(
+    console.log('Updating availability:', doctorId, isAvailable);
+
+    const response = await axios.post(
       url,
       { doctorAvailabilityStatus: isAvailable },
-      { headers: { 'Content-Type': 'application/json' } },
-    )
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-    console.log('Update response:', response.data)
+    console.log('Update response:', response.data);
 
-    // You can check either axios status or your API success field
-    return response.status === 200 && response.data.success === true
+    return response.status === 200;
   } catch (error) {
-    showCustomToast(`${error.message}` || 'Failed to update doctor availability','error')
-    console.error('❌ Error updating availability:', error)
-    return false
+    toast.error(error.message || "Failed to update doctor availability");
+    console.error("❌ Error updating availability:", error);
+    return false;
   }
-}
+};
 
 
 export const handleDeleteToggle = async (doctorID) => {
   console.log(doctorID)
   try {
-    const response = await http.delete(`/delete-doctor/${doctorID}`)
+    const response = await axios.delete(`${ClinicBase_url}/${deleteDoctor}/${doctorID}`)
     console.log('Doctor deleted successfully:', response.data)
     // Optional: return true or response if needed
     return response
   } catch (error) {
-    showCustomToast(`${error.message}` || 'Failed to delete doctor','error')
+    toast.error(`${error.message}` || 'Failed to delete doctor')
     console.error('Error occurred while deleting doctor:', error.response?.data || error.message)
     // Optional: return false or error if needed
     return false
@@ -48,7 +45,7 @@ export const handleDeleteToggle = async (doctorID) => {
 export const DoctorData = async () => {
   console.log('appointdata calling')
   try {
-    const response = await http.get(`/${getAllDoctors}`)
+    const response = await axios.get(`${ClinicBase_url}/${getAllDoctors}`)
     console.log(`appointdata calling ${response.data}`)
 
     console.log(response.data)
@@ -63,11 +60,10 @@ export const DoctorData = async () => {
     throw error
   }
 }
-// getDoctorsByHospitalIdAndBranchId
-export const getDoctorByClinicIdData = async (clinicId,branchId) => {
+export const getDoctorByClinicIdData = async (clinicId) => {
   console.log('appointdata calling')
   try {
-    const response = await http.get(`/${getDoctorByClinicId}/${clinicId}/${branchId}`)
+    const response = await axios.get(`${ClinicBase_url}/${getDoctorByClinicId}/${clinicId}`)
     console.log(`appointdata calling ${response.data}`)
 
     console.log(response.data)
@@ -82,28 +78,10 @@ export const getDoctorByClinicIdData = async (clinicId,branchId) => {
     throw error
   }
 }
-// export const getDoctorByClinicIdData = async (clinicId) => {
-//   console.log('appointdata calling')
-//   try {
-//     const response = await http.get(`/${getDoctorByClinicId}/${clinicId}`)
-//     console.log(`appointdata calling ${response.data}`)
-
-//     console.log(response.data)
-
-//     return response.data
-//   } catch (error) {
-//     console.error('Error fetching service data:', error.message)
-//     if (error.response) {
-//       console.error('Error Response Data:', error.response.data)
-//       console.error('Error Response Status:', error.response.status)
-//     }
-//     throw error
-//   }
-// }
 export const getDoctorDetailsById = async (doctorId) => {
-  console.log(`doctorData calling ${doctorId}`)
+  console.log('doctorData calling')
   try {
-    const response = await http.get(`/${GetBy_DoctorId}/${doctorId}`)
+    const response = await axios.get(`${ClinicBase_url}/${GetBy_DoctorId}/${doctorId}`)
     console.log(`doctorData calling ${response.data}`)
 
     console.log(response.data)
@@ -118,10 +96,38 @@ export const getDoctorDetailsById = async (doctorId) => {
     throw error
   }
 }
+
+export const AddDoctorByAdmin = async (doctorData) => {
+  try {
+    console.log('🚀 AddDoctorByAdmin API Call:');
+    console.log('URL:', `${ClinicBase_url}/${addDoctorUrl}`);
+    console.log('Payload:', doctorData);
+    
+    const response = await axios.post(`${ClinicBase_url}/${addDoctorUrl}`, doctorData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 30000, // Add timeout to prevent hanging
+    });
+    
+    console.log('✅ API Response Status:', response.status);
+    console.log('✅ API Response Data:', response.data);
+    return response;
+    
+  } catch (error) {
+    console.error('❌ API Error Details:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
+    });
+    throw error;
+  }
+};
 export const GetClinicBranches = async (clinicId) => {
   console.log('appointdata calling')
   try {
-    const response = await http.get(`/${GetBranches_ByClinicId}/${clinicId}`)
+    const response = await axios.get(`${BASE_URL}/${GetBranches_ByClinicId}/${clinicId}`)
     console.log(`appointdata calling ${response.data}`)
 
     console.log(response.data)
@@ -136,3 +142,52 @@ export const GetClinicBranches = async (clinicId) => {
     throw error
   }
 }
+
+
+
+
+//getBranchByClinicAndBranchId
+export const getDoctorsByHospitalAndBranchId = async (clinicId, branchId) => {
+  console.log('🔄 Fetching branch by clinicId and branchId...',clinicId, branchId)
+  try {
+    const response = await axios.get(
+      `${ClinicBase_url}/${getDoctorsByHospitalIdAndBranchId}/${clinicId}/${branchId}`
+    )
+    console.log(`✅ API Response:`, response.data)
+    return response.data
+  } catch (error) {
+    console.error('❌ Error fetching branch data:', error.message)
+    if (error.response) {
+      console.error('Error Response Data:', error.response.data)
+      console.error('Error Response Status:', error.response.status)
+    }
+    throw error
+  }
+}
+
+export const UpdateDoctorById = async (doctorId, doctorData) => {
+  if (!doctorId) throw new Error("❌ Doctor ID is required");
+
+  const url = `${ClinicBase_url}/${UpdateDoctor}/${doctorId}`;
+  console.log("🔎 Update Doctor API URL:", url);
+  console.log("📤 Payload being sent:", doctorData);
+console.log("🔗 URL called:", `${ClinicBase_url}/${UpdateDoctor}/${doctorId}`);
+
+  try {
+    const response = await axios.put(url, doctorData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Update doctor API response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error updating doctor data:", error.message);
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+    }
+    throw error;
+  }
+};

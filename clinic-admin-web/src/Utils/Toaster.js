@@ -37,9 +37,9 @@ const CustomToast = ({ message, type = 'success' }) => {
   )
 }
 
-export const showCustomToast = (message, type = 'success', position = 'top-right') => {
+export const showCustomToast = (message, type = 'success') => {
   toast(<CustomToast message={message} type={type} />, {
-    position: position,
+    position: 'top-right',
     autoClose: 3000,
     hideProgressBar: false,
     closeOnClick: true,

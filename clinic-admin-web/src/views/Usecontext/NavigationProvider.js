@@ -6,7 +6,7 @@ const NavigationContext = createContext()
 export const NavigationProvider = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [stack, setStack] = useState(['/dashboard']) // always start with dashboard
+  const [stack, setStack] = useState(['/clinic-management']) // always start with dashboard
 
   // track every route change
   useEffect(() => {
@@ -29,7 +29,7 @@ export const NavigationProvider = ({ children }) => {
       setStack(newStack)
       navigate(prev)
     } else {
-      navigate('/dashboard') // fallback
+      navigate('/clinic-management') // fallback
     }
   }
 

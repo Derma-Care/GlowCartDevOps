@@ -1,24 +1,19 @@
+// src/components/ProtectedRoute.js
 import React from 'react'
-import { Navigate } from 'react-router-dom'
-import { useHospital } from '../views/Usecontext/HospitalContext'
-import { CSpinner } from '@coreui/react'
+import { Navigate, useLocation } from 'react-router-dom'
 
 const ProtectedRoute = ({ children }) => {
-  const { loading, selectedHospital } = useHospital()
-  const hospitalId = localStorage.getItem('HospitalId')
+  const isAuthenticated =
+    !!localStorage.getItem('userName') && !!localStorage.getItem('authentication')
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <CSpinner size="sm" color="primary" />
-      </div>
-    )
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    // Redirect to login with intended route preserved
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
 
-  // ✅ Just check localStorage
-  const isAuthenticated = !!hospitalId && (selectedHospital !== null || selectedHospital !== '')
-
-  return isAuthenticated ? children : <Navigate to="/login" replace />
+  return children
 }
 
 export default ProtectedRoute
