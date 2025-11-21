@@ -5,6 +5,9 @@ import com.glowkart.procedure.model.Procedure;
 import com.glowkart.procedure.repo.ProcedureRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,12 +20,20 @@ public class ProcedureServiceImpl implements ProcedureService {
         this.repo = repo;
     }
 
+    // Convert UTC Instant -> IST Instant for API response
     private ProcedureDTO mapToDTO(Procedure procedure) {
         ProcedureDTO dto = new ProcedureDTO();
-        dto.setProcedureId(procedure.getId()); // updated
+        dto.setProcedureId(procedure.getId());
         dto.setProcedureName(procedure.getProcedureName());
-        dto.setCreatedAt(procedure.getCreatedAt());
-        dto.setUpdatedAt(procedure.getUpdatedAt());
+
+        ZoneId istZone = ZoneId.of("Asia/Kolkata");
+
+        // Convert to IST for response
+        dto.setCreatedAt(procedure.getCreatedAt() != null ?
+                procedure.getCreatedAt().atZone(ZoneId.of("UTC")).withZoneSameInstant(istZone).toInstant() : null);
+        dto.setUpdatedAt(procedure.getUpdatedAt() != null ?
+                procedure.getUpdatedAt().atZone(ZoneId.of("UTC")).withZoneSameInstant(istZone).toInstant() : null);
+
         return dto;
     }
 

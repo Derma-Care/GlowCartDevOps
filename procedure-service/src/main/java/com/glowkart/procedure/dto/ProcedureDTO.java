@@ -1,5 +1,6 @@
 package com.glowkart.procedure.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -12,7 +13,12 @@ public class ProcedureDTO {
     @NotBlank(message = "Procedure name is required")
     private String procedureName;
 
-    // Read-only timestamps
+    // Read-only timestamps with seconds precision
+ // Timestamps in IST, seconds precision
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Kolkata")
     private Instant createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Kolkata")
     private Instant updatedAt;
 }
+
