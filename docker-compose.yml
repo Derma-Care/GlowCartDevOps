@@ -124,6 +124,22 @@ services:
       - apigateway
     restart: always
 
+  # Main Admin Web(Frontend)
+  main-admin-web:
+    build: ./main-admin-web
+    container_name: main-admin-web-container
+    ports:
+      - "4000:80"
+    environment:
+      - HOST=35.154.152.61
+      - PORT=4000
+      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
+    networks:
+      - app-network
+    depends_on:
+      - apigateway
+    restart: always
+
 networks:
   app-network:
     driver: bridge
