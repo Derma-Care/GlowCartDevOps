@@ -6,9 +6,6 @@ import com.twilio.type.PhoneNumber;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
 @Service
 public class WhatsAppSender {
 
@@ -16,7 +13,7 @@ public class WhatsAppSender {
     private final String authToken;
     private final String from;
 
-    // Use default empty values to prevent startup crash
+    // Safe constructor with defaults to avoid startup failure
     public WhatsAppSender(
             @Value("${twilio.account-sid:}") String accountSid,
             @Value("${twilio.auth-token:}") String authToken,
@@ -27,43 +24,28 @@ public class WhatsAppSender {
         this.from = from;
     }
 
-    // Sends WhatsApp link or runs mock mode
+    // Send WhatsApp link (mock mode supported)
     public void sendWhatsAppLink(String to, String link) {
 
-        // Enable mock mode when Twilio creds are blank
+        // MOCK MODE if Twilio credentials missing
         if (accountSid.isBlank() || authToken.isBlank() || from.isBlank()) {
             System.out.println("[MOCK WHATSAPP] To=" + to + " Link=" + link);
             return;
         }
 
-        try {
-            String encodedLink;
+        // Initialize Twilio
+        Twilio.init(accountSid, authToken);
 
-            // Safe check for token in the URL
-            if (link.contains("?")) {
-                String[] parts = link.split("\\?", 2);  // split only once
-                String tokenPart = parts[1].replace("token=", "");
-                encodedLink = parts[0] + "?token=" + URLEncoder.encode(tokenPart, "UTF-8");
-            } else {
-                encodedLink = link;
-            }
+        // No encoding needed; send link exactly as provided
+        String body =
+                "👋 Complete your clinic onboarding: " + link +
+                "\n(Expires in 60 minutes)";
 
-            // Initialize Twilio
-            Twilio.init(accountSid, authToken);
-
-            String body =
-                    "👋 Complete your clinic onboarding: " + encodedLink +
-                    "\n(Expires in 60 minutes)";
-
-            // Send WhatsApp message
-            Message.creator(
-                    new PhoneNumber("whatsapp:" + to),
-                    new PhoneNumber("whatsapp:" + from),
-                    body
-            ).create();
-
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Error encoding the URL", e);
-        }
+        // Send WhatsApp message
+        Message.creator(
+                new PhoneNumber("whatsapp:" + to),
+                new PhoneNumber("whatsapp:" + from),
+                body
+        ).create();
     }
 }

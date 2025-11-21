@@ -55,5 +55,11 @@ public class ClinicProcedurePricingController {
             @PathVariable String clinicId) {
         return pricingService.delete(procedureId, clinicId);
     }
+    
+ // New API endpoint to fetch all procedure pricing data
+    @GetMapping("/procedure-pricing/all")
+    public ApiResponse<List<ProcedurePricingDTO>> getAllProcedurePricing() {
+        return pricingService.getAllProcedurePricing();
+    }
 }
 

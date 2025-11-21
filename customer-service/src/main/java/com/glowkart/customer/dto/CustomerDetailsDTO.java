@@ -1,10 +1,13 @@
 package com.glowkart.customer.dto;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.*;
-import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -28,7 +31,7 @@ public class CustomerDetailsDTO {
     private String clinicName;
     private String clinicCityArea;
     private LocalDate dateOfLastVisit;
-    private String serviceType;
+    private List<String> serviceType;
     private String blood;
 
     private String registrationCode;

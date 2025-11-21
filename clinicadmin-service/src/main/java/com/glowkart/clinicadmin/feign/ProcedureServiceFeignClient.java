@@ -34,4 +34,8 @@ public interface ProcedureServiceFeignClient {
             @PathVariable String procedureId,
             @PathVariable String clinicId
     );
+    
+    // New method to fetch all procedure pricing data
+    @GetMapping("/procedures/pricing/all")
+    ApiResponse<List<ProcedurePricingDTO>> getAll();
 }

@@ -24,6 +24,12 @@ public class ProcedurePricingController {
     public ApiResponse<List<ProcedurePricingDTO>> getByClinic(@PathVariable String clinicId) {
         return new ApiResponse<>(true, "Data Fetched", service.getByClinic(clinicId));
     }
+    
+    // ⭐ New Method for fetching all data across clinics
+    @GetMapping("/pricing/all")
+    public ApiResponse<List<ProcedurePricingDTO>> getAll() {
+        return new ApiResponse<>(true, "All Procedure Pricing Fetched", service.getAll());
+    }
 
     // ⭐ New Method
     @GetMapping("/pricing/get/{procedureId}/{clinicId}")

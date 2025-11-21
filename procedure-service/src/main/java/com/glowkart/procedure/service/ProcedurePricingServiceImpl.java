@@ -96,6 +96,15 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     public void delete(String procedureId, String clinicId) {
         pricingRepository.deleteByProcedureIdAndClinicId(procedureId, clinicId);
     }
+    
+ // New Method to Fetch All Data
+    @Override
+    public List<ProcedurePricingDTO> getAll() {
+        // Fetch all procedure pricing data
+        return pricingRepository.findAll().stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
+    }
 
     private void calculatePricing(ProcedurePricing procedure) {
         procedure.setDiscountAmount(procedure.getPrice() * procedure.getDiscountPercentage() / 100.0);

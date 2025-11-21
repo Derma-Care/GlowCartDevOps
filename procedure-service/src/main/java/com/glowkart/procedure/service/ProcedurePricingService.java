@@ -9,4 +9,5 @@ public interface ProcedurePricingService {
     ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto);
     void delete(String procedureId, String clinicId);
 	ProcedurePricingDTO getByProcedureAndClinic(String procedureId, String clinicId);
+	List<ProcedurePricingDTO> getAll();
 }

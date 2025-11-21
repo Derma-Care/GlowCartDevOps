@@ -38,63 +38,77 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public String createAndSendToken(String whatsappNumber, String email) {
-        if ((whatsappNumber == null || whatsappNumber.isBlank()) && 
+
+        if ((whatsappNumber == null || whatsappNumber.isBlank()) &&
             (email == null || email.isBlank())) {
             throw new IllegalArgumentException("Provide either WhatsApp number or Email");
         }
 
-        // Generate a unique token
+        // Check for existing active token
+        Optional<OnboardingToken> existingTokenOpt = repo.findByEmailAndUsedFalse(email);
+
+        if (existingTokenOpt.isPresent()) {
+            OnboardingToken existingToken = existingTokenOpt.get();
+
+            if (existingToken.getExpiresAt().isAfter(Instant.now()) && !existingToken.isUsed()) {
+
+                String link = String.format("%s/clinic-registration?token=%s",
+                        frontendBaseUrl, existingToken.getId());
+
+                sendLink(whatsappNumber, email, link);
+                logger.info("Re-sending existing token: {}", existingToken.getId());
+                return existingToken.getId();
+            } else {
+                repo.delete(existingToken);
+            }
+        }
+
+        // Create new token
         String token = UUID.randomUUID().toString();
         Instant now = Instant.now();
 
-        // Create and save the token to the database
-        OnboardingToken t = new OnboardingToken();
-        t.setId(token);
-        t.setWhatsappNumber(whatsappNumber);
-        t.setEmail(email);
-        t.setCreatedAt(now);
-        t.setExpiresAt(now.plus(expiry));
-        t.setUsed(false);
+        OnboardingToken newToken = new OnboardingToken();
+        newToken.setId(token);
+        newToken.setWhatsappNumber(whatsappNumber);
+        newToken.setEmail(email);
+        newToken.setCreatedAt(now);
+        newToken.setExpiresAt(now.plus(expiry));
+        newToken.setUsed(false);
 
-        try {
-            repo.save(t);
-            logger.info("Token created and saved: {}", token);
-        } catch (Exception e) {
-            logger.error("Error saving token to database", e);
-            throw new RuntimeException("Error saving token to database");
-        }
+        repo.save(newToken);
 
-        // Generate link and send it via email/whatsapp
-        String link = String.format("%s/onboard?token=%s", frontendBaseUrl, token);
+        String link = String.format("%s/clinic-registration?token=%s",
+                frontendBaseUrl, token);
+
+        sendLink(whatsappNumber, email, link);
+
+        return token;
+    }
+
+    private void sendLink(String whatsappNumber, String email, String link) {
         if (whatsappNumber != null && !whatsappNumber.isBlank()) {
             whatsAppSender.sendWhatsAppLink(whatsappNumber, link);
         }
         if (email != null && !email.isBlank()) {
             emailSender.sendEmailLink(email, link);
         }
-
-        return token;
     }
 
     @Override
     public OnboardingToken validateToken(String token) {
-        // Debugging step: Check the token value
-        logger.info("Validating token: {}", token);
-
-        // Use 'repo' to access the token from the database
-        Optional<OnboardingToken> optionalToken = repo.findById(token); // Use findById instead of findByToken
-
+        Optional<OnboardingToken> optionalToken = repo.findById(token);
         if (!optionalToken.isPresent()) {
-            logger.error("Token not found in database");
             throw new IllegalArgumentException("Invalid token");
         }
 
         OnboardingToken t = optionalToken.get();
 
-        // Check if the token has expired
-        if (t.getExpiresAt() != null && t.getExpiresAt().isBefore(Instant.now())) {
-            logger.error("Token has expired");
+        if (t.getExpiresAt().isBefore(Instant.now())) {
             throw new IllegalArgumentException("Token has expired");
+        }
+
+        if (t.isUsed()) {
+            throw new IllegalArgumentException("Token already used");
         }
 
         return t;
@@ -102,21 +116,15 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public void markUsed(String token) {
-        // Mark the token as used after successful validation
+
         Optional<OnboardingToken> optionalToken = repo.findById(token);
-        if (optionalToken.isPresent()) {
-            OnboardingToken t = optionalToken.get();
-            t.setUsed(true);
-            try {
-                repo.save(t);
-                logger.info("Token marked as used: {}", token);
-            } catch (Exception e) {
-                logger.error("Error marking token as used: {}", e.getMessage());
-                throw new RuntimeException("Error marking token as used");
-            }
-        } else {
-            logger.error("Token not found for marking as used: {}", token);
+
+        if (!optionalToken.isPresent()) {
             throw new IllegalArgumentException("Token not found");
         }
+
+        OnboardingToken t = optionalToken.get();
+        t.setUsed(true);
+        repo.save(t);
     }
 }

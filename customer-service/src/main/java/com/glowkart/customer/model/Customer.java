@@ -1,11 +1,13 @@
 package com.glowkart.customer.model;
 
-import lombok.Data;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
+import lombok.Data;
 
 @Data
 @Document(collection = "customers")
@@ -28,7 +30,7 @@ public class Customer {
     private String clinicName;
     private String clinicCityArea;
     private LocalDate dateOfLastVisit;
-    private String serviceType;
+    private List<String> serviceType;
     private String blood;
 
     private String registrationCode;
