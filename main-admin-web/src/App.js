@@ -4,10 +4,11 @@ import { useSelector } from 'react-redux'
 import { CSpinner, useColorModes } from '@coreui/react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import './scss/style.scss'
+
 import routes from './routes'
 import ProtectedRoute from './components/ProtectedRoute'
 import { injectTheme } from './Constant/Themes'
+import './scss/style.scss'
 
 // Lazy-loaded default pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))

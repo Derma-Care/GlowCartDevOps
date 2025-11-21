@@ -35,21 +35,14 @@ import 'react-toastify/dist/ReactToastify.css'
 import { BASE_URL } from '../../baseUrl'
 import { fetchBranchByBranchId } from './AddBranchAPI'
 import AddDoctors from '../Doctors/AddDoctors'
-// import EditDoctor from '../Doctors/EditDoctor'
-import { getDoctorsByHospitalAndBranchId } from '../Doctors/DoctorAPI'
-import { DoctorAllData } from '../../baseUrl'
 import DoctorCard from '../Doctors/DoctorCard'
 import { ToastContainer } from 'react-toastify'
-import AppointmentManagement from '../AppointmentManagement/AppointmentManagement'
 import 'react-toastify/dist/ReactToastify.css'
-import DoctorDetailsPage from '../Doctors/DoctorDetailsPage'
 import EmployeeManagement from '../EmployeeManagement/EmployeeManagement'
 
 
 const BranchDetails = () => {
-
   const { branchId, clinicId } = useParams()
-
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [formErrors, setFormErrors] = useState({})
@@ -58,7 +51,6 @@ const BranchDetails = () => {
   const [activeTab, setActiveTab] = useState(tabFromUrl)
   const [branchData, setBranchData] = useState(null)
   const [doctors, setDoctors] = useState([])
-  const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   const [allDoctors, setAllDoctors] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -520,10 +512,8 @@ const BranchDetails = () => {
 `}</style>
 
           </CTabPane>
+        
           <CTabPane visible={activeTab === 2}>
-            <AppointmentManagement branchId={branchId} clinicId={branchData?.clinicId} />
-          </CTabPane>
-          <CTabPane visible={activeTab === 3}>
             <EmployeeManagement branchId={branchId} clinicId={branchData?.clinicId} />
           </CTabPane>
         </CTabContent>
