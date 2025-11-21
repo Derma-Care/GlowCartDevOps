@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: customer-service
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/customer_db}
+      database: ${SPRING_DATA_MONGODB_DATABASE:customer_db}
+
+server:
+  port: 8090
+
+# Feign configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+
+# Eureka configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# Optional async configuration if needed
+async:
+  core-pool-size: 5
+  max-pool-size: 20
+  queue-capacity: 50

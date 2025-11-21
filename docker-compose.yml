@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Eureka Service Registry
+  eureka-server:
+    image: openjdk:17-jdk
+    container_name: service_registry
+    build: ./service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
+  # API Gateway
+  apigateway:
+    build: ./api-gateway
+    container_name: api_gateway_service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    networks:
+      - app-network
+
+  # Admin Service
+  admin-service:
+    build: ./admin-service
+    container_name: admin_servce
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_admin
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
+
+  # Clinic Admin Service
+  clinicadmin-service:
+    build: ./clinicadmin-service
+    container_name: clinicadmin_service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_clinicadmin
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
+
+  # Customer Service
+  customer-service:
+    build: ./customer-service
+    container_name: customer_service
+    ports:
+      - "8090:8090"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/customer_db
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
+
+  # Onboarding Service
+  onboarding-service:
+    build: ./onboarding-service
+    container_name: onboarding_service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/onboardingdb
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
+
+  # Procedure Service
+  procedure-service:
+    build: ./procedure-service
+    container_name: procedure_service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/procedure_db
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
+
+  # MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb_service
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+  # Clinic Admin Web (Frontend)
+  clinic-admin-web:
+    build: ./clinic-admin-web
+    container_name: clinic-admin-web-container
+    ports:
+      - "3000:80"
+    environment:
+      - HOST=35.154.152.61
+      - PORT=3000
+      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
+    networks:
+      - app-network
+    depends_on:
+      - apigateway
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
