@@ -29,8 +29,6 @@ import ProcedureManagementDoctor from './ProcedureManagementDoctor'
 import DocumentField from './DocumentField'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import DoctorCard from '../Doctors/DoctorCard'
-import AddDoctors from '../Doctors/AddDoctors'
 import { fetchBranchByBranchId } from './AddBranchAPI'
 import PackageManagement from '../PackageManagement/PackageManagement'
 
@@ -61,8 +59,7 @@ const ClinicDetails = () => {
   const [itemsPerPage] = useState(5)
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = allDoctors.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.max(1, Math.ceil(allDoctors.length / itemsPerPage))
+
   // ---------------------- API calls ----------------------
   const fetchClinicDetails = async () => {
     if (!hospitalId) return
@@ -84,42 +81,6 @@ const ClinicDetails = () => {
     }
   }
 
-  // Fetch doctors for a particular clinic + branch
-  // Accepts clinicId (required) and branchId (optional)
-  const fetchDoctorsForClinicAndBranch = async (clinicIdParam, branchIdParam) => {
-    if (!clinicIdParam) return
-    try {
-      // If backend endpoint requires both clinicId and branchId
-      let url = ''
-      if (branchIdParam) {
-        url = `${BASE_URL}/admin/getDoctorsByHospitalIdAndBranchId/${clinicIdParam}/${branchIdParam}`
-      } else {
-        // fallback endpoint for clinic-only doctors (adjust if your backend differs)
-        url = `${BASE_URL}/admin/getDoctorsByHospitalId/${clinicIdParam}`
-      }
-      const res = await axios.get(url)
-      const docs = res?.data?.data || []
-      setAllDoctors(docs)
-      setCurrentPageSafe(1)
-    } catch (error) {
-      console.error('Error fetching doctors:', error)
-      toast.error('Failed to fetch doctors')
-      setAllDoctors([])
-    }
-  }
-
-
-  // safe setter for current page
-  const setCurrentPageSafe = (p) => {
-    setCurrentPage(p)
-  }
-
-
-  const fetchAllDoctors = async () => {
-    // Deprecated in favor of fetchDoctorsForClinicAndBranch, kept for compatibility
-    if (!hospitalId) return
-    await fetchDoctorsForClinicAndBranch(hospitalId, branchId)
-  }
   // Fetch branch data by branchId
   const fetchBranch = async (bId) => {
     if (!bId) return null
@@ -146,25 +107,7 @@ const ClinicDetails = () => {
     }
   }
 
-  // Delete doctor
-  const handleDeleteDoctor = async () => {
-    if (!selectedDoctor) return
-    try {
-      const response = await axios.delete(`${BASE_URL}/admin/deleteDoctor/${selectedDoctor.doctorId}`)
-      if (response?.data?.success) {
-        toast.success(`Dr. ${selectedDoctor.doctorName} deleted successfully!`)
-        setAllDoctors((prev) => prev.filter((d) => d.doctorId !== selectedDoctor.doctorId))
-      } else {
-        toast.error(response?.data?.message || 'Failed to delete doctor')
-      }
-    } catch (error) {
-      console.error('Error deleting doctor:', error)
-      toast.error('Error deleting doctor')
-    } finally {
-      setShowDeleteModal(false)
-      setSelectedDoctor(null)
-    }
-  }
+
   // PDF preview helper
   const openPdfPreview = (base64) => {
     try {
@@ -272,13 +215,6 @@ const ClinicDetails = () => {
     setActiveTab(tabIndex)
     setSearchParams({ tab: tabIndex })
   }
-
-
-  const openDeleteModal = (doctor) => {
-    setSelectedDoctor(doctor)
-    setShowDeleteModal(true)
-  }
-
 
   // ---------------------- render ----------------------
   if (loading) {
@@ -1297,112 +1233,7 @@ const ClinicDetails = () => {
                 </CForm>
               </CTabPane>
 
-              {/* <CTabPane visible={activeTab === 2}>
-                <CCardHeader>
-                  <div className="d-flex justify-content-between align-items-center mb-3 w-100">
-                    <h4 className="mb-0 text-center flex-grow-1">Doctor Details</h4>
-
-
-                    <button
-                      className="btn btn-info text-white d-flex align-items-center gap-2 shadow-sm rounded-pill px-4 py-2"
-                      onClick={() => setModalVisible(true)}
-                      style={{
-                        background: 'linear-gradient(90deg, #0072CE 0%, #00AEEF 100%)',
-                        border: 'none',
-                        fontWeight: '600',
-                        fontSize: '16px',
-                      }}
-                    >
-                      <span>Add Doctor</span>
-                    </button>
-                  </div>
-                </CCardHeader>
-                {branchData?.clinicId ? (
-                  <AddDoctors
-                    modalVisible={modalVisible}
-                    setModalVisible={setModalVisible}
-                    clinicId={branchData.clinicId}
-                    branchId={branchData.branchId}
-                    closeForm={() => setModalVisible(false)}
-                    fetchAllDoctors={() => fetchDoctorsForClinicAndBranch(branchData.clinicId, branchData.branchId)}
-                  />
-                ) : (
-                  <AddDoctors
-                    modalVisible={modalVisible}
-                    setModalVisible={setModalVisible}
-                    clinicId={hospitalId}
-                    branchId={branchId}
-                    closeForm={() => setModalVisible(false)}
-                    fetchAllDoctors={() => fetchDoctorsForClinicAndBranch(hospitalId, branchId)}
-                  />
-                )}
-                {branchNotFound && <p className="text-danger text-center mt-2">Branch not found</p>}
-                {currentItems.length > 0 ? (
-                  <div className="doctor-card-container">
-                    {currentItems.map((doc) => (
-                      <DoctorCard
-                        key={doc.doctorId}
-                        doctor={doc}
-                        branchId={branchData?.branchId}
-                        onEdit={() => {
-                          setSelectedDoctor(doc)
-                          setEditDoctorModal(true)
-                        }}
-                        onDelete={() => openDeleteModal(doc)}
-                        onView={() => {
-                          setSelectedDoctor(doc)
-                          setShowDoctorModal(true)
-                        }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center">No Doctors Available</p>
-                )}
-                <div className="d-flex justify-content-center mt-3">
-                  <CPagination aria-label="Doctors navigation">
-                    <CPaginationItem disabled={currentPage === 1} onClick={() => setCurrentPageSafe(Math.max(1, currentPage - 1))}>
-                      Previous
-                    </CPaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <CPaginationItem key={i} active={currentPage === i + 1} onClick={() => setCurrentPageSafe(i + 1)}>
-                        {i + 1}
-                      </CPaginationItem>
-                    ))}
-                    <CPaginationItem disabled={currentPage === totalPages} onClick={() => setCurrentPageSafe(Math.min(totalPages, currentPage + 1))}>
-                      Next
-                    </CPaginationItem>
-                  </CPagination>
-                </div>
-                <CModal visible={showDeleteModal} onClose={() => setShowDeleteModal(false)} alignment="center">
-                  <CModalHeader>
-                    <CModalTitle>Delete Doctor</CModalTitle>
-                  </CModalHeader>
-                  <CModalBody>
-                    Are you sure you want to delete Dr. {selectedDoctor?.doctorName || ''}?
-                  </CModalBody>
-                  <CModalFooter>
-                    <CButton color="secondary" onClick={() => setShowDeleteModal(false)}>
-                      Cancel
-                    </CButton>
-                    <CButton color="danger" onClick={handleDeleteDoctor}>
-                      Delete
-                    </CButton>
-                  </CModalFooter>
-                </CModal>
-
-
-                <style>{`
-.doctor-card-container {
-display: flex;
-flex-direction: column;
-gap: 20px;
-}
-`}</style>
-              </CTabPane> */}
-
-
-
+             
               <CTabPane visible={activeTab === 3}>
                 <ProcedureManagementDoctor clinicId={hospitalId} />
               </CTabPane>

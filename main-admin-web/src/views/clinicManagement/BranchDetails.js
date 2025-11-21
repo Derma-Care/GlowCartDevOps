@@ -34,11 +34,10 @@ import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { BASE_URL } from '../../baseUrl'
 import { fetchBranchByBranchId } from './AddBranchAPI'
-import AddDoctors from '../Doctors/AddDoctors'
-import DoctorCard from '../Doctors/DoctorCard'
+
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import EmployeeManagement from '../EmployeeManagement/EmployeeManagement'
+
 
 
 const BranchDetails = () => {
@@ -50,7 +49,7 @@ const BranchDetails = () => {
 
   const [activeTab, setActiveTab] = useState(tabFromUrl)
   const [branchData, setBranchData] = useState(null)
-  const [doctors, setDoctors] = useState([])
+
   const [loading, setLoading] = useState(true)
   const [allDoctors, setAllDoctors] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -436,86 +435,9 @@ const BranchDetails = () => {
             </CModalFooter>
           </CModal>
           {/* Doctors Tab */}
-          <CTabPane visible={activeTab === 1}>
-            <CCardHeader>
-              <div className="d-flex justify-content-between align-items-center mb-3 w-100">
-                {/* <CButton color="secondary" onClick={() => navigate(-1)}>
-        Back
-      </CButton> */}
-
-                <h4 className="mb-0 text-center flex-grow-1">Doctor Details</h4>
-
-                <button
-                  className="btn btn-info text-white d-flex align-items-center gap-2 shadow-sm rounded-pill px-4 py-2"
-                  onClick={() => {
-                    setFormErrors({})
-                    setModalVisible(true)
-                  }}
-                  style={{
-                    background: 'linear-gradient(90deg, #0072CE 0%, #00AEEF 100%)',
-                    border: 'none',
-                    fontWeight: '600',
-                    fontSize: '16px',
-                  }}
-                >
-                  <span>Add Doctor</span>
-                </button>
-              </div>
-            </CCardHeader>
-
-            {/* Add Doctor Modal */}
-            {branchData?.clinicId && (
-              <AddDoctors
-                modalVisible={modalVisible}
-                setModalVisible={setModalVisible}
-                clinicId={branchData.clinicId}  // hospitalId
-                branchId={branchData.branchId}   // branchId
-                closeForm={() => setModalVisible(false)}
-                fetchAllDoctors={() => fetchAllDoctors(branchData.clinicId, branchId)}
-              />
-            )}
-
-            {/* Doctor Cards */}
-            {currentItems.length > 0 ? (
-              <div className="doctor-card-container">
-                {currentItems.map(doc => (
-                  <DoctorCard
-                    key={doc.doctorId}
-                    doctor={doc}
-                    branchId={branchData.branchId} // ✅ pass branchId here
-                    onEdit={() => {
-                      setSelectedDoctor(doc)
-                      setEditDoctorModal(true)
-                    }}
-                    onDelete={() => openDeleteModal(doc)}
-                    onView={() => {
-                      setSelectedDoctor(doc)
-                      setShowDoctorModal(true)
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-center">No Doctors Available</p>
-            )}
-
-            <style>{`
-  .doctor-card-container {
-    display: flex;
-    flex-direction: column; /* stack vertically */
-    gap: 20px; /* spacing between cards */
-  }
-
-  .doctor-card {
-    width: 100%; /* full width */
-  }
-`}</style>
-
-          </CTabPane>
+         
         
-          <CTabPane visible={activeTab === 2}>
-            <EmployeeManagement branchId={branchId} clinicId={branchData?.clinicId} />
-          </CTabPane>
+         
         </CTabContent>
       </CCardBody>
     </CCard>

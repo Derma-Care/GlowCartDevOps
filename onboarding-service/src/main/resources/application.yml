@@ -37,7 +37,7 @@ eureka:
     lease-expiration-duration-in-seconds: 30
 
 app:
-  frontend-base-url: ${APP_FRONTEND_BASE_URL:http://35.154.152.61:3000}
+  frontend-base-url: ${APP_FRONTEND_BASE_URL:http://35.154.152.61:4000}
   token-expiry-minutes: ${APP_TOKEN_EXPIRY_MINUTES:60}
 
 # Twilio credentials removed
