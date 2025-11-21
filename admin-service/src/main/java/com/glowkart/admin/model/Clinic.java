@@ -44,11 +44,11 @@ public class Clinic {
     private byte[] businessRegistrationCertificate;
 
     private String clinicType;
-    private String medicinesSoldOnSite;
+    private String medicinesSoldOnSite; // Yes / No
     private byte[] drugLicenseCertificate;
     private String drugLicenseFormType;
 
-    private String hasPharmacist;
+    private String hasPharmacist; // Yes / No / NA
     private byte[] pharmacistCertificate;
 
     private byte[] biomedicalWasteManagementAuth;

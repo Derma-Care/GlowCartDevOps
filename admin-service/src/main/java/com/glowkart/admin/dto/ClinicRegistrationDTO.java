@@ -12,8 +12,8 @@ import java.util.Map;
 @Data
 public class ClinicRegistrationDTO {
 
-	private String clinicId; 
-	 
+    private String clinicId; 
+
     @NotBlank(message = "Hospital name is required")
     private String name;
 
@@ -66,9 +66,8 @@ public class ClinicRegistrationDTO {
     private String clinicalEstablishmentCertificate;
     private String businessRegistrationCertificate;
 
-    // Clinic Type: Proprietorship, Partnership, LLP, Pvt Ltd
     @NotBlank(message = "Clinic type is required")
-    private String clinicType;
+    private String clinicType; // Proprietorship / Partnership / LLP / Pvt Ltd
 
     // Medicines Handling
     private String medicinesSoldOnSite;  // Yes / No
@@ -95,7 +94,6 @@ public class ClinicRegistrationDTO {
     private double longitude;
     private int nabhScore;
     private String branch;
-
     private String walkthrough;
 
     // Clinic admin credentials
@@ -106,7 +104,6 @@ public class ClinicRegistrationDTO {
     private String twitterHandle;
     private String facebookHandle;
 
-    // Admin-controlled clinic status
     private String status; // PENDING / VERIFIED / REJECTED
 
     // New Fields Added
