@@ -24,6 +24,9 @@ import LoadingIndicator from '../../../Utils/loader'
 import { registerCustomer } from '../APIs/registerCustomerApi'
 import { verifyRegistrationCode } from '../APIs/verifyRegistrationCode'
 import { fileToBase64 } from '../Utills/FileToBase64'
+import { processFile } from '../Utills/fileUtils'
+import { UploadedPreview } from '../Utills/FileUpload'
+import { getAllProcedures } from '../APIs/procedureService'
 export default function NGlowKartPatientRegistration_CoreUI() {
   const today = new Date()
   const maxToday = today.toISOString().split('T')[0]
@@ -39,62 +42,103 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const dummyAadhar = '123456789012' // Change as needed
   const regCode = 'NGK-202517' // Change as needed
   const [winnerPrize, setWinnerPrize] = useState(null)
-  const [showWheel, setShowWheel] = useState(true)
-  const [instagram, setInstagram] = useState(false)
-  const [isRegistration, setIsRegistration] = useState(true)
+  const [showWheel, setShowWheel] = useState(() =>
+    localStorage.getItem('step_showWheel') === 'false' ? false : true,
+  )
+
+  const [instagram, setInstagram] = useState(
+    () => localStorage.getItem('step_instagram') === 'true',
+  )
+
+  const [isRegistration, setIsRegistration] = useState(() =>
+    localStorage.getItem('step_isRegistration') === 'false' ? false : true,
+  )
+
   const [spinWhell, setSpinWhell] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [verifyLoading, setVerifyLoading] = useState(false)
+  const [procedureOptions, setProcedureOptions] = useState([])
 
-  const [form, setForm] = useState({
-    fullName: '',
-    mobile: '',
-    email: '',
-    city: '',
-    dob: '',
-    confirmedVisit: false,
-    clinicName: '',
-    clinicCityArea: '',
-    dateOfLastVisit: '',
-    serviceType: '',
-    Blood: '',
-    registraionCode: '',
-    referBy: '',
-    Aadhar: '',
-    prescription: '',
+  useEffect(() => {
+    async function fetchProcedures() {
+      const list = await getAllProcedures()
 
-    // ⭐ ADD THESE TWO NEW FIELDS
-    spinRewardId: '',
-    spinRewardValue: '',
-    spinRewardImage: '',
+      const formatted = list.map((item) => ({
+        value: item.procedureId,
+        label: item.procedureName,
+      }))
 
-    prizePostScreenshot: '',
-    followScreenshot: '',
-    address: '',
+      setProcedureOptions(formatted)
+    }
+
+    fetchProcedures()
+  }, [])
+
+  const [form, setForm] = useState(() => {
+    const saved = localStorage.getItem('saved_form')
+    return saved
+      ? JSON.parse(saved)
+      : {
+          fullName: '',
+          mobile: '',
+          email: '',
+          city: '',
+          dob: '',
+          confirmedVisit: false,
+          clinicName: '',
+          clinicCityArea: '',
+          dateOfLastVisit: '',
+          serviceType: '',
+          Blood: '',
+          registraionCode: '',
+          referBy: '',
+          Aadhar: '',
+          prescription: '',
+          referBy: "Neha's GlowKart",
+
+          spinRewardId: '',
+          spinRewardValue: '',
+          spinRewardImage: '',
+
+          prizePostScreenshot: '',
+          followScreenshot: '',
+          address: '',
+        }
   })
 
-  const procedureOptions = [
-    { value: 'botox', label: 'Botox' },
-    { value: 'chemical_peel', label: 'Chemical Peel' },
-    { value: 'laser_treatment', label: 'Laser Treatment' },
-    { value: 'fillers', label: 'Fillers' },
-    { value: 'microdermabrasion', label: 'Microdermabrasion' },
-    { value: 'prp_hair', label: 'PRP Hair Treatment' },
-    { value: 'facial', label: 'Facial Therapy' },
-    { value: 'pigmentation_treatment', label: 'Pigmentation Treatment' },
-    { value: 'acne_treatment', label: 'Acne Treatment' },
-    { value: 'skin_rejuvenation', label: 'Skin Rejuvenation' },
-    { value: 'tattoo_removal', label: 'Tattoo Removal' },
-    { value: 'body_contouring', label: 'Body Contouring' },
-    { value: 'derma_roller', label: 'Derma Roller' },
-    { value: 'lip_lightening', label: 'Lip Lightening' },
-    { value: 'skin_brightening', label: 'Skin Brightening' },
-    { value: 'other', label: 'Other (Not Listed)' }, // Custom option
-  ]
+  useEffect(() => {
+    const safeForm = { ...form }
+
+    // ❌ Remove large fields BEFORE saving
+    delete safeForm.prescription
+
+    localStorage.setItem('saved_form', JSON.stringify(safeForm))
+  }, [form])
+
+  // const procedureOptions = [
+  //   { value: 'botox', label: 'Botox' },
+  //   { value: 'chemical_peel', label: 'Chemical Peel' },
+  //   { value: 'laser_treatment', label: 'Laser Treatment' },
+  //   { value: 'fillers', label: 'Fillers' },
+  //   { value: 'microdermabrasion', label: 'Microdermabrasion' },
+  //   { value: 'prp_hair', label: 'PRP Hair Treatment' },
+  //   { value: 'facial', label: 'Facial Therapy' },
+  //   { value: 'pigmentation_treatment', label: 'Pigmentation Treatment' },
+  //   { value: 'acne_treatment', label: 'Acne Treatment' },
+  //   { value: 'skin_rejuvenation', label: 'Skin Rejuvenation' },
+  //   { value: 'tattoo_removal', label: 'Tattoo Removal' },
+  //   { value: 'body_contouring', label: 'Body Contouring' },
+  //   { value: 'derma_roller', label: 'Derma Roller' },
+  //   { value: 'lip_lightening', label: 'Lip Lightening' },
+  //   { value: 'skin_brightening', label: 'Skin Brightening' },
+  //   { value: 'other', label: 'Other (Not Listed)' }, // Custom option
+  // ]
 
   const [errors, setErrors] = useState({})
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(
+    () => localStorage.getItem('step_submitted') === 'true',
+  )
 
   function calculateAge(dobStr) {
     if (!dobStr) return 0
@@ -113,12 +157,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   // }, [])
 
   const handleProcedureChange = (selected) => {
-    // Update form with selected values (array of values)
     setForm((prev) => ({
       ...prev,
-      serviceType: selected.map((s) => s.value),
+      serviceType: selected.map((item) => item.label), // ✔ store labels
     }))
   }
+
   const showOtherInput = form.serviceType?.includes('other')
   function handleChange(e) {
     const { name, value, type, checked } = e.target
@@ -233,12 +277,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       clinicName: form.clinicName,
       clinicCityArea: form.clinicCityArea,
       dateOfLastVisit: form.dateOfLastVisit,
-      serviceType: form.serviceType[0],
+      serviceType: form.serviceType,
       blood: form.Blood,
       registrationCode: form.registraionCode,
       referBy: form.referBy,
       aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
+      referBy: form.referBy,
     }
 
     try {
@@ -265,6 +310,22 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    localStorage.setItem('step_isRegistration', isRegistration)
+  }, [isRegistration])
+
+  useEffect(() => {
+    localStorage.setItem('step_submitted', submitted)
+  }, [submitted])
+
+  useEffect(() => {
+    localStorage.setItem('step_showWheel', showWheel)
+  }, [showWheel])
+
+  useEffect(() => {
+    localStorage.setItem('step_instagram', instagram)
+  }, [instagram])
 
   console.log('instagram :: ', instagram)
   console.log('instagram :: ', form)
@@ -303,7 +364,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
           }}
         >
           {/* HEADER */}
-          <div className="d-flex align-items-start gap-3 mb-4">
+          <div className="d-flex align-items-start gap-3 mb-2">
             <img
               src={DermaCareLogo}
               alt="logo"
@@ -394,6 +455,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               spinRewardImage: winner.src,
                             }))
 
+                            localStorage.setItem('saved_winnerPrize', JSON.stringify(winner))
+
                             setWinnerPrize(winner)
                             setShowWheel(false) // HIDE WHEEL
                           }}
@@ -437,7 +500,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       width: '100%',
                       minHeight: '70vh',
                       padding: '20px 0',
-                   
                     }}
                   >
                     <div
@@ -454,7 +516,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       <h3
                         style={{
                           fontSize: 20,
-                          marginBottom: 14,
+
                           fontWeight: 700,
                           color: '#d81b60',
                           textAlign: 'center',
@@ -835,10 +897,11 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             isMulti
                             placeholder="Select services received..."
                             onChange={handleProcedureChange}
-                            value={procedureOptions.filter((opt) =>
-                              form.serviceType?.includes(opt.value),
+                            value={procedureOptions.filter(
+                              (opt) => form.serviceType?.includes(opt.label), // ✔ match using label
                             )}
                           />
+
                           {errors.serviceType && (
                             <p
                               style={{
@@ -867,36 +930,51 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             Upload your last visit bill or prescription{' '}
                             <span className="text-danger">*</span>
                           </CFormLabel>
-
-                          <label
+                          <div
                             style={{
-                              border: '2px dashed #ff95c9',
-                              borderRadius: 12,
-                              padding: '18px',
-                              width: '100%',
-                              textAlign: 'center',
-                              display: 'block',
-                              cursor: 'pointer',
-                              background: '#fff8fc',
-                              color: '#ff2e85',
-                              fontWeight: '500',
-                              fontSize: 15,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: '10px',
+                              alignContent: 'center',
+                              alignItems: 'center',
                             }}
                           >
-                            📁 Tap to upload Prescription / Bill
-                            <input
-                              type="file"
-                              accept="image/*, application/pdf"
-                              onChange={async (e) => {
-                                const file = e.target.files[0]
-                                if (!file) return
-
-                                const base64 = await fileToBase64(file)
-                                updateForm('prescription', base64)
+                            <label
+                              style={{
+                                border: '2px dashed #ff95c9',
+                                borderRadius: 12,
+                                padding: '18px',
+                                width: '100%',
+                                textAlign: 'center',
+                                display: 'block',
+                                cursor: 'pointer',
+                                background: '#fff8fc',
+                                color: '#ff2e85',
+                                fontWeight: '500',
+                                fontSize: 15,
                               }}
-                              style={{ display: 'none' }}
-                            />
-                          </label>
+                            >
+                              📁 Tap to upload Prescription / Bill
+                              <input
+                                type="file"
+                                accept="image/*, application/pdf"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0]
+                                  if (!file) return
+
+                                  try {
+                                    const base64 = await processFile(file)
+                                    updateForm('prescription', base64)
+                                  } catch (err) {
+                                    alert(err.message)
+                                    e.target.value = ''
+                                  }
+                                }}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                            <UploadedPreview src={form.prescription} />
+                          </div>
                         </div>
                         <small style={{ color: '#888', display: 'block' }}>
                           Accepted formats: PDF, JPG, JPEG, PNG
@@ -922,7 +1000,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     <CCol md={12} className="mt-3 d-flex justify-content-end">
                       <CButton
                         style={{ background: '#ff4f9a', color: '#fff' }}
-                        disabled={!form.confirmedVisit}
+                        disabled={!form.confirmedVisit || loading}
                         type="submit"
                       >
                         {loading ? 'Submitting...' : 'Submit'}

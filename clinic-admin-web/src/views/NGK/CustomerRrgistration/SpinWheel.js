@@ -6,7 +6,9 @@ import { getWheelSlices } from '../APIs/getWheelSlices'
 export default function SpinWheel({ onResult }) {
   const [mustSpin, setMustSpin] = useState(false)
   const [prizeNumber, setPrizeNumber] = useState(0)
+  const wheelSize = window.innerWidth < 350 ? 180 : window.innerWidth < 420 ? 220 : 320
 
+  const [spinning, setSpinning] = useState(false)
   const [slices, setSlices] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -35,51 +37,38 @@ export default function SpinWheel({ onResult }) {
     setLoading(false)
   }
 
-  if (loading) return <p>Loading wheel...</p>
-  // const slices = [
-  //   {
-  //     id: '1',
-  //     option: '💄 Lipstick',
-  //     src: '/assets/images/1.png',
-  //   },
-  //   {
-  //     id: '2',
-  //     option: '💋 Liquid Matte Lipstick',
-  //     src: '/assets/images/2.png',
-  //   },
-  //   { id: '3', option: '5%' },
-  //   {
-  //     id: '4',
-  //     option: '🧴 BB Cream',
-  //     src: '/assets/images/3.png',
-  //   },
-  //   { id: '5', option: '10%' },
-  //   {
-  //     id: '6',
-  //     option: '👁️ Kajal / Eye Pencil',
-  //     src: '/assets/images/4.png',
-  //   },
-  //   { id: '7', option: '15%' },
-  //   {
-  //     id: '8',
-  //     option: '💅 Nail Polish',
-  //     src: '/assets/images/5.png',
-  //   },
-  //   {
-  //     id: '9',
-  //     option: '🧖 Face Sheet Mask',
-  //     src: '/assets/images/6.png',
-  //   },
-  //   { id: '10', option: '20%' },
-  //   {
-  //     id: '11',
-  //     option: '👜 Mini Makeup Kit',
-  //     src: '/assets/images/6.png',
-  //   },
-  //   { id: '12', option: '25%' }, // ⬅️ Wrapped into 2 lines
-  // ]
+  {
+    loading && (
+      <div style={loaderStyles.overlay}>
+        <div style={loaderStyles.loaderWrapper}>
+          <div className="spinner"></div>
 
-  // Format text: if long → small size + allow wrap
+          <div style={loaderStyles.textBlock}>
+            <p style={loaderStyles.text}>Loading wheel...</p>
+          </div>
+        </div>
+
+        <style>
+          {`
+        .spinner {
+          width: 58px;
+          height: 58px;
+          border: 6px solid #ffd4ec;
+          border-top-color: #ff007f;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}
+        </style>
+      </div>
+    )
+  }
+
   const data = slices.map((item) => {
     const isLong = item.option.length > 12
     return {
@@ -97,6 +86,7 @@ export default function SpinWheel({ onResult }) {
     const randomIndex = Math.floor(Math.random() * slices.length)
     setPrizeNumber(randomIndex)
     setMustSpin(true)
+    setSpinning(true)
 
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overflow = 'hidden'
@@ -107,15 +97,20 @@ export default function SpinWheel({ onResult }) {
 
   return (
     <div className="spin-container">
+      {/* {spinning && (
+        <div className="spin-loader">
+          <div className="loader-circle"></div>
+          <p>Spinning...</p>
+        </div>
+      )} */}
       <div className="wheel-wrapper">
         <Wheel
+          wheelSize={wheelSize}
           mustStartSpinning={mustSpin}
           prizeNumber={prizeNumber}
           data={data}
-          wheelSize={160}
-          pointerProps={{
-            style: { transform: 'scale(0.60)', fill: '#ff4f9a' },
-          }}
+          // wheelSize={160}
+
           textColors={['#ffffff']}
           backgroundColors={['#ff9933', '#ffcc00', '#ff6666', '#66cc66', '#66a3ff', '#cc66ff']}
           radiusLineColor="#fff"
@@ -126,6 +121,12 @@ export default function SpinWheel({ onResult }) {
           innerBorderWidth={6}
           perpendicularText={false}
           fontSize={16}
+          pointerProps={{
+            style: {
+              transform: window.innerWidth < 480 ? 'scale(0.50)' : 'scale(0.75)',
+              transformOrigin: 'top',
+            },
+          }}
           onStopSpinning={() => {
             setMustSpin(false)
             document.body.style.overflow = 'auto'
@@ -148,4 +149,43 @@ export default function SpinWheel({ onResult }) {
       </div>
     </div>
   )
+}
+const loaderStyles = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(6px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+
+  loaderWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    maxWidth: '380px', // 👈 keeps paragraphs aligned
+    padding: '20px',
+  },
+
+  textBlock: {
+    marginTop: '20px',
+  },
+
+  text: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: '#ff007f',
+    marginBottom: '10px',
+  },
+
+  textSmall: {
+    fontSize: '15px',
+    fontWeight: 500,
+    color: '#ff007f',
+    lineHeight: '22px',
+  },
 }

@@ -10,49 +10,27 @@ import './SpinWheel.css'
 export default function SpinResultCard({ prize, onReset, setInstagram, form }) {
   const cardRef = useRef(null)
   const [loading, setLoading] = useState(false)
+  const [localPrize, setLocalPrize] = useState(null)
 
-  //   const handleShare = async () => {
-  //     try {
-  //       setLoading(true) // start loader immediately
+  useEffect(() => {
+    if (!prize) {
+      const saved = localStorage.getItem('saved_winnerPrize')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setLocalPrize(parsed) // store it inside component state
+      }
+    }
+  }, [])
 
-  //       await navigator.clipboard.writeText(
-  //         `I just won ${prize.option} an exciting gift from Neha's GlowKart! 🎁✨
-  // Thanks to Neha's GlowKart for the amazing surprises! 💖
-  // #GlowKartWinner #GlowKartGifts #LuckySpin`,
-  //       )
+  const finalPrize = prize || localPrize
 
-  //       const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true })
-  //       const image = canvas.toDataURL('image/png')
-
-  //       const link = document.createElement('a')
-  //       link.href = image
-  //       link.download = `NGlowKart-Prize-${prize.option}.png`
-  //       link.click()
-
-  //       showCustomToast(
-  //         '📸 Image saved & caption copied! 🚀 Opening Instagram…',
-  //         { autoClose: 2800 },
-  //         'top-left',
-  //       )
-
-  //       // ✨ Wait + show loader before redirecting
-  //       setTimeout(() => {
-  //         // const instaTab = window.open('https://instagram.com', '_blank')
-  //         // if (!instaTab) toast.error('⚠️ Enable popups to continue.')
-  //         setInstagram(true)
-  //         setLoading(false) // hide loader
-  //       }, 3000)
-  //     } catch (err) {
-  //       setLoading(false)
-  //       toast.error('❌ Something went wrong.')
-  //     }
-  //   }
+  if (!finalPrize) return <p>No prize found</p>
 
   const handleShare = async () => {
     try {
       setLoading(true)
 
-      const caption = `I just won ${prize.option} an exciting gift from Neha's GlowKart! 🎁✨
+      const caption = `I just won ${finalPrize.option} an exciting gift from Neha's GlowKart! 🎁✨
 Thanks to Neha's GlowKart for the amazing surprises! 💖
 #GlowKartWinner #GlowKartGifts #LuckySpin`
 
@@ -104,7 +82,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       // ---------------------------
       const link = document.createElement('a')
       link.href = image
-      link.download = `NGlowKart-Prize-${prize.option}.png`
+      link.download = `NGlowKart-Prize-${finalPrize.option}.png`
 
       document.body.appendChild(link)
       link.click()
@@ -147,7 +125,6 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
         width: '100%',
         maxWidth: 560,
         margin: 'auto',
-        padding: '16px',
       }}
     >
       {/* CARD */}
@@ -241,7 +218,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           </p>
 
           {/* PRIZE DISPLAY */}
-          {prize.src ? (
+          {finalPrize.src ? (
             <div
               className="d-flex align-items-center justify-content-center"
               style={{ gap: '60px' }}
@@ -256,7 +233,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  {prize.option}
+                  {finalPrize.option}
                 </h4>
                 <p
                   style={{
@@ -267,7 +244,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  a premium {prize.option} as a prize!
+                  a premium {finalPrize.option} as a prize!
                 </p>
               </div>
               <div
@@ -287,7 +264,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 }}
               >
                 <img
-                  src={prize.src}
+                  src={finalPrize.src}
                   crossOrigin="anonymous"
                   alt="Prize"
                   style={{
@@ -314,7 +291,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  {prize.option} discount on all dermatology services on your{' '}
+                  {finalPrize.option} discount on all dermatology services on your{' '}
                   <span style={{ fontWeight: 'bold', color: '#ff2e85' }}>First</span> service
                   booking.
                 </p>
@@ -337,7 +314,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 }}
               >
                 <div style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1 }}>
-                  {prize.option}
+                  {finalPrize.option}
                 </div>
                 <span style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1 }}>OFF</span>
               </div>
@@ -408,25 +385,25 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
 
       {loading && (
         <div style={loaderStyles.overlay}>
-          <div style={loaderStyles.box}>
+          <div style={loaderStyles.loaderWrapper}>
             <div className="spinner"></div>
-            <p style={loaderStyles.text}>Opening Instagram…</p>
-            <p style={loaderStyles.text}>
-              🎉 Image saved & caption copied!
-              <br />
-              Now just upload the image on Instagram and
-              <br />
-              paste the caption while posting.
-            </p>
+
+            <div style={loaderStyles.textBlock}>
+              <p style={loaderStyles.text}>Opening Instagram…</p>
+              <p style={loaderStyles.textSmall}>
+                🎉 Image saved & caption copied! <br />
+                Now just upload the image on Instagram and <br />
+                paste the caption while posting.
+              </p>
+            </div>
           </div>
 
-          {/* Spinner Animation */}
           <style>
             {`
         .spinner {
-          width: 55px;
-          height: 55px;
-          border: 5px solid #ffd4ec;
+          width: 58px;
+          height: 58px;
+          border: 6px solid #ffd4ec;
           border-top-color: #ff007f;
           border-radius: 50%;
           animation: spin 1s linear infinite;
@@ -447,20 +424,38 @@ const loaderStyles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(255, 255, 255, 0.9)',
+    background: 'rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(6px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
   },
-  box: {
+
+  loaderWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     textAlign: 'center',
+    maxWidth: '380px', // 👈 keeps paragraphs aligned
+    padding: '20px',
   },
+
+  textBlock: {
+    marginTop: '20px',
+  },
+
   text: {
-    marginTop: '15px',
-    fontSize: '18px',
-    fontWeight: 600,
+    fontSize: '20px',
+    fontWeight: 700,
     color: '#ff007f',
+    marginBottom: '10px',
+  },
+
+  textSmall: {
+    fontSize: '15px',
+    fontWeight: 500,
+    color: '#ff007f',
+    lineHeight: '22px',
   },
 }

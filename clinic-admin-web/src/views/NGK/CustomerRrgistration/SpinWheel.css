@@ -2,11 +2,13 @@
   width: 100%;
   display: flex;
   justify-content: center;
+ 
+  overflow: hidden !important;
 }
 
 .wheel-wrapper {
   position: relative;
-  display: inline-flex;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
@@ -27,7 +29,7 @@
 }
 
 .bgCard {
-  height: 95vh;
+  height: 100vh;
   max-width: 1200px;
   background: #fff;
   overflow: hidden;
@@ -52,26 +54,35 @@
 
 /* Mobile Responsive */
 @media (max-width: 480px) {
+  .spin-container {
+    padding-top: 40px; /* extra for pointer */
+    padding-bottom: 40px; /* extra for pointer */
+  }
+
   .wheel-wrapper {
-    width: 290px;
-    height: 290px;
-    /* padding: 10px; */
+    width: auto !important;
+    height: auto !important; /* remove clipping */
   }
 
   .spin-btn {
-    width: 70px;
-    height: 70px;
-    font-size: 14px;
+    width: 58px;
+    height: 58px;
+    font-size: 13px;
   }
 
-  .rw-text {
-    font-size: 12px !important;
+  /* pointer must shrink */
+  .rw-pointer {
+    transform: scale(0.5) !important;
   }
 }
 .roulette-img {
   width: 50px !important;
   height: 50px !important;
   object-fit: contain;
+}
+
+.close-btn {
+  display: block !important;
 }
 
 /* MOBILE FIX: perfect round circle */
@@ -84,13 +95,17 @@
     padding: 6px !important;
   }
 
-  .spin-result-card {
-    margin-top: 40px !important;
-    padding: 10px !important;
-  }
   .bgCard {
     background: none !important; /* remove white background */
     box-shadow: none !important; /* remove shadow */
     border-radius: 0 !important; /* optional */
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+  .success-bg {
+    background: none !important;
+    box-shadow: none !important;
   }
 }
