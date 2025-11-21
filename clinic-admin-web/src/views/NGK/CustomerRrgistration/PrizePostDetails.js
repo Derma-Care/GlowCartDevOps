@@ -2,9 +2,13 @@ import React, { useState } from 'react'
 import { CCard, CCardBody, CButton, CFormInput } from '@coreui/react'
 import OnboardSuccess from './OnboardSuccess'
 import { useNavigate } from 'react-router-dom'
+import { updateStep2 } from '../APIs/FinalRegistrationApi'
+import { processFile } from '../Utills/fileUtils'
+import { UploadedPreview } from '../Utills/FileUpload'
 
 export default function PrizePostDetails({ form, setForm, onSubmit }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const navigate = useNavigate()
   // ------------ UPDATE FORM ------------
@@ -51,36 +55,116 @@ export default function PrizePostDetails({ form, setForm, onSubmit }) {
   }
 
   // ------------ SUBMIT (AUTO LOCATION IF EMPTY) ------------
+  // const handleSubmit = async () => {
+  //   // Auto-fetch location if address empty
+  //   if (!form.address.trim()) {
+  //     const fetched = await handleGetLocation()
+  //     if (!fetched) return
+  //   }
+
+  //   if (!form.prizePostScreenshot) {
+  //     alert('Upload your Prize Post screenshot!')
+  //     return
+  //   }
+
+  //   if (!form.address.trim()) {
+  //     alert('Address is required!')
+  //     return
+  //   }
+
+  //   if (!form.followScreenshot) {
+  //     alert('Upload your Follow Page screenshot!')
+  //     return
+  //   }
+
+  //   onSubmit() // parent handles full final submission
+  //   navigate('/onboard-success', {
+  //     state: {
+  //       name: form.fullName,
+  //     },
+  //   })
+  //   localStorage.removeItem('saved_form')
+  //   localStorage.removeItem('saved_winnerPrize')
+  //   localStorage.removeItem('step_submitted')
+  //   localStorage.removeItem('step_showWheel')
+  //   localStorage.removeItem('step_instagram')
+  //   localStorage.removeItem('step_isRegistration')
+
+  //   console.log('/onboard-success')
+  //   console.log(form.fullName)
+  // }
+
   const handleSubmit = async () => {
-    // Auto-fetch location if address empty
-    if (!form.address.trim()) {
-      const fetched = await handleGetLocation()
-      if (!fetched) return
+    if (loading) return // prevent double click
+
+    setLoading(true) // 🔥 SHOW LOADER
+
+    try {
+      if (!form.address.trim()) {
+        const fetched = await handleGetLocation()
+        if (!fetched) {
+          setLoading(false)
+          return
+        }
+      }
+
+      if (!form.prizePostScreenshot) {
+        alert('Upload your Prize Post screenshot!')
+        setLoading(false)
+        return
+      }
+
+      if (!form.address.trim()) {
+        alert('Address is required!')
+        setLoading(false)
+        return
+      }
+
+      if (!form.followScreenshot) {
+        alert('Upload your Follow Page screenshot!')
+        setLoading(false)
+        return
+      }
+
+      const step2Payload = {
+        spinRewardId: form.spinRewardId,
+        spinRewardValue: form.spinRewardValue,
+        // spinRewardImage: form.spinRewardImage,
+        prizePostScreenshot: form.prizePostScreenshot,
+        followScreenshot: form.followScreenshot,
+        address: form.address,
+      }
+
+      console.log('Sending Step2 Payload:', step2Payload)
+
+      const result = await updateStep2(form.mobile, step2Payload)
+
+      if (!result.success) {
+        alert('Failed to update Step 2!')
+        setLoading(false)
+        return
+      }
+
+      // On success:
+      onSubmit()
+      navigate('/onboard-success', {
+        state: { name: form.fullName },
+      })
+
+      localStorage.removeItem('saved_form')
+      localStorage.removeItem('saved_winnerPrize')
+      localStorage.removeItem('step_submitted')
+      localStorage.removeItem('step_showWheel')
+      localStorage.removeItem('step_instagram')
+      localStorage.removeItem('step_isRegistration')
+
+      console.log('Success..Moving to onboard success')
+    } catch (err) {
+      console.log('Error:', err)
+      alert('Something went wrong!')
     }
 
-    if (!form.prizePostScreenshot) {
-      alert('Upload your Prize Post screenshot!')
-      return
-    }
-
-    if (!form.address.trim()) {
-      alert('Address is required!')
-      return
-    }
-
-    if (!form.followScreenshot) {
-      alert('Upload your Follow Page screenshot!')
-      return
-    }
-
-    onSubmit() // parent handles full final submission
-    navigate('/onboard-success', {
-      state: {
-        name: form.fullName,
-      },
-    })
-    console.log('/onboard-success')
-    console.log(form.fullName)
+    setLoading(false) // 🔥 HIDE LOADER
   }
 
   const canSubmit = form.prizePostScreenshot && form.address.trim() !== '' && form.followScreenshot
@@ -121,30 +205,51 @@ export default function PrizePostDetails({ form, setForm, onSubmit }) {
             >
               1️⃣ Upload Prize Post Screenshot
             </p>
-
-            <label
+            <div
               style={{
-                border: '2px dashed #ff95c9',
-                borderRadius: 12,
-                padding: '18px',
-                width: '100%',
-                textAlign: 'center',
-                display: 'block',
-                cursor: 'pointer',
-                background: '#fff8fc',
-                color: '#ff2e85',
-                fontWeight: '500',
-                fontSize: 15,
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '10px',
+                alignContent: 'center',
+                alignItems: 'center',
               }}
             >
-              📷 Tap to upload image
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => updateForm('prizePostScreenshot', e.target.files[0])}
-                style={{ display: 'none' }}
-              />
-            </label>
+              <label
+                style={{
+                  border: '2px dashed #ff95c9',
+                  borderRadius: 12,
+                  padding: '18px',
+                  width: '100%',
+                  textAlign: 'center',
+                  display: 'block',
+                  cursor: 'pointer',
+                  background: '#fff8fc',
+                  color: '#ff2e85',
+                  fontWeight: '500',
+                  fontSize: 15,
+                }}
+              >
+                📷 Tap to upload image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
+
+                    try {
+                      const base64 = await processFile(file)
+                      updateForm('prizePostScreenshot', base64)
+                    } catch (err) {
+                      alert(err.message)
+                      e.target.value = ''
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <UploadedPreview src={form.prizePostScreenshot} />
+            </div>
           </div>
 
           {/* STEP 2 - ADDRESS */}
@@ -252,46 +357,69 @@ export default function PrizePostDetails({ form, setForm, onSubmit }) {
             >
               3️⃣ Upload Follow Screenshot
             </p>
-
-            <label
+            <div
               style={{
-                border: '2px dashed #ff95c9',
-                borderRadius: 12,
-                padding: '18px',
-                width: '100%',
-                textAlign: 'center',
-                display: 'block',
-                cursor: 'pointer',
-                background: '#fff8fc',
-                color: '#ff2e85',
-                fontWeight: '500',
-                fontSize: 15,
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '10px',
+                alignContent: 'center',
+                alignItems: 'center',
               }}
             >
-              📁 Tap to upload screenshot
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => updateForm('followScreenshot', e.target.files[0])}
-                style={{ display: 'none' }}
-              />
-            </label>
+              <label
+                style={{
+                  border: '2px dashed #ff95c9',
+                  borderRadius: 12,
+                  padding: '18px',
+                  width: '100%',
+                  textAlign: 'center',
+                  display: 'block',
+                  cursor: 'pointer',
+                  background: '#fff8fc',
+                  color: '#ff2e85',
+                  fontWeight: '500',
+                  fontSize: 15,
+                }}
+              >
+                📁 Tap to upload screenshot
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
+
+                    try {
+                      const base64 = await processFile(file)
+                      updateForm('followScreenshot', base64)
+                    } catch (err) {
+                      alert(err.message)
+                      e.target.value = ''
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <UploadedPreview src={form.followScreenshot} />
+            </div>
           </div>
 
           {/* SUBMIT BUTTON */}
           {canSubmit && (
             <CButton
-              color="dark"
               style={{
+                backgroundColor: '#ff2e85',
                 width: '100%',
                 padding: '12px 0',
                 borderRadius: 12,
                 fontWeight: '600',
                 fontSize: 17,
+                color: 'white',
               }}
+              disabled={loading}
               onClick={handleSubmit}
             >
-              ✔ Submit & Register
+              {loading ? 'Please wait...' : '✔ Submit & Register'}
             </CButton>
           )}
         </CCardBody>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import LaunchCountdown from './LaunchCountdown'
 import { CButton } from '@coreui/react'
+import './SpinWheel.css'
 export default function OnboardSuccess({ visible = true }) {
   const confettiRef = useRef(null)
   const location = useLocation()
@@ -79,7 +80,7 @@ export default function OnboardSuccess({ visible = true }) {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.35)',
+            // background: 'rgba(0,0,0,0.35)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             justifyContent: 'center',
@@ -96,6 +97,7 @@ export default function OnboardSuccess({ visible = true }) {
           {/* CARD */}
           <motion.div
             variants={card}
+            className='success-bg'
             style={{
               width: '50%',
               minWidth: 380,
@@ -131,6 +133,7 @@ export default function OnboardSuccess({ visible = true }) {
               <button
                 onClick={onClose}
                 title="Navigating to other website"
+                className="close-btn"
                 style={{
                   marginLeft: 'auto',
                   border: 'none',
