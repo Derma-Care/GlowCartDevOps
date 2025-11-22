@@ -66,6 +66,8 @@ const ClinicRegistration = () => {
   const [showNabhModal, setShowNabhModal] = useState(false);
   const [nabhScore, setNabhScore] = useState(null);
   const [nabhSubmitted, setNabhSubmitted] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successResponse, setSuccessResponse] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -631,6 +633,21 @@ const ClinicRegistration = () => {
   const previewFromLocalStorage = JSON.parse(localStorage.getItem('clinicFormPreview'))
   console.log('📦 Loaded from localStorage for preview:', previewFromLocalStorage)
 
+
+
+  // ✅ Extract token from URL and store in localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      console.log("Extracted Token:", token);
+      localStorage.setItem("onboardingToken", token);
+    } else {
+      console.warn("No token found in URL");
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -639,38 +656,7 @@ const ClinicRegistration = () => {
 
     setIsSubmitting(true);
 
-    const { emailAddress, contactNumber, licenseNumber, whatsappNumber } = formData;
-    const safeExistingDoctors = Array.isArray(existingDoctors) ? existingDoctors : [];
-
-    // Duplicate checks
-    const isEmailDuplicate = safeExistingDoctors.some(
-      (doc) => doc.emailAddress?.toLowerCase() === emailAddress?.toLowerCase()
-    );
-    const isWhatsAppNumberDuplicate = safeExistingDoctors.some(
-      (doc) => doc.whatsappNumber === whatsappNumber
-    );
-    const isMobileDuplicate = safeExistingDoctors.some(
-      (doc) => doc.contactNumber === contactNumber
-    );
-    const isLicenseDuplicate = safeExistingDoctors.some(
-      (doc) => doc.licenseNumber?.toLowerCase() === licenseNumber?.toLowerCase()
-    );
-
-    if (isEmailDuplicate || isMobileDuplicate || isLicenseDuplicate) {
-      const newErrors = {};
-
-      if (isEmailDuplicate) newErrors.emailAddress = "Email already exists";
-      if (isMobileDuplicate) newErrors.contactNumber = "Mobile number already exists";
-      if (isWhatsAppNumberDuplicate) newErrors.whatsappNumber = "WhatsApp number already exists";
-      if (isLicenseDuplicate) newErrors.licenseNumber = "License Number already exists";
-
-      setErrors((prev) => ({ ...prev, ...newErrors }));
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // Convert helper
       const convertIfExists = async (file) => {
         if (!file) return "";
         if (file instanceof Blob) return await convertFileToBase64(file);
@@ -688,13 +674,16 @@ const ClinicRegistration = () => {
         );
       };
 
-      // FILE conversions
+      // 🔥 GET TOKEN FROM LOCAL STORAGE
+      const onboardingToken = localStorage.getItem("onboardingToken");
+
+      // Convert Files (same as you had)
       const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
       const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
-      const hospitalContractBase64 = await convertIfExists(formData.contractorDocuments);
+      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
       const clinicalEstablishmentCertificateBase64 = await convertIfExists(formData.clinicalEstablishmentCertificate);
       const businessRegistrationCertificateBase64 = await convertIfExists(formData.businessRegistrationCertificate);
-      const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);   // FILE
+      const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);
       const pharmacistCertificateBase64 = await convertIfExists(formData.pharmacistCertificate);
       const biomedicalWasteManagementAuthBase64 = await convertIfExists(formData.biomedicalWasteManagementAuth);
       const tradeLicenseBase64 = await convertIfExists(formData.tradeLicense);
@@ -703,108 +692,52 @@ const ClinicRegistration = () => {
       const gstRegistrationCertificateBase64 = await convertIfExists(formData.gstRegistrationCertificate);
       const othersBase64 = await convertMultipleIfExists(formData.others);
 
-      // FIXED: drugLicenseFormType must be TEXT — NOT Base64
-      const drugLicenseFormTypeValue = formData.drugLicenseFormType;
-
-      // Collect token
-      const onboardingToken = localStorage.getItem("onboardingToken");
-
-      // Final Payload
+      // 🔥 FINAL BODY (TOKEN IN BODY)
       const clinicData = {
         token: onboardingToken,
-        contractorDocuments: hospitalContractBase64,
-        address: formData.address,
-        alternateContactNumber: formData.alternateContactNumber,
-        bankAccountName: formData.bankAccountName,
-        bankAccountNumber: formData.bankAccountNumber,
-        biomedicalWasteManagementAuth: biomedicalWasteManagementAuthBase64,
-        branch: formData.branch,
-        businessRegistrationCertificate: businessRegistrationCertificateBase64,
-        city: formData.city,
-        clinicManagementSoftwareUsage: formData.clinicManagementSoftwareUsage,
-        clinicSoftware: !!formData.clinicSoftware,
-        clinicSpecializationType: formData.clinicSpecializationType,
-        clinicType: formData.clinicType,
-        clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
-        closingTime: formData.closingTime,
 
-        contactNumber: formData.contactNumber,
-        whatsappNumber: formData.whatsappNumber,
-        designation: formData.designation,
-
-        // FIXED AREA
-        drugLicenseCertificate: drugLicenseCertificateBase64,
-        drugLicenseFormType: drugLicenseFormTypeValue,   // TEXT as required
-
-        emailAddress: formData.emailAddress,
-        facebookHandle: formData.facebookHandle,
-        fireSafetyCertificate: fireSafetyCertificateBase64,
-
-        gstRegistrationCertificate: gstRegistrationCertificateBase64,
-        hasPharmacist: selectedPharmacistOption,
+        contractorDocuments: contractorDocumentsBase64,
         hospitalDocuments: hospitalDocumentsBase64,
         hospitalLogo: hospitalLogoBase64,
-        ifscCode: formData.ifscCode,
-        instagramHandle: formData.instagramHandle,
-        issuingAuthority: formData.issuingAuthority,
-        latitude: formData.latitude,
-        licenseNumber: formData.licenseNumber,
-        longitude: formData.longitude,
-        medicinesSoldOnSite: formData.medicinesSoldOnSite,
-        nabhScore: formData.nabhScore,
-        name: formData.name,
-        openingTime: formData.openingTime,
-        others: othersBase64,
-        panNumber: formData.panNumber,
+        clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
+        businessRegistrationCertificate: businessRegistrationCertificateBase64,
+        drugLicenseCertificate: drugLicenseCertificateBase64,
         pharmacistCertificate: pharmacistCertificateBase64,
-        primaryContactPerson: formData.primaryContactPerson,
-        professionalIndemnityInsurance: professionalIndemnityInsuranceBase64,
-        recommended: !!formData.recommended,
-        subscription: formData.subscription,
+        biomedicalWasteManagementAuth: biomedicalWasteManagementAuthBase64,
         tradeLicense: tradeLicenseBase64,
-        twitterHandle: formData.twitterHandle,
-        upiId: formData.upiId,
-        walkthrough: formData.walkthrough,
+        fireSafetyCertificate: fireSafetyCertificateBase64,
+        professionalIndemnityInsurance: professionalIndemnityInsuranceBase64,
+        gstRegistrationCertificate: gstRegistrationCertificateBase64,
+        others: othersBase64,
+
+        ...formData,
         website: normalizeWebsite(formData.website.trim()),
       };
 
-      // API CALL
       const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
       const savedClinicData = response.data;
 
-      const apiToken = savedClinicData?.data?.token;
-      localStorage.setItem("apiToken", apiToken);
-
+      // 🔥 When success → Open Modal Instead of Redirect
       if (savedClinicData.success) {
-        toast.success(savedClinicData.message || "Clinic Added Successfully", {
-          position: "top-right",
+        setSuccessResponse({
+          status: savedClinicData.data?.status || "PENDING",
+          message: savedClinicData.data?.message || "Clinic registered successfully",
+          clinicId: savedClinicData.data?.clinicId,
         });
 
-        setTimeout(() => {
-          sendDermaCareOnboardingEmail({
-            name: formData.name,
-            email: formData.emailAddress,
-            password: savedClinicData.data.clinicTemporaryPassword,
-            userID: savedClinicData.data.clinicUsername,
-          });
-
-          navigate("/clinic-management", {
-            state: { refresh: true, newClinic: savedClinicData },
-          });
-        }, 1000);
+        setShowSuccessModal(true);
+        return; // stop further actions
       } else {
-        toast.error(savedClinicData.message || "Something went wrong", {
-          position: "top-right",
-        });
+        toast.error(savedClinicData.message || "Something went wrong");
       }
+
     } catch (error) {
       console.error("Error submitting clinic data:", error);
-      toast.error(error.message || "Something went wrong", { position: "top-right" });
+      toast.error(error.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
 
   return (
@@ -819,7 +752,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Clinic Information</h5>
             <CRow className="mb-4 g-3">
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Clinic Name
                   <span className="text-danger">*</span>
                 </CFormLabel>
@@ -848,7 +781,7 @@ const ClinicRegistration = () => {
                 {errors.name && <CFormFeedback invalid>{errors.name}</CFormFeedback>}
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Email Address<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
@@ -870,7 +803,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Contact Number<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -891,7 +824,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Website<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -921,7 +854,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Clinic Specialization Type <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -952,7 +885,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Designation <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -978,7 +911,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Do you use any Clinic Management Software?
                 </CFormLabel>
                 <CFormSelect
@@ -997,7 +930,7 @@ const ClinicRegistration = () => {
 
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Recommendation Status
                   {/* <span className="text-danger">*</span> */}
                 </CFormLabel>
@@ -1016,7 +949,7 @@ const ClinicRegistration = () => {
                 </CFormSelect>
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Clinic Type <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1049,7 +982,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   WhatsAppNumber <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1071,7 +1004,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Clinic Contact Details</h5>
             <CRow className="mb-3">
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Primary Contact Person
                   <span className="text-danger">*</span>
                 </CFormLabel>
@@ -1107,7 +1040,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={6}>
-               <CFormLabel>Alternate Contact Number</CFormLabel>
+                <CFormLabel>Alternate Contact Number</CFormLabel>
 
                 <CFormInput
                   type="text" // keep as text for better control
@@ -1142,7 +1075,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Address<span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1155,7 +1088,7 @@ const ClinicRegistration = () => {
                 {errors.address && <CFormFeedback invalid>{errors.address}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   City<span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1173,7 +1106,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Bank & Financial Information</h5>
             <CRow className='mb-3'>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Bank Account Name <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1208,7 +1141,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   Bank Account Number <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1245,7 +1178,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   IFSC Code <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1281,7 +1214,7 @@ const ClinicRegistration = () => {
 
             <CRow className="mb-3">
               <CCol md={4}>
-               <CFormLabel>UPI ID</CFormLabel>
+                <CFormLabel>UPI ID</CFormLabel>
 
                 <CFormInput
                   type="text"
@@ -1295,7 +1228,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={4}>
-               <CFormLabel>
+                <CFormLabel>
                   PAN Number <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1511,7 +1444,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Issuing Authority<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1580,7 +1513,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Virtual Tour & Branch Info</h5>
             <CRow className="mb-3">
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Virtual Clinic Tour <span className="text-danger"></span>
                 </CFormLabel>
                 <CFormInput
@@ -1621,7 +1554,7 @@ const ClinicRegistration = () => {
               {/* ✅ Branch Input */}
 
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Branch <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1650,7 +1583,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Social Media</h5>
             <CRow className="mb-3">
               <CCol md={4}>
-               <CFormLabel>Instagram</CFormLabel>
+                <CFormLabel>Instagram</CFormLabel>
                 <CFormInput
                   type="text"
                   id="instagram"
@@ -1661,7 +1594,7 @@ const ClinicRegistration = () => {
                 />
               </CCol>
               <CCol md={4}>
-               <CFormLabel>Facebook</CFormLabel>
+                <CFormLabel>Facebook</CFormLabel>
                 <CFormInput
                   type="text"
                   id="facebook"
@@ -1672,7 +1605,7 @@ const ClinicRegistration = () => {
                 />
               </CCol>
               <CCol md={4}>
-               <CFormLabel>Twitter</CFormLabel>
+                <CFormLabel>Twitter</CFormLabel>
                 <CFormInput
                   type="text"
                   id="twitter"
@@ -1687,7 +1620,7 @@ const ClinicRegistration = () => {
 
             <CRow className="mb-3">
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Clinic has a valid pharmacist
                   <span className="text-danger">*</span>
                 </CFormLabel>
@@ -1730,7 +1663,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Location & Coordinates</h5>
             <CRow className="mb-3">
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Clinic Latitude <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1770,7 +1703,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={6}>
-               <CFormLabel>
+                <CFormLabel>
                   Clinic Longitude <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1875,7 +1808,7 @@ const ClinicRegistration = () => {
               />
               <CCol md={6}>
                 <CTooltip content="NABH Accreditation / Aesthetic Procedure Training Certificate">
-                 <CFormLabel>Others (NABH / Aesthetic Training)</CFormLabel>
+                  <CFormLabel>Others (NABH / Aesthetic Training)</CFormLabel>
                 </CTooltip>
                 <CFormInput
                   type="file"
@@ -1950,7 +1883,7 @@ const ClinicRegistration = () => {
                   <CRow key={index} className="mb-4">
                     {/* Question with number */}
                     <CCol md={12}>
-                     <CFormLabel>
+                      <CFormLabel>
                         {index + 1}. {question}
                       </CFormLabel>
                     </CCol>
@@ -2019,6 +1952,30 @@ const ClinicRegistration = () => {
               </CButton>
             </div>
           </CForm>
+          <CModal visible={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
+            <CModalHeader>
+              <CModalTitle>Registration Successful</CModalTitle>
+            </CModalHeader>
+
+            <CModalBody>
+              <p><strong>Status:</strong> {successResponse?.status}</p>
+              <p><strong>Message:</strong> {successResponse?.message}</p>
+              <p><strong>Clinic ID:</strong> {successResponse?.clinicId}</p>
+            </CModalBody>
+
+            <CModalFooter>
+              <CButton
+                color="primary"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  window.close();   // 🔥 Close the current window
+                }}
+              >
+                OK
+              </CButton>
+            </CModalFooter>
+          </CModal>
+
         </CCardBody>
       </CCard>
     </div >
