@@ -1,6 +1,6 @@
 // export const BASE_URL = 'http://alb-dev-sc-197990416.ap-south-1.elb.amazonaws.com/api'
 // const ipUrl = 'localhost'
-const ipUrl = '3.6.119.57:9090'
+const ipUrl = '35.154.152.61:8080'
 export const BASE_URL = `http://${ipUrl}`
 export const CLINIC_ADMIN_URL = `http://${ipUrl}`
 export const MainAdmin_URL = `${BASE_URL}/admin`

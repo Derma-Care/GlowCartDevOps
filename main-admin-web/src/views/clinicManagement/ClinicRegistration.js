@@ -84,7 +84,7 @@ const ClinicRegistration = () => {
     clinicSoftware: false,
     hospitalDocuments: null,
     contractorDocuments: null,
-    freeFollowUps: '',
+
     clinicalEstablishmentCertificate: null,
     businessRegistrationCertificate: null,
     clinicType: '',                           // (Existing)
@@ -99,7 +99,7 @@ const ClinicRegistration = () => {
     professionalIndemnityInsurance: null,
     gstRegistrationCertificate: null,
     others: [],
-    consultationExpiration: '',
+
     subscription: '',
     instagramHandle: '',
     twitterHandle: '',
@@ -252,12 +252,7 @@ const ClinicRegistration = () => {
       }
     }
 
-    //consultation Expiration
-    if (!formData.consultationExpiration) {
-      newErrors.consultationExpiration = 'Consultation days are required'
-    } else if (isNaN(formData.consultationExpiration) || formData.consultationExpiration < 0) {
-      newErrors.consultationExpiration = 'Enter a valid number greater than 0'
-    }
+
 
     // License Number
     if (!formData.licenseNumber.trim()) {
@@ -428,11 +423,7 @@ const ClinicRegistration = () => {
     if (!formData.nabhScore || !String(formData.nabhScore).trim()) {
       newErrors.nabhScore = "NABH Score is required";
     }
-    if (!formData.freeFollowUps) {
-      newErrors.freeFollowUps = "Free Follow Ups is required"
-    } else if (isNaN(formData.freeFollowUps) || formData.freeFollowUps < 0) {
-      newErrors.freeFollowUps = "Free Follow Ups must be a positive number"
-    }
+
     // No `else { newErrors.website = '' }`
 
     console.log('Validation errors:', newErrors)
@@ -736,9 +727,7 @@ const ClinicRegistration = () => {
         clinicType: formData.clinicType,
         clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
         closingTime: formData.closingTime,
-        consultationExpiration: formData.consultationExpiration
-          ? `${formData.consultationExpiration} days`
-          : "",
+
         contactNumber: formData.contactNumber,
         whatsappNumber: formData.whatsappNumber,
         designation: formData.designation,
@@ -750,7 +739,7 @@ const ClinicRegistration = () => {
         emailAddress: formData.emailAddress,
         facebookHandle: formData.facebookHandle,
         fireSafetyCertificate: fireSafetyCertificateBase64,
-        freeFollowUps: formData.freeFollowUps,
+
         gstRegistrationCertificate: gstRegistrationCertificateBase64,
         hasPharmacist: selectedPharmacistOption,
         hospitalDocuments: hospitalDocumentsBase64,
@@ -830,7 +819,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Clinic Information</h5>
             <CRow className="mb-4 g-3">
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Clinic Name
                   <span className="text-danger">*</span>
                 </CFormLabel>
@@ -859,7 +848,7 @@ const ClinicRegistration = () => {
                 {errors.name && <CFormFeedback invalid>{errors.name}</CFormFeedback>}
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Email Address<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
@@ -881,7 +870,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Contact Number<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -902,7 +891,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Website<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -932,7 +921,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Clinic Specialization Type <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -963,7 +952,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Designation <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -989,7 +978,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Do you use any Clinic Management Software?
                 </CFormLabel>
                 <CFormSelect
@@ -1008,7 +997,7 @@ const ClinicRegistration = () => {
 
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Recommendation Status
                   {/* <span className="text-danger">*</span> */}
                 </CFormLabel>
@@ -1027,7 +1016,7 @@ const ClinicRegistration = () => {
                 </CFormSelect>
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Clinic Type <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1060,7 +1049,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   WhatsAppNumber <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1082,7 +1071,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Clinic Contact Details</h5>
             <CRow className="mb-3">
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Primary Contact Person
                   <span className="text-danger">*</span>
                 </CFormLabel>
@@ -1118,7 +1107,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={6}>
-                <CFormLabel>Alternate Contact Number</CFormLabel>
+               <CFormLabel>Alternate Contact Number</CFormLabel>
 
                 <CFormInput
                   type="text" // keep as text for better control
@@ -1153,7 +1142,7 @@ const ClinicRegistration = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Address<span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1166,7 +1155,7 @@ const ClinicRegistration = () => {
                 {errors.address && <CFormFeedback invalid>{errors.address}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   City<span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1184,7 +1173,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Bank & Financial Information</h5>
             <CRow className='mb-3'>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Bank Account Name <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1219,7 +1208,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   Bank Account Number <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1256,7 +1245,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   IFSC Code <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1292,7 +1281,7 @@ const ClinicRegistration = () => {
 
             <CRow className="mb-3">
               <CCol md={4}>
-                <CFormLabel>UPI ID</CFormLabel>
+               <CFormLabel>UPI ID</CFormLabel>
 
                 <CFormInput
                   type="text"
@@ -1306,7 +1295,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={4}>
-                <CFormLabel>
+               <CFormLabel>
                   PAN Number <span className="text-danger">*</span>
                 </CFormLabel>
 
@@ -1336,15 +1325,14 @@ const ClinicRegistration = () => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">Clinic Operations</h5>
+            <h5 className="mb-4 text-primary fw-bold">Clinic Operations</h5>
 
-            <CRow className='mb-3'>
-
-              <CCol md={4}>
+            {/* Row 1 : Clinic Management Software + Subscription */}
+            <CRow className="mb-4">
+              <CCol md={6}>
                 <CFormLabel>
                   Clinic Management Software <span className="text-danger">*</span>
                 </CFormLabel>
-
                 <CFormInput
                   type="text"
                   name="clinicManagementSoftwareUsage"
@@ -1356,25 +1344,23 @@ const ClinicRegistration = () => {
                     const error = !value.trim()
                       ? "This field is required"
                       : "";
-
                     setErrors((prev) => ({ ...prev, [name]: error || undefined }));
                   }}
                   invalid={!!errors.clinicManagementSoftwareUsage}
                 />
-
                 {errors.clinicManagementSoftwareUsage && (
                   <CFormFeedback invalid>{errors.clinicManagementSoftwareUsage}</CFormFeedback>
                 )}
               </CCol>
-              <CCol md={4}>
+
+              <CCol md={6}>
                 <CFormLabel>
-                  Subscription<span className="text-danger">*</span>
+                  Subscription <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormSelect
-                  name="subscription" // ✅ Must match key in formData
-                  className="form-select"
+                  name="subscription"
                   value={formData.subscription}
-                  onChange={handleInputChange} // ✅ Uses generic input handler
+                  onChange={handleInputChange}
                   invalid={!!errors.subscription}
                 >
                   <option value="">Select Subscription</option>
@@ -1383,109 +1369,80 @@ const ClinicRegistration = () => {
                   <option value="Standard">Standard</option>
                   <option value="Premium">Premium</option>
                 </CFormSelect>
-                {errors.subscription && <div className="text-danger">{errors.subscription}</div>}
+                {errors.subscription && (
+                  <p className="text-danger small">{errors.subscription}</p>
+                )}
               </CCol>
-              <CCol md={4}>
-                <CFormLabel>
-                  Medicines sold on-site
+            </CRow>
 
-                </CFormLabel>
+            {/* Row 2 : Medicines sold + conditional license fields */}
+            <CRow className="mb-4">
+              <CCol md={6}>
+                <CFormLabel>Medicines sold on-site</CFormLabel>
                 <CFormSelect
-                  name='medicinesSoldOnSite'
+                  name="medicinesSoldOnSite"
                   value={formData.medicinesSoldOnSite}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      medicinesSoldOnSite: e.target.value === 'true',
+                      medicinesSoldOnSite: e.target.value === "true",
+                      ...(e.target.value === "false" && {
+                        drugLicenseCertificate: null,
+                        drugLicenseFormType: "",
+                      }),
                     }))
                   }
                 >
-
                   <option value="true">Yes</option>
                   <option value="false">No</option>
                 </CFormSelect>
-
               </CCol>
             </CRow>
 
-            <CRow className='mb-3'>
-              <CCol md={4}>
-                <CFormLabel>
-                  Consultation Expiration (in days) <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="text"
-                  name="consultationExpiration"
-                  value={formData.consultationExpiration}
-                  onChange={(e) => {
-                    let value = e.target.value.replace(/\D/g, ""); // allow only digits
-                    if (value.length > 2) value = value.slice(0, 2); // limit to 2 digits
+            {/* Row 3 : Drug License (conditional) */}
+            {formData.medicinesSoldOnSite && (
+              <CRow className="mb-4">
+                <CCol md={6}>
+                  <FileInput
+                    label="Drug License Certificate"
+                    name="drugLicenseCertificate"
+                    formData={formData}
+                    setFormData={setFormData}
+                    errors={errors}
+                    setErrors={setErrors}
+                    inputRef={refs.drugLicenseCertificate}
+                  />
+                </CCol>
 
-                    setFormData((prev) => ({
-                      ...prev,
-                      consultationExpiration: value,
-                    }));
-
-                    // Clear error if valid
-                    if (value) {
-                      setErrors((prev) => ({
+                <CCol md={6}>
+                  <CFormLabel>Drug License Form Type (20/21)</CFormLabel>
+                  <CFormSelect
+                    name="drugLicenseFormType"
+                    value={formData.drugLicenseFormType || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
                         ...prev,
-                        consultationExpiration: "",
-                      }));
-                    } else {
-                      // Add error again if empty
-                      setErrors((prev) => ({
-                        ...prev,
-                        consultationExpiration: "Consultation Expiration is required",
-                      }));
+                        drugLicenseFormType: e.target.value,
+                      }))
                     }
-                  }}
-                  onBlur={(e) => {
-                    let value = e.target.value;
-                    if (value.length === 1) {
-                      value = value.padStart(2, "0"); // add leading zero
-                    }
+                    ref={refs.drugLicenseFormType}
+                  >
+                    <option value="">Select Form Type</option>
+                    <option value="Form 20">Form 20</option>
+                    <option value="Form 21">Form 21</option>
+                  </CFormSelect>
+                  {errors.drugLicenseFormType && (
+                    <p className="text-danger small">{errors.drugLicenseFormType}</p>
+                  )}
+                </CCol>
+              </CRow>
+            )}
 
-                    setFormData((prev) => ({
-                      ...prev,
-                      consultationExpiration: value,
-                    }));
-
-                    // Double check on blur (so if user tabs away empty field, error comes back)
-                    if (!value) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        consultationExpiration: "Consultation Expiration is required",
-                      }));
-                    }
-                  }}
-                  placeholder="Enter consultation days (01-99)"
-                  invalid={!!errors.consultationExpiration}
-                />
-                {errors.consultationExpiration && (
-                  <CFormFeedback invalid>{errors.consultationExpiration}</CFormFeedback>
-                )}
-              </CCol>
-              <CCol md={4}>
+            {/* Row 4 : Opening + Closing Time */}
+            <CRow className="mb-4">
+              <CCol md={6}>
                 <CFormLabel>
-                  No. of Free Follow Ups <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="number"
-                  name="freeFollowUps"
-                  value={formData.freeFollowUps}
-                  onChange={handleInputChange}
-                  min="0"
-                  placeholder="Enter next visit consultation count"
-                  invalid={!!errors.freeFollowUps}
-                />
-                {errors.freeFollowUps && (
-                  <CFormFeedback invalid>{errors.freeFollowUps}</CFormFeedback>
-                )}
-              </CCol>
-              <CCol md={4}>
-                <CFormLabel>
-                  Opening Time<span style={{ color: 'red' }}>*</span>
+                  Opening Time <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormSelect
                   name="openingTime"
@@ -1505,11 +1462,10 @@ const ClinicRegistration = () => {
                   <CFormFeedback invalid>{errors.openingTime}</CFormFeedback>
                 )}
               </CCol>
-            </CRow>
-            <CRow className="mb-3">
-              <CCol md={4}>
+
+              <CCol md={6}>
                 <CFormLabel>
-                  Closing Time<span style={{ color: 'red' }}>*</span>
+                  Closing Time <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormSelect
                   name="closingTime"
@@ -1519,7 +1475,6 @@ const ClinicRegistration = () => {
                   disabled={loadingTimings}
                 >
                   <option value="">Select Closing Time</option>
-
                   {timings.map((slot, idx) => (
                     <option key={idx} value={slot.closingTime}>
                       {slot.closingTime}
@@ -1531,6 +1486,9 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
             </CRow>
+
+
+
 
 
             <h5 className="mb-3 text-primary mt-6">Licenses & Certifications</h5>
@@ -1553,7 +1511,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Issuing Authority<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1616,76 +1574,13 @@ const ClinicRegistration = () => {
               />
               {/* ---------------- DRUG LICENSE SECTION ---------------- */}
 
-              <CRow className="mb-3">
-                <CCol md={6}>
-                  <CFormLabel>Do you have a Drug License?</CFormLabel>
-                  <CFormSelect
-                    value={selectedOption}
-                    onChange={(e) => {
-                      setSelectedOption(e.target.value);
-                      if (e.target.value === "No") {
-                        setFormData((prev) => ({
-                          ...prev,
-                          drugLicenseCertificate: null,
-                          drugLicenseFormType: "",
-                        }));
-                      }
-                    }}
-                  >
-                    <option value="">Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </CFormSelect>
-                  {errors.drugLicenseCertificate && (
-                    <p className="text-danger">{errors.drugLicenseCertificate}</p>
-                  )}
-                </CCol>
-              </CRow>
 
-              {selectedOption === "Yes" && (
-                <CRow className="mb-3">
-
-                  {/* Drug License Certificate */}
-                  <FileInput
-                    label="Drug License Certificate"
-                    name="drugLicenseCertificate"
-                    formData={formData}
-                    setFormData={setFormData}
-                    errors={errors}
-                    setErrors={setErrors}
-                    inputRef={refs.drugLicenseCertificate}
-                  />
-
-                  {/* Drug License Form Type */}
-                  <CCol md={6}>
-                    <CFormLabel>Drug License Form Type (20 / 21)</CFormLabel>
-                    <CFormSelect
-                      name="drugLicenseFormType"
-                      value={formData.drugLicenseFormType || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          drugLicenseFormType: e.target.value,
-                        }))
-                      }
-                      ref={refs.drugLicenseFormType}
-                    >
-                      <option value="">Select Form Type</option>
-                      <option value="Form 20">Form 20</option>
-                      <option value="Form 21">Form 21</option>
-                    </CFormSelect>
-                    {errors.drugLicenseFormType && (
-                      <p className="text-danger">{errors.drugLicenseFormType}</p>
-                    )}
-                  </CCol>
-                </CRow>
-              )}
             </CRow>
 
             <h5 className="mb-3 text-primary mt-6">Virtual Tour & Branch Info</h5>
             <CRow className="mb-3">
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Virtual Clinic Tour <span className="text-danger"></span>
                 </CFormLabel>
                 <CFormInput
@@ -1726,7 +1621,7 @@ const ClinicRegistration = () => {
               {/* ✅ Branch Input */}
 
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Branch <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1755,7 +1650,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Social Media</h5>
             <CRow className="mb-3">
               <CCol md={4}>
-                <CFormLabel>Instagram</CFormLabel>
+               <CFormLabel>Instagram</CFormLabel>
                 <CFormInput
                   type="text"
                   id="instagram"
@@ -1766,7 +1661,7 @@ const ClinicRegistration = () => {
                 />
               </CCol>
               <CCol md={4}>
-                <CFormLabel>Facebook</CFormLabel>
+               <CFormLabel>Facebook</CFormLabel>
                 <CFormInput
                   type="text"
                   id="facebook"
@@ -1777,7 +1672,7 @@ const ClinicRegistration = () => {
                 />
               </CCol>
               <CCol md={4}>
-                <CFormLabel>Twitter</CFormLabel>
+               <CFormLabel>Twitter</CFormLabel>
                 <CFormInput
                   type="text"
                   id="twitter"
@@ -1792,7 +1687,7 @@ const ClinicRegistration = () => {
 
             <CRow className="mb-3">
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Clinic has a valid pharmacist
                   <span className="text-danger">*</span>
                 </CFormLabel>
@@ -1835,7 +1730,7 @@ const ClinicRegistration = () => {
             <h5 className="mb-3 text-primary mt-6">Location & Coordinates</h5>
             <CRow className="mb-3">
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Clinic Latitude <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1875,7 +1770,7 @@ const ClinicRegistration = () => {
               </CCol>
 
               <CCol md={6}>
-                <CFormLabel>
+               <CFormLabel>
                   Clinic Longitude <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
@@ -1980,7 +1875,7 @@ const ClinicRegistration = () => {
               />
               <CCol md={6}>
                 <CTooltip content="NABH Accreditation / Aesthetic Procedure Training Certificate">
-                  <CFormLabel>Others (NABH / Aesthetic Training)</CFormLabel>
+                 <CFormLabel>Others (NABH / Aesthetic Training)</CFormLabel>
                 </CTooltip>
                 <CFormInput
                   type="file"
@@ -2055,7 +1950,7 @@ const ClinicRegistration = () => {
                   <CRow key={index} className="mb-4">
                     {/* Question with number */}
                     <CCol md={12}>
-                      <CFormLabel>
+                     <CFormLabel>
                         {index + 1}. {question}
                       </CFormLabel>
                     </CCol>
