@@ -61,14 +61,23 @@ public class RegistrationCodeService {
     public RegistrationResponseDTO verifyCode(RegistrationRequestDTO dto) {
         RegistrationCode reg = repo.findByCode(dto.getCode());
 
-        if (reg == null) return new RegistrationResponseDTO(dto.getCode(), false, false);
-        if (reg.isUsed()) return new RegistrationResponseDTO(reg.getCode(), true, false);
+        if (reg == null) {
+            // Code does not exist
+            return new RegistrationResponseDTO(dto.getCode(), false, false);
+        }
 
-        reg.setUsed(true);
-        repo.save(reg);
+        if (reg.isUsed()) {
+            // Code already fully used (final registration done)
+            return new RegistrationResponseDTO(reg.getCode(), true, false);
+        }
 
-        return new RegistrationResponseDTO(reg.getCode(), true, true);
+        // At this point:
+        // - Code exists
+        // - Code is not fully used
+        // ✅ Do NOT mark as used yet
+        return new RegistrationResponseDTO(reg.getCode(), false, true);
     }
+
 
 
     // ----------------------

@@ -8,7 +8,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegistrationResponseDTO {
+
     private String code;
-    private boolean used;
-    private boolean valid; 
+    private boolean used;     // true only when registration completed
+    private boolean valid;    // true if code exists
+
+    private boolean isRegistrationCodeVerified;
+    private boolean isUserProfileCompleted;
+    private boolean isSpinWheelCompleted;
+    private boolean isRegistrationCompleted;
 }

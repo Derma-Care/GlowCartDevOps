@@ -8,10 +8,11 @@ import org.springframework.stereotype.Service;
 import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.dto.WheelSliceDto;
-import com.glowkart.customer.feign.WheelSliceClient;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
+import com.glowkart.customer.feign.WheelSliceClient;
 
 @Service
 public class CustomerService {
@@ -22,57 +23,63 @@ public class CustomerService {
     @Autowired
     private WheelSliceClient wheelSliceClient;
 
-    // ==================== STEP-1: Register Customer ====================
+    // ==================== STEP-1 ====================
     public ApiResponse<Customer> saveCustomer(CustomerDetailsDTO dto) {
-        checkDuplicateMobile(dto.getMobile(), null);
-        checkDuplicateEmail(dto.getEmail(), null);
-        checkDuplicateAadhar(dto.getAadharNumber(), null);
+        Customer customer = customerRepository.findAll().stream()
+                .filter(c -> dto.getRegistrationCode().equals(c.getRegistrationCode()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Invalid user session"));
 
-        Customer customer = new Customer();
+        checkDuplicateMobile(dto.getMobile(), customer.getMobile());
+        checkDuplicateEmail(dto.getEmail(), customer.getMobile());
+        checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
+
         copyStep1Fields(dto, customer);
-        customer.setRegistrationStatus(false); // Step-1 incomplete
+        customer.setUserProfileCompleted(true);
         customerRepository.save(customer);
 
-        return new ApiResponse<>(true, "Customer registered successfully (Step 1)", customer);
+        return new ApiResponse<>(true, "Step-1: User profile completed successfully", customer);
     }
 
-    // ==================== STEP-1: Update basic info ====================
-    public ApiResponse<Customer> updateStep1(String mobile, CustomerDetailsDTO dto) {
+    // ==================== STEP-2 ====================
+    public ApiResponse<Customer> completeSpinByMobile(String mobile, SpinWheelDTO dto) {
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        checkDuplicateMobile(dto.getMobile(), mobile);
-        checkDuplicateEmail(dto.getEmail(), mobile);
-        checkDuplicateAadhar(dto.getAadharNumber(), mobile);
+        if (!customer.isUserProfileCompleted()) {
+            return new ApiResponse<>(false, "Complete Profile first!", null);
+        }
 
-        copyStep1Fields(dto, customer);
+        WheelSliceDto slice = wheelSliceClient.getSliceById(dto.getRewardId());
+        if (slice != null) {
+            customer.setSpinRewardId(slice.getId());
+            customer.setSpinRewardValue(slice.getOption());
+            customer.setSpinRewardImage(slice.getSrc());
+        }
+
+        customer.setSpinWheelCompleted(true);
         customerRepository.save(customer);
 
-        return new ApiResponse<>(true, "Step-1 fields updated successfully", customer);
+        return new ApiResponse<>(true, "Step-2: Spin wheel completed", customer);
     }
 
-    // ==================== STEP-2: Complete Registration ====================
-    public ApiResponse<Customer> completeRegistration(String mobile, CompleteRegistrationDTO dto) {
+    // ==================== STEP-3 ====================
+    public ApiResponse<Customer> completeRegistrationByMobile(String mobile, CompleteRegistrationDTO dto) {
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        if (dto.getSpinRewardId() != null && !dto.getSpinRewardId().isEmpty()) {
-            WheelSliceDto slice = wheelSliceClient.getSliceById(dto.getSpinRewardId());
-            if (slice != null) {
-                customer.setSpinRewardId(slice.getId());
-                customer.setSpinRewardValue(slice.getOption());
-                customer.setSpinRewardImage(slice.getSrc());
-            }
+        if (!customer.isSpinWheelCompleted()) {
+            return new ApiResponse<>(false, "Complete Spin Wheel first!", null);
         }
 
         customer.setPrizePostScreenshot(dto.getPrizePostScreenshot());
         customer.setFollowScreenshot(dto.getFollowScreenshot());
         customer.setAddress(dto.getAddress());
-        customer.setRegistrationStatus(true); // Step-2 completed
 
+        customer.setRegistrationCompleted(true);
         customerRepository.save(customer);
 
-        return new ApiResponse<>(true, "Step-2 registration completed/updated successfully", customer);
+        return new ApiResponse<>(true, "Step-3: Final registration completed", customer);
     }
 
     // ==================== GET Wheel Slices ====================
@@ -81,7 +88,7 @@ public class CustomerService {
         return new ApiResponse<>(true, "Wheel slices fetched successfully", slices);
     }
 
-    // ==================== CRUD Operations ====================
+    // ==================== CRUD ====================
     public ApiResponse<List<Customer>> getAllCustomers() {
         List<Customer> customers = customerRepository.findAll();
         if (customers.isEmpty()) {
@@ -91,8 +98,7 @@ public class CustomerService {
     }
 
     public ApiResponse<Customer> getCustomer(String mobile) {
-        Customer customer = customerRepository.findByMobile(mobile)
-                .orElse(null);
+        Customer customer = customerRepository.findByMobile(mobile).orElse(null);
         if (customer == null) {
             return new ApiResponse<>(false, "Customer not found", null);
         }
@@ -100,8 +106,7 @@ public class CustomerService {
     }
 
     public ApiResponse<String> deleteCustomer(String mobile) {
-        Customer customer = customerRepository.findByMobile(mobile)
-                .orElse(null);
+        Customer customer = customerRepository.findByMobile(mobile).orElse(null);
         if (customer == null) {
             return new ApiResponse<>(false, "Customer not found", null);
         }
@@ -129,19 +134,19 @@ public class CustomerService {
 
     private void checkDuplicateMobile(String mobile, String excludeMobile) {
         customerRepository.findByMobile(mobile)
-                .filter(c -> excludeMobile == null || !c.getMobile().equals(excludeMobile))
+                .filter(c -> !c.getMobile().equals(excludeMobile))
                 .ifPresent(c -> { throw new RuntimeException("Mobile number already exists"); });
     }
 
     private void checkDuplicateEmail(String email, String excludeMobile) {
         customerRepository.findByEmail(email)
-                .filter(c -> excludeMobile == null || !c.getMobile().equals(excludeMobile))
+                .filter(c -> !c.getMobile().equals(excludeMobile))
                 .ifPresent(c -> { throw new RuntimeException("Email already exists"); });
     }
 
     private void checkDuplicateAadhar(String aadhar, String excludeMobile) {
         customerRepository.findByAadharNumber(aadhar)
-                .filter(c -> excludeMobile == null || !c.getMobile().equals(excludeMobile))
+                .filter(c -> !c.getMobile().equals(excludeMobile))
                 .ifPresent(c -> { throw new RuntimeException("Aadhar number already exists"); });
     }
 }

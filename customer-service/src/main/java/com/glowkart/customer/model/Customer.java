@@ -41,16 +41,19 @@ public class Customer {
 
     private String prescription;
 
-    // ⭐ NEW FIELDS — Wheel Spin reward
+    // ================= Wheel Spin Reward =================
     private String spinRewardId;
     private String spinRewardValue;
     private String spinRewardImage;
 
-    // ⭐ NEW FIELDS — Final registration
+    // ================= Final Registration =================
     private String prizePostScreenshot;
     private String followScreenshot;
     private String address;
 
-    // ⭐ RegistrationStatus (false on step 1, true on step 2)
-    private boolean registrationStatus = false;
+    // ================= Step Flags =================
+    private boolean registrationCodeVerified = false;
+    private boolean isUserProfileCompleted = false;   // Step-1
+    private boolean isSpinWheelCompleted = false;     // Step-2
+    private boolean isRegistrationCompleted = false;  // Step-3
 }

@@ -1,15 +1,17 @@
 package com.glowkart.customer.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class CompleteRegistrationDTO {
 
-    private String spinRewardId;
-    private String spinRewardValue;
-    private String spinRewardImage;
-
+    @NotBlank
     private String prizePostScreenshot;
+
+    @NotBlank
     private String followScreenshot;
+
+    @NotBlank
     private String address;
 }
