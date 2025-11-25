@@ -1,4 +1,5 @@
 package com.glowkart.customer.controller;
+
 import com.glowkart.customer.dto.RegistrationRequestDTO;
 import com.glowkart.customer.dto.RegistrationResponseDTO;
 import com.glowkart.customer.dto.ApiResponse;
@@ -9,21 +10,21 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
-// @CrossOrigin("*")
+//@CrossOrigin("*")
 public class RegistrationController {
 
     @Autowired
     private RegistrationService registrationService;
 
+    // Verify registration code
     @PostMapping("/customer/registration/verify")
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> verify(@RequestBody RegistrationRequestDTO request) {
-        ApiResponse<RegistrationResponseDTO> response = registrationService.verifyCode(request.getCode());
+        return registrationService.verifyCode(request.getCode());
+    }
 
-        // Propagate the correct HTTP status
-        if (!response.getData().isValid()) {
-            return ResponseEntity.badRequest().body(response); // HTTP 400
-        }
-
-        return ResponseEntity.ok(response); // HTTP 200
+    // Mark registration code as used
+    @PostMapping("/customer/registration/mark-used")
+    public ResponseEntity<ApiResponse<RegistrationResponseDTO>> markUsed(@RequestBody RegistrationRequestDTO request) {
+        return registrationService.markCodeUsed(request.getCode());
     }
 }

@@ -1,6 +1,10 @@
 package com.glowkart.customer.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,54 +27,41 @@ public class RegistrationService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(RegistrationService.class);
 
     // STEP-1: Verify Registration Code
-    public ApiResponse<RegistrationResponseDTO> verifyCode(String code) {
+    public ResponseEntity<ApiResponse<RegistrationResponseDTO>> verifyCode(String code) {
 
-        // Load existing customer using this code
-        Customer customer = customerRepository.findAll().stream()
-                .filter(c -> code.equals(c.getRegistrationCode()))
-                .findFirst()
-                .orElse(null);
+        Customer customer = customerRepository.findByRegistrationCode(code);
 
-        // STEP 4: Code fully used -> do not allow verification
+        // Already completed locally
         if (customer != null && customer.isRegistrationCompleted()) {
-            return new ApiResponse<>(
-                    false,
-                    "Code already used!",
-                    new RegistrationResponseDTO(
-                            code,
-                            true,   // used
-                            false,  // valid
-                            true,   // registrationCodeVerified
-                            customer.isUserProfileCompleted(),
-                            customer.isSpinWheelCompleted(),
-                            customer.isRegistrationCompleted()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(
+                            false,
+                            "Code already used!",
+                            buildStepResponse(customer, code, true)
                     )
             );
         }
 
-        ApiResponse<RegistrationResponseDTO> adminResponse;
+        ApiResponse<RegistrationResponseDTO> adminResponse = null;
         try {
             adminResponse = adminServiceClient.verifyCode(new RegistrationRequestDTO(code));
-        } catch (FeignException ex) {
+        } catch (FeignException e) {
+            // Extract admin-service response body
             try {
-                String body = ex.contentUTF8();
-                return objectMapper.readValue(body, new TypeReference<ApiResponse<RegistrationResponseDTO>>() {});
-            } catch (Exception e) {
-                // FIXED: using full constructor
-                return new ApiResponse<>(
-                        false,
-                        "Failed to verify code",
-                        new RegistrationResponseDTO(
-                                code,
-                                false,  // used
-                                false,  // valid
-                                false,  // registrationCodeVerified
-                                false,  // userProfileCompleted
-                                false,  // spinWheelCompleted
-                                false   // registrationCompleted
+                String responseBody = e.contentUTF8();
+                ObjectMapper mapper = new ObjectMapper();
+                adminResponse = mapper.readValue(
+                        responseBody, new TypeReference<ApiResponse<RegistrationResponseDTO>>() {});
+            } catch (Exception ex) {
+                logger.error("Failed to parse admin-service response: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                        new ApiResponse<>(
+                                false,
+                                "Failed to verify code",
+                                buildStepResponse(customer, code, false)
                         )
                 );
             }
@@ -78,31 +69,88 @@ public class RegistrationService {
 
         RegistrationResponseDTO adminData = adminResponse.getData();
 
-        if (!adminData.isValid()) {
-            return new ApiResponse<>(false, "Invalid or used code", adminData);
+        // Invalid code from admin-service
+        if (adminData == null || !adminData.isValid()) {
+            boolean used = adminData != null && adminData.isUsed(); // use real admin-service value
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(
+                            false,
+                            adminResponse.getMessage(),
+                            buildStepResponse(customer, code, used)
+                    )
+            );
         }
 
-        // If no customer exists, create new (STEP 1 BEGIN)
+        // Create customer locally if not exists
         if (customer == null) {
             customer = new Customer();
             customer.setRegistrationCode(code);
         }
 
-        // Mark STEP-1 completed
+        // Mark local registration step
         customer.setRegistrationCodeVerified(true);
         customerRepository.save(customer);
 
-        // Return combined response
-        RegistrationResponseDTO result = new RegistrationResponseDTO(
-                adminData.getCode(),
-                false, // used
-                true,  // valid
-                customer.isRegistrationCodeVerified(),
-                customer.isUserProfileCompleted(),
-                customer.isSpinWheelCompleted(),
-                customer.isRegistrationCompleted()
+        // Return enriched response with admin message
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        adminResponse.getMessage(),
+                        buildStepResponse(customer, code, adminData.isUsed())
+                )
         );
+    }
 
-        return new ApiResponse<>(true, "Code verified successfully", result);
+    // Helper: Build registration step response
+    private RegistrationResponseDTO buildStepResponse(Customer customer, String code, boolean used) {
+        boolean registrationCodeVerified = customer != null && customer.isRegistrationCodeVerified();
+        boolean userProfileCompleted = customer != null && customer.isUserProfileCompleted();
+        boolean spinWheelCompleted = customer != null && customer.isSpinWheelCompleted();
+        boolean registrationCompleted = customer != null && customer.isRegistrationCompleted();
+
+        return new RegistrationResponseDTO(
+                code,
+                used || registrationCompleted,
+                registrationCodeVerified || userProfileCompleted || spinWheelCompleted,
+                registrationCodeVerified,
+                userProfileCompleted,
+                spinWheelCompleted,
+                registrationCompleted
+        );
+    }
+
+    // STEP-2: Mark code as used in admin-service
+    public ResponseEntity<ApiResponse<RegistrationResponseDTO>> markCodeUsed(String code) {
+        ApiResponse<RegistrationResponseDTO> adminResponse = null;
+
+        try {
+            adminResponse = adminServiceClient.markCodeUsed(new RegistrationRequestDTO(code));
+        } catch (FeignException e) {
+            // Extract admin-service response
+            try {
+                String responseBody = e.contentUTF8();
+                ObjectMapper mapper = new ObjectMapper();
+                adminResponse = mapper.readValue(
+                        responseBody, new TypeReference<ApiResponse<RegistrationResponseDTO>>() {});
+            } catch (Exception ex) {
+                logger.error("Failed to parse admin-service response: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                        new ApiResponse<>(false, "Failed to mark code as used", null)
+                );
+            }
+        }
+
+        RegistrationResponseDTO adminData = adminResponse.getData();
+
+        if (adminData == null || !adminData.isValid()) {
+            boolean used = adminData != null && adminData.isUsed();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(false, adminResponse.getMessage(), adminData)
+            );
+        }
+
+        // Optionally, update local customer state if needed
+
+        return ResponseEntity.ok(new ApiResponse<>(true, adminResponse.getMessage(), adminData));
     }
 }

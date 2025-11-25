@@ -7,8 +7,24 @@ spring:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/customer_db}
       database: ${SPRING_DATA_MONGODB_DATABASE:customer_db}
 
+  # Increase JSON and file payload limits
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
 server:
   port: 8090
+
+  tomcat:
+    # New property replacing deprecated 'max-http-post-size'
+    max-http-form-post-size: 52428800 # 50MB in bytes
+
+  # Optional: enable gzip compression for large JSON payloads
+  compression:
+    enabled: true
+    min-response-size: 1KB
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
 
 # Feign configuration
 feign:

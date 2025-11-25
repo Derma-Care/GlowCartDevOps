@@ -21,7 +21,7 @@ public class Customer {
     @Indexed(unique = true)
     private String mobile;
 
-    @Indexed(unique = true)
+    
     private String email;
 
     private String city;

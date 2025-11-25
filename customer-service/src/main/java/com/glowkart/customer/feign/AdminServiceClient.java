@@ -12,4 +12,8 @@ public interface AdminServiceClient {
 
     @PostMapping("/admin/api/registration/verify")
     ApiResponse<RegistrationResponseDTO> verifyCode(@RequestBody RegistrationRequestDTO request);
+
+    // ---------------- Call to mark a code as used ----------------
+    @PostMapping("/admin/api/registration/mark-used")
+    ApiResponse<RegistrationResponseDTO> markCodeUsed(@RequestBody RegistrationRequestDTO request);
 }

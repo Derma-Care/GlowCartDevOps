@@ -54,38 +54,34 @@ public class RegistrationCodeService {
         return repo.saveAll(newCodes);
     }
 
-    // ----------------------
-    // Verify code (one-time use)
-    // ----------------------
-    @Transactional
+
+    @Transactional(readOnly = true)
     public RegistrationResponseDTO verifyCode(RegistrationRequestDTO dto) {
-        RegistrationCode reg = repo.findByCode(dto.getCode());
+        RegistrationCode code = repo.findByCode(dto.getCode());
 
-        if (reg == null) {
-            // Code does not exist
-            return new RegistrationResponseDTO(dto.getCode(), false, false);
+        if (code == null) {
+            return new RegistrationResponseDTO(dto.getCode(), false, false); // invalid
         }
 
-        if (reg.isUsed()) {
-            // Code already fully used (final registration done)
-            return new RegistrationResponseDTO(reg.getCode(), true, false);
-        }
-
-        // At this point:
-        // - Code exists
-        // - Code is not fully used
-        // ✅ Do NOT mark as used yet
-        return new RegistrationResponseDTO(reg.getCode(), false, true);
+        return new RegistrationResponseDTO(code.getCode(), code.isUsed(), true); // valid
     }
 
+    @Transactional
+    public RegistrationResponseDTO markCodeUsed(String codeStr) {
+        RegistrationCode code = repo.findByCode(codeStr);
+        if (code == null) {
+            return new RegistrationResponseDTO(codeStr, false, false); // invalid
+        }
+        if (!code.isUsed()) {
+            code.setUsed(true);
+            repo.save(code);
+        }
+        return new RegistrationResponseDTO(codeStr, true, true); // valid & used
+    }
 
-
-    // ----------------------
-    // Get all codes
-    // ----------------------
     public List<RegistrationResponseDTOWithCode> getAllCodes() {
         return repo.findAll().stream()
-                .map(r -> new RegistrationResponseDTOWithCode(r.getCode(), r.isUsed()))
+                .map(c -> new RegistrationResponseDTOWithCode(c.getCode(), c.isUsed()))
                 .collect(Collectors.toList());
     }
 
@@ -122,7 +118,6 @@ public class RegistrationCodeService {
                 row.createCell(1).setCellValue(reg.isUsed() ? "Yes" : "No");
             }
 
-            // Auto-size columns safely
             for (int i = 0; i < 2; i++) {
                 sheet.autoSizeColumn(i);
             }
@@ -130,7 +125,6 @@ public class RegistrationCodeService {
             workbook.write(out);
             ByteArrayResource resource = new ByteArrayResource(out.toByteArray());
 
-            // Prepare email
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(emailTo);
@@ -138,7 +132,6 @@ public class RegistrationCodeService {
             helper.setText("Please find attached the registration codes Excel file.");
             helper.addAttachment("RegistrationCodes.xlsx", resource);
 
-            // Send email
             mailSender.send(message);
         }
     }
