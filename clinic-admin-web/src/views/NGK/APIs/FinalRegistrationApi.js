@@ -3,7 +3,7 @@ import { Booking_sevice, wifiUrl } from '../../../baseUrl'
 
 export const updateStep2 = async (mobile, payload) => {
   try {
-    const response = await axios.put(`${Booking_sevice}/customer/${mobile}/step2`, payload)
+    const response = await axios.post(`${wifiUrl}/api/customer/${mobile}/complete`, payload)
     return response.data
   } catch (error) {
     console.error('Step2 Update Error:', error)

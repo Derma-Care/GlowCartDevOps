@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { Wheel } from 'react-custom-roulette'
 import './SpinWheel.css'
 import { getWheelSlices } from '../APIs/getWheelSlices'
+import { sendSpinReward } from '../APIs/SendSpinReward'
+import { showCustomToast } from '../../../Utils/Toaster'
 
-export default function SpinWheel({ onResult }) {
+export default function SpinWheel({ onResult, userData, setUserData }) {
   const [mustSpin, setMustSpin] = useState(false)
   const [prizeNumber, setPrizeNumber] = useState(0)
   const wheelSize = window.innerWidth < 350 ? 180 : window.innerWidth < 420 ? 220 : 320
+  // const [spinCompleted, setSpinCompleted] = useState(userData?.spinWheelCompleted || false)
 
   const [slices, setSlices] = useState([])
   const [loading, setLoading] = useState(true)
@@ -44,6 +47,11 @@ export default function SpinWheel({ onResult }) {
   }))
 
   const handleSpinClick = () => {
+    // if (spinCompleted) {
+    //   showCustomToast('You have already completed your spin! 🎉', 'info')
+    //   return
+    // }
+
     if (mustSpin || slices.length === 0) return
 
     const randomIndex = Math.floor(Math.random() * slices.length)
@@ -111,18 +119,42 @@ export default function SpinWheel({ onResult }) {
               transformOrigin: 'top',
             },
           }}
-          onStopSpinning={() => {
+          onStopSpinning={async () => {
             setMustSpin(false)
+
             document.body.style.overflow = 'auto'
             document.documentElement.style.overflow = 'auto'
             const container = document.querySelector('.spin-container')
             if (container) container.style.overflow = 'auto'
 
-            onResult({
+            const winner = {
               id: slices[prizeNumber].id,
               option: slices[prizeNumber].option,
               src: slices[prizeNumber].src || null,
-            })
+            }
+
+            onResult(winner)
+
+            const rewardPayload = {
+              rewardId: winner.id,
+            }
+            console.log('Backend Spin Response:', userData)
+
+            const response = await sendSpinReward(userData.mobile, rewardPayload)
+
+            console.log('Backend Spin Response:', response)
+
+            if (response.success) {
+              showCustomToast(response.message || '🎉 Reward saved!', 'success')
+              setUserData(response.data)
+              // 🔥 LOCK the wheel now
+              // setSpinCompleted(true)
+
+              // Optional: save to localStorage
+              // localStorage.setItem('spinWheelCompleted', 'true')
+            } else {
+              console.log('⚠️ Backend error:', response.message)
+            }
           }}
         />
 

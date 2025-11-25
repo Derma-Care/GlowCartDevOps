@@ -7,22 +7,22 @@ import { showCustomToast } from '../../../Utils/Toaster'
 import { toast } from 'react-toastify'
 import LoadingIndicator from '../../../Utils/loader'
 import './SpinWheel.css'
-export default function SpinResultCard({ prize, onReset, setInstagram, form }) {
+export default function SpinResultCard({ prize, onReset, setInstagram, form, userData }) {
   const cardRef = useRef(null)
   const [loading, setLoading] = useState(false)
   const [localPrize, setLocalPrize] = useState(null)
 
-  useEffect(() => {
-    if (!prize) {
-      const saved = localStorage.getItem('saved_winnerPrize')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        setLocalPrize(parsed) // store it inside component state
-      }
-    }
-  }, [])
+  // useEffect(() => {
+  //   if (!prize) {
+  //     const saved = localStorage.getItem('saved_winnerPrize')
+  //     if (saved) {
+  //       const parsed = JSON.parse(saved)
+  //       setLocalPrize(parsed) // store it inside component state
+  //     }
+  //   }
+  // }, [])
 
-  const finalPrize = prize || localPrize
+  const finalPrize = userData || prize
 
   if (!finalPrize) return <p>No prize found</p>
 
@@ -30,7 +30,7 @@ export default function SpinResultCard({ prize, onReset, setInstagram, form }) {
     try {
       setLoading(true)
 
-      const caption = `I just won ${finalPrize.option} an exciting gift from Neha's GlowKart! 🎁✨
+      const caption = `I just won ${finalPrize.spinRewardValue} an exciting gift from Neha's GlowKart! 🎁✨
 Thanks to Neha's GlowKart for the amazing surprises! 💖
 #GlowKartWinner #GlowKartGifts #LuckySpin`
 
@@ -82,7 +82,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       // ---------------------------
       const link = document.createElement('a')
       link.href = image
-      link.download = `NGlowKart-Prize-${finalPrize.option}.png`
+      link.download = `NGlowKart-Prize-${finalPrize.spinRewardImage}.png`
 
       document.body.appendChild(link)
       link.click()
@@ -210,7 +210,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
               borderRadius: '5px', // optional for rounded strip
             }}
           >
-            {form.fullName}
+            {finalPrize.fullName}
           </p>
 
           <p style={{ textAlign: 'center', fontSize: 15, marginTop: '5px', fontWeight: 'bold' }}>
@@ -218,7 +218,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           </p>
 
           {/* PRIZE DISPLAY */}
-          {finalPrize.src ? (
+          {finalPrize.spinRewardImage ? (
             <div
               className="d-flex align-items-center justify-content-center"
               style={{ gap: '60px' }}
@@ -233,7 +233,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  {finalPrize.option}
+                  {finalPrize.spinRewardValue}
                 </h4>
                 <p
                   style={{
@@ -244,7 +244,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  a premium {finalPrize.option} as a prize!
+                  a premium {finalPrize.spinRewardValue} as a prize!
                 </p>
               </div>
               <div
@@ -264,8 +264,11 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 }}
               >
                 <img
-                  src={finalPrize.src}
-                  crossOrigin="anonymous"
+                  src={
+                    finalPrize.spinRewardImage?.startsWith('data:')
+                      ? finalPrize.spinRewardImage
+                      : `data:image/png;base64,${finalPrize.spinRewardImage}`
+                  }
                   alt="Prize"
                   style={{
                     width: '100%',
@@ -291,7 +294,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  {finalPrize.option} discount on all dermatology services on your{' '}
+                  {finalPrize.spinRewardValue} discount on all dermatology services on your{' '}
                   <span style={{ fontWeight: 'bold', color: '#ff2e85' }}>First</span> service
                   booking.
                 </p>
@@ -314,7 +317,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 }}
               >
                 <div style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1 }}>
-                  {finalPrize.option}
+                  {finalPrize.spinRewardValue}
                 </div>
                 <span style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1 }}>OFF</span>
               </div>

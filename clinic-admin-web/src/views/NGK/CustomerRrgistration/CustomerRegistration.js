@@ -10,56 +10,44 @@ import {
   CAlert,
   CFormSelect,
 } from '@coreui/react'
-
 import DermaCareLogo from '../../../assets/images/logoN.png'
 import '../CustomerRrgistration/Register.css'
 import SpinWheel from './SpinWheel'
 import SpinResultCard from './SpinResultCard'
 import PrizePostDetails from './PrizePostDetails'
-import { serviceDataH } from '../../ProcedureManagement/ProcedureManagementAPI'
+
 import Select from 'react-select'
 import { showCustomToast } from '../../../Utils/Toaster'
-import LoadingIndicator from '../../../Utils/loader'
 
 import { registerCustomer } from '../APIs/registerCustomerApi'
 import { verifyRegistrationCode } from '../APIs/verifyRegistrationCode'
-import { fileToBase64 } from '../Utills/FileToBase64'
+
 import { processFile } from '../Utills/fileUtils'
 import { UploadedPreview } from '../Utills/FileUpload'
 import { getAllProcedures } from '../APIs/procedureService'
+import { getCustomerByCode } from '../APIs/customerApiUsingRC'
 export default function NGlowKartPatientRegistration_CoreUI() {
   const today = new Date()
   const maxToday = today.toISOString().split('T')[0]
-
   const oneYearAgo = new Date()
   oneYearAgo.setFullYear(today.getFullYear() - 1)
   const oneYearAgoISO = oneYearAgo.toISOString().split('T')[0]
-
   const minLastVisitDate = new Date(today)
   minLastVisitDate.setMonth(today.getMonth() - 12)
   const minDate12Months = minLastVisitDate.toISOString().split('T')[0]
   const [aadharVerified, setAadharVerified] = useState(false)
-  const dummyAadhar = '123456789012' // Change as needed
-  const regCode = 'NGK-202517' // Change as needed
   const [winnerPrize, setWinnerPrize] = useState(null)
-  const [showWheel, setShowWheel] = useState(() =>
-    localStorage.getItem('step_showWheel') === 'false' ? false : true,
-  )
-
-  const [instagram, setInstagram] = useState(
-    () => localStorage.getItem('step_instagram') === 'true',
-  )
-
-  const [isRegistration, setIsRegistration] = useState(() =>
-    localStorage.getItem('step_isRegistration') === 'false' ? false : true,
-  )
-
   const [spinWhell, setSpinWhell] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [verifyLoading, setVerifyLoading] = useState(false)
   const [procedureOptions, setProcedureOptions] = useState([])
-
+  const [userData, setUserData] = useState([])
+  const [errors, setErrors] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+  const [showWheel, setShowWheel] = useState(false)
+  const [instagram, setInstagram] = useState(false)
+  const [isRegistration, setIsRegistration] = useState(true)
   useEffect(() => {
     async function fetchProcedures() {
       const list = await getAllProcedures()
@@ -75,70 +63,73 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     fetchProcedures()
   }, [])
 
-  const [form, setForm] = useState(() => {
-    const saved = localStorage.getItem('saved_form')
-    return saved
-      ? JSON.parse(saved)
-      : {
-          fullName: '',
-          mobile: '',
-          email: '',
-          city: '',
-          dob: '',
-          confirmedVisit: false,
-          clinicName: '',
-          clinicCityArea: '',
-          dateOfLastVisit: '',
-          serviceType: '',
-          Blood: '',
-          registraionCode: '',
-          referBy: '',
-          Aadhar: '',
-          prescription: '',
-          referBy: "Neha's GlowKart",
+  const [form, setForm] = useState({
+    fullName: '',
+    mobile: '',
+    email: '',
+    city: '',
+    dob: '',
+    confirmedVisit: false,
+    clinicName: '',
+    clinicCityArea: '',
+    dateOfLastVisit: '',
+    serviceType: '',
+    Blood: '',
+    registraionCode: '',
+    referBy: '',
+    Aadhar: '',
+    prescription: '',
+    referBy: "Neha's GlowKart",
 
-          spinRewardId: '',
-          spinRewardValue: '',
-          spinRewardImage: '',
+    spinRewardId: '',
+    spinRewardValue: '',
+    spinRewardImage: '',
 
-          prizePostScreenshot: '',
-          followScreenshot: '',
-          address: '',
-        }
+    prizePostScreenshot: '',
+    followScreenshot: '',
+    address: '',
   })
 
-  useEffect(() => {
-    const safeForm = { ...form }
+  function applyBackendStatus(status) {
+    const {
+      registrationCompleted,
+      registrationCodeVerified,
+      spinWheelCompleted,
+      userProfileCompleted,
+    } = status
 
-    // ❌ Remove large fields BEFORE saving
-    delete safeForm.prescription
+    // 1️⃣ Registration already done → stop
+    if (registrationCompleted) {
+      showCustomToast('❌ Registration already completed!', 'error')
+      return
+    }
 
-    localStorage.setItem('saved_form', JSON.stringify(safeForm))
-  }, [form])
+    // 2️⃣ If user profile NOT completed → show registration form
+    if (!userProfileCompleted) {
+      setIsRegistration(false) // hide referral code page
+      setSubmitted(false)
+      setShowWheel(false)
+      setInstagram(false)
+      return
+    }
 
-  // const procedureOptions = [
-  //   { value: 'botox', label: 'Botox' },
-  //   { value: 'chemical_peel', label: 'Chemical Peel' },
-  //   { value: 'laser_treatment', label: 'Laser Treatment' },
-  //   { value: 'fillers', label: 'Fillers' },
-  //   { value: 'microdermabrasion', label: 'Microdermabrasion' },
-  //   { value: 'prp_hair', label: 'PRP Hair Treatment' },
-  //   { value: 'facial', label: 'Facial Therapy' },
-  //   { value: 'pigmentation_treatment', label: 'Pigmentation Treatment' },
-  //   { value: 'acne_treatment', label: 'Acne Treatment' },
-  //   { value: 'skin_rejuvenation', label: 'Skin Rejuvenation' },
-  //   { value: 'tattoo_removal', label: 'Tattoo Removal' },
-  //   { value: 'body_contouring', label: 'Body Contouring' },
-  //   { value: 'derma_roller', label: 'Derma Roller' },
-  //   { value: 'lip_lightening', label: 'Lip Lightening' },
-  //   { value: 'skin_brightening', label: 'Skin Brightening' },
-  //   { value: 'other', label: 'Other (Not Listed)' }, // Custom option
-  // ]
+    // 3️⃣ User completed profile but not spin → show wheel
+    if (!spinWheelCompleted) {
+      setIsRegistration(false)
+      setSubmitted(true)
+      setShowWheel(true) // show wheel
+      setInstagram(false)
+      return
+    }
 
-  const [errors, setErrors] = useState({})
-  const [submitted, setSubmitted] = useState(
-    () => localStorage.getItem('step_submitted') === 'true',
-  )
+    // 4️⃣ Spin is done → show prize result
+    if (spinWheelCompleted) {
+      setSubmitted(true)
+      setShowWheel(false)
+      setInstagram(false)
+      return
+    }
+  }
 
   function calculateAge(dobStr) {
     if (!dobStr) return 0
@@ -151,10 +142,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const updateForm = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
-
-  // useEffect(() => {
-  //   serviceDataH()
-  // }, [])
 
   const handleProcedureChange = (selected) => {
     setForm((prev) => ({
@@ -208,15 +195,32 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       setVerifyLoading(true)
       setError('')
 
+      // 1️⃣ Verify Registration Code
       const result = await verifyRegistrationCode(code)
 
       if (!result.success) {
-        setError('❌ Invalid registration code. Please try again.')
+        setError(result.message || '❌ Invalid registration code.')
         return
       }
 
-      showCustomToast('🎉 Registration code verified successfully!')
-      setIsRegistration(false)
+      // 2️⃣ Apply backend-driven screen navigation
+      applyBackendStatus(result.data)
+
+      // 3️⃣ Fetch full customer details
+      const customerRes = await getCustomerByCode(code)
+
+      if (customerRes.success) {
+        const customer = customerRes.data
+
+        // Save in localStorage
+        // localStorage.setItem('ngk_customer', JSON.stringify(customer))
+
+        // Update UI state
+        setUserData(customer)
+      }
+
+      // 4️⃣ Show success toast
+      showCustomToast('🎉 Registration code verified!', 'success')
     } catch (err) {
       console.error('Verify Code Error:', err)
       setError('⚠️ Something went wrong. Try again.')
@@ -257,12 +261,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     return Object.keys(e).length === 0
   }
 
-  // function handleSubmit(e) {
-  //   e.preventDefault()
-  //   if (!validate()) return
-  //   setSubmitted(true)
-  // }
-
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -292,17 +290,16 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       const result = await registerCustomer(payload)
 
       if (!result.success) {
-        showCustomToast('❌ Registration failed!', 'error')
+        showCustomToast(`${result.message}` || '❌ Registration failed!', 'error')
         return
       }
 
-      showCustomToast('🎉 Data Submitted successful!', 'success')
+      showCustomToast(`${result.message}` || `🎉 Data Submitted successful!`, 'success')
       setSubmitted(true)
-      const id = result.data.customerId
-      console.log('Customer Registered ID:', id)
-
-      // TODO: Navigate to next step or page
-      // navigate(`/customer/${id}`);
+      const data = result.data
+      console.log('Customer Registered ID:', data)
+      setUserData(data)
+      setShowWheel(true)
     } catch (error) {
       console.error('Registration Error:', error)
       showCustomToast('⚠️ Something went wrong! Please try again.', 'error')
@@ -312,30 +309,57 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   }
 
   useEffect(() => {
-    localStorage.setItem('step_isRegistration', isRegistration)
-  }, [isRegistration])
+    const sessionData = sessionStorage.getItem('ngk_session')
+
+    if (sessionData) {
+      const state = JSON.parse(sessionData)
+
+      setIsRegistration(state.isRegistration)
+      setSubmitted(state.submitted)
+      setShowWheel(state.showWheel)
+      setInstagram(state.instagram)
+      setUserData(state.userData || null)
+      setWinnerPrize(state.winnerPrize || null)
+      setSpinWhell(state.spinWhell || false)
+    }
+  }, [])
 
   useEffect(() => {
-    localStorage.setItem('step_submitted', submitted)
-  }, [submitted])
+    const stateToSave = {
+      isRegistration,
+      submitted,
+      showWheel,
+      instagram,
+      userData,
+      winnerPrize,
+      spinWhell,
+    }
 
-  useEffect(() => {
-    localStorage.setItem('step_showWheel', showWheel)
-  }, [showWheel])
+    sessionStorage.setItem('ngk_session', JSON.stringify(stateToSave))
+  }, [isRegistration, submitted, showWheel, instagram, userData, winnerPrize, spinWhell])
 
-  useEffect(() => {
-    localStorage.setItem('step_instagram', instagram)
-  }, [instagram])
+  // useEffect(() => {
+  //   localStorage.setItem('step_isRegistration', isRegistration)
+  // }, [isRegistration])
 
-  console.log('instagram :: ', instagram)
-  console.log('instagram :: ', form)
+  // useEffect(() => {
+  //   localStorage.setItem('step_submitted', submitted)
+  // }, [submitted])
+
+  // useEffect(() => {
+  //   localStorage.setItem('step_showWheel', showWheel)
+  // }, [showWheel])
+
+  // useEffect(() => {
+  //   localStorage.setItem('step_instagram', instagram)
+  // }, [instagram])
 
   return (
     <div
       className="d-flex justify-content-center align-items-center"
       style={{
         height: '100vh',
-        // background: '#f8f0ee',NGK-18518356
+
         overflow: 'hidden',
       }}
     >
@@ -390,7 +414,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
               <div
                 className="d-flex flex-column justify-content-center align-items-center"
                 style={{
-                  // height: '80%', // Full height of parent container
                   minHeight: '60vh', // Ensures good centering even on small screens
                   width: '100%',
                   textAlign: 'center',
@@ -445,6 +468,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     ) : (
                       <div className="w-100">
                         <SpinWheel
+                          userData={userData}
+                          setUserData={setUserData}
                           onResult={(winner) => {
                             console.log('WON:', winner)
 
@@ -455,7 +480,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               spinRewardImage: winner.src,
                             }))
 
-                            localStorage.setItem('saved_winnerPrize', JSON.stringify(winner))
+                            // localStorage.setItem('saved_winnerPrize', JSON.stringify(winner))
 
                             setWinnerPrize(winner)
                             setShowWheel(false) // HIDE WHEEL
@@ -468,6 +493,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                   <div className="w-100">
                     {instagram ? (
                       <PrizePostDetails
+                        userData={userData}
                         form={form}
                         setForm={setForm}
                         onSubmit={(data) => {
@@ -477,6 +503,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       />
                     ) : (
                       <SpinResultCard
+                        userData={userData}
                         prize={winnerPrize}
                         form={form}
                         onReset={() => {
@@ -752,49 +779,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           }}
                           placeholder="Enter 12-digit Aadhaar number"
                         />
-
-                        {/* <CFormInput
-                        name="Aadhar"
-                        maxLength={12}
-                        disabled={aadharVerified} // Disable after verification
-                        value={form.Aadhar}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '') // only digits
-                          handleChange({ target: { name: 'Aadhar', value } })
-
-                          // when 12 digits entered → verify
-                          if (value.length === 12) {
-                            if (value === dummyAadhar) {
-                              setAadharVerified(true)
-                              setErrors((prev) => ({ ...prev, Aadhar: null }))
-                            } else {
-                              setAadharVerified(false)
-                              setErrors((prev) => ({
-                                ...prev,
-                                Aadhar: 'Aadhaar number does not match',
-                              }))
-                            }
-                          } else {
-                            setAadharVerified(false)
-                          }
-                        }}
-                        placeholder="Enter 12-digit Aadhaar number"
-                      /> */}
-
-                        {/* {aadharVerified && (
-                        <span
-                          style={{
-                            background: '#ff4f9a',
-                            color: '#fff',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                          }}
-                        >
-                          Verified
-                        </span>
-                      )} */}
                       </div>
 
                       {/* Error */}
@@ -816,8 +800,43 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         name="confirmedVisit"
                         checked={form.confirmedVisit}
                         onChange={handleChange}
-                        label="I confirm that I have availed dermatology or cosmetic services from a verified clinic within the last 12 months and agree to N Glow Kart’s verification and data privacy policy"
+                        label="I confirm that I have availed dermatology or cosmetic services from a verified clinic within the last 12 months and agree to N Glow Kart’s verification and data "
                       />
+                      <a
+                        href="/pdf/privacy-policy.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: '#ff2e85',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          marginLeft: '25px',
+                        }}
+                      >
+                        Privacy Policy
+                      </a>
+                      {/* <a
+                        href="/pdf/privacy-policy.pdf"
+                        download="Nehas_GlowKart_Privacy_Policy.pdf"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 16px',
+                          backgroundColor: '#ff2e85',
+                          color: 'white',
+                          textDecoration: 'none',
+                          borderRadius: '10px',
+                          fontWeight: '600',
+                          width: 'fit-content',
+                        }}
+                      >
+                        <img
+                          src="https://cdn-icons-png.flaticon.com/512/724/724933.png"
+                          style={{ width: 20, height: 20 }}
+                        />
+                        Download Privacy Policy
+                      </a> */}
                     </CCol>
 
                     {/* Conditional fields */}
@@ -989,10 +1008,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {errors.prescription}
                           </div>
                         )}
-
-                        {/* {errors.serviceType && (
-                          <CAlert color="danger">{errors.serviceType}</CAlert>
-                        )} */}
                       </>
                     )}
 

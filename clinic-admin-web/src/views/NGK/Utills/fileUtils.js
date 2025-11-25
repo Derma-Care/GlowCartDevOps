@@ -70,15 +70,15 @@ export const compressPDF = async (file) => {
 
 // Main function: Validate + Compress + Return Base64
 export const processFile = async (file) => {
-  const MAX_ALLOWED = 1024 * 1024 // 1MB
+  const MAX_UPLOAD_SIZE = 5 * 1024 * 1024 // 5MB
   const MAX_FINAL = 500 * 1024 // 500KB
 
   if (!file) return null
 
   // Reject if above 1 MB
-  if (file.size > MAX_ALLOWED) {
-    // throw new Error("File must be below 1MB.");
-    showCustomToast('File must be below 1MB.', 'warning')
+  if (file.size > MAX_UPLOAD_SIZE) {
+    showCustomToast('File too large! Use an image below 5MB.', 'warning')
+    throw new Error('Too big')
   }
 
   // If <= 500 KB → return as is
