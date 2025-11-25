@@ -41,7 +41,7 @@ public class CustomerService {
         customer.setUserProfileCompleted(true);
         customerRepository.save(customer);
 
-        return new ApiResponse<>(true, "Step-1 completed", customer);
+        return new ApiResponse<>(true, "Step-1 completed. Please proceed to the next step.", customer);
     }
 
     // ==================== STEP 2 ====================
@@ -63,7 +63,7 @@ public class CustomerService {
         customer.setSpinWheelCompleted(true);
         customerRepository.save(customer);
 
-        return new ApiResponse<>(true, "Step-2 completed", customer);
+        return new ApiResponse<>(true, "Step-2 completed. Please proceed to the next step.", customer);
     }
 
     // ==================== STEP 3 ====================
@@ -88,7 +88,7 @@ public class CustomerService {
             System.err.println("Failed to mark code as used: " + e.getMessage());
         }
 
-        return new ApiResponse<>(true, "Step-3 completed. Registration finished!", customer);
+        return new ApiResponse<>(true, "Great! You’ve successfully completed Step-3. Your registration is now finished!", customer);
     }
 
     // ==================== GET Wheel Slices ====================

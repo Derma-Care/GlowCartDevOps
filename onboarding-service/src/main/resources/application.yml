@@ -37,8 +37,9 @@ eureka:
     lease-expiration-duration-in-seconds: 30
 
 app:
-  frontend-base-url: ${APP_FRONTEND_BASE_URL:http://35.154.152.61:4000}
+  frontend-base-url: ${APP_FRONTEND_BASE_URL:https://glowkartmain.ashokfruit.shop}
   token-expiry-minutes: ${APP_TOKEN_EXPIRY_MINUTES:60}
+  return-token: ${APP_RETURN_TOKEN:true}   # Optional: show token in API responses (dev/testing)
 
 # Twilio credentials removed
 # twilio:

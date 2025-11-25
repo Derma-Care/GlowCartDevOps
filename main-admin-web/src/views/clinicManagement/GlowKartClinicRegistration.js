@@ -23,14 +23,14 @@ import {
   CModalBody,
   CModalFooter,
 } from '@coreui/react'
-import { BASE_URL, ClinicAllData, getAllQuestions, postAllQuestionsAndAnswers } from '../../baseUrl'
+import { AllClinicData, BASE_URL, CLINIC_REGISTRATION_URL, ClinicAllData, getAllQuestions, postAllQuestionsAndAnswers } from '../../baseUrl'
 import { CategoryData } from '../categoryManagement/CategoryAPI'
 import sendDermaCareOnboardingEmail from '../../Utils/Emailjs'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { getClinicTimings } from './AddClinicAPI'
+import { getClinicTimings } from './GlowKartgetTimingsAPI'
 
-const AddClinic = ({ mode = 'add', initialData = {} }) => {
+const ClinicRegistration = () => {
   const refs = {
     contractorDocuments: useRef(),
     hospitalDocuments: useRef(),
@@ -58,7 +58,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
   const [selectedOption, setSelectedOption] = useState('')
   const [selectedPharmacistOption, setSelectedPharmacistOption] = useState('')
   const [clinicTypeOption, setClinicTypeOption] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const [timings, setTimings] = useState([])
   const [loadingTimings, setLoadingTimings] = useState(false)
   const [nabhQuestions, setNabhQuestions] = useState([]);
@@ -66,12 +66,15 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
   const [showNabhModal, setShowNabhModal] = useState(false);
   const [nabhScore, setNabhScore] = useState(null);
   const [nabhSubmitted, setNabhSubmitted] = useState(false);
-
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successResponse, setSuccessResponse] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     city: '',
     contactNumber: '',
+    whatsappNumber: '',
     openingTime: '',
     closingTime: '',
     hospitalLogo: null,
@@ -80,15 +83,16 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     licenseNumber: '',
     issuingAuthority: '',
     recommended: false,
+    clinicSoftware: false,
     hospitalDocuments: null,
-    hospitalContract: null,
-    freeFollowUps: '',
+    contractorDocuments: null,
+
     clinicalEstablishmentCertificate: null,
     businessRegistrationCertificate: null,
     clinicType: '',                           // (Existing)
-    medicinesSoldOnSite: '',
+    medicinesSoldOnSite: false,
     drugLicenseCertificate: null,
-    drugLicenseFormType: null,
+    drugLicenseFormType: "",
     hasPharmacist: '',
     pharmacistCertificate: null,
     biomedicalWasteManagementAuth: null,
@@ -97,7 +101,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     professionalIndemnityInsurance: null,
     gstRegistrationCertificate: null,
     others: [],
-    consultationExpiration: '',
+
     subscription: '',
     instagramHandle: '',
     twitterHandle: '',
@@ -113,7 +117,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     primaryContactPerson: '',
     designation: '',
     alternateContactNumber: '',
-    usingClinicManagementSoftware: '',        // yes/no or name of software
+    clinicManagementSoftwareUsage: '',        // yes/no or name of software
     bankAccountName: '',
     bankAccountNumber: '',
     ifscCode: '',
@@ -121,14 +125,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     panNumber: ''
   });
 
-  useEffect(() => {
-    if (mode === 'edit' && initialData) {
-      setFormData(initialData)
-      setClinicTypeOption(initialData.clinicType)
-      setSelectedOption(initialData.medicinesSoldOnSite)
-      setSelectedPharmacistOption(initialData.hasPharmacist)
-    }
-  }, [initialData, mode])
+
   //get timings
   useEffect(() => {
     const fetchTimings = async () => {
@@ -145,20 +142,16 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     fetchTimings()
   }, [])
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await CategoryData()
-
-        if (response?.data) {
-          setCategories(response.data)
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-      }
-    }
-    fetchCategories()
-  }, [])
+  // FILE TO BASE64
+  const convertIfExists = async (file) => {
+    if (!file) return null;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   const preventNumberInput = (e) => {
     const isNumber = /[0-9]/.test(e.key)
@@ -185,7 +178,14 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required'
     }
-
+    if (selectedOption === "Yes") {
+      if (!formData.drugLicenseCertificate) {
+        newErrors.drugLicenseCertificate = "Please upload Drug License Certificate";
+      }
+      if (!formData.drugLicenseFormType) {
+        newErrors.drugLicenseFormType = "Please enter Form Type (20/21)";
+      }
+    }
     // City validation
     if (!formData.city?.trim()) {
       newErrors.city = 'City is required'
@@ -214,7 +214,16 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
         newErrors.contactNumber = 'Contact number must start with a digit between 5 and 9'
       }
     }
-
+    if (!formData.whatsappNumber?.trim()) {
+      newErrors.whatsappNumber = 'whatsappNumber is required'
+    } else {
+      const whatsappNumber = formData.whatsappNumber.trim()
+      if (whatsappNumber.length !== 10) {
+        newErrors.whatsappNumber = 'whatsappNumber must be exactly 10 digits long'
+      } else if (!phoneRegex.test(whatsappNumber)) {
+        newErrors.whatsappNumber = 'whatsappNumber must start with a digit between 5 and 9'
+      }
+    }
     // Time validation
     // Time validation
     if (!formData.openingTime) {
@@ -245,12 +254,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
       }
     }
 
-    //consultation Expiration
-    if (!formData.consultationExpiration) {
-      newErrors.consultationExpiration = 'Consultation days are required'
-    } else if (isNaN(formData.consultationExpiration) || formData.consultationExpiration < 0) {
-      newErrors.consultationExpiration = 'Enter a valid number greater than 0'
-    }
+
 
     // License Number
     if (!formData.licenseNumber.trim()) {
@@ -271,8 +275,8 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     if (!formData.hospitalDocuments) {
       newErrors.hospitalDocuments = 'Please upload the document'
     }
-    if (!formData.hospitalContract) {
-      newErrors.hospitalContract = 'Please upload the document'
+    if (!formData.contractorDocuments) {
+      newErrors.contractorDocuments = 'Please upload the document'
     }
     if (!formData.clinicalEstablishmentCertificate) {
       newErrors.clinicalEstablishmentCertificate = 'Please upload at least one document'
@@ -280,9 +284,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     if (!formData.businessRegistrationCertificate) {
       newErrors.businessRegistrationCertificate = 'Please upload at least one document'
     }
-    if (!formData.drugLicenseCertificate && selectedOption === 'Yes') {
-      newErrors.drugLicenseCertificate = 'Please upload at least one document'
-    }
+
     if (!formData.drugLicenseFormType && selectedOption === 'Yes') {
       newErrors.drugLicenseFormType = 'Please upload at least one document'
     }
@@ -310,11 +312,8 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
       newErrors.gstRegistrationCertificate = 'Please upload at least one document'
     }
 
-    if (!clinicTypeOption || clinicTypeOption.trim() === '') {
-      newErrors.clinicType = 'Please select a clinic Type.'
-    }
-    if (!selectedOption || selectedOption.trim() === '') {
-      newErrors.medicinesSoldOnSite = 'Please select  atleast one option'
+    if (!formData.clinicType || formData.clinicType.trim() === "") {
+      newErrors.clinicType = "Please select a clinic type.";
     }
     if (!selectedPharmacistOption || selectedPharmacistOption.trim() === '') {
       newErrors.hasPharmacist = 'Please select whether clinic has a valid pharmacist.'
@@ -382,8 +381,8 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     }
 
     // 🔹 Clinic Management Software
-    if (!formData.usingClinicManagementSoftware?.trim()) {
-      newErrors.usingClinicManagementSoftware = "Please specify if you use clinic software"
+    if (!formData.clinicManagementSoftwareUsage?.trim()) {
+      newErrors.clinicManagementSoftwareUsage = "Please specify if you use clinic software"
     }
 
     // 🔹 Bank Account Name
@@ -426,11 +425,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
     if (!formData.nabhScore || !String(formData.nabhScore).trim()) {
       newErrors.nabhScore = "NABH Score is required";
     }
-    if (!formData.freeFollowUps) {
-      newErrors.freeFollowUps = "Free Follow Ups is required"
-    } else if (isNaN(formData.freeFollowUps) || formData.freeFollowUps < 0) {
-      newErrors.freeFollowUps = "Free Follow Ups must be a positive number"
-    }
+
     // No `else { newErrors.website = '' }`
 
     console.log('Validation errors:', newErrors)
@@ -541,7 +536,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/${ClinicAllData}`)
+        const response = await axios.get(`${AllClinicData}`)
         const clinicList = Array.isArray(response.data) // your actual API
         // const data = await response.json()
         console.log('Fetched doctor data:', response.data) // <-- CHECK THIS STRUCTURE
@@ -638,6 +633,21 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
   const previewFromLocalStorage = JSON.parse(localStorage.getItem('clinicFormPreview'))
   console.log('📦 Loaded from localStorage for preview:', previewFromLocalStorage)
 
+
+
+  // ✅ Extract token from URL and store in localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      console.log("Extracted Token:", token);
+      localStorage.setItem("onboardingToken", token);
+    } else {
+      console.warn("No token found in URL");
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -646,105 +656,62 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
 
     setIsSubmitting(true);
 
-    const { emailAddress, contactNumber, licenseNumber } = formData;
-    const safeExistingDoctors = Array.isArray(existingDoctors) ? existingDoctors : [];
-
-    const isEmailDuplicate = safeExistingDoctors.some(
-      (doc) => doc.emailAddress?.toLowerCase() === emailAddress?.toLowerCase()
-    );
-    const isMobileDuplicate = safeExistingDoctors.some(
-      (doc) => doc.contactNumber === contactNumber
-    );
-    const isLicenseDuplicate = safeExistingDoctors.some(
-      (doc) => doc.licenseNumber?.toLowerCase() === licenseNumber?.toLowerCase()
-    );
-
-    if (isEmailDuplicate || isMobileDuplicate || isLicenseDuplicate) {
-      const newErrors = {};
-
-      if (isEmailDuplicate) {
-        newErrors.emailAddress = "Email already exists";
-      }
-      if (isMobileDuplicate) {
-        newErrors.contactNumber = "Mobile number already exists";
-      }
-      if (isLicenseDuplicate) {
-        newErrors.licenseNumber = "License Number already exists";
-      }
-
-      setErrors((prev) => ({ ...prev, ...newErrors }));
-      setIsSubmitting(false);
-      return;
-    }
-
-
     try {
-      // 🔹 Helper functions
       const convertIfExists = async (file) => {
         if (!file) return "";
+        if (file.base64) return file.base64;
         if (file instanceof Blob) return await convertFileToBase64(file);
-        return file; // already Base64
+        if (typeof file === "string") return file;
+        return "";
       };
 
       const convertMultipleIfExists = async (files) => {
         if (!Array.isArray(files)) return [];
-        return Promise.all(
+        return await Promise.all(
           files.map(async (file) => {
-            if (file?.base64) return file.base64;
+            if (!file) return "";
+            if (file.base64) return file.base64;
             if (file instanceof Blob) return await convertFileToBase64(file);
-            return file;
+            if (typeof file === "string") return file;
+            return "";
           })
         );
       };
 
-      // 🔹 Convert files
-      const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
+      // Convert files
+      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
       const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
-      const hospitalContractBase64 = await convertIfExists(formData.hospitalContract);
-      const clinicalEstablishmentCertificateBase64 = await convertIfExists(
-        formData.clinicalEstablishmentCertificate
-      );
-      const businessRegistrationCertificateBase64 = await convertIfExists(
-        formData.businessRegistrationCertificate
-      );
+      const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
+      const clinicalEstablishmentCertificateBase64 = await convertIfExists(formData.clinicalEstablishmentCertificate);
+      const businessRegistrationCertificateBase64 = await convertIfExists(formData.businessRegistrationCertificate);
       const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);
-      const drugLicenseFormTypeBase64 = await convertIfExists(formData.drugLicenseFormType);
       const pharmacistCertificateBase64 = await convertIfExists(formData.pharmacistCertificate);
-      const biomedicalWasteManagementAuthBase64 = await convertIfExists(
-        formData.biomedicalWasteManagementAuth
-      );
+      const biomedicalWasteManagementAuthBase64 = await convertIfExists(formData.biomedicalWasteManagementAuth);
       const tradeLicenseBase64 = await convertIfExists(formData.tradeLicense);
       const fireSafetyCertificateBase64 = await convertIfExists(formData.fireSafetyCertificate);
-      const professionalIndemnityInsuranceBase64 = await convertIfExists(
-        formData.professionalIndemnityInsurance
-      );
-      const gstRegistrationCertificateBase64 = await convertIfExists(
-        formData.gstRegistrationCertificate
-      );
+      const professionalIndemnityInsuranceBase64 = await convertIfExists(formData.professionalIndemnityInsurance);
+      const gstRegistrationCertificateBase64 = await convertIfExists(formData.gstRegistrationCertificate);
       const othersBase64 = await convertMultipleIfExists(formData.others);
 
-      // 🔹 Prepare payload
+      const onboardingToken = localStorage.getItem("onboardingToken");
+
+      const cleanValue = (val) => {
+        if (val === null || val === undefined) return "";
+        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
+          return val;
+        if (val?.value) return val.value;
+        if (Array.isArray(val)) return val.map((v) => cleanValue(v));
+        return "";
+      };
+
       const clinicData = {
-        name: formData.name,
-        address: formData.address,
-        city: formData.city,
-        contactNumber: formData.contactNumber,
-        openingTime: formData.openingTime,
-        closingTime: formData.closingTime,
-        hospitalLogo: hospitalLogoBase64,
-        emailAddress: formData.emailAddress,
-        website: normalizeWebsite(formData.website.trim()),
-        licenseNumber: formData.licenseNumber,
-        issuingAuthority: formData.issuingAuthority,
+        token: onboardingToken,
+        contractorDocuments: contractorDocumentsBase64,
         hospitalDocuments: hospitalDocumentsBase64,
-        contractorDocuments: hospitalContractBase64,
+        hospitalLogo: hospitalLogoBase64,
         clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
         businessRegistrationCertificate: businessRegistrationCertificateBase64,
-        clinicType: clinicTypeOption,
-        medicinesSoldOnSite: selectedOption,
         drugLicenseCertificate: drugLicenseCertificateBase64,
-        drugLicenseFormType: drugLicenseFormTypeBase64,
-        hasPharmacist: selectedPharmacistOption,
         pharmacistCertificate: pharmacistCertificateBase64,
         biomedicalWasteManagementAuth: biomedicalWasteManagementAuthBase64,
         tradeLicense: tradeLicenseBase64,
@@ -752,88 +719,58 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
         professionalIndemnityInsurance: professionalIndemnityInsuranceBase64,
         gstRegistrationCertificate: gstRegistrationCertificateBase64,
         others: othersBase64,
-        freeFollowUps: formData.freeFollowUps,
-        instagramHandle: formData.instagramHandle,
-        twitterHandle: formData.twitterHandle,
-        facebookHandle: formData.facebookHandle,
-        recommended: !!formData.recommended,
-        consultationExpiration: formData.consultationExpiration
-          ? `${formData.consultationExpiration} days`
-          : "",
-        subscription: formData.subscription,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        walkthrough: formData.walkthrough,
-        nabhScore: formData.nabhScore,
-        branch: formData.branch,
-
-        // 🔹 Newly Added Fields
-        clinicSpecializationType: formData.clinicSpecializationType,
-        primaryContactPerson: formData.primaryContactPerson,
-        designation: formData.designation,
-        alternateContactNumber: formData.alternateContactNumber,
-        usingClinicManagementSoftware: formData.usingClinicManagementSoftware,
-        bankAccountName: formData.bankAccountName,
-        bankAccountNumber: formData.bankAccountNumber,
-        ifscCode: formData.ifscCode,
-        upiId: formData.upiId,
-        panNumber: formData.panNumber
+        ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
+        website: normalizeWebsite(formData.website?.trim() || "")
       };
 
-      // 🔹 API Call
-      const response = await axios.post(`${BASE_URL}/admin/CreateClinic`, clinicData);
+      const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
       const savedClinicData = response.data;
 
-      if (savedClinicData.success) {
-        toast.success(savedClinicData.message || "Clinic Added Successfully", {
-          position: "top-right",
+      if (savedClinicData?.success) {
+
+        // 🔥 FIX: Proper modal states
+        setSuccessResponse({
+          status: savedClinicData.data.status,
+          message: savedClinicData.message,
+          clinicId: savedClinicData.data.clinicId,
         });
 
-        // 🔹 Send onboarding email + navigate after small delay
+        setShowSuccessModal(true);
+
         setTimeout(() => {
-          sendDermaCareOnboardingEmail({
-            name: formData.name,
-            email: formData.emailAddress,
-            password: savedClinicData.data.clinicTemporaryPassword,
-            userID: savedClinicData.data.clinicUsername,
-          });
+          window.close();
+        }, 2500);
 
-          navigate("/clinic-management", {
-            state: {
-              refresh: true,
-              newClinic: savedClinicData,
-            },
-          });
-        }, 1000);
       } else {
-        toast.error(savedClinicData.message || "Something went wrong", {
-          position: "top-right",
-        });
+        toast.error(savedClinicData.message || "Something went wrong");
       }
+
     } catch (error) {
-      console.error("Error submitting clinic data:", error);
-      toast.error(error.message || "Something went wrong", { position: "top-right" });
+      console.error("Error submitting clinic:", error);
+      toast.error(error.message || "Failed to submit clinic");
     } finally {
       setIsSubmitting(false);
     }
   };
 
 
+
+
   return (
     <div className="container mt-4">
       <ToastContainer />
-      <CCard>
-        <CCardHeader>
+      <CCard className="shadow-sm border-0 rounded-3">
+        <CCardHeader className="bg-primary text-white">
           <h3 className="mb-0">Add New Clinic</h3>
         </CCardHeader>
         <CCardBody>
           <CForm onSubmit={handleSubmit}>
-            
-            <CRow className="mb-3">
-              <CCol md={6}>
+            <h5 className="mb-3 text-primary mt-6">Clinic Information</h5>
+            <CRow className="mb-4 g-3">
+              <CCol md={4}>
                 <CFormLabel>
                   Clinic Name
-                  <span className="text-danger">*</span>
+                  <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
                   type="text"
@@ -859,7 +796,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
 
                 {errors.name && <CFormFeedback invalid>{errors.name}</CFormFeedback>}
               </CCol>
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
                   Email Address<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
@@ -881,10 +818,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.emailAddress}</CFormFeedback>
                 )}
               </CCol>
-
-            </CRow>
-            <CRow className="mb-3">
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
                   Contact Number<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
@@ -903,8 +837,9 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.contactNumber}</CFormFeedback>
                 )}
               </CCol>
-
-              <CCol md={6}>
+            </CRow>
+            <CRow className="mb-3">
+              <CCol md={4}>
                 <CFormLabel>
                   Website<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
@@ -933,14 +868,10 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                 {errors.website && (
                   <div style={{ color: 'red', fontSize: '0.9rem' }}>{errors.website}</div>
                 )}
-
               </CCol>
-
-            </CRow>
-            <CRow className="mb-3">
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
-                  Clinic Specialization Type <span className="text-danger">*</span>
+                  Clinic Specialization Type <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormSelect
@@ -969,11 +900,10 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.clinicSpecializationType}</CFormFeedback>
                 )}
               </CCol>
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
-                  Designation <span className="text-danger">*</span>
+                  Designation <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
-
                 <CFormInput
                   type="text"
                   name="designation"
@@ -990,49 +920,138 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   }}
                   invalid={!!errors.designation}
                 />
-
                 {errors.designation && (
                   <CFormFeedback invalid>{errors.designation}</CFormFeedback>
                 )}
               </CCol>
-
             </CRow>
+            <CRow className="mb-3">
+              <CCol md={4}>
+                <CFormLabel>
+                  Do you use any Clinic Management Software?
+                </CFormLabel>
+                <CFormSelect
+                  name="clinicSoftware"
+                  value={formData.clinicSoftware}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      clinicSoftware: e.target.value === 'true',
+                    }))
+                  }
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </CFormSelect>
+
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>
+                  Recommendation Status
+                  {/* <span className="text-danger">*</span> */}
+                </CFormLabel>
+                <CFormSelect
+                  name="recommended"
+                  value={formData.recommended}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      recommended: e.target.value === 'true',
+                    }))
+                  }
+                >
+                  <option value="true">Yes, Recommend</option>
+                  <option value="false">No, Don't Recommend</option>
+                </CFormSelect>
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>
+                  Clinic Type <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+
+                <CFormSelect
+                  name="clinicType"
+                  value={formData.clinicType}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    setFormData((prev) => ({ ...prev, clinicType: value }));
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      clinicType: value ? "" : "Please select a clinic type.",
+                    }));
+                  }}
+                  invalid={!!errors.clinicType}
+                >
+                  <option value="">Select Type</option>
+                  <option value="Proprietorship">Proprietorship</option>
+                  <option value="Partnership">Partnership</option>
+                  <option value="LLP">LLP</option>
+                  <option value="Private Limited">Private Limited</option>
+                </CFormSelect>
+
+                {errors.clinicType && (
+                  <CFormFeedback invalid>{errors.clinicType}</CFormFeedback>
+                )}
+              </CCol>
+            </CRow>
+            <CRow className="mb-3">
+              <CCol md={4}>
+                <CFormLabel>
+                  WhatsAppNumber <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="tel"
+                  name="whatsappNumber"
+                  value={formData.whatsappNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    handleInputChange({ target: { name: 'whatsappNumber', value } });
+                  }}
+                  maxLength={10}
+                  invalid={!!errors.whatsappNumber}
+                />
+                {errors.whatsappNumber && (
+                  <CFormFeedback invalid>{errors.whatsappNumber}</CFormFeedback>
+                )}
+              </CCol>
+            </CRow>
+            <h5 className="mb-3 text-primary mt-6">Clinic Contact Details</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
-                  Primary Contact Number <span className="text-danger">*</span>
+                  Primary Contact Person
+                 <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormInput
                   type="text"
-                  name="primaryContactNumber"
-                  value={formData.primaryContactNumber || ""}
-                  maxLength={10}
+                  name="primaryContactPerson"
+                  value={formData.primaryContactPerson || ""}
+                  maxLength={50} // optional, limit name length
                   onChange={(e) => {
                     let { name, value } = e.target;
 
-                    // remove non-numeric characters
-                    value = value.replace(/\D/g, '');
-
-                    // restrict to 10 digits
-                    if (value.length > 10) value = value.slice(0, 10);
+                    // Remove digits and special characters (allow letters and spaces)
+                    value = value.replace(/[^a-zA-Z\s]/g, '');
 
                     setFormData((prev) => ({ ...prev, [name]: value }));
 
+                    // Validation
                     let error = "";
-                    if (value.length === 10 && !/^[6-9][0-9]{9}$/.test(value)) {
-                      error = "Number must start with 6-9";
-                    } else if (value && value.length < 10) {
-                      error = "Number must be 10 digits";
+                    if (!value.trim()) {
+                      error = "Name is required";
                     }
 
                     setErrors((prev) => ({ ...prev, [name]: error || undefined }));
                   }}
-                  invalid={!!errors.primaryContactNumber}
+                  invalid={!!errors.primaryContactPerson}
+
                 />
 
-                {errors.primaryContactNumber && (
-                  <CFormFeedback invalid>{errors.primaryContactNumber}</CFormFeedback>
+                {errors.primaryContactPerson && (
+                  <CFormFeedback invalid>{errors.primaryContactPerson}</CFormFeedback>
                 )}
               </CCol>
 
@@ -1073,34 +1092,38 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
-                  Clinic Management Software <span className="text-danger">*</span>
+                  Address<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
-
                 <CFormInput
                   type="text"
-                  name="usingClinicManagementSoftware"
-                  value={formData.usingClinicManagementSoftware || ""}
-                  onChange={(e) => {
-                    const { name, value } = e.target;
-                    setFormData((prev) => ({ ...prev, [name]: value }));
-
-                    const error = !value.trim()
-                      ? "This field is required"
-                      : "";
-
-                    setErrors((prev) => ({ ...prev, [name]: error || undefined }));
-                  }}
-                  invalid={!!errors.usingClinicManagementSoftware}
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  invalid={!!errors.address}
                 />
-
-                {errors.usingClinicManagementSoftware && (
-                  <CFormFeedback invalid>{errors.usingClinicManagementSoftware}</CFormFeedback>
-                )}
+                {errors.address && <CFormFeedback invalid>{errors.address}</CFormFeedback>}
               </CCol>
-
               <CCol md={6}>
                 <CFormLabel>
-                  Bank Account Name <span className="text-danger">*</span>
+                  City<span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  onKeyDown={preventNumberInput}
+                  invalid={!!errors.city}
+                />
+                {errors.city && <CFormFeedback invalid>{errors.city}</CFormFeedback>}
+              </CCol>
+            </CRow>
+
+            <h5 className="mb-3 text-primary mt-6">Bank & Financial Information</h5>
+            <CRow className='mb-3'>
+              <CCol md={4}>
+                <CFormLabel>
+                  Bank Account Name <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormInput
@@ -1133,12 +1156,9 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.bankAccountName}</CFormFeedback>
                 )}
               </CCol>
-
-            </CRow>
-            <CRow className="mb-3">
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
-                  Bank Account Number <span className="text-danger">*</span>
+                  Bank Account Number <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormInput
@@ -1173,10 +1193,9 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.bankAccountNumber}</CFormFeedback>
                 )}
               </CCol>
-
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
-                  IFSC Code <span className="text-danger">*</span>
+                  IFSC Code <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormInput
@@ -1207,10 +1226,10 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
 
                 {errors.ifscCode && <CFormFeedback invalid>{errors.ifscCode}</CFormFeedback>}
               </CCol>
-
             </CRow>
+
             <CRow className="mb-3">
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>UPI ID</CFormLabel>
 
                 <CFormInput
@@ -1220,23 +1239,13 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   onChange={(e) => {
                     const { name, value } = e.target;
                     setFormData((prev) => ({ ...prev, [name]: value }));
-
-                    let error = "";
-                    if (value.trim() && !/^[\w.-]+@[\w.-]+$/.test(value)) {
-                      error = "Invalid UPI ID format";
-                    }
-
-                    setErrors((prev) => ({ ...prev, [name]: error || undefined }));
                   }}
-                  invalid={!!errors.upiId}
                 />
-
-                {errors.upiId && <CFormFeedback invalid>{errors.upiId}</CFormFeedback>}
               </CCol>
 
-              <CCol md={6}>
+              <CCol md={4}>
                 <CFormLabel>
-                  PAN Number <span className="text-danger">*</span>
+                  PAN Number <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormInput
@@ -1265,60 +1274,174 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
               </CCol>
             </CRow>
 
-            <CRow className="mb-3">
-              <CRow className="mb-3">
+            <h5 className="mb-4 text-primary fw-bold">Clinic Operations</h5>
+
+            {/* Row 1 : Clinic Management Software + Subscription */}
+            <CRow className="mb-4">
+              <CCol md={6}>
+                <CFormLabel>
+                  Clinic Management Software <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="text"
+                  name="clinicManagementSoftwareUsage"
+                  value={formData.clinicManagementSoftwareUsage || ""}
+                  onChange={(e) => {
+                    const { name, value } = e.target;
+                    setFormData((prev) => ({ ...prev, [name]: value }));
+
+                    const error = !value.trim()
+                      ? "This field is required"
+                      : "";
+                    setErrors((prev) => ({ ...prev, [name]: error || undefined }));
+                  }}
+                  invalid={!!errors.clinicManagementSoftwareUsage}
+                />
+                {errors.clinicManagementSoftwareUsage && (
+                  <CFormFeedback invalid>{errors.clinicManagementSoftwareUsage}</CFormFeedback>
+                )}
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Subscription <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormSelect
+                  name="subscription"
+                  value={formData.subscription}
+                  onChange={handleInputChange}
+                  invalid={!!errors.subscription}
+                >
+                  <option value="">Select Subscription</option>
+                  <option value="Free">Free</option>
+                  <option value="Basic">Basic</option>
+                  <option value="Standard">Standard</option>
+                  <option value="Premium">Premium</option>
+                </CFormSelect>
+                {errors.subscription && (
+                  <p className="text-danger small">{errors.subscription}</p>
+                )}
+              </CCol>
+            </CRow>
+
+            {/* Row 2 : Medicines sold + conditional license fields */}
+            <CRow className="mb-4">
+              <CCol md={6}>
+                <CFormLabel>Medicines sold on-site</CFormLabel>
+                <CFormSelect
+                  name="medicinesSoldOnSite"
+                  value={formData.medicinesSoldOnSite}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      medicinesSoldOnSite: e.target.value === "true",
+                      ...(e.target.value === "false" && {
+                        drugLicenseCertificate: null,
+                        drugLicenseFormType: "",
+                      }),
+                    }))
+                  }
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </CFormSelect>
+              </CCol>
+            </CRow>
+
+            {/* Row 3 : Drug License (conditional) */}
+            {formData.medicinesSoldOnSite && (
+              <CRow className="mb-4">
                 <CCol md={6}>
-                  <CFormLabel>
-                    Opening Time<span style={{ color: 'red' }}>*</span>
-                  </CFormLabel>
-                  <CFormSelect
-                    name="openingTime"
-                    value={formData.openingTime}
-                    onChange={handleInputChange}
-                    invalid={!!errors.openingTime}
-                    disabled={loadingTimings}
-                  >
-                    <option value="">Select Opening Time</option>
-                    {timings.map((slot, idx) => (
-                      <option key={idx} value={slot.openingTime}>
-                        {slot.openingTime}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                  {errors.openingTime && (
-                    <CFormFeedback invalid>{errors.openingTime}</CFormFeedback>
-                  )}
+                  <FileInput
+                    label="Drug License Certificate"
+                    name="drugLicenseCertificate"
+                    formData={formData}
+                    setFormData={setFormData}
+                    errors={errors}
+                    setErrors={setErrors}
+                    inputRef={refs.drugLicenseCertificate}
+                  />
                 </CCol>
 
                 <CCol md={6}>
-                  <CFormLabel>
-                    Closing Time<span style={{ color: 'red' }}>*</span>
-                  </CFormLabel>
+                  <CFormLabel>Drug License Form Type (20/21)</CFormLabel>
                   <CFormSelect
-                    name="closingTime"
-                    value={formData.closingTime}
-                    onChange={handleInputChange}
-                    invalid={!!errors.closingTime}
-                    disabled={loadingTimings}
+                    name="drugLicenseFormType"
+                    value={formData.drugLicenseFormType || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        drugLicenseFormType: e.target.value,
+                      }))
+                    }
+                    ref={refs.drugLicenseFormType}
                   >
-                    <option value="">Select Closing Time</option>
-
-                    {timings.map((slot, idx) => (
-                      <option key={idx} value={slot.closingTime}>
-                        {slot.closingTime}
-                      </option>
-                    ))}
+                    <option value="">Select Form Type</option>
+                    <option value="Form 20">Form 20</option>
+                    <option value="Form 21">Form 21</option>
                   </CFormSelect>
-                  {errors.closingTime && (
-                    <CFormFeedback invalid>{errors.closingTime}</CFormFeedback>
+                  {errors.drugLicenseFormType && (
+                    <p className="text-danger small">{errors.drugLicenseFormType}</p>
                   )}
                 </CCol>
               </CRow>
-            </CRow>
-            <CRow>
+            )}
+
+            {/* Row 4 : Opening + Closing Time */}
+            <CRow className="mb-4">
               <CCol md={6}>
                 <CFormLabel>
-                  License Number<span className="text-danger">*</span>
+                  Opening Time <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormSelect
+                  name="openingTime"
+                  value={formData.openingTime}
+                  onChange={handleInputChange}
+                  invalid={!!errors.openingTime}
+                  disabled={loadingTimings}
+                >
+                  <option value="">Select Opening Time</option>
+                  {timings.map((slot, idx) => (
+                    <option key={idx} value={slot.openingTime}>
+                      {slot.openingTime}
+                    </option>
+                  ))}
+                </CFormSelect>
+                {errors.openingTime && (
+                  <CFormFeedback invalid>{errors.openingTime}</CFormFeedback>
+                )}
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Closing Time <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormSelect
+                  name="closingTime"
+                  value={formData.closingTime}
+                  onChange={handleInputChange}
+                  invalid={!!errors.closingTime}
+                  disabled={loadingTimings}
+                >
+                  <option value="">Select Closing Time</option>
+                  {timings.map((slot, idx) => (
+                    <option key={idx} value={slot.closingTime}>
+                      {slot.closingTime}
+                    </option>
+                  ))}
+                </CFormSelect>
+                {errors.closingTime && (
+                  <CFormFeedback invalid>{errors.closingTime}</CFormFeedback>
+                )}
+              </CCol>
+            </CRow>
+
+            <h5 className="mb-3 text-primary mt-6">Licenses & Certifications</h5>
+
+            <CRow className='mb-3'>
+              <CCol md={6}>
+                <CFormLabel>
+                  License Number<span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
                 <CFormInput
                   type="text"
@@ -1331,6 +1454,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.licenseNumber}</CFormFeedback>
                 )}
               </CCol>
+
               <CCol md={6}>
                 <CFormLabel>
                   Issuing Authority<span style={{ color: 'red' }}>*</span>
@@ -1347,211 +1471,8 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   <CFormFeedback invalid>{errors.issuingAuthority}</CFormFeedback>
                 )}
               </CCol>
+
             </CRow>
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  Address<span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  invalid={!!errors.address}
-                />
-                {errors.address && <CFormFeedback invalid>{errors.address}</CFormFeedback>}
-              </CCol>
-              <CCol md={6}>
-                <CFormLabel>
-                  Recommendation Status
-                  {/* <span className="text-danger">*</span> */}
-                </CFormLabel>
-                <CFormSelect
-                  name="recommended"
-                  value={formData.recommended}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      recommended: e.target.value === 'true',
-                    }))
-                  }
-                >
-                  <option value="true">Yes, Recommend</option>
-                  <option value="false">No, Don't Recommend</option>
-                </CFormSelect>
-              </CCol>
-            </CRow>
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  City<span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  onKeyDown={preventNumberInput}
-                  invalid={!!errors.city}
-                />
-                {errors.city && <CFormFeedback invalid>{errors.city}</CFormFeedback>}
-              </CCol>
-
-              <FileInput
-                label="Clinic Contract"
-                name="hospitalContract"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.clinicContract} // ✅ should match ref name
-              />
-            </CRow>
-            <CRow className="mb-3">
-              <FileInput
-                label="Clinic Logo"
-                name="hospitalLogo"
-                accept=".jpeg,.jpg,.png"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.hospitalLogo}
-              />
-
-              <FileInput
-                label="Clinic Documents"
-                name="hospitalDocuments"
-                accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
-                tooltip="Issued by Local Fire Department"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.hospitalDocuments}
-              />
-            </CRow>
-
-            <CRow className="mb-3">
-              <FileInput
-                label="Clinical Establishment Registration Certificate"
-                name="clinicalEstablishmentCertificate"
-                accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.clinicalEstablishmentCertificate}
-              />
-
-              <FileInput
-                label="Business Registration Certificate"
-                name="businessRegistrationCertificate"
-                accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.businessRegistrationCertificate}
-              />
-            </CRow>
-
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  Clinic Type <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormSelect
-                  className="form-select"
-                  value={clinicTypeOption}
-                  onChange={(e) => {
-                    setClinicTypeOption(e.target.value)
-                    setErrors((prev) => ({ ...prev, clinicType: '' })) // clear error on change
-                  }}
-                  invalid={!!errors.clinicType} // this is critical!
-                >
-                  <option value="">Select Type</option>
-                  <option value="Proprietorship">Proprietorship</option>
-                  <option value="Partnership">Partnership</option>
-                  <option value="LLP">LLP</option>
-                  <option value="Private Limited">Private Limited</option>
-                </CFormSelect>
-
-                {errors.clinicType && <CFormFeedback invalid>{errors.clinicType}</CFormFeedback>}
-              </CCol>
-
-              <FileInput
-                label="Professional Indemnity Insurance"
-                name="professionalIndemnityInsurance"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.professionalIndemnityInsurance}
-                required={false}  // <-- makes it optional
-              />
-            </CRow>
-
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  Medicines sold on-site
-                  <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormSelect
-                  className="form-select"
-                  value={selectedOption}
-                  onChange={(e) => {
-                    setSelectedOption(e.target.value)
-                    setErrors((prev) => ({ ...prev, medicinesSoldOnSite: '' })) // clear error on change
-                  }}
-                  invalid={!!errors.medicinesSoldOnSite}
-                >
-                  <option value="">Select an option</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </CFormSelect>
-                {errors.medicinesSoldOnSite && (
-                  <CFormFeedback invalid>{errors.medicinesSoldOnSite}</CFormFeedback>
-                )}
-              </CCol>
-              <FileInput
-                label="Biomedical Waste Management Authorization"
-                name="biomedicalWasteManagementAuth"
-                tooltip="Issued by State Pollution Control Board (SPCB)"
-                accept=".pdf,.doc,.docx,.jpeg,.png"
-                formData={formData}
-                setFormData={setFormData}
-                errors={errors}
-                setErrors={setErrors}
-                inputRef={refs.biomedicalWasteManagementAuth}
-              />
-            </CRow>
-
-            {selectedOption === 'Yes' && (
-              <CRow className="mb-3">
-                <FileInput
-                  label="Drug Licence Certificate"
-                  name="drugLicenseCertificate"
-                  formData={formData}
-                  setFormData={setFormData}
-                  errors={errors}
-                  setErrors={setErrors}
-                  inputRef={refs.drugLicenseCertificate}
-                />
-
-                <FileInput
-                  label="Drug Licence Form Type 20/21"
-                  name="drugLicenseFormType"
-                  formData={formData}
-                  setFormData={setFormData}
-                  errors={errors}
-                  setErrors={setErrors}
-                  inputRef={refs.drugLicenseFormType}
-                />
-              </CRow>
-            )}
             <CRow className="mb-3">
               <FileInput
                 label="Trade Licence / Shop & Establishment Certificate"
@@ -1574,8 +1495,7 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                 inputRef={refs.fireSafetyCertificate}
               />
             </CRow>
-
-            <CRow className="mb-3">
+            <CRow className='mb-3'>
               <FileInput
                 label="GST Registration Certificate"
                 name="gstRegistrationCertificate"
@@ -1586,7 +1506,317 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                 setErrors={setErrors}
                 inputRef={refs.gstRegistrationCertificate}
               />
+              <FileInput
+                label="Professional Indemnity Insurance"
+                name="professionalIndemnityInsurance"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.professionalIndemnityInsurance}
+                required={false}  // <-- makes it optional
+              />
+              {/* ---------------- DRUG LICENSE SECTION ---------------- */}
 
+
+            </CRow>
+
+            <h5 className="mb-3 text-primary mt-6">Virtual Tour & Branch Info</h5>
+            <CRow className="mb-3">
+              <CCol md={6}>
+                <CFormLabel>
+                  Virtual Clinic Tour <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="url"
+                  placeholder="https://example.com/VirtualClinicTour"
+                  value={formData.walkthrough || ""}
+                  onChange={(e) => {
+                    const { value } = e.target;
+
+                    // Update form data
+                    setFormData((prev) => ({ ...prev, walkthrough: value }));
+
+                    // Real-time validation
+                    let error = "";
+
+                    if (value.trim()) {
+                      try {
+                        new URL(value); // throws if invalid
+                      } catch {
+                        error = "Enter a valid URL (e.g. https://example.com)";
+                      }
+                    }
+
+                    // Set or clear error
+                    setErrors((prev) => ({
+                      ...prev,
+                      walkthrough: error || undefined,
+                    }));
+                  }}
+                  invalid={!!errors.walkthrough}
+                />
+                {errors.walkthrough && (
+                  <div style={{ color: 'red', fontSize: '0.9rem' }}>{errors.walkthrough}</div>
+                )}
+
+
+              </CCol>
+              {/* ✅ Branch Input */}
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Branch <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="text"
+                  placeholder="Enter branch name"
+                  value={formData.branch || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    setFormData((prev) => ({ ...prev, branch: value }));
+                    if (!value) {
+                      setErrors((prev) => ({ ...prev, branch: "Branch name is required" }))
+                    }
+                    else {
+                      setErrors((prev) => ({ ...prev, branch: "" }))
+                    }
+                  }}
+
+                  invalid={!!errors.branch}
+                />
+                {errors.branch && <CFormFeedback invalid>{errors.branch}</CFormFeedback>}
+              </CCol>
+
+            </CRow>
+
+            <h5 className="mb-3 text-primary mt-6">Social Media</h5>
+            <CRow className="mb-3">
+              <CCol md={4}>
+                <CFormLabel>Instagram</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="instagram"
+                  placeholder="@clinic_handle"
+                  name="instagramHandle"
+                  value={formData.instagramHandle}
+                  onChange={handleInputChange}
+                />
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>Facebook</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="facebook"
+                  placeholder="facebook.com/clinic"
+                  name="facebookHandle"
+                  value={formData.facebookHandle}
+                  onChange={handleInputChange}
+                />
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>Twitter</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="twitter"
+                  placeholder="@clinic_tweet"
+                  name="twitterHandle"
+                  value={formData.twitterHandle}
+                  onChange={handleInputChange}
+                />
+              </CCol>
+            </CRow>
+            <h5 className="mb-3 text-primary mt-6">Clinic Staff & Pharmacist</h5>
+
+            <CRow className="mb-3">
+              <CCol md={6}>
+                <CFormLabel>
+                  Clinic has a valid pharmacist
+                  <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormSelect
+                  value={selectedPharmacistOption}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    setSelectedPharmacistOption(value);
+
+                    setFormData(prev => ({
+                      ...prev,
+                      hasPharmacist: value
+                    }));
+
+                    setErrors(prev => ({ ...prev, hasPharmacist: '' }));
+                  }}
+                >
+                  <option value="">Select an option</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </CFormSelect>
+
+                {errors.hasPharmacist && (
+                  <CFormFeedback invalid>{errors.hasPharmacist}</CFormFeedback>
+                )}
+              </CCol>
+              {selectedPharmacistOption === 'Yes' && (
+                <FileInput
+                  label="Pharmacist Certificate"
+                  name="pharmacistCertificate"
+                  accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
+                  formData={formData}
+                  setFormData={setFormData}
+                  errors={errors}
+                  setErrors={setErrors}
+                  inputRef={refs.pharmacistCertificate}
+                />)}
+            </CRow>
+            <h5 className="mb-3 text-primary mt-6">Location & Coordinates</h5>
+            <CRow className="mb-3">
+              <CCol md={6}>
+                <CFormLabel>
+                  Clinic Latitude <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="number"
+                  step="any"
+                  placeholder="Enter latitude"
+                  value={formData.latitude || ""}
+                  onChange={(e) => {
+                    const { value } = e.target;
+                    setFormData((prev) => ({ ...prev, latitude: value }));
+
+                    // validate immediately
+                    const lat = parseFloat(value);
+                    let error = "";
+                    if (!value) {
+                      error = "Latitude is required";
+                    } else if (isNaN(lat) || lat < -90 || lat > 90) {
+                      error = "Latitude must be between -90 and 90";
+                    }
+
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      if (error) {
+                        newErrors.latitude = error;
+                      } else {
+                        delete newErrors.latitude; // ✅ remove error when valid
+                      }
+                      return newErrors;
+                    });
+                  }}
+                  invalid={!!errors.latitude}
+                />
+                {errors.latitude && (
+                  <CFormFeedback invalid>{errors.latitude}</CFormFeedback>
+                )}
+
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Clinic Longitude <span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="number"
+                  step="any"
+                  placeholder="Enter longitude"
+                  value={formData.longitude || ""}
+                  onChange={(e) => {
+                    const { value } = e.target;
+                    setFormData((prev) => ({ ...prev, longitude: value }));
+
+                    // validate immediately
+                    const lng = parseFloat(value);
+                    let error = "";
+                    if (!value) {
+                      error = "Longitude is required";
+                    } else if (isNaN(lng) || lng < -180 || lng > 180) {
+                      error = "Longitude must be between -180 and 180";
+                    }
+
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      if (error) {
+                        newErrors.longitude = error;
+                      } else {
+                        delete newErrors.longitude; // ✅ remove error when valid
+                      }
+                      return newErrors;
+                    });
+                  }}
+                  invalid={!!errors.longitude}
+                />
+                {errors.longitude && (
+                  <CFormFeedback invalid>{errors.longitude}</CFormFeedback>
+                )}
+
+              </CCol>
+            </CRow>
+
+            <h5 className="mb-3 text-primary mt-6">Other Attachments / Documents</h5>
+            <CRow className="mb-3">
+              <FileInput
+                label="Clinic Contract"
+                name="contractorDocuments"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.contractorDocuments} // ✅ should match ref name
+              />
+              <FileInput
+                label="Clinic Logo"
+                name="hospitalLogo"
+                accept=".jpeg,.jpg,.png"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.hospitalLogo}
+              />
+              <FileInput
+                label="Clinic Documents"
+                name="hospitalDocuments"
+                accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
+                tooltip="Issued by Local Fire Department"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.hospitalDocuments}
+              />
+              <FileInput
+                label="Clinical Establishment Registration Certificate"
+                name="clinicalEstablishmentCertificate"
+                accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.clinicalEstablishmentCertificate}
+              />
+              <FileInput
+                label="Business Registration Certificate"
+                name="businessRegistrationCertificate"
+                accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.businessRegistrationCertificate}
+              />
+              <FileInput
+                label="Biomedical Waste Management Authorization"
+                name="biomedicalWasteManagementAuth"
+                tooltip="Issued by State Pollution Control Board (SPCB)"
+                accept=".pdf,.doc,.docx,.jpeg,.png"
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
+                inputRef={refs.biomedicalWasteManagementAuth}
+              />
               <CCol md={6}>
                 <CTooltip content="NABH Accreditation / Aesthetic Procedure Training Certificate">
                   <CFormLabel>Others (NABH / Aesthetic Training)</CFormLabel>
@@ -1630,339 +1860,13 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                   </div>
                 )}
               </CCol>
-
-            </CRow>
-            <CRow>
-              <CCol md={6}>
-                <CRow >
-
-                  <CCol md={6}>
-                    <CFormLabel>
-                      Consultation Expiration (in days) <span className="text-danger">*</span>
-                    </CFormLabel>
-                    <CFormInput
-                      type="text"
-                      name="consultationExpiration"
-                      value={formData.consultationExpiration}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, ""); // allow only digits
-                        if (value.length > 2) value = value.slice(0, 2); // limit to 2 digits
-
-                        setFormData((prev) => ({
-                          ...prev,
-                          consultationExpiration: value,
-                        }));
-
-                        // Clear error if valid
-                        if (value) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            consultationExpiration: "",
-                          }));
-                        } else {
-                          // Add error again if empty
-                          setErrors((prev) => ({
-                            ...prev,
-                            consultationExpiration: "Consultation Expiration is required",
-                          }));
-                        }
-                      }}
-                      onBlur={(e) => {
-                        let value = e.target.value;
-                        if (value.length === 1) {
-                          value = value.padStart(2, "0"); // add leading zero
-                        }
-
-                        setFormData((prev) => ({
-                          ...prev,
-                          consultationExpiration: value,
-                        }));
-
-                        // Double check on blur (so if user tabs away empty field, error comes back)
-                        if (!value) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            consultationExpiration: "Consultation Expiration is required",
-                          }));
-                        }
-                      }}
-                      placeholder="Enter consultation days (01-99)"
-                      invalid={!!errors.consultationExpiration}
-                    />
-                    {errors.consultationExpiration && (
-                      <CFormFeedback invalid>{errors.consultationExpiration}</CFormFeedback>
-                    )}
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>
-                      No. of Free Follow Ups <span className="text-danger">*</span>
-                    </CFormLabel>
-                    <CFormInput
-                      type="number"
-                      name="freeFollowUps"
-                      value={formData.freeFollowUps}
-                      onChange={handleInputChange}
-                      min="0"
-                      placeholder="Enter next visit consultation count"
-                      invalid={!!errors.freeFollowUps}
-                    />
-                    {errors.freeFollowUps && (
-                      <CFormFeedback invalid>{errors.freeFollowUps}</CFormFeedback>
-                    )}
-                  </CCol>
-                </CRow>
-              </CCol>
-              <CCol md={6}>
-                <CFormLabel>
-                  Subscription<span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormSelect
-                  name="subscription" // ✅ Must match key in formData
-                  className="form-select"
-                  value={formData.subscription}
-                  onChange={handleInputChange} // ✅ Uses generic input handler
-                  invalid={!!errors.subscription}
-                >
-                  <option value="">Select Subscription</option>
-                  <option value="Free">Free</option>
-                  <option value="Basic">Basic</option>
-                  <option value="Standard">Standard</option>
-                  <option value="Premium">Premium</option>
-                </CFormSelect>
-                {errors.subscription && <div className="text-danger">{errors.subscription}</div>}
-              </CCol>
-            </CRow>
-            <CRow className="mb-3">
-              <CCol md={4}>
-                <CFormLabel>Instagram</CFormLabel>
-                <CFormInput
-                  type="text"
-                  id="instagram"
-                  placeholder="@clinic_handle"
-                  name="instagramHandle"
-                  value={formData.instagramHandle}
-                  onChange={handleInputChange}
-                />
-              </CCol>
-              <CCol md={4}>
-                <CFormLabel>Facebook</CFormLabel>
-                <CFormInput
-                  type="text"
-                  id="facebook"
-                  placeholder="facebook.com/clinic"
-                  name="facebookHandle"
-                  value={formData.facebookHandle}
-                  onChange={handleInputChange}
-                />
-              </CCol>
-              <CCol md={4}>
-                <CFormLabel>Twitter</CFormLabel>
-                <CFormInput
-                  type="text"
-                  id="twitter"
-                  placeholder="@clinic_tweet"
-                  name="twitterHandle"
-                  value={formData.twitterHandle}
-                  onChange={handleInputChange}
-                />
-              </CCol>
             </CRow>
 
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  Clinic has a valid pharmacist
-                  <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormSelect
-                  className="form-select"
-                  value={selectedPharmacistOption}
-                  onChange={(e) => {
-                    setSelectedPharmacistOption(e.target.value)
-                    setErrors((prev) => ({ ...prev, hasPharmacist: '' })) // clear error on change
-                  }}
-                  invalid={!!errors.hasPharmacist}
-                >
-                  <option value="">Select an option</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                  {/* <option value="n/a">N/A</option> */}
-                </CFormSelect>
-                {errors.hasPharmacist && (
-                  <CFormFeedback invalid>{errors.hasPharmacist}</CFormFeedback>
-                )}
-              </CCol>
-              {selectedPharmacistOption === 'Yes' && (
-                <FileInput
-                  label="Pharmacist Certificate"
-                  name="pharmacistCertificate"
-                  accept=".pdf,.doc,.docx,.jpeg,.png,.zip"
-                  formData={formData}
-                  setFormData={setFormData}
-                  errors={errors}
-                  setErrors={setErrors}
-                  inputRef={refs.pharmacistCertificate}
-                />)}
-            </CRow>
-            {/* ✅ Clinic Coordinates */}
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  Clinic Latitude <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="number"
-                  step="any"
-                  placeholder="Enter latitude"
-                  value={formData.latitude || ""}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    setFormData((prev) => ({ ...prev, latitude: value }));
-
-                    // validate immediately
-                    const lat = parseFloat(value);
-                    let error = "";
-                    if (!value) {
-                      error = "Latitude is required";
-                    } else if (isNaN(lat) || lat < -90 || lat > 90) {
-                      error = "Latitude must be between -90 and 90";
-                    }
-
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      if (error) {
-                        newErrors.latitude = error;
-                      } else {
-                        delete newErrors.latitude; // ✅ remove error when valid
-                      }
-                      return newErrors;
-                    });
-                  }}
-                  invalid={!!errors.latitude}
-                />
-                {errors.latitude && (
-                  <CFormFeedback invalid>{errors.latitude}</CFormFeedback>
-                )}
-
-              </CCol>
-
-              <CCol md={6}>
-                <CFormLabel>
-                  Clinic Longitude <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="number"
-                  step="any"
-                  placeholder="Enter longitude"
-                  value={formData.longitude || ""}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    setFormData((prev) => ({ ...prev, longitude: value }));
-
-                    // validate immediately
-                    const lng = parseFloat(value);
-                    let error = "";
-                    if (!value) {
-                      error = "Longitude is required";
-                    } else if (isNaN(lng) || lng < -180 || lng > 180) {
-                      error = "Longitude must be between -180 and 180";
-                    }
-
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      if (error) {
-                        newErrors.longitude = error;
-                      } else {
-                        delete newErrors.longitude; // ✅ remove error when valid
-                      }
-                      return newErrors;
-                    });
-                  }}
-                  invalid={!!errors.longitude}
-                />
-                {errors.longitude && (
-                  <CFormFeedback invalid>{errors.longitude}</CFormFeedback>
-                )}
-
-              </CCol>
-            </CRow>
-
-
-            {/* ✅ Walkthrough URL */}
-            <CRow className="mb-3">
-              <CCol md={6}>
-                <CFormLabel>
-                  Virtual Clinic Tour <span className="text-danger"></span>
-                </CFormLabel>
-                <CFormInput
-                  type="url"
-                  placeholder="https://example.com/VirtualClinicTour"
-                  value={formData.walkthrough || ""}
-                  onChange={(e) => {
-                    const { value } = e.target;
-
-                    // Update form data
-                    setFormData((prev) => ({ ...prev, walkthrough: value }));
-
-                    // Real-time validation
-                    let error = "";
-
-                    if (value.trim()) {
-                      try {
-                        new URL(value); // throws if invalid
-                      } catch {
-                        error = "Enter a valid URL (e.g. https://example.com)";
-                      }
-                    }
-
-                    // Set or clear error
-                    setErrors((prev) => ({
-                      ...prev,
-                      walkthrough: error || undefined,
-                    }));
-                  }}
-                  invalid={!!errors.walkthrough}
-                />
-                {errors.walkthrough && (
-                  <div style={{ color: 'red', fontSize: '0.9rem' }}>{errors.walkthrough}</div>
-                )}
-
-
-              </CCol>
-              {/* ✅ Branch Input */}
-
-              <CCol md={6}>
-                <CFormLabel>
-                  Branch <span className="text-danger">*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="text"
-                  placeholder="Enter branch name"
-                  value={formData.branch || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    setFormData((prev) => ({ ...prev, branch: value }));
-                    if (!value) {
-                      setErrors((prev) => ({ ...prev, branch: "Branch name is required" }))
-                    }
-                    else {
-                      setErrors((prev) => ({ ...prev, branch: "" }))
-                    }
-                  }}
-
-                  invalid={!!errors.branch}
-                />
-                {errors.branch && <CFormFeedback invalid>{errors.branch}</CFormFeedback>}
-              </CCol>
-
-            </CRow>
-
+            <h5 className="mb-3 text-primary mt-6">NABH Accreditation</h5>
             {/* ✅ NABH Score - Opens Modal */}
             <CRow className="mb-3">
               <CCol md={12} className='d-flex align-items-center'>
-                <CFormLabel className="me-3">NABH Score <span className="text-danger">*</span></CFormLabel>
+                <CFormLabel className="me-3">NABH Score <span style={{ color: 'red' }}>*</span></CFormLabel>
                 {nabhScore !== null && (
                   <span className="me-3 fw-bold text-success">{nabhScore}</span>
                 )}
@@ -1980,7 +1884,6 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
                 </CCol>
               )}
             </CRow>
-
             <CModal visible={showNabhModal} onClose={() => setShowNabhModal(false)} size="lg" className="custom-modal"
               backdrop="static">
               <CModalHeader>
@@ -2060,10 +1963,39 @@ const AddClinic = ({ mode = 'add', initialData = {} }) => {
               </CButton>
             </div>
           </CForm>
+          <CModal
+            visible={showSuccessModal}
+            alignment="center"
+            backdrop="static"
+          >
+            <CModalHeader>
+              <CModalTitle>Registration Successful</CModalTitle>
+            </CModalHeader>
+
+            <CModalBody>
+              <p><strong>Status:</strong> {successResponse?.status}</p>
+              <p><strong>Message:</strong> {successResponse?.message}</p>
+              <p><strong>Clinic ID:</strong> {successResponse?.clinicId}</p>
+            </CModalBody>
+
+            <CModalFooter>
+              <CButton
+                color="success"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  window.close();   // 🔥 closes window
+                }}
+              >
+                OK
+              </CButton>
+            </CModalFooter>
+          </CModal>
+
+
         </CCardBody>
       </CCard>
-    </div>
+    </div >
   )
 }
 
-export default AddClinic
+export default ClinicRegistration

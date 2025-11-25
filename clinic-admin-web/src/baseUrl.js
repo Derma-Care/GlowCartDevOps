@@ -5,7 +5,7 @@
 // export let wifiUrl = 'http://3.6.119.57:9090'
 //----------------------------
 // GlowKart
-export let wifiUrl = 'http://35.154.152.61:8080'
+export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
 //-----------------------------
 // Production
 // export let wifiUrl = 'https://api.aesthetech.life'

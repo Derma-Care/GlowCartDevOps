@@ -1,13 +1,14 @@
 package com.glowkart.procedure.service;
 
 import com.glowkart.procedure.dto.ProcedureDTO;
+import com.glowkart.procedure.exception.BadRequestException;
+import com.glowkart.procedure.exception.DuplicateResourceException;
+import com.glowkart.procedure.exception.ResourceNotFoundException;
 import com.glowkart.procedure.model.Procedure;
 import com.glowkart.procedure.repo.ProcedureRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,15 +21,12 @@ public class ProcedureServiceImpl implements ProcedureService {
         this.repo = repo;
     }
 
-    // Convert UTC Instant -> IST Instant for API response
     private ProcedureDTO mapToDTO(Procedure procedure) {
         ProcedureDTO dto = new ProcedureDTO();
         dto.setProcedureId(procedure.getId());
         dto.setProcedureName(procedure.getProcedureName());
 
         ZoneId istZone = ZoneId.of("Asia/Kolkata");
-
-        // Convert to IST for response
         dto.setCreatedAt(procedure.getCreatedAt() != null ?
                 procedure.getCreatedAt().atZone(ZoneId.of("UTC")).withZoneSameInstant(istZone).toInstant() : null);
         dto.setUpdatedAt(procedure.getUpdatedAt() != null ?
@@ -39,36 +37,50 @@ public class ProcedureServiceImpl implements ProcedureService {
 
     @Override
     public ProcedureDTO create(ProcedureDTO dto) {
-        if (repo.existsByProcedureName(dto.getProcedureName().trim())) {
-            throw new RuntimeException("Procedure name already exists");
+        String name = dto.getProcedureName() != null ? dto.getProcedureName().trim() : "";
+
+        if (name.isEmpty()) {
+            throw new BadRequestException("PROCEDURE_NAME_EMPTY", "Procedure name cannot be empty");
+        }
+
+        if (repo.existsByProcedureNameIgnoreCase(name)) {
+            throw new DuplicateResourceException("PROCEDURE_ALREADY_EXISTS", "Procedure name already exists");
         }
 
         Procedure procedure = new Procedure();
-        procedure.setProcedureName(dto.getProcedureName().trim());
+        procedure.setProcedureName(name);
 
         Procedure saved = repo.save(procedure);
         return mapToDTO(saved);
     }
 
+
     @Override
     public ProcedureDTO update(String procedureId, ProcedureDTO dto) {
         Procedure existing = repo.findById(procedureId)
-                .orElseThrow(() -> new RuntimeException("Procedure not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PROCEDURE_NOT_FOUND", "Procedure not found"));
 
-        if (!existing.getProcedureName().equalsIgnoreCase(dto.getProcedureName()) &&
-            repo.existsByProcedureName(dto.getProcedureName().trim())) {
-            throw new RuntimeException("Procedure name already exists");
+        String name = dto.getProcedureName() != null ? dto.getProcedureName().trim() : "";
+
+        if (name.isEmpty()) {
+            throw new BadRequestException("PROCEDURE_NAME_EMPTY", "Procedure name cannot be empty");
         }
 
-        existing.setProcedureName(dto.getProcedureName().trim());
+        if (!existing.getProcedureName().equalsIgnoreCase(name) &&
+            repo.existsByProcedureNameIgnoreCase(name)) {
+            throw new DuplicateResourceException("PROCEDURE_ALREADY_EXISTS", "Procedure name already exists");
+        }
+
+        existing.setProcedureName(name);
         Procedure updated = repo.save(existing);
         return mapToDTO(updated);
     }
 
+
     @Override
     public ProcedureDTO getById(String procedureId) {
         Procedure procedure = repo.findById(procedureId)
-                .orElseThrow(() -> new RuntimeException("Procedure not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PROCEDURE_NOT_FOUND", "Procedure not found"));
         return mapToDTO(procedure);
     }
 
@@ -82,7 +94,7 @@ public class ProcedureServiceImpl implements ProcedureService {
     @Override
     public void delete(String procedureId) {
         if (!repo.existsById(procedureId)) {
-            throw new RuntimeException("Procedure not found");
+            throw new ResourceNotFoundException("PROCEDURE_NOT_FOUND", "Procedure not found");
         }
         repo.deleteById(procedureId);
     }

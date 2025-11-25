@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "procedure-service")  // Eureka service name
+@FeignClient(
+        name = "procedure-service"
+)
 public interface ProcedureClient {
 
     @PostMapping("/procedures/create")

@@ -53,7 +53,7 @@ const App = () => {
       />
       <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
         <Routes>
-          <Route path="/" element={<Navigate to="/clinic-registration" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/clinic-registration" element={<ClinicRegistration />} />

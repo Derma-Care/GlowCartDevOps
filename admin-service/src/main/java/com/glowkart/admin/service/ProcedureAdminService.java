@@ -1,8 +1,8 @@
 package com.glowkart.admin.service;
 
 import com.glowkart.admin.client.ProcedureClient;
-import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ProcedureDTO;
+import com.glowkart.admin.dto.ApiResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,32 +16,23 @@ public class ProcedureAdminService {
         this.procedureClient = procedureClient;
     }
 
-    public ProcedureDTO createProcedure(ProcedureDTO dto) {
-        ApiResponse<ProcedureDTO> response = procedureClient.createProcedure(dto);
-        if (!response.isSuccess()) throw new RuntimeException(response.getMessage());
-        return response.getData();
+    public ApiResponse<ProcedureDTO> createProcedure(ProcedureDTO dto) {
+        return procedureClient.createProcedure(dto);
     }
 
-    public ProcedureDTO updateProcedure(String procedureId, ProcedureDTO dto) {
-        ApiResponse<ProcedureDTO> response = procedureClient.updateProcedure(procedureId, dto);
-        if (!response.isSuccess()) throw new RuntimeException(response.getMessage());
-        return response.getData();
+    public ApiResponse<ProcedureDTO> updateProcedure(String procedureId, ProcedureDTO dto) {
+        return procedureClient.updateProcedure(procedureId, dto);
     }
 
-    public ProcedureDTO getProcedureById(String procedureId) {
-        ApiResponse<ProcedureDTO> response = procedureClient.getProcedureById(procedureId);
-        if (!response.isSuccess()) throw new RuntimeException(response.getMessage());
-        return response.getData();
+    public ApiResponse<ProcedureDTO> getProcedureById(String procedureId) {
+        return procedureClient.getProcedureById(procedureId);
     }
 
-    public List<ProcedureDTO> getAllProcedures() {
-        ApiResponse<List<ProcedureDTO>> response = procedureClient.getAllProcedures();
-        if (!response.isSuccess()) throw new RuntimeException(response.getMessage());
-        return response.getData();
+    public ApiResponse<List<ProcedureDTO>> getAllProcedures() {
+        return procedureClient.getAllProcedures();
     }
 
-    public void deleteProcedure(String procedureId) {
-        ApiResponse<Void> response = procedureClient.deleteProcedure(procedureId);
-        if (!response.isSuccess()) throw new RuntimeException(response.getMessage());
+    public ApiResponse<Void> deleteProcedure(String procedureId) {
+        return procedureClient.deleteProcedure(procedureId);
     }
 }

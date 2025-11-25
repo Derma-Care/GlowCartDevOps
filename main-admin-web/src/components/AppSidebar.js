@@ -60,7 +60,7 @@ const AppSidebar = () => {
                 fontWeight: 'bold',
               }}
             >
-              GlowKaart
+              GlowKart
             </h1>
           </div>
         </div>

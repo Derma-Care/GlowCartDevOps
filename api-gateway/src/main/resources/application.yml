@@ -42,7 +42,7 @@ spring:
           globalcors:
             cors-configurations:
               '[/**]':
-                allowedOrigins: "http://localhost:3000,http://35.154.152.61:3000,http://35.154.152.61:4000,http://35.154.152.61:5000"
+                allowedOrigins: "http://localhost:3000,https://glowkartclinic.ashokfruit.shop,https://glowkartmain.ashokfruit.shop"
                 allowedMethods: "GET,POST,PUT,DELETE"
                 allowedHeaders: "*"
                 allowCredentials: true

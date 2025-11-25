@@ -1,0 +1,399 @@
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { AllClinicData, NGkRegistrationLink, statusapi } from '../../baseUrl'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Eye } from 'lucide-react'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CButton,
+  CFormInput,
+  CTable,
+  CTableHead,
+  CTableBody,
+  CTableRow,
+  CTableHeaderCell,
+  CTableDataCell,
+  CPagination,
+  CPaginationItem,
+  CFormSelect, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
+} from '@coreui/react'
+import { COLORS } from '../../Constant/Themes'
+import LoadingIndicator from '../../Utils/loader'
+import { toast } from 'react-toastify'
+
+// ------------------------------------------
+// BACKEND → UI STATUS MAPPER
+// ------------------------------------------
+const mapBackendStatusToUI = (status) => {
+  switch (status) {
+    case "PENDING":
+      return "pending"
+    case "VERIFICATION_IN_PROGRESS":
+      return "start"
+    case "VERIFIED":
+      return "verified"
+    case "REJECTED":
+      return "rejected"
+    default:
+      return "pending"
+  }
+}
+
+// ------------------------------------------
+// UI → BACKEND STATUS MAPPER
+// ------------------------------------------
+const mapUIStatusToBackend = (status) => {
+  switch (status) {
+    case "pending":
+      return "PENDING"
+    case "start":
+      return "VERIFICATION_IN_PROGRESS"
+    case "verified":
+      return "VERIFIED"
+    case "rejected":
+      return "REJECTED"
+    default:
+      return "PENDING"
+  }
+}
+
+const ClinicManagement = ({ service }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const [clinics, setClinics] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [modalVisible, setModalVisible] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedClinicId, setSelectedClinicId] = useState(null);
+  const [isLink, setIsLink] = useState(false);
+  const[loadingLink,setLoadingLink]=useState(false);
+  useEffect(() => {
+    fetchClinics()
+
+    if (location.state?.newClinic) {
+      setClinics((prev) => [...prev, location.state.newClinic])
+    }
+  }, [location.state?.newClinic])
+
+  // ------------------------------------------
+  // FETCH CLINICS
+  // ------------------------------------------
+  const fetchClinics = async () => {
+    setLoading(true)
+    try {
+      const response = await axios.get(`${AllClinicData}`)
+
+      const clinicList = Array.isArray(response.data)
+        ? response.data
+        : response.data.hospitalCategory || response.data.data || []
+
+      setClinics(clinicList)
+    } catch {
+      setError('Failed to load clinics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ------------------------------------------
+  // HANDLE STATUS CHANGE
+  // ------------------------------------------
+  const handleStatusChange = async (newStatus, clinicId) => {
+    const backendStatus = mapUIStatusToBackend(newStatus)
+
+    try {
+      if (newStatus === "start") {
+        await statusapi.startClinic(clinicId)
+      } else if (newStatus === "verified") {
+        await statusapi.verifyClinic(clinicId)
+      } else if (newStatus === "rejected") {
+        setModalVisible(true)
+        setSelectedClinicId(clinicId)
+      }
+
+      // Update UI immediately
+      setClinics(prev =>
+        prev.map(c =>
+          c.clinicId === clinicId
+            ? { ...c, status: backendStatus }
+            : c
+        )
+      )
+
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSubmitModal = async () => {
+    await statusapi.rejectClinic(selectedClinicId)
+  }
+  // ------------------------------------------
+  // SEARCH
+  // ------------------------------------------
+  const filteredClinics = clinics.filter(
+    (clinic) =>
+      clinic.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      clinic.contactNumber?.startsWith(searchTerm) ||
+      clinic.email?.toLowerCase().startsWith(searchTerm.toLowerCase())
+  )
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
+
+  // ------------------------------------------
+  // PAGINATION
+  // ------------------------------------------
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = filteredClinics.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
+
+
+
+  const sendNGKRegistrationLink = async (email) => {
+    console.log("Sending registration link to:", email);
+
+    try {
+      setLoadingLink(true)
+      const response = await fetch(`${NGkRegistrationLink}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),  // <-- send email
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send link");
+      }
+
+      const data = await response.json();
+      console.log("API Success:", data);
+
+      // Show toast or success message
+      toast.success(`${data.message}`||"Registration link sent successfully!");
+      setIsLink(false)
+    } catch (error) {
+      console.error("API Error:", error);
+      toast.error("Failed to send link");
+    }
+    finally{
+      setLoadingLink(false)
+      setInputValue("")
+    }
+  };
+
+  return (
+    <>
+      <CCard className="mt-4">
+        <CCardHeader>
+          <div className="d-flex justify-content-between align-items-center">
+            <h2 className="mb-0">{service?.categoryName} Clinics</h2>
+            <CButton
+              color="secondary"
+              style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
+              onClick={() => setIsLink(true)}
+            >
+              Send Link
+            </CButton>
+
+          </div>
+        </CCardHeader>
+
+        <CCardBody>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="col-4 mx-2">
+              <CFormInput
+                type="text"
+                style={{ border: '1px solid #7e3a93' }}
+                placeholder="Search by Clinic Name, Mobile, or Email"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="col-2 text-end">
+              No.of Hospitals: {filteredClinics.length}
+            </div>
+          </div>
+
+          {loading ? (
+            <LoadingIndicator message="Fetching Clinic Details, please wait..." />
+          ) : (
+            <CTable striped hover responsive>
+              <CTableHead className="pink-table">
+                <CTableRow>
+                  <CTableHeaderCell>S.No</CTableHeaderCell>
+                  <CTableHeaderCell>Clinic Name</CTableHeaderCell>
+                  <CTableHeaderCell>Contact Number</CTableHeaderCell>
+                  <CTableHeaderCell>Email</CTableHeaderCell>
+                  <CTableHeaderCell>City</CTableHeaderCell>
+                  <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                  <CTableHeaderCell>Status</CTableHeaderCell>
+
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody className="pink-table">
+                {currentItems.length > 0 ? (
+                  currentItems.map((clinic, index) => (
+                    <CTableRow key={clinic?.clinicId || index}>
+                      <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
+                      <CTableDataCell>{clinic?.name}</CTableDataCell>
+                      <CTableDataCell>{clinic?.contactNumber}</CTableDataCell>
+                      <CTableDataCell>{clinic?.email}</CTableDataCell>
+                      <CTableDataCell>{clinic?.city}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        <button
+                          className="actionBtn"
+                          onClick={() =>
+                            navigate(`/clinic-Management/${clinic.clinicId}`)
+                          }
+                          title="View"
+                        >
+                          View
+                        </button>
+                      </CTableDataCell>
+                      <CFormSelect
+                        value={mapBackendStatusToUI(clinic?.status)}
+                        onChange={(e) => handleStatusChange(e.target.value, clinic.clinicId)}
+                        style={{ color: "var(--color-black)" }}
+
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="start">Started</option>
+                        <option value="verified">Verified</option>
+                        <option value="rejected">Rejected</option>
+                      </CFormSelect>
+
+                    </CTableRow>
+                  ))
+                ) : (
+                  <CTableRow>
+                    <CTableDataCell colSpan="7" className="text-center">
+                      No clinics found
+                    </CTableDataCell>
+                  </CTableRow>
+                )}
+              </CTableBody>
+            </CTable>
+          )}
+
+          {filteredClinics.length > 0 && (
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                <label className="me-2">Rows per page:</label>
+                <CFormSelect
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  style={{ width: '80px', display: 'inline-block' }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </CFormSelect>
+              </div>
+
+              <div>
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length} entries
+              </div>
+
+              <CPagination align="end">
+                <CPaginationItem
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                >
+                  Previous
+                </CPaginationItem>
+
+                {[...Array(totalPages)].map((_, idx) => (
+                  <CPaginationItem
+                    key={idx + 1}
+                    active={currentPage === idx + 1}
+                    onClick={() => setCurrentPage(idx + 1)}
+                  >
+                    {idx + 1}
+                  </CPaginationItem>
+                ))}
+
+                <CPaginationItem
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                >
+                  Next
+                </CPaginationItem>
+              </CPagination>
+            </div>
+          )}
+        </CCardBody>
+      </CCard>
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
+        <CModalHeader>
+          <CModalTitle>Update Status</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <CFormInput
+            type="text"
+            label="Enter value"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type something..."
+          />
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setModalVisible(false)}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={handleSubmitModal}>
+            Submit
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+
+      <CModal visible={isLink} onClose={() => setIsLink(false)}>
+        <CModalHeader>
+          <CModalTitle>Registration Link</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <CFormInput
+            type="text"
+            label="Mobile number / Email Id"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type something..."
+          />
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setIsLink(false)}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={() => sendNGKRegistrationLink(inputValue)} disabled={loadingLink}>
+            {loadingLink?"Sending...":"Send"}
+          </CButton>
+        </CModalFooter>
+      </CModal>
+    </>
+  )
+}
+
+export default ClinicManagement

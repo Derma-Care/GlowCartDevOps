@@ -3,8 +3,7 @@ package com.glowkart.procedure.controller;
 import com.glowkart.procedure.dto.ApiResponse;
 import com.glowkart.procedure.dto.ProcedureDTO;
 import com.glowkart.procedure.service.ProcedureService;
-
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,51 +18,40 @@ public class ProcedureController {
         this.service = service;
     }
 
+    // Create a new procedure
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<ProcedureDTO>> create(@RequestBody ProcedureDTO dto) {
-        try {
-            ProcedureDTO result = service.create(dto);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Procedure created successfully", result));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
-        }
+    public ApiResponse<ProcedureDTO> create(@Valid @RequestBody ProcedureDTO dto) {
+        ProcedureDTO result = service.create(dto);
+        return new ApiResponse<>(true, "Procedure created successfully", result);
     }
 
-    @PutMapping("/update/{procedureId}")
-    public ResponseEntity<ApiResponse<ProcedureDTO>> update(
-            @PathVariable String procedureId,
-            @RequestBody ProcedureDTO dto) {
-        try {
-            ProcedureDTO result = service.update(procedureId, dto);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Procedure updated successfully", result));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
-        }
-    }
-
+    // Get a procedure by ID
     @GetMapping("/get/{procedureId}")
-    public ResponseEntity<ApiResponse<ProcedureDTO>> getById(@PathVariable String procedureId) {
-        try {
-            ProcedureDTO result = service.getById(procedureId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Procedure fetched successfully", result));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
-        }
+    public ApiResponse<ProcedureDTO> getById(@PathVariable String procedureId) {
+        ProcedureDTO dto = service.getById(procedureId);
+        return new ApiResponse<>(true, "Procedure fetched successfully", dto);
     }
 
+    // Get all procedures
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<ProcedureDTO>>> getAll() {
+    public ApiResponse<List<ProcedureDTO>> getAll() {
         List<ProcedureDTO> list = service.getAll();
-        return ResponseEntity.ok(new ApiResponse<>(true, "All procedures fetched", list));
+        return new ApiResponse<>(true, "All procedures fetched", list);
     }
 
+    // Update a procedure
+    @PutMapping("/update/{procedureId}")
+    public ApiResponse<ProcedureDTO> update(
+            @PathVariable String procedureId,
+            @Valid @RequestBody ProcedureDTO dto) {
+        ProcedureDTO updated = service.update(procedureId, dto);
+        return new ApiResponse<>(true, "Procedure updated successfully", updated);
+    }
+
+    // Delete a procedure
     @DeleteMapping("/delete/{procedureId}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String procedureId) {
-        try {
-            service.delete(procedureId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Procedure deleted successfully", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
-        }
+    public ApiResponse<Void> delete(@PathVariable String procedureId) {
+        service.delete(procedureId);
+        return new ApiResponse<>(true, "Procedure deleted successfully", null);
     }
 }

@@ -1,17 +1,18 @@
 package com.glowkart.onboarding.service;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
-
+import com.glowkart.onboarding.exception.BadRequestException;
+import com.glowkart.onboarding.exception.ResourceNotFoundException;
+import com.glowkart.onboarding.model.OnboardingToken;
+import com.glowkart.onboarding.repo.OnboardingTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.glowkart.onboarding.model.OnboardingToken;
-import com.glowkart.onboarding.repo.OnboardingTokenRepository;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class OnboardingServiceImpl implements OnboardingService {
@@ -38,32 +39,28 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public String createAndSendToken(String whatsappNumber, String email) {
-
         if ((whatsappNumber == null || whatsappNumber.isBlank()) &&
-            (email == null || email.isBlank())) {
-            throw new IllegalArgumentException("Provide either WhatsApp number or Email");
+                (email == null || email.isBlank())) {
+            throw new BadRequestException("Provide either WhatsApp number or Email");
         }
 
-        // Check for existing active token
-        Optional<OnboardingToken> existingTokenOpt = repo.findByEmailAndUsedFalse(email);
+        Optional<OnboardingToken> existingTokenOpt = email != null && !email.isBlank()
+                ? repo.findByEmailAndUsedFalse(email)
+                : Optional.empty();
 
         if (existingTokenOpt.isPresent()) {
-            OnboardingToken existingToken = existingTokenOpt.get();
+            OnboardingToken existing = existingTokenOpt.get();
 
-            if (existingToken.getExpiresAt().isAfter(Instant.now()) && !existingToken.isUsed()) {
-
-                String link = String.format("%s/clinic-registration?token=%s",
-                        frontendBaseUrl, existingToken.getId());
-
+            if (existing.getExpiresAt().isAfter(Instant.now()) && !existing.isUsed()) {
+                String link = getOnboardingLink(existing.getId());
                 sendLink(whatsappNumber, email, link);
-                logger.info("Re-sending existing token: {}", existingToken.getId());
-                return existingToken.getId();
+                logger.info("Re-sent onboarding link for existing token {}", existing.getId());
+                return existing.getId();
             } else {
-                repo.delete(existingToken);
+                repo.delete(existing);
             }
         }
 
-        // Create new token
         String token = UUID.randomUUID().toString();
         Instant now = Instant.now();
 
@@ -77,10 +74,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
         repo.save(newToken);
 
-        String link = String.format("%s/clinic-registration?token=%s",
-                frontendBaseUrl, token);
-
-        sendLink(whatsappNumber, email, link);
+        sendLink(whatsappNumber, email, getOnboardingLink(token));
 
         return token;
     }
@@ -94,21 +88,21 @@ public class OnboardingServiceImpl implements OnboardingService {
         }
     }
 
+    private String getOnboardingLink(String token) {
+        return frontendBaseUrl + "/clinic-registration?token=" + token;
+    }
+
     @Override
     public OnboardingToken validateToken(String token) {
-        Optional<OnboardingToken> optionalToken = repo.findById(token);
-        if (!optionalToken.isPresent()) {
-            throw new IllegalArgumentException("Invalid token");
-        }
-
-        OnboardingToken t = optionalToken.get();
+        OnboardingToken t = repo.findById(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid token"));
 
         if (t.getExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalArgumentException("Token has expired");
+            throw new BadRequestException("Token has expired");
         }
 
         if (t.isUsed()) {
-            throw new IllegalArgumentException("Token already used");
+            throw new BadRequestException("Token already used");
         }
 
         return t;
@@ -116,14 +110,9 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public void markUsed(String token) {
+        OnboardingToken t = repo.findById(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Token not found"));
 
-        Optional<OnboardingToken> optionalToken = repo.findById(token);
-
-        if (!optionalToken.isPresent()) {
-            throw new IllegalArgumentException("Token not found");
-        }
-
-        OnboardingToken t = optionalToken.get();
         t.setUsed(true);
         repo.save(t);
     }
