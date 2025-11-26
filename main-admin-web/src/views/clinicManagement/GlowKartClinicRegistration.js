@@ -667,108 +667,83 @@ const ClinicRegistration = () => {
   }, []);
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const isValid = validateForm();
-    if (!isValid) return;
+  const isValid = validateForm();
+  if (!isValid) return;
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      const convertIfExists = async (file) => {
-        if (!file) return "";
-        if (file.base64) return file.base64;
-        if (file instanceof Blob) return await convertFileToBase64(file);
-        if (typeof file === "string") return file;
-        return "";
-      };
+  try {
+    // Convert files to base64
+    const convertIfExists = async (file) => {
+      if (!file) return "";
+      if (file.base64) return file.base64;
+      if (file instanceof Blob) return await convertFileToBase64(file);
+      if (typeof file === "string") return file;
+      return "";
+    };
 
-      const convertMultipleIfExists = async (files) => {
-        if (!Array.isArray(files)) return [];
-        return await Promise.all(
-          files.map(async (file) => {
-            if (!file) return "";
-            if (file.base64) return file.base64;
-            if (file instanceof Blob) return await convertFileToBase64(file);
-            if (typeof file === "string") return file;
-            return "";
-          })
-        );
-      };
+    const convertMultipleIfExists = async (files) => {
+      if (!Array.isArray(files)) return [];
+      return await Promise.all(
+        files.map(async (file) => convertIfExists(file))
+      );
+    };
 
-      // Convert files
-      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
-      const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
-      const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
-      const clinicalEstablishmentCertificateBase64 = await convertIfExists(formData.clinicalEstablishmentCertificate);
-      const businessRegistrationCertificateBase64 = await convertIfExists(formData.businessRegistrationCertificate);
-      const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);
-      const pharmacistCertificateBase64 = await convertIfExists(formData.pharmacistCertificate);
-      const biomedicalWasteManagementAuthBase64 = await convertIfExists(formData.biomedicalWasteManagementAuth);
-      const tradeLicenseBase64 = await convertIfExists(formData.tradeLicense);
-      const fireSafetyCertificateBase64 = await convertIfExists(formData.fireSafetyCertificate);
-      const professionalIndemnityInsuranceBase64 = await convertIfExists(formData.professionalIndemnityInsurance);
-      const gstRegistrationCertificateBase64 = await convertIfExists(formData.gstRegistrationCertificate);
-      const othersBase64 = await convertMultipleIfExists(formData.others);
+    const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
+    const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
+    const othersBase64 = await convertMultipleIfExists(formData.others);
 
-      const onboardingToken = localStorage.getItem("onboardingToken");
-      const onboardingEmail = localStorage.getItem("onboardingEmail");
-      const cleanValue = (val) => {
-        if (val === null || val === undefined) return "";
-        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
-          return val;
-        if (val?.value) return val.value;
-        if (Array.isArray(val)) return val.map((v) => cleanValue(v));
-        return "";
-      };
+    const onboardingToken = localStorage.getItem("onboardingToken");
+    const onboardingEmail = localStorage.getItem("onboardingEmail");
 
-      const clinicData = {
-        token: onboardingToken,
-        email: onboardingEmail,
-        contractorDocuments: contractorDocumentsBase64,
-        hospitalDocuments: hospitalDocumentsBase64,
-        hospitalLogo: hospitalLogoBase64,
-        clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
-        businessRegistrationCertificate: businessRegistrationCertificateBase64,
-        drugLicenseCertificate: drugLicenseCertificateBase64,
-        pharmacistCertificate: pharmacistCertificateBase64,
-        biomedicalWasteManagementAuth: biomedicalWasteManagementAuthBase64,
-        tradeLicense: tradeLicenseBase64,
-        fireSafetyCertificate: fireSafetyCertificateBase64,
-        professionalIndemnityInsurance: professionalIndemnityInsuranceBase64,
-        gstRegistrationCertificate: gstRegistrationCertificateBase64,
-        others: othersBase64,
-        ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
-        website: normalizeWebsite(formData.website?.trim() || "")
-      };
+    const cleanValue = (val) => {
+      if (val === null || val === undefined) return "";
+      if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
+        return val;
+      if (val?.value) return val.value;
+      if (Array.isArray(val)) return val.map((v) => cleanValue(v));
+      return "";
+    };
 
-      const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
-      const savedClinicData = response.data;
+    const clinicData = {
+      token: onboardingToken,
+      email: onboardingEmail,
+      contractorDocuments: contractorDocumentsBase64,
+      hospitalDocuments: hospitalDocumentsBase64,
+      others: othersBase64,
+      ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
+      website: normalizeWebsite(formData.website?.trim() || "")
+    };
 
-     // SUCCESS CASE → NAVIGATE 🚀
-      if (savedClinicData?.success) {
-        navigate("/clinic-onboarding-success", {
-          state: {
-            clinicName: formData.clinicName,
-            clinicId: savedClinicData.data.clinicId,
-            message: savedClinicData.message,
-            status: savedClinicData.data.status,
-          },
-        });
-        return;
-      }
-      else {
-        toast.error(savedClinicData.message || "Something went wrong");
-      }
+    // ✅ Make API call
+    const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
+    const savedClinicData = response.data;
 
-    } catch (error) {
-      console.error("Error submitting clinic:", error);
-      toast.error(error.message || "Failed to submit clinic");
-    } finally {
-      setIsSubmitting(false);
+    // ✅ Check success immediately AFTER API call
+    if (savedClinicData?.success === true) {
+      navigate("/clinic-onboarding-success", {
+        state: {
+          clinicName: formData.clinicName,
+          clinicId: savedClinicData.data.clinicId,
+          message: savedClinicData.message,
+          status: savedClinicData.data.status,
+        },
+      });
+      return;
+    } else {
+      toast.error(savedClinicData.message || "Something went wrong");
     }
-  };
+
+  } catch (error) {
+    console.error("Error submitting clinic:", error);
+    toast.error(error.message || "Failed to submit clinic");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="container mt-4">
