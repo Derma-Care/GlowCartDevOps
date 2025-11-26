@@ -1,17 +1,11 @@
 package com.glowkart.onboarding.controller;
 
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.glowkart.onboarding.dto.ApiResponse;
 import com.glowkart.onboarding.dto.OnboardingTokenResponseDTO;
@@ -37,7 +31,8 @@ public class OnboardingController {
     }
 
     @PostMapping("/request-link")
-    public ResponseEntity<ApiResponse<OnboardingTokenResponseDTO>> requestLink(@Valid @RequestBody RequestLinkDTO dto) {
+    public ResponseEntity<ApiResponse<OnboardingTokenResponseDTO>> requestLink(
+            @Valid @RequestBody RequestLinkDTO dto) {
 
         String token = service.createAndSendToken(dto.getWhatsappNumber(), dto.getEmail());
         OnboardingToken t = service.validateToken(token);
@@ -50,10 +45,13 @@ public class OnboardingController {
                 returnTokenInResponse ? t.getId() : null
         );
 
-        logger.info("Generated onboarding token {} for {}", token, t.getEmail());
+        logger.info("Onboarding notifications sent for token {} to email={} whatsapp={}",
+                t.getId(), t.getEmail(), t.getWhatsappNumber());
 
         return ResponseEntity.accepted()
-                .body(new ApiResponse<>(true, "Link sent successfully", response));
+                .body(new ApiResponse<>(true,
+                        "Onboarding notifications sent successfully",
+                        response));
     }
 
     @GetMapping("/verify")
@@ -65,10 +63,12 @@ public class OnboardingController {
                 t.getWhatsappNumber(),
                 t.getCreatedAt(),
                 t.getExpiresAt(),
-                t.getId()
+                returnTokenInResponse ? t.getId() : null
         );
 
-        return ResponseEntity.ok(new ApiResponse<>(true, "Token valid", response));
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Token is valid", response)
+        );
     }
 
     @PostMapping("/mark-used")
@@ -80,6 +80,8 @@ public class OnboardingController {
 
         service.markUsed(token);
 
-        return ResponseEntity.ok(new ApiResponse<>(true, "Token marked as used", null));
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Token marked as used", null)
+        );
     }
 }

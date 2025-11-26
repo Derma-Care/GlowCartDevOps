@@ -16,7 +16,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilLockUnlocked } from '@coreui/icons'
-import Logo from '../login/DermaLogo.png'
+import Logo from '../login/GlowKaart.png'
 import { BASE_URL, endPoint } from '../../../baseUrl'
 
 const Login = () => {
@@ -101,28 +101,34 @@ const Login = () => {
 
   return (
 
-    <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
-
+    <div style={{ minHeight: '100vh',backgroundColor:"white" }}
+      className="d-flex flex-row align-items-center">
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8}>
-            <h1 className="text-center mb-4 fw-bold">Chiselon Clinic Management Suite</h1>
-            <CCardGroup>
-              <CCard className="p-4">
+            <h1 className="fw-bold" style={{ color: '#FF007F', textAlign: "center" }}>GlowKart</h1>
+            <CCardGroup className="shadow-lg rounded-4 overflow-hidden">
+
+              {/* Login Form Card */}
+              <CCard className="p-5" style={{ backgroundColor: '#ffffff' }}>
                 <CCardBody>
-                  <CForm onSubmit={handleSubmit}>
+                  <div className="text-center mb-4">
                     <h1>Login</h1>
-                    <p className="text-body-secondary">Sign In to your account</p>
-                    {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+                    <p className="text-secondary fs-6">
+                      Sign in to access your dashboard and manage your clinics efficiently.
+                    </p>
+                  </div>
+                  {errorMessage && <p className="text-danger">{errorMessage}</p>}
+                  <CForm onSubmit={handleSubmit}>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
                       <CFormInput
                         placeholder="Username"
-                        autoComplete="username"
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
+                        autoComplete="username"
                       />
                     </CInputGroup>
                     <CInputGroup className="mb-4">
@@ -135,20 +141,14 @@ const Login = () => {
                       <CFormInput
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Password"
-                        autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="current-password"
                       />
                     </CInputGroup>
-
                     <CRow>
                       <CCol xs={12} className="text-end">
-                        <CButton
-                          color="primary"
-                          className="px-4"
-                          type="submit"
-                          disabled={isLoading}
-                        >
+                        <CButton color="primary" type="submit" disabled={isLoading}>
                           {isLoading ? 'Logging in...' : 'Login'}
                         </CButton>
                       </CCol>
@@ -156,22 +156,15 @@ const Login = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="text-white py-5" style={{ width: '44%', backgroundColor: "#a5c4d4ff" }}>
+
+              {/* Welcome/Brand Card */}
+              <CCard className="text-white py-5 d-none d-md-block"
+                style={{ width: '44%', background: '#d6e5ffff' }}>
                 <CCardBody className="text-center">
-                  <div>
-                    <h2 >Welcome</h2>
-                    <p >
-                      We manage and streamline operations for all clinics — ensuring efficient care,
-                      coordination, and smooth management.
-                    </p>
-                    <div className="d-flex justify-content-center">
-                      <img
-                        src={Logo}
-                        alt="DermaCare Logo"
-                        style={{ width: '200px', height: 'auto', marginBottom: '10px' }}
-                      />
-                    </div>
-                  </div>
+                  <h2 style={{ color: 'black' }}>Welcome!</h2>
+                  <p style={{ fontSize: '0.95rem', color: '#000' }}>
+                    GlowKart helps streamline clinic operations efficiently. Track, coordinate, and manage your clinics seamlessly. </p>
+                  <img src={Logo} alt="GlowKart Logo" style={{ width: '150px', marginTop: '20px' }} />
                 </CCardBody>
               </CCard>
             </CCardGroup>

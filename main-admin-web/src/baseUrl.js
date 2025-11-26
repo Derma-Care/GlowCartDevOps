@@ -7,8 +7,8 @@ const ipUrl = '3.6.119.57:9090'
 export const BASE_URL = `http://${ipUrl}`
 export const CLINIC_ADMIN_URL = `http://${ipUrl}`
 export const MainAdmin_URL = `${BASE_URL}/admin`
-export const Procedure_URL=`http://${ipUrl}`
-export const ClinicBase_url=`${BASE_URL}/admin`
+export const Procedure_URL = `http://${ipUrl}`
+export const ClinicBase_url = `${BASE_URL}/admin`
 // export let wifiUrl = '192.168.1.7'
 
 // export const CUSTOMER_SERVICE_URL = `http://${ipUrl}:8083/api`
@@ -29,7 +29,7 @@ export const updateService = 'updateByServiceId'
 export const getService = 'getServiceById'
 // export const getServiceByServiceId='getServiceByServiceId'
 export const Category = 'category/getServices'
- 
+
 // login
 export const endPoint = 'admin/adminLogin'
 
@@ -51,9 +51,7 @@ export const UpdateClinic = 'admin/updateClinic'
 
 export const DeleteClinic = 'admin/deleteClinic'
 
-export const getAllQuestions='admin/clinicQuestions/getAll'
 
-export const postAllQuestionsAndAnswers='admin/clinicQA/postQuestionsAndAnswer'
 // Doctor Management
 export const DoctorAllData = '/clinic-admin/doctors/hospitalById'
 export const AddDoctor = 'clinic-admin/addDoctor'
@@ -63,7 +61,7 @@ export const UpdateDoctor = 'admin/updateDoctor'
 export const deleteDoctor = 'admin/deleteDoctor'
 export const GetBranches_ByClinicId = 'admin/getBranchByClinicId'
 
-export const getDoctorsByHospitalIdAndBranchId='admin/getDoctorsByHospitalIdAndBranchId'
+export const getDoctorsByHospitalIdAndBranchId = 'admin/getDoctorsByHospitalIdAndBranchId'
 
 // Customer Management
 export const CustomerAllData = 'admin/getAllCustomers'
@@ -174,7 +172,7 @@ export const getadminSubServicesbyserviceId = `admin/getSubServicesByServiceId`
 export const getSubServiceBySubServiceId = `admin/getSubServiceBySubServiceId`
 export const getservice = 'admin/getServiceById'
 
-export const addDoctorUrl=`admin/addDoctor`
+export const addDoctorUrl = `admin/addDoctor`
 
 export const AddSubService = 'admin/addSubService'
 
@@ -182,21 +180,21 @@ export const getService_ByClinicId = 'admin/getSubServiceByHospitalId'
 
 export const service = 'admin/getAllSubServices'
 
-export const deleteSubService='admin/deleteSubService'
+export const deleteSubService = 'admin/deleteSubService'
 
 //Branch CRUD
 
-export const createBranch='admin/createBranch'
+export const createBranch = 'admin/createBranch'
 
-export const deleteBranch='admin/deleteBranch'
+export const deleteBranch = 'admin/deleteBranch'
 
-export const getBranchByClinicId='admin/getBranchByClinicId'
+export const getBranchByClinicId = 'admin/getBranchByClinicId'
 
-export const getBranchById='admin/getBranchById'
+export const getBranchById = 'admin/getBranchById'
 
-export const getAllBranches='admin/getAllBranches'
+export const getAllBranches = 'admin/getAllBranches'
 
-export const updateBranches='admin/updateBranch'
+export const updateBranches = 'admin/updateBranch'
 
 // export const getBranchByClinicAndBranchId='admin/getBranchByClinicAndBranchId'
 
@@ -204,15 +202,15 @@ export const updateBranches='admin/updateBranch'
 
 //Procedure_URL
 
-export const addProcedureDetails='admin/addSubService'
+export const addProcedureDetails = 'admin/addSubService'
 
-export const deleteProcedureDetails='admin/deleteSubService'
+export const deleteProcedureDetails = 'admin/deleteSubService'
 
-export const updateProcedureDetails='admin/updateSubService'
+export const updateProcedureDetails = 'admin/updateSubService'
 
 
 
-export const getSubService='admin/getSubService'
+export const getSubService = 'admin/getSubService'
 
 
 
@@ -235,8 +233,10 @@ export const PROCEDURE_DELETE_URL = (id) => `${BASE_URL_API}/procedures/delete/$
 export const AllClinicData = `${BASE_URL_API}/clinics`
 
 export const statusapi = {
-  startClinic: (id) => axios.put(`${AllClinicData}/${id}/start-verification`),
-  verifyClinic: (id) => axios.put(`${AllClinicData}/${id}/verify`),
-  rejectClinic: (id) => axios.put(`${AllClinicData}/${id}/reject`), //payload reason
+    startClinic: (id) => axios.put(`${AllClinicData}/${id}/start-verification`),
+    verifyClinic: (id) => axios.put(`${AllClinicData}/${id}/verify`),
+    rejectClinic: (id) => axios.put(`${AllClinicData}/${id}/reject`), //payload reason
 };
-  export const NGkRegistrationLink=`https://glowkartapi.ashokfruit.shop/onboard/request-link`
+export const NGkRegistrationLink = `https://glowkartapi.ashokfruit.shop/onboard/request-link`
+export const getAllQuestions = '/clinicQuestions/getAll'
+export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'

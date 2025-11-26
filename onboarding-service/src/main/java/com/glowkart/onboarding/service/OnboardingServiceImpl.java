@@ -4,6 +4,7 @@ import com.glowkart.onboarding.exception.BadRequestException;
 import com.glowkart.onboarding.exception.ResourceNotFoundException;
 import com.glowkart.onboarding.model.OnboardingToken;
 import com.glowkart.onboarding.repo.OnboardingTokenRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,74 +23,68 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final OnboardingTokenRepository repo;
     private final WhatsAppSender whatsAppSender;
     private final EmailSender emailSender;
-    private final String frontendBaseUrl;
     private final Duration expiry;
 
     public OnboardingServiceImpl(OnboardingTokenRepository repo,
                                  WhatsAppSender whatsAppSender,
                                  EmailSender emailSender,
-                                 @Value("${app.frontend-base-url}") String frontendBaseUrl,
                                  @Value("${app.token-expiry-minutes}") long expiryMinutes) {
         this.repo = repo;
         this.whatsAppSender = whatsAppSender;
         this.emailSender = emailSender;
-        this.frontendBaseUrl = frontendBaseUrl;
         this.expiry = Duration.ofMinutes(expiryMinutes);
     }
 
     @Override
     public String createAndSendToken(String whatsappNumber, String email) {
+
         if ((whatsappNumber == null || whatsappNumber.isBlank()) &&
-                (email == null || email.isBlank())) {
+            (email == null || email.isBlank())) {
             throw new BadRequestException("Provide either WhatsApp number or Email");
         }
 
-        Optional<OnboardingToken> existingTokenOpt = email != null && !email.isBlank()
-                ? repo.findByEmailAndUsedFalse(email)
-                : Optional.empty();
+        Instant now = Instant.now();
+        OnboardingToken tokenToSend = null;
 
-        if (existingTokenOpt.isPresent()) {
-            OnboardingToken existing = existingTokenOpt.get();
-
-            if (existing.getExpiresAt().isAfter(Instant.now()) && !existing.isUsed()) {
-                String link = getOnboardingLink(existing.getId());
-                sendLink(whatsappNumber, email, link);
-                logger.info("Re-sent onboarding link for existing token {}", existing.getId());
-                return existing.getId();
-            } else {
-                repo.delete(existing);
+        if (email != null && !email.isBlank()) {
+            Optional<OnboardingToken> usedEmail = repo.findByEmailAndUsedTrue(email);
+            if (usedEmail.isPresent()) {
+                throw new BadRequestException("This email has already completed onboarding");
             }
         }
 
-        String token = UUID.randomUUID().toString();
-        Instant now = Instant.now();
-
-        OnboardingToken newToken = new OnboardingToken();
-        newToken.setId(token);
-        newToken.setWhatsappNumber(whatsappNumber);
-        newToken.setEmail(email);
-        newToken.setCreatedAt(now);
-        newToken.setExpiresAt(now.plus(expiry));
-        newToken.setUsed(false);
-
-        repo.save(newToken);
-
-        sendLink(whatsappNumber, email, getOnboardingLink(token));
-
-        return token;
-    }
-
-    private void sendLink(String whatsappNumber, String email, String link) {
-        if (whatsappNumber != null && !whatsappNumber.isBlank()) {
-            whatsAppSender.sendWhatsAppLink(whatsappNumber, link);
-        }
         if (email != null && !email.isBlank()) {
-            emailSender.sendEmailLink(email, link);
+            Optional<OnboardingToken> active = repo.findByEmailAndUsedFalseAndExpiresAtAfter(email, now);
+            if (active.isPresent()) tokenToSend = active.get();
         }
-    }
 
-    private String getOnboardingLink(String token) {
-        return frontendBaseUrl + "/clinic-registration?token=" + token;
+        if (tokenToSend == null && whatsappNumber != null && !whatsappNumber.isBlank()) {
+            Optional<OnboardingToken> active = repo.findByWhatsappNumberAndUsedFalseAndExpiresAtAfter(whatsappNumber, now);
+            if (active.isPresent()) tokenToSend = active.get();
+        }
+
+        if (tokenToSend == null) {
+            tokenToSend = new OnboardingToken();
+            tokenToSend.setId(UUID.randomUUID().toString());
+            tokenToSend.setEmail(email);
+            tokenToSend.setWhatsappNumber(whatsappNumber);
+            tokenToSend.setCreatedAt(now);
+            tokenToSend.setExpiresAt(now.plus(expiry));
+            tokenToSend.setUsed(false);
+            repo.save(tokenToSend);
+
+            logger.info("Created new token {}", tokenToSend.getId());
+        } else {
+            logger.info("Reusing existing active token {}", tokenToSend.getId());
+        }
+
+        // NOW ALWAYS SEND CONSISTENT URL
+        emailSender.sendOnboardingEmail(email, tokenToSend.getId(), email, whatsappNumber);
+        if (whatsappNumber != null && !whatsappNumber.isBlank()) {
+            whatsAppSender.sendOnboardingWhatsApp(whatsappNumber, tokenToSend.getId(), email, whatsappNumber);
+        }
+
+        return tokenToSend.getId();
     }
 
     @Override

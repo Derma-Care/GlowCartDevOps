@@ -16,4 +16,13 @@ public interface OnboardingTokenRepository extends MongoRepository<OnboardingTok
 
     // Find a token by email where the token is not expired and hasn't been used
     Optional<OnboardingToken> findByEmailAndUsedFalseAndExpiresAtAfter(String email, Instant now);
+
+    // Find a token by WhatsApp number where the token is not expired and hasn't been used
+    Optional<OnboardingToken> findByWhatsappNumberAndUsedFalseAndExpiresAtAfter(String whatsappNumber, Instant now);
+
+    // ✅ New method to check if email already completed onboarding
+    Optional<OnboardingToken> findByEmailAndUsedTrue(String email);
+
+    // Optional: check if WhatsApp number already completed onboarding
+    Optional<OnboardingToken> findByWhatsappNumberAndUsedTrue(String whatsappNumber);
 }

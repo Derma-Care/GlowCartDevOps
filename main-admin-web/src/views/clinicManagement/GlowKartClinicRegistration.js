@@ -23,12 +23,13 @@ import {
   CModalBody,
   CModalFooter,
 } from '@coreui/react'
-import { AllClinicData, BASE_URL, CLINIC_REGISTRATION_URL, ClinicAllData, getAllQuestions, postAllQuestionsAndAnswers } from '../../baseUrl'
+import { AllClinicData, BASE_URL, BASE_URL_API, CLINIC_REGISTRATION_URL, ClinicAllData, getAllQuestions, postAllQuestionsAndAnswers } from '../../baseUrl'
 import { CategoryData } from '../categoryManagement/CategoryAPI'
 import sendDermaCareOnboardingEmail from '../../Utils/Emailjs'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { getClinicTimings } from './GlowKartgetTimingsAPI'
+import ClinicOnboardingSuccess from './SuccessOnboradClinic'
 
 const ClinicRegistration = () => {
   const refs = {
@@ -69,6 +70,7 @@ const ClinicRegistration = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successResponse, setSuccessResponse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -78,7 +80,7 @@ const ClinicRegistration = () => {
     openingTime: '',
     closingTime: '',
     hospitalLogo: null,
-    emailAddress: '',
+    email: '',
     website: '',
     licenseNumber: '',
     issuingAuthority: '',
@@ -193,12 +195,12 @@ const ClinicRegistration = () => {
       newErrors.city = 'City name must contain only letters'
     }
     // Email validation-
-    if (!formData.emailAddress?.trim()) {
-      newErrors.emailAddress = 'Email is required';
-    } else if (formData.emailAddress.includes(' ')) {
-      newErrors.emailAddress = 'Email cannot contain spaces';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
-      newErrors.emailAddress = 'Email must contain "@" and "." in a valid format';
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (formData.email.includes(' ')) {
+      newErrors.email = 'Email cannot contain spaces';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email must contain "@" and "." in a valid format';
     }
 
     // Contact Number
@@ -563,7 +565,7 @@ const ClinicRegistration = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/${getAllQuestions}`, {
+        const response = await axios.get(`${BASE_URL_API}/${getAllQuestions}`, {
           params: { id: savedQuestionId }
         });
 
@@ -598,7 +600,7 @@ const ClinicRegistration = () => {
       };
 
       const response = await axios.post(
-        `${BASE_URL}/${postAllQuestionsAndAnswers}`,
+        `${BASE_URL_API}/${postAllQuestionsAndAnswers}`,
         payload
       );
 
@@ -637,14 +639,24 @@ const ClinicRegistration = () => {
 
   // ✅ Extract token from URL and store in localStorage
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
+    const email = params.get("email"); // capture email from URL
 
     if (token) {
       console.log("Extracted Token:", token);
       localStorage.setItem("onboardingToken", token);
     } else {
       console.warn("No token found in URL");
+    }
+
+    if (email) {
+      // decode URL‑encoded email if needed
+      const decodedEmail = decodeURIComponent(email);
+      console.log("Extracted Email:", decodedEmail);
+      localStorage.setItem("onboardingEmail", decodedEmail);
+    } else {
+      console.warn("No email found in URL");
     }
   }, []);
 
@@ -694,7 +706,7 @@ const ClinicRegistration = () => {
       const othersBase64 = await convertMultipleIfExists(formData.others);
 
       const onboardingToken = localStorage.getItem("onboardingToken");
-
+      const onboardingEmail = localStorage.getItem("onboardingEmail");
       const cleanValue = (val) => {
         if (val === null || val === undefined) return "";
         if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
@@ -706,6 +718,7 @@ const ClinicRegistration = () => {
 
       const clinicData = {
         token: onboardingToken,
+        email: onboardingEmail,
         contractorDocuments: contractorDocumentsBase64,
         hospitalDocuments: hospitalDocumentsBase64,
         hospitalLogo: hospitalLogoBase64,
@@ -734,7 +747,7 @@ const ClinicRegistration = () => {
           message: savedClinicData.message,
           clinicId: savedClinicData.data.clinicId,
         });
-
+        setIsSuccess(true);
         setShowSuccessModal(true);
 
         setTimeout(() => {
@@ -752,9 +765,6 @@ const ClinicRegistration = () => {
       setIsSubmitting(false);
     }
   };
-
-
-
 
   return (
     <div className="container mt-4">
@@ -803,19 +813,19 @@ const ClinicRegistration = () => {
 
                 <CFormInput
                   type="email"
-                  name="emailAddress"
+                  name="email"
 
-                  value={formData.emailAddress}
+                  value={formData.email}
                   onChange={(e) => {
                     const { name, value } = e.target;
                     setFormData((prev) => ({ ...prev, [name]: value }));
                     setErrors((prev) => ({ ...prev, [name]: '' }))
                   }}
                   // onBlur={EmailBlur}
-                  invalid={!!errors.emailAddress}
+                  invalid={!!errors.email}
                 />
-                {errors.emailAddress && (
-                  <CFormFeedback invalid>{errors.emailAddress}</CFormFeedback>
+                {errors.email && (
+                  <CFormFeedback invalid>{errors.email}</CFormFeedback>
                 )}
               </CCol>
               <CCol md={4}>
@@ -1022,7 +1032,7 @@ const ClinicRegistration = () => {
               <CCol md={6}>
                 <CFormLabel>
                   Primary Contact Person
-                 <span style={{ color: 'red' }}>*</span>
+                  <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
 
                 <CFormInput
@@ -1963,6 +1973,11 @@ const ClinicRegistration = () => {
               </CButton>
             </div>
           </CForm>
+
+
+
+
+
           <CModal
             visible={showSuccessModal}
             alignment="center"
@@ -1994,7 +2009,14 @@ const ClinicRegistration = () => {
 
         </CCardBody>
       </CCard>
+      {
+        isSuccess && <ClinicOnboardingSuccess
+          clinicName={formData.clinicName}
+          onClose={() => window.close()}
+        />
+      }
     </div >
+
   )
 }
 
