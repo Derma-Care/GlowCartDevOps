@@ -123,5 +123,7 @@ public class ClinicRegistrationDTO {
     private String upiId; // Optional
 
     @NotBlank(message = "PAN number is required")
+    @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "PAN number must be in valid format (e.g., ABCDE1234F)")
     private String panNumber;
+
 }

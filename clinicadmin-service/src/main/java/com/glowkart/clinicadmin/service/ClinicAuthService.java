@@ -3,6 +3,7 @@ package com.glowkart.clinicadmin.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
 import com.glowkart.clinicadmin.dto.ClinicLoginResponse;
+import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.feign.AdminServiceFeignClient;
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,29 +20,32 @@ public class ClinicAuthService {
     private AdminServiceFeignClient client;
 
     @Autowired
-    private ObjectMapper objectMapper;  // Jackson ObjectMapper to parse JSON
+    private ObjectMapper objectMapper;
 
-    public ClinicLoginResponse login(String username, String password) {
-        ClinicLoginRequest request = new ClinicLoginRequest();
-        request.setUsername(username);
-        request.setPassword(password);
-
+    // Updated to return ApiResponse<ClinicLoginResponse>
+    public ApiResponse<ClinicLoginResponse> login(ClinicLoginRequest request) {
         try {
-            return client.login(request);
+            // Call admin service via Feign and return full ApiResponse
+            ApiResponse<ClinicLoginResponse> response = client.login(request);
+
+            // Optional: check success before returning
+            if (response.isSuccess()) {
+                return response;
+            } else {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, response.getMessage());
+            }
+
         } catch (FeignException e) {
             Map<String, Object> errorBody;
             try {
-                // Parse Feign error response to Map
                 errorBody = objectMapper.readValue(e.contentUTF8(), Map.class);
             } catch (Exception ex) {
-                // Fallback if parsing fails
                 errorBody = Map.of("error", e.getMessage());
             }
 
-            // Throw ResponseStatusException with proper JSON body
             throw new ResponseStatusException(
                     HttpStatus.valueOf(e.status()),
-                    errorBody.get("error").toString()
+                    errorBody.getOrDefault("message", errorBody.getOrDefault("error", "Login failed")).toString()
             );
         }
     }

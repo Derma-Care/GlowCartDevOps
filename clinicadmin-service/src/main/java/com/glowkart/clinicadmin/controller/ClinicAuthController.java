@@ -1,12 +1,13 @@
 package com.glowkart.clinicadmin.controller;
 
-import com.glowkart.clinicadmin.dto.ClinicLoginResponse;
-import com.glowkart.clinicadmin.service.ClinicAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import com.glowkart.clinicadmin.dto.ApiResponse;
+import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
+import com.glowkart.clinicadmin.dto.ClinicLoginResponse;
+import com.glowkart.clinicadmin.service.ClinicAuthService;
 
 @RestController
 @RequestMapping("/clinic-admin")
@@ -16,11 +17,9 @@ public class ClinicAuthController {
     private ClinicAuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ClinicLoginResponse> login(@RequestBody Map<String, String> body) {
-        String username = body.get("username");
-        String password = body.get("password");
-
-        ClinicLoginResponse response = authService.login(username, password);
+    public ResponseEntity<ApiResponse<ClinicLoginResponse>> login(@RequestBody ClinicLoginRequest request) {
+        // Return the full ApiResponse from service
+        ApiResponse<ClinicLoginResponse> response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 }
