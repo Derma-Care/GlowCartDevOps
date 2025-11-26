@@ -2,7 +2,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "../../../src/assets/images/GlowKaart.png"
-export default function ClinicOnboardingSuccess({ clinicName, onClose }) {
+import { useLocation, useNavigate } from "react-router-dom";
+export default function ClinicOnboardingSuccess({ onClose }) {
+    const { state } = useLocation();
+    const navigate = useNavigate();
+
+    const clinicName = state?.clinicName;  // ← get clinic name here
+    const clinicId = state?.clinicId;
+    const message = state?.message;
+    const status = state?.status;
     return (
         <div style={{
             minHeight: "100vh",
@@ -83,7 +91,7 @@ export default function ClinicOnboardingSuccess({ clinicName, onClose }) {
                     </button>
 
                     <button
-                        onClick={onClose}
+                       onClick={() => window.close()}
                         style={{
                             background: "#ddd",
                             color: "black",

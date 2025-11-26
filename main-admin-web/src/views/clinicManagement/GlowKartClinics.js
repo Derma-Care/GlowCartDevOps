@@ -68,7 +68,7 @@ const ClinicManagement = ({ service }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-
+const [linkInputValue,setLinkInputValue]=useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [modalVisible, setModalVisible] = useState(false);
@@ -145,28 +145,37 @@ const ClinicManagement = ({ service }) => {
   const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
 
   // --------------------- SEND LINK ---------------------
-  const sendNGKRegistrationLink = async (email) => {
-    try {
-      setLoadingLink(true)
-      const response = await fetch(`${NGkRegistrationLink}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      })
+const sendNGKRegistrationLink = async (email) => {
+  try {
+    setLoadingLink(true);
 
-      if (!response.ok) throw new Error("Failed to send link")
-      const data = await response.json()
-      toast.success(data.message || "Registration link sent successfully!")
-      setIsLink(false)
-      setInputValue("")
-    } catch (error) {
-      console.error(error)
-      toast.error("Failed to send link")
-    } finally {
-      setLoadingLink(false)
+    const response = await fetch(`${NGkRegistrationLink}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();  // ✅ parse first
+
+    if (!response.ok || data.success === false) {
+      // Backend error message (your example)
+      toast.error(data.message || "Failed to send link");
+      return;
     }
 
+    // Success case
+    toast.success(data.message || "Registration link sent successfully!");
+    setIsLink(false);
+    setInputValue("");
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+  } finally {
+    setLoadingLink(false);
   }
+};
+
 
   return (
     <>
@@ -190,6 +199,7 @@ const ClinicManagement = ({ service }) => {
             <div className="col-4 mx-2">
               <CFormInput
                 type="text"
+                autoComplete="off"
                 style={{ border: '1px solid #7e3a93' }}
                 placeholder="Search by Clinic Name, Mobile, or Email"
                 value={searchTerm}
@@ -346,9 +356,10 @@ const ClinicManagement = ({ service }) => {
         <CModalBody>
           <CFormInput
             type="text"
+            autoComplete="email"
             label="Mobile number / Email Id"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            value={linkInputValue}
+            onChange={(e) => setLinkInputValue(e.target.value)}
             placeholder="Type something..."
           />
         </CModalBody>
@@ -357,7 +368,7 @@ const ClinicManagement = ({ service }) => {
           <CButton color="secondary" onClick={() => setIsLink(false)}>
             Cancel
           </CButton>
-          <CButton color="primary" onClick={() => sendNGKRegistrationLink(inputValue)} disabled={loadingLink}>
+          <CButton color="primary" onClick={() => sendNGKRegistrationLink(linkInputValue)} disabled={loadingLink}>
             {loadingLink ? "Sending..." : "Send"}
           </CButton>
         </CModalFooter>

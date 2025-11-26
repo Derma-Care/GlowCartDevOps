@@ -58,7 +58,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/clinic-registration" element={<ClinicRegistration />} />
-           {/* <Route path="/clinic-registration" element={<ClinicOnboardingSuccess clinicName="Neha's GlowKart" />} /> */}
+           <Route path="/clinic-onboarding-success" element={<ClinicOnboardingSuccess />} />
           <Route path="/404" element={<Page404 />} />
           <Route path="/500" element={<Page500 />} />
 

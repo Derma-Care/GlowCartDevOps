@@ -106,7 +106,7 @@ const Login = () => {
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8}>
-            <h1 className="fw-bold" style={{ color: '#FF007F', textAlign: "center" }}>GlowKart</h1>
+            <h1 className="fw-bold" style={{ color: '#FF007F', textAlign: "center" }}>Neha's GlowKart</h1>
             <CCardGroup className="shadow-lg rounded-4 overflow-hidden">
 
               {/* Login Form Card */}

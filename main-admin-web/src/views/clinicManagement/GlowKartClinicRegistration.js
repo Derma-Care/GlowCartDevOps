@@ -638,133 +638,115 @@ const ClinicRegistration = () => {
 
 
   // ✅ Extract token from URL and store in localStorage
+  // Extract from URL and save in localStorage
   useEffect(() => {
-     const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
     const token = params.get("token");
-    const email = params.get("email"); // capture email from URL
 
     if (token) {
-      console.log("Extracted Token:", token);
       localStorage.setItem("onboardingToken", token);
-    } else {
-      console.warn("No token found in URL");
     }
 
     if (email) {
-      // decode URL‑encoded email if needed
-      const decodedEmail = decodeURIComponent(email);
-      console.log("Extracted Email:", decodedEmail);
-      localStorage.setItem("onboardingEmail", decodedEmail);
-    } else {
-      console.warn("No email found in URL");
+      const decoded = decodeURIComponent(email);
+      localStorage.setItem("onboardingEmail", decoded);
     }
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Pre-fill the form field automatically
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("onboardingEmail");
 
-    const isValid = validateForm();
-    if (!isValid) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const convertIfExists = async (file) => {
-        if (!file) return "";
-        if (file.base64) return file.base64;
-        if (file instanceof Blob) return await convertFileToBase64(file);
-        if (typeof file === "string") return file;
-        return "";
-      };
-
-      const convertMultipleIfExists = async (files) => {
-        if (!Array.isArray(files)) return [];
-        return await Promise.all(
-          files.map(async (file) => {
-            if (!file) return "";
-            if (file.base64) return file.base64;
-            if (file instanceof Blob) return await convertFileToBase64(file);
-            if (typeof file === "string") return file;
-            return "";
-          })
-        );
-      };
-
-      // Convert files
-      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
-      const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
-      const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
-      const clinicalEstablishmentCertificateBase64 = await convertIfExists(formData.clinicalEstablishmentCertificate);
-      const businessRegistrationCertificateBase64 = await convertIfExists(formData.businessRegistrationCertificate);
-      const drugLicenseCertificateBase64 = await convertIfExists(formData.drugLicenseCertificate);
-      const pharmacistCertificateBase64 = await convertIfExists(formData.pharmacistCertificate);
-      const biomedicalWasteManagementAuthBase64 = await convertIfExists(formData.biomedicalWasteManagementAuth);
-      const tradeLicenseBase64 = await convertIfExists(formData.tradeLicense);
-      const fireSafetyCertificateBase64 = await convertIfExists(formData.fireSafetyCertificate);
-      const professionalIndemnityInsuranceBase64 = await convertIfExists(formData.professionalIndemnityInsurance);
-      const gstRegistrationCertificateBase64 = await convertIfExists(formData.gstRegistrationCertificate);
-      const othersBase64 = await convertMultipleIfExists(formData.others);
-
-      const onboardingToken = localStorage.getItem("onboardingToken");
-      const onboardingEmail = localStorage.getItem("onboardingEmail");
-      const cleanValue = (val) => {
-        if (val === null || val === undefined) return "";
-        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
-          return val;
-        if (val?.value) return val.value;
-        if (Array.isArray(val)) return val.map((v) => cleanValue(v));
-        return "";
-      };
-
-      const clinicData = {
-        token: onboardingToken,
-        email: onboardingEmail,
-        contractorDocuments: contractorDocumentsBase64,
-        hospitalDocuments: hospitalDocumentsBase64,
-        hospitalLogo: hospitalLogoBase64,
-        clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
-        businessRegistrationCertificate: businessRegistrationCertificateBase64,
-        drugLicenseCertificate: drugLicenseCertificateBase64,
-        pharmacistCertificate: pharmacistCertificateBase64,
-        biomedicalWasteManagementAuth: biomedicalWasteManagementAuthBase64,
-        tradeLicense: tradeLicenseBase64,
-        fireSafetyCertificate: fireSafetyCertificateBase64,
-        professionalIndemnityInsurance: professionalIndemnityInsuranceBase64,
-        gstRegistrationCertificate: gstRegistrationCertificateBase64,
-        others: othersBase64,
-        ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
-        website: normalizeWebsite(formData.website?.trim() || "")
-      };
-
-      const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
-      const savedClinicData = response.data;
-
-      if (savedClinicData?.success) {
-
-        // 🔥 FIX: Proper modal states
-        setSuccessResponse({
-          status: savedClinicData.data.status,
-          message: savedClinicData.message,
-          clinicId: savedClinicData.data.clinicId,
-        });
-        setIsSuccess(true);
-        setShowSuccessModal(true);
-
-        setTimeout(() => {
-          window.close();
-        }, 2500);
-
-      } else {
-        toast.error(savedClinicData.message || "Something went wrong");
-      }
-
-    } catch (error) {
-      console.error("Error submitting clinic:", error);
-      toast.error(error.message || "Failed to submit clinic");
-    } finally {
-      setIsSubmitting(false);
+    if (savedEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: savedEmail,
+      }));
     }
-  };
+  }, []);
+
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const isValid = validateForm();
+  if (!isValid) return;
+
+  setIsSubmitting(true);
+
+  try {
+    // Convert files to base64
+    const convertIfExists = async (file) => {
+      if (!file) return "";
+      if (file.base64) return file.base64;
+      if (file instanceof Blob) return await convertFileToBase64(file);
+      if (typeof file === "string") return file;
+      return "";
+    };
+
+    const convertMultipleIfExists = async (files) => {
+      if (!Array.isArray(files)) return [];
+      return Promise.all(files.map((file) => convertIfExists(file)));
+    };
+
+    const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
+    const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
+    const othersBase64 = await convertMultipleIfExists(formData.others);
+
+    const onboardingToken = localStorage.getItem("onboardingToken");
+    const onboardingEmail = localStorage.getItem("onboardingEmail");
+
+    const cleanValue = (val) => {
+      if (val === null || val === undefined) return "";
+      if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
+        return val;
+      if (val?.value) return val.value;
+      if (Array.isArray(val)) return val.map((v) => cleanValue(v));
+      return "";
+    };
+
+    const clinicData = {
+      token: onboardingToken,
+      email: onboardingEmail,
+      contractorDocuments: contractorDocumentsBase64,
+      hospitalDocuments: hospitalDocumentsBase64,
+      others: othersBase64,
+      ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
+      website: normalizeWebsite(formData.website?.trim() || "")
+    };
+
+    // API call
+    const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
+    const savedClinicData = response.data;
+
+    console.log(savedClinicData);
+
+    // SUCCESS CHECK (corrected)
+    if (savedClinicData?.success === true) {
+      navigate("/clinic-onboarding-success", {
+        state: {
+          clinicName: formData.name,
+          clinicId: savedClinicData.data?.clinicId,
+          message: savedClinicData.message,
+          status: savedClinicData.data?.status,
+          shouldClose: true,
+        },
+      });
+      return;
+    } else {
+      toast.error(savedClinicData.message || "Something went wrong");
+    }
+
+  } catch (error) {
+    console.error("Error submitting clinic:", error);
+    toast.error(error.message || "Failed to submit clinic");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <div className="container mt-4">
@@ -814,16 +796,22 @@ const ClinicRegistration = () => {
                 <CFormInput
                   type="email"
                   name="email"
-
                   value={formData.email}
+                  disabled
+                  style={{
+                    backgroundColor: "#e9ecef",   // light gray like Bootstrap
+                    color: "#6c757d",             // gray text
+                  }}
+                  readOnly={true}   // ⬅️ Make field non-editable
                   onChange={(e) => {
                     const { name, value } = e.target;
                     setFormData((prev) => ({ ...prev, [name]: value }));
-                    setErrors((prev) => ({ ...prev, [name]: '' }))
+                    setErrors((prev) => ({ ...prev, [name]: '' }));
                   }}
-                  // onBlur={EmailBlur}
                   invalid={!!errors.email}
                 />
+
+
                 {errors.email && (
                   <CFormFeedback invalid>{errors.email}</CFormFeedback>
                 )}
