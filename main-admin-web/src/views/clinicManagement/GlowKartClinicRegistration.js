@@ -638,27 +638,34 @@ const ClinicRegistration = () => {
 
 
   // ✅ Extract token from URL and store in localStorage
+  // Extract from URL and save in localStorage
   useEffect(() => {
-     const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
     const token = params.get("token");
-    const email = params.get("email"); // capture email from URL
 
     if (token) {
-      console.log("Extracted Token:", token);
       localStorage.setItem("onboardingToken", token);
-    } else {
-      console.warn("No token found in URL");
     }
 
     if (email) {
-      // decode URL‑encoded email if needed
-      const decodedEmail = decodeURIComponent(email);
-      console.log("Extracted Email:", decodedEmail);
-      localStorage.setItem("onboardingEmail", decodedEmail);
-    } else {
-      console.warn("No email found in URL");
+      const decoded = decodeURIComponent(email);
+      localStorage.setItem("onboardingEmail", decoded);
     }
   }, []);
+
+  // Pre-fill the form field automatically
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("onboardingEmail");
+
+    if (savedEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: savedEmail,
+      }));
+    }
+  }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -739,22 +746,19 @@ const ClinicRegistration = () => {
       const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
       const savedClinicData = response.data;
 
+     // SUCCESS CASE → NAVIGATE 🚀
       if (savedClinicData?.success) {
-
-        // 🔥 FIX: Proper modal states
-        setSuccessResponse({
-          status: savedClinicData.data.status,
-          message: savedClinicData.message,
-          clinicId: savedClinicData.data.clinicId,
+        navigate("/clinic-onboarding-success", {
+          state: {
+            clinicName: formData.clinicName,
+            clinicId: savedClinicData.data.clinicId,
+            message: savedClinicData.message,
+            status: savedClinicData.data.status,
+          },
         });
-        setIsSuccess(true);
-        setShowSuccessModal(true);
-
-        setTimeout(() => {
-          window.close();
-        }, 2500);
-
-      } else {
+        return;
+      }
+      else {
         toast.error(savedClinicData.message || "Something went wrong");
       }
 
@@ -814,16 +818,22 @@ const ClinicRegistration = () => {
                 <CFormInput
                   type="email"
                   name="email"
-
                   value={formData.email}
+                  disabled
+                  style={{
+                    backgroundColor: "#e9ecef",   // light gray like Bootstrap
+                    color: "#6c757d",             // gray text
+                  }}
+                  readOnly={true}   // ⬅️ Make field non-editable
                   onChange={(e) => {
                     const { name, value } = e.target;
                     setFormData((prev) => ({ ...prev, [name]: value }));
-                    setErrors((prev) => ({ ...prev, [name]: '' }))
+                    setErrors((prev) => ({ ...prev, [name]: '' }));
                   }}
-                  // onBlur={EmailBlur}
                   invalid={!!errors.email}
                 />
+
+
                 {errors.email && (
                   <CFormFeedback invalid>{errors.email}</CFormFeedback>
                 )}
