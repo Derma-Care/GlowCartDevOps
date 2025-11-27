@@ -18,66 +18,68 @@ public class AsyncVerificationService {
         this.whatsAppService = whatsAppService;
     }
 
-    // Send acknowledgement when the clinic is in PENDING status
+    // 1. Registration Pending
     @Async
     public void sendAcknowledgementAsync(Clinic clinic) {
         Map<String, String> data = new HashMap<>();
-        // Adding greeting and signature
-        data.put("message", 
-                  "Hello,\n\n" + 
-                  "We have received your registration and are reviewing it.\n\n" +
-                  "Regards,\nGlowKart Team");
-        data.put("subject", "GlowKart Clinic Registration Pending");
-        // Send email and WhatsApp messages
+
+        data.put("subject", "GlowKart Registration Pending");
+        data.put("message",
+                "Thank you for registering with GlowKart. Your registration is currently pending, and we are preparing "
+                        + "to begin the review process shortly.\n"
+                        + "We will notify you as soon as our team starts verifying your details.");
+
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }
 
-    // Send notification when the clinic verification process has started
+    // 2. Review Started
     @Async
     public void sendVerificationStartedAsync(Clinic clinic) {
         Map<String, String> data = new HashMap<>();
-        // Adding greeting and signature
-        data.put("message", 
-                  "Hello,\n\n" + 
-                  "Your clinic verification process has started.\n\n" +
-                  "Regards,\nGlowKart Team");
-        data.put("subject", "GlowKart Clinic Verification Started");
-        // Send email and WhatsApp messages
+
+        data.put("subject", "GlowKart Registration Review Initiated");
+        data.put("message",
+                "We’re pleased to inform you that the review of your GlowKart registration has officially begun. "
+                        + "Our team is carefully verifying your submitted details.\n"
+                        + "You will receive an update as soon as the process is complete.");
+
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }
 
-    // Send credentials to the clinic when the clinic is VERIFIED
+    // 3. Registration Verified
     @Async
     public void sendCredentialsAsync(Clinic clinic) {
         Map<String, String> data = new HashMap<>();
+
+        data.put("subject", "Your GlowKart Registration Has Been Verified");
+        data.put("message",
+                "Great news! Your GlowKart registration has been successfully verified.\n"
+                        + "You can now log in and begin using your account without any restrictions.\n\n"
+                        + "If you need any assistance, feel free to reach out to us.\n\n"
+                        + "Welcome to GlowKart!");
+
         data.put("username", clinic.getUsername());
         data.put("password", clinic.getPassword());
-        // Adding greeting and signature along with credentials
-        data.put("message", 
-                  "Hello,\n\n" + 
-                  "Your clinic has been successfully verified.\n\n" +
-                  "Username: " + clinic.getUsername() + "\nPassword: " + clinic.getPassword() + 
-                  "\n\nRegards,\nGlowKart Team");
-        data.put("subject", "GlowKart Clinic Verified Successfully");
-        // Send email and WhatsApp messages
+
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }
 
-    // Send rejection notification if the clinic is REJECTED
+    // 4. Registration Rejected
     @Async
     public void sendRejectionNotificationAsync(Clinic clinic, String reason) {
         Map<String, String> data = new HashMap<>();
-        // Adding greeting and signature along with rejection reason
-        data.put("message", 
-                  "Hello,\n\n" + 
-                  "We regret to inform you that your clinic registration has been rejected.\n\n" +
-                  "Reason: " + reason + "\n\n" +
-                  "Regards,\nGlowKart Team");
-        data.put("subject", "GlowKart Clinic Registration Rejected");
-        // Send email and WhatsApp messages
+
+        data.put("subject", "GlowKart Registration Status – Rejected");
+        data.put("message",
+                "Thank you for registering with GlowKart. After reviewing your submission, we are unable to approve "
+                        + "your registration at this time.\n"
+                        + "Reason for rejection: " + reason + "\n\n"
+                        + "You may correct the issue and reapply at any time. If you have questions or believe this "
+                        + "was an error, please contact our support team.");
+
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }

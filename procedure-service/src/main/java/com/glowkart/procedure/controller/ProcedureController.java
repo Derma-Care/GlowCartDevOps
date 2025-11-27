@@ -4,19 +4,17 @@ import com.glowkart.procedure.dto.ApiResponse;
 import com.glowkart.procedure.dto.ProcedureDTO;
 import com.glowkart.procedure.service.ProcedureService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/procedures")
+@RequiredArgsConstructor
 public class ProcedureController {
 
     private final ProcedureService service;
-
-    public ProcedureController(ProcedureService service) {
-        this.service = service;
-    }
 
     // Create a new procedure
     @PostMapping("/create")

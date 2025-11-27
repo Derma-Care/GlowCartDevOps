@@ -42,40 +42,37 @@ public class WhatsAppService {
             return;
         }
 
-        if (accountSid == null || authToken == null || fromNumber == null) {
-            logger.warn("Twilio credentials missing. WhatsApp message not sent.");
-            return;
-        }
-
         try {
-            Message message = Message.creator(
-                            new PhoneNumber("whatsapp:" + to),
-                            new PhoneNumber("whatsapp:" + fromNumber),
-                            buildMessageBody(data))
-                    .create();
-            logger.info("WhatsApp message sent successfully to {}", to);
+            Message.creator(
+                    new PhoneNumber("whatsapp:" + to),
+                    new PhoneNumber("whatsapp:" + fromNumber),
+                    buildMessageBody(data)
+            ).create();
+
+            logger.info("WhatsApp message sent to {}", to);
         } catch (Exception e) {
-            logger.error("Failed to send WhatsApp message to {}: {}", to, e.getMessage(), e);
+            logger.error("WhatsApp sending failed to {}: {}", to, e.getMessage(), e);
         }
     }
 
     private String buildMessageBody(Map<String, String> data) {
-        String statusMessage = data.getOrDefault("message", "Your clinic status has been updated.");
+
+        String bodyMessage = data.getOrDefault("message", "");
         String username = data.get("username");
         String password = data.get("password");
 
         StringBuilder body = new StringBuilder();
         body.append("Hello,\n\n");
+        body.append(bodyMessage).append("\n\n");
 
         if (username != null && password != null) {
-            body.append("Your clinic has been verified.\n")
-                .append("Username: ").append(username).append("\n")
+            body.append("Username: ").append(username).append("\n")
                 .append("Password: ").append(password).append("\n\n");
-        } else {
-            body.append(statusMessage).append("\n\n");
         }
 
         body.append("Regards,\nGlowKart Team");
+
         return body.toString();
     }
+
 }

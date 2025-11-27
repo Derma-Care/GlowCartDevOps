@@ -381,7 +381,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center w-100"
+      className="d-flex justify-content-center align-items-center   w-100"
       style={{
         height: '100vh',
 
@@ -404,7 +404,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
         {/* RIGHT PANEL SCROLL */}
         <div
-          className="thin-scroll "
+          className="thin-scroll form-panel"
           style={{
             width: '55%',
             height: '100%',

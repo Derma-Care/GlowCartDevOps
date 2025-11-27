@@ -1,52 +1,48 @@
 package com.glowkart.clinicadmin.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
 import com.glowkart.clinicadmin.dto.ClinicLoginResponse;
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.feign.AdminServiceFeignClient;
 import feign.FeignException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Map;
 
 @Service
 public class ClinicAuthService {
 
-    @Autowired
-    private AdminServiceFeignClient client;
+    private final AdminServiceFeignClient client;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    public ClinicAuthService(AdminServiceFeignClient client) {
+        this.client = client;
+    }
 
-    // Updated to return ApiResponse<ClinicLoginResponse>
-    public ApiResponse<ClinicLoginResponse> login(ClinicLoginRequest request) {
+    public ResponseEntity<ApiResponse<ClinicLoginResponse>> login(ClinicLoginRequest request) {
         try {
-            // Call admin service via Feign and return full ApiResponse
-            ApiResponse<ClinicLoginResponse> response = client.login(request);
-
-            // Optional: check success before returning
-            if (response.isSuccess()) {
-                return response;
-            } else {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, response.getMessage());
-            }
-
-        } catch (FeignException e) {
-            Map<String, Object> errorBody;
-            try {
-                errorBody = objectMapper.readValue(e.contentUTF8(), Map.class);
-            } catch (Exception ex) {
-                errorBody = Map.of("error", e.getMessage());
-            }
-
-            throw new ResponseStatusException(
-                    HttpStatus.valueOf(e.status()),
-                    errorBody.getOrDefault("message", errorBody.getOrDefault("error", "Login failed")).toString()
+            // Call Feign client
+            ResponseEntity<ApiResponse<ClinicLoginResponse>> response = client.login(request);
+            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+        } catch (FeignException feignEx) {
+            // Handle errors from the downstream service
+            ApiResponse<ClinicLoginResponse> errorResponse = new ApiResponse<>(
+                    false,
+                    "Invalid username or password", // downstream error message
+                    null
             );
+
+            HttpStatus status = HttpStatus.resolve(feignEx.status());
+            if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+            return ResponseEntity.status(status).body(errorResponse);
+        } catch (Exception ex) {
+            // Fallback for internal errors
+            ApiResponse<ClinicLoginResponse> errorResponse = new ApiResponse<>(
+                    false,
+                    "Internal Server Error: " + ex.getMessage(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }

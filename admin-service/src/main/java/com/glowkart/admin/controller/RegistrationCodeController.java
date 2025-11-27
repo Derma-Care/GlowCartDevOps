@@ -33,7 +33,7 @@ public class RegistrationCodeController {
         }
 
         return new ApiResponse<>(true,
-                "500 registration codes generated and emailed to " + defaultEmail, null);
+                "500 registration codes generated and emailId to " + defaultEmail, null);
     }
 
     // ---------------- Verify code ----------------

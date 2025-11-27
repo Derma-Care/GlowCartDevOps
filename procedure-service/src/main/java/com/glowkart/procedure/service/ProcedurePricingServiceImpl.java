@@ -1,13 +1,16 @@
 package com.glowkart.procedure.service;
 
-
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.glowkart.procedure.client.ClinicFeignClient;
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
+import com.glowkart.procedure.exception.DuplicateResourceException;
+import com.glowkart.procedure.exception.ResourceNotFoundException;
 import com.glowkart.procedure.mapper.ProcedurePricingMapper;
 import com.glowkart.procedure.model.Procedure;
 import com.glowkart.procedure.model.ProcedurePricing;
@@ -15,47 +18,55 @@ import com.glowkart.procedure.repo.ProcedurePricingRepository;
 import com.glowkart.procedure.repo.ProcedureRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
     private final ProcedurePricingRepository pricingRepository;
     private final ProcedureRepository procedureRepository;
     private final ProcedurePricingMapper mapper;
+    private final ClinicFeignClient clinicFeignClient;
 
     @Override
+    @Transactional
     public ProcedurePricingDTO create(ProcedurePricingDTO dto) {
-        // 1. Validate procedureId exists
-        Procedure procedure = procedureRepository.findById(dto.getProcedureId())
-                .orElseThrow(() -> new RuntimeException("Procedure not found"));
+        log.info("Creating pricing for procedureId={} and clinicId={}", dto.getProcedureId(), dto.getClinicId());
 
-        // 2. Check duplicate for same clinic
+        // Validate procedure
+        Procedure procedure = procedureRepository.findById(dto.getProcedureId())
+                .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND", 
+                        "Procedure not found with ID: " + dto.getProcedureId()));
+
+        // Validate clinic
+        validateClinic(dto.getClinicId());
+
+        // Check duplicate pricing
         pricingRepository.findByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())
-                .ifPresent(p -> {
-                    throw new RuntimeException("Procedure already exists for this clinic");
+                .ifPresent(existing -> {
+                    String name = existing.getProcedureName() != null ? existing.getProcedureName() : "Unknown";
+                    throw new DuplicateResourceException("DUPLICATE_PRICING",
+                            "Procedure '" + name + "' already has pricing set for this clinic.");
                 });
 
-        // 3. Map DTO to entity
+        // Map DTO to entity
         ProcedurePricing entity = mapper.toEntity(dto);
-
-        // 4. Set procedureName from Procedure master
         entity.setProcedureName(procedure.getProcedureName());
-
-        // 5. Set timestamps
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
 
-        // 6. Calculate pricing
+        // Calculate pricing
         calculatePricing(entity);
 
-        // 7. Save
         ProcedurePricing saved = pricingRepository.save(entity);
         return mapper.toDto(saved);
     }
 
     @Override
     public List<ProcedurePricingDTO> getByClinic(String clinicId) {
+        validateClinic(clinicId);
         return pricingRepository.findByClinicId(clinicId).stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
@@ -63,26 +74,31 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
     @Override
     public ProcedurePricingDTO getByProcedureAndClinic(String procedureId, String clinicId) {
+        validateClinic(clinicId);
         ProcedurePricing entity = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
-                .orElseThrow(() -> new RuntimeException("No pricing found for this procedure and clinic"));
-
+                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
+                        "No pricing found for procedure ID " + procedureId + " in clinic " + clinicId));
         return mapper.toDto(entity);
     }
 
     @Override
+    @Transactional
     public ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto) {
-        ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
-                .orElseThrow(() -> new RuntimeException("Procedure not found for this clinic"));
+        validateClinic(clinicId);
 
-        // Optional: update procedureName if procedureId changed
-        if (!existing.getProcedureId().equals(dto.getProcedureId())) {
+        ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
+                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
+                        "Procedure pricing not found for procedure ID " + procedureId + " in clinic " + clinicId));
+
+        // Update procedure if changed
+        if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
             Procedure procedure = procedureRepository.findById(dto.getProcedureId())
-                    .orElseThrow(() -> new RuntimeException("Procedure not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
+                            "Procedure not found with ID: " + dto.getProcedureId()));
             existing.setProcedureId(procedure.getId());
             existing.setProcedureName(procedure.getProcedureName());
         }
 
-        // Map other fields
         mapper.updateEntity(existing, dto);
         existing.setUpdatedAt(Instant.now());
 
@@ -93,29 +109,57 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     }
 
     @Override
+    @Transactional
     public void delete(String procedureId, String clinicId) {
-        pricingRepository.deleteByProcedureIdAndClinicId(procedureId, clinicId);
+        validateClinic(clinicId);
+        ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
+                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
+                        "Procedure pricing not found for procedure ID " + procedureId + " in clinic " + clinicId));
+        pricingRepository.delete(existing);
+        log.info("Deleted pricing for procedureId={} and clinicId={}", procedureId, clinicId);
     }
-    
- // New Method to Fetch All Data
+
     @Override
     public List<ProcedurePricingDTO> getAll() {
-        // Fetch all procedure pricing data
         return pricingRepository.findAll().stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
+    // ---------------- Helper Methods ----------------
+
+    private void validateClinic(String clinicId) {
+        try {
+            clinicFeignClient.getClinicById(clinicId);
+        } catch (Exception e) {
+            log.warn("Clinic not found: {}", clinicId);
+            throw new ResourceNotFoundException("CLINIC_NOT_FOUND", "Clinic not found with ID: " + clinicId);
+        }
+    }
+
     private void calculatePricing(ProcedurePricing procedure) {
-        procedure.setDiscountAmount(procedure.getPrice() * procedure.getDiscountPercentage() / 100.0);
-        double discountedPrice = procedure.getPrice() - procedure.getDiscountAmount();
+        // 1. Calculate discount
+        double discountAmount = procedure.getPrice() * procedure.getDiscountPercentage() / 100.0;
+        procedure.setDiscountAmount(discountAmount);
+
+        double discountedPrice = procedure.getPrice() - discountAmount;
         procedure.setDiscountedCost(discountedPrice);
 
-        procedure.setTaxAmount(discountedPrice * procedure.getTaxPercentage() / 100.0);
-        procedure.setGstAmount(discountedPrice * procedure.getGst() / 100.0);
-        procedure.setPlatformFee(discountedPrice * procedure.getPlatformFeePercentage() / 100.0);
+        // 2. Calculate taxes and platform fee
+        double taxAmount = discountedPrice * procedure.getTaxPercentage() / 100.0;
+        double gstAmount = discountedPrice * procedure.getGst() / 100.0;
+        double platformFee = discountedPrice * procedure.getPlatformFeePercentage() / 100.0;
 
-        procedure.setClinicPay(discountedPrice + procedure.getTaxAmount() + procedure.getGstAmount() - procedure.getPlatformFee());
-        procedure.setFinalCost(discountedPrice + procedure.getConsultationFee() + procedure.getTaxAmount() + procedure.getGstAmount() + procedure.getPlatformFee());
+        procedure.setTaxAmount(taxAmount);
+        procedure.setGstAmount(gstAmount);
+        procedure.setPlatformFee(platformFee);
+
+        // 3. Calculate final amounts
+        double clinicPay = discountedPrice + taxAmount + gstAmount - platformFee;
+        double finalCost = discountedPrice + procedure.getConsultationFee() + taxAmount + gstAmount + platformFee;
+
+        procedure.setClinicPay(clinicPay);
+        procedure.setFinalCost(finalCost);
     }
+
 }

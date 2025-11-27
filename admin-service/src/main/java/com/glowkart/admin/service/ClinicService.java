@@ -9,11 +9,11 @@ import com.glowkart.admin.model.Clinic;
 public interface ClinicService {
     Clinic registerClinic(ClinicRegistrationDTO dto);
 
-    void startVerificationProcess(String clinicId);
+    Clinic startVerificationProcess(String clinicId);
 
-    void verifyClinic(String clinicId);
+    Clinic verifyClinic(String clinicId);
 
-    void rejectClinic(String clinicId, String reason);
+    Clinic  rejectClinic(String clinicId, String reason);
     
     // NEW
     List<Clinic> getAll();

@@ -31,7 +31,7 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(to);
             message.setFrom(fromAddress);
-            message.setSubject(data.getOrDefault("subject", "GlowKart Clinic Notification"));
+            message.setSubject(data.getOrDefault("subject", "GlowKart Notification"));
             message.setText(buildMessageBody(data));
 
             mailSender.send(message);
@@ -42,22 +42,22 @@ public class EmailService {
     }
 
     private String buildMessageBody(Map<String, String> data) {
-        String statusMessage = data.getOrDefault("message", "Your clinic status has been updated.");
+
+        String bodyMessage = data.getOrDefault("message", "");
         String username = data.get("username");
         String password = data.get("password");
 
         StringBuilder body = new StringBuilder();
         body.append("Hello,\n\n");
+        body.append(bodyMessage).append("\n\n");
 
         if (username != null && password != null) {
-            body.append("Your clinic has been verified.\n\n")
-                .append("Username: ").append(username).append("\n")
+            body.append("Username: ").append(username).append("\n")
                 .append("Password: ").append(password).append("\n\n");
-        } else {
-            body.append(statusMessage).append("\n\n");
         }
 
         body.append("Regards,\nGlowKart Team");
+
         return body.toString();
     }
 }

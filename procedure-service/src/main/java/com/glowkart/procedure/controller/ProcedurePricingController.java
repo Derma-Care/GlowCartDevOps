@@ -3,6 +3,7 @@ package com.glowkart.procedure.controller;
 import com.glowkart.procedure.dto.ApiResponse;
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
 import com.glowkart.procedure.service.ProcedurePricingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,28 +17,25 @@ public class ProcedurePricingController {
     private final ProcedurePricingService service;
 
     @PostMapping("/pricing/create")
-    public ApiResponse<ProcedurePricingDTO> create(@RequestBody ProcedurePricingDTO dto) {
-        return new ApiResponse<>(true, "Procedure Created", service.create(dto));
+    public ApiResponse<ProcedurePricingDTO> create(@Valid @RequestBody ProcedurePricingDTO dto) {
+        return new ApiResponse<>(true, "Procedure pricing created successfully", service.create(dto));
     }
 
     @GetMapping("/pricing/all/{clinicId}")
     public ApiResponse<List<ProcedurePricingDTO>> getByClinic(@PathVariable String clinicId) {
-        return new ApiResponse<>(true, "Data Fetched", service.getByClinic(clinicId));
-    }
-    
-    // ⭐ New Method for fetching all data across clinics
-    @GetMapping("/pricing/all")
-    public ApiResponse<List<ProcedurePricingDTO>> getAll() {
-        return new ApiResponse<>(true, "All Procedure Pricing Fetched", service.getAll());
+        return new ApiResponse<>(true, "Procedures fetched successfully", service.getByClinic(clinicId));
     }
 
-    // ⭐ New Method
+    @GetMapping("/pricing/all")
+    public ApiResponse<List<ProcedurePricingDTO>> getAll() {
+        return new ApiResponse<>(true, "All procedure pricing fetched successfully", service.getAll());
+    }
+
     @GetMapping("/pricing/get/{procedureId}/{clinicId}")
     public ApiResponse<ProcedurePricingDTO> getByProcedureAndClinic(
             @PathVariable String procedureId,
             @PathVariable String clinicId) {
-
-        return new ApiResponse<>(true, "Data Fetched",
+        return new ApiResponse<>(true, "Procedure pricing fetched successfully",
                 service.getByProcedureAndClinic(procedureId, clinicId));
     }
 
@@ -45,15 +43,14 @@ public class ProcedurePricingController {
     public ApiResponse<ProcedurePricingDTO> update(
             @PathVariable String procedureId,
             @PathVariable String clinicId,
-            @RequestBody ProcedurePricingDTO dto) {
-        return new ApiResponse<>(true, "Updated", service.update(procedureId, clinicId, dto));
+            @Valid @RequestBody ProcedurePricingDTO dto) {
+        return new ApiResponse<>(true, "Procedure pricing updated successfully",
+                service.update(procedureId, clinicId, dto));
     }
 
     @DeleteMapping("/pricing/delete/{procedureId}/{clinicId}")
-    public ApiResponse<Void> delete(
-            @PathVariable String procedureId,
-            @PathVariable String clinicId) {
+    public ApiResponse<Void> delete(@PathVariable String procedureId, @PathVariable String clinicId) {
         service.delete(procedureId, clinicId);
-        return new ApiResponse<>(true, "Deleted", null);
+        return new ApiResponse<>(true, "Procedure pricing deleted successfully", null);
     }
 }

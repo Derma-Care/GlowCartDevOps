@@ -78,16 +78,16 @@ public class ClinicServiceImpl implements ClinicService {
     // VERIFICATION
     // -----------------------------------------------------
     @Override
-    public void startVerificationProcess(String clinicId) {
+    public Clinic startVerificationProcess(String clinicId) {
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("VERIFICATION_IN_PROGRESS");
         repo.save(clinic);
-
         asyncVerificationService.sendVerificationStartedAsync(clinic);
+        return clinic;
     }
 
     @Override
-    public void verifyClinic(String clinicId) {
+    public Clinic verifyClinic(String clinicId) {
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("VERIFIED");
 
@@ -99,16 +99,23 @@ public class ClinicServiceImpl implements ClinicService {
 
         repo.save(clinic);
         asyncVerificationService.sendCredentialsAsync(clinic);
+        return clinic;
     }
 
+
+   
+
     @Override
-    public void rejectClinic(String clinicId, String reason) {
+    public Clinic rejectClinic(String clinicId, String reason) {
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("REJECTED");
         repo.save(clinic);
 
         asyncVerificationService.sendRejectionNotificationAsync(clinic, reason);
+
+        return clinic; // return updated clinic
     }
+
 
     // -----------------------------------------------------
     // CRUD

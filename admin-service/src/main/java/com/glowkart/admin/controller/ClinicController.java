@@ -9,6 +9,7 @@ import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ClinicLoginRequest;
 import com.glowkart.admin.dto.ClinicLoginResponse;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
+import com.glowkart.admin.dto.ClinicRejectionRequest;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.service.ClinicService;
 
@@ -49,26 +50,36 @@ public class ClinicController {
     // ---------------------------------------------------
     @PutMapping("/clinics/{clinicId}/start-verification")
     public ResponseEntity<ApiResponse<?>> startVerification(@PathVariable String clinicId) {
-
-        clinicService.startVerificationProcess(clinicId);
+        Clinic clinic = clinicService.startVerificationProcess(clinicId);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Verification process started successfully", null)
+            new ApiResponse<>(true, "Verification process started successfully",
+                Map.of(
+                    "clinicId", clinic.getClinicId(),
+                    "status", clinic.getStatus()
+                )
+            )
         );
     }
+
 
     // ---------------------------------------------------
     // 3. MARK CLINIC VERIFIED
     // ---------------------------------------------------
     @PutMapping("/clinics/{clinicId}/verify")
     public ResponseEntity<ApiResponse<?>> verifyClinic(@PathVariable String clinicId) {
-
-        clinicService.verifyClinic(clinicId);
+        Clinic clinic = clinicService.verifyClinic(clinicId);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Clinic verified successfully", null)
+            new ApiResponse<>(true, "Clinic verified successfully",
+                Map.of(
+                    "clinicId", clinic.getClinicId(),
+                    "status", clinic.getStatus()
+                )
+            )
         );
     }
+
 
     // ---------------------------------------------------
     // 4. REJECT CLINIC
@@ -76,18 +87,24 @@ public class ClinicController {
     @PutMapping("/clinics/{clinicId}/reject")
     public ResponseEntity<ApiResponse<?>> rejectClinic(
             @PathVariable String clinicId,
-            @RequestParam String reason) {
+            @Valid @RequestBody ClinicRejectionRequest request) {
 
-        clinicService.rejectClinic(clinicId, reason);
+        Clinic clinic = clinicService.rejectClinic(clinicId, request.getReason());
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         true,
                         "Clinic rejected successfully",
-                        Map.of("reason", reason)
+                        Map.of(
+                                "clinicId", clinic.getClinicId(),
+                                "status", clinic.getStatus(),
+                                "reason", request.getReason()
+                        )
                 )
         );
     }
+
+
 
     // ---------------------------------------------------
     // 5. GET ALL CLINICS

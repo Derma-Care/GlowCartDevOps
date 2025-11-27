@@ -174,7 +174,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   fontWeight: 700,
                   marginBottom: 10,
                   fontSize: 17,
-                  color: '#333',
+                  // color: '#333',
                 }}
               >
                 1️⃣ Upload Prize Post Screenshot
@@ -233,7 +233,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   fontWeight: 700,
                   marginBottom: 10,
                   fontSize: 17,
-                  color: '#333',
+                  // color: '#333',
                 }}
               >
                 2️⃣ Enter Your Address
@@ -249,7 +249,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                       borderRadius: 12,
                       padding: 14,
                       border: '1px solid #e3e3e3',
-                      background: '#fafafa',
+                      // background: '#fafafa',
                     }}
                   />
                 </CCol>
@@ -331,7 +331,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   fontWeight: 700,
                   marginBottom: 10,
                   fontSize: 17,
-                  color: '#333',
+                  // color: '#333',
                 }}
               >
                 3️⃣ Upload Follow Screenshot
