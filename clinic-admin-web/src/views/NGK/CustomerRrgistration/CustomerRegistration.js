@@ -27,14 +27,17 @@ import { UploadedPreview } from '../Utills/FileUpload'
 import { getAllProcedures } from '../APIs/procedureService'
 import { getCustomerByCode } from '../APIs/customerApiUsingRC'
 export default function NGlowKartPatientRegistration_CoreUI() {
+  //   const today = new Date()
   const today = new Date()
+  const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+
+  const eighteenYearsAgoISO = eighteenYearsAgo.toISOString().split('T')[0]
+
+  // subtract 12 months
+  const past1Year = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
+
+  const minDate12Months = past1Year.toISOString().split('T')[0]
   const maxToday = today.toISOString().split('T')[0]
-  const oneYearAgo = new Date()
-  oneYearAgo.setFullYear(today.getFullYear() - 1)
-  const oneYearAgoISO = oneYearAgo.toISOString().split('T')[0]
-  const minLastVisitDate = new Date(today)
-  minLastVisitDate.setMonth(today.getMonth() - 12)
-  const minDate12Months = minLastVisitDate.toISOString().split('T')[0]
   const [aadharVerified, setAadharVerified] = useState(false)
   const [winnerPrize, setWinnerPrize] = useState(null)
   const [spinWhell, setSpinWhell] = useState(false)
@@ -133,12 +136,17 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   function calculateAge(dobStr) {
     if (!dobStr) return 0
-    const b = new Date(dobStr)
-    let age = today.getFullYear() - b.getFullYear()
-    const m = today.getMonth() - b.getMonth()
-    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--
+    const today = new Date()
+    const dob = new Date(dobStr)
+
+    let age = today.getFullYear() - dob.getFullYear()
+    const m = today.getMonth() - dob.getMonth()
+
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--
+
     return age
   }
+
   const updateForm = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
@@ -185,7 +193,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   const handleSubmitReferralCode = async () => {
     const code = form.registraionCode.trim()
-
+    sessionStorage.setItem('registraionCode', code)
     if (!code) {
       setError('⚠️ Please enter your registration code.')
       return
@@ -239,7 +247,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
 
     if (!form.dob) e.dob = 'Date of birth required'
-    else if (calculateAge(form.dob) < 1) e.dob = 'Must be at least 1 year old'
+    else if (calculateAge(form.dob) < 18) e.dob = 'Must be at least 18 years old'
 
     if (form.confirmedVisit) {
       if (!form.clinicName) e.clinicName = 'Clinic name required'
@@ -247,9 +255,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
       if (!form.dateOfLastVisit) e.dateOfLastVisit = 'Last visit date required'
       else {
-        if (form.dateOfLastVisit > maxToday) e.dateOfLastVisit = 'Future dates not allowed'
-        else if (form.dateOfLastVisit < minDate12Months)
+        const selected = new Date(form.dateOfLastVisit)
+        const max = new Date(maxToday)
+        const min = new Date(minDate12Months)
+
+        if (selected > max) {
+          e.dateOfLastVisit = 'Future dates not allowed'
+        } else if (selected < min) {
           e.dateOfLastVisit = 'Visit must be within last 12 months'
+        }
       }
 
       if (!form.serviceType) e.serviceType = 'Service required'
@@ -277,7 +291,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       dateOfLastVisit: form.dateOfLastVisit,
       serviceType: form.serviceType,
       blood: form.Blood,
-      registrationCode: form.registraionCode,
+      registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
       referBy: form.referBy,
       aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
@@ -673,14 +687,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       <CFormLabel>
                         DOB <span className="text-danger">*</span>
                       </CFormLabel>
+
                       <CFormInput
                         type="date"
                         name="dob"
-                        max={maxToday}
+                        max={eighteenYearsAgoISO} // 🚀 Max date = 18 years old
                         value={form.dob}
                         onFocus={(e) => {
                           const input = e.target
-                          input.value = oneYearAgoISO
+                          input.value = eighteenYearsAgoISO // 🚀 Calendar opens showing 18yr old
                           input.showPicker?.()
                           setTimeout(() => {
                             if (!form.dob) input.value = ''
@@ -688,15 +703,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         }}
                         onChange={handleChange}
                       />
-                      {errors.dob && (
-                        <p
-                          style={{
-                            color: '#ff2e85',
-                          }}
-                        >
-                          {errors.dob}
-                        </p>
-                      )}
+
+                      {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
                     </CCol>
 
                     <CCol md={6}>
@@ -888,22 +896,26 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           <CFormLabel>
                             Last Visit <span className="text-danger">*</span>
                           </CFormLabel>
+
                           <CFormInput
                             type="date"
                             name="dateOfLastVisit"
-                            max={maxToday}
-                            min={minDate12Months}
+                            max={maxToday} // today
+                            min={minDate12Months} // today - 1 year
                             value={form.dateOfLastVisit}
+                            onFocus={(e) => {
+                              const input = e.target
+                              input.value = maxToday // show today's date on picker open
+                              input.showPicker?.()
+                              setTimeout(() => {
+                                if (!form.dateOfLastVisit) input.value = ''
+                              }, 0)
+                            }}
                             onChange={handleChange}
                           />
+
                           {errors.dateOfLastVisit && (
-                            <p
-                              style={{
-                                color: '#ff2e85',
-                              }}
-                            >
-                              {errors.dateOfLastVisit}
-                            </p>
+                            <p style={{ color: '#ff2e85' }}>{errors.dateOfLastVisit}</p>
                           )}
                         </CCol>
 

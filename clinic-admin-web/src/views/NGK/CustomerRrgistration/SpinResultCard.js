@@ -82,7 +82,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       // ---------------------------
       const link = document.createElement('a')
       link.href = image
-      link.download = `NGlowKart-Prize-${finalPrize.spinRewardImage}.png`
+      link.download = `NGlowKart-Prize-${finalPrize.spinRewardValue}.png`
 
       document.body.appendChild(link)
       link.click()

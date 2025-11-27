@@ -127,6 +127,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
 
       // 🚀 sessionStorage cleanup
       sessionStorage.removeItem('ngk_session')
+      sessionStorage.removeItem('registraionCode')
       sessionStorage.clear() // full clear optional
 
       console.log('Success..Moving to onboard success')
@@ -204,7 +205,8 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   📷 Upload Screenshot
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/jpg, application/pdf"
+                    capture={false}
                     onChange={async (e) => {
                       const file = e.target.files[0]
                       if (!file) return
@@ -359,7 +361,8 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   📁 Upload Screenshot
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/jpg, application/pdf"
+                    capture={false}
                     onChange={async (e) => {
                       const file = e.target.files[0]
                       if (!file) return

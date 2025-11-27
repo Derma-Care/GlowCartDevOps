@@ -18,6 +18,17 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
     loadSlices()
   }, [])
 
+  useEffect(() => {
+    // smooth scroll window (fallback)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // smooth scroll the scrollable container
+    const panel = document.querySelector('.form-panels')
+    if (panel) {
+      panel.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [])
+
   const loadSlices = async () => {
     const response = await getWheelSlices()
 
@@ -96,8 +107,8 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
   }
 
   return (
-    <div className="spin-container">
-      <div className="wheel-wrapper">
+    <div className="spin-container form-panels">
+      <div className="wheel-wrapper ">
         <Wheel
           wheelSize={wheelSize}
           mustStartSpinning={mustSpin}
