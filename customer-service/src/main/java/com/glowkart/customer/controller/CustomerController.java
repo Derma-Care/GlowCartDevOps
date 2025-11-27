@@ -39,11 +39,16 @@ public class CustomerController {
 
     // ==================== STEP 3 ====================
     @PostMapping("/customer/{mobile}/complete")
-    public ResponseEntity<ApiResponse<Customer>> step3(@PathVariable String mobile, @RequestBody @Valid CompleteRegistrationDTO dto) {
+    public ResponseEntity<ApiResponse<Customer>> step3(
+            @PathVariable String mobile,
+            @RequestBody @Valid CompleteRegistrationDTO dto) {
+
         ApiResponse<Customer> response = customerService.completeRegistrationByMobile(mobile, dto);
+
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
                 .body(response);
     }
+
 
     // ==================== GET Wheel Slices ====================
     @GetMapping("/customer/wheel-slices")

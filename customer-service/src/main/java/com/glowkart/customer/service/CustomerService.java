@@ -68,6 +68,7 @@ public class CustomerService {
 
     // ==================== STEP 3 ====================
     public ApiResponse<Customer> completeRegistrationByMobile(String mobile, CompleteRegistrationDTO dto) {
+
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
@@ -78,8 +79,8 @@ public class CustomerService {
         customer.setPrizePostScreenshot(dto.getPrizePostScreenshot());
         customer.setFollowScreenshot(dto.getFollowScreenshot());
         customer.setAddress(dto.getAddress());
-
         customer.setRegistrationCompleted(true);
+
         customerRepository.save(customer);
 
         try {
@@ -90,6 +91,8 @@ public class CustomerService {
 
         return new ApiResponse<>(true, "Great! You’ve successfully completed Step-3. Your registration is now finished!", customer);
     }
+
+
 
     // ==================== GET Wheel Slices ====================
     public ApiResponse<List<WheelSliceDto>> getWheelSlices() {
