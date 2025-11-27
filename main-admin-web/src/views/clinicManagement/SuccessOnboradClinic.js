@@ -29,9 +29,9 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                 style={{
                     background: "#fff",
                     width: "100%",
-                    maxWidth: "900px",
+                    maxWidth: "1200px",
                     maxHeight: "90vh", // limits height to viewport
-                    padding: "50px",
+                    padding: "20px",
                     borderRadius: "25px",
                     textAlign: "center",
                     boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
@@ -40,7 +40,7 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                 }}
             >
                 {/* LOGO */}
-                <div className="d-flex justify-content-center align-items-center">
+                {/* <div className="d-flex justify-content-center align-items-center">
                     <motion.img
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -53,7 +53,7 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                     <h3 className="mx-3" style={{ fontWeight: "bold", color: "var(--color-black)", marginBottom: "25px" }}>
                         Neha's GlowKart
                     </h3>
-                </div>
+                </div> */}
 
                 {/* HEADER */}
                 <h1 style={{ fontSize: "36px", fontWeight: "800", marginBottom: "10px", color: "#333" }}>
@@ -66,7 +66,7 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                 </h2>
 
                 {/* MESSAGE */}
-                <p style={{ fontSize: "18px", color: "#555", maxWidth: "700px", margin: "0 auto 30px" }}>
+                <p style={{ fontSize: "18px", color: "#555", maxWidth: "900px", margin: "0 auto 30px" }}>
                     Thank you for completing the onboarding process. Our verification team
                     will review your details, and your login credentials will be shared
                     soon. Meanwhile, feel free to explore our platform.
@@ -88,34 +88,18 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                         }}
                     >
                         🌐 Explore Website
-                    </button>
-
-                    <button
-                       onClick={() => window.close()}
-                        style={{
-                            background: "#ddd",
-                            color: "black",
-                            padding: "14px 32px",
-                            borderRadius: "12px",
-                            fontSize: "18px",
-                            border: "none",
-                            cursor: "pointer",
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-                        }}
-                    >
-                        ✖ Close
-                    </button>
+                    </button>   
                 </div>
 
                 {/* COMPANY DETAILS SECTION */}
-                <div style={{ marginTop: "50px", padding: "25px", background: "#f7f7f7", borderRadius: "20px", border: "1px solid #e0e0e0" }}>
+                <div style={{ marginTop: "20px", padding: "15px", background: "#f7f7f7", borderRadius: "20px", border: "1px solid #e0e0e0" }}>
                     {/* Centered Heading */}
-                    <h3 style={{ fontSize: "26px", fontWeight: "700", textAlign: "center", marginBottom: "30px" }}>
+                    {/* <h3 style={{ fontSize: "26px", fontWeight: "700", textAlign: "center", marginBottom: "30px" }}>
                         📞 Contact Information
-                    </h3>
+                    </h3> */}
 
                     {/* Two-column layout */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",alignContent:"center" }}>
                         {/* Left Column: Contact Details */}
                         <div style={{
                             display: "grid",

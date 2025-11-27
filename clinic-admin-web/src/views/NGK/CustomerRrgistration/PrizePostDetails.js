@@ -150,7 +150,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             borderRadius: 20,
             padding: 24,
           }}
-          // className="form-panel"
+          className="form-panel"
         >
           <div>
             {/* TITLE */}
@@ -205,11 +205,11 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   📷 Upload Screenshot
                   <input
                     type="file"
-                    accept="image/png, image/jpeg, image/jpg, application/pdf"
-                    capture={false}
+                    accept=".jpg,.jpeg,.png,application/pdf"
                     onChange={async (e) => {
                       const file = e.target.files[0]
                       if (!file) return
+
                       try {
                         const base64 = await processFile(file)
                         updateForm('prizePostScreenshot', base64)
@@ -361,8 +361,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                   📁 Upload Screenshot
                   <input
                     type="file"
-                    accept="image/png, image/jpeg, image/jpg, application/pdf"
-                    capture={false}
+                    accept=".jpg,.jpeg,.png,application/pdf"
                     onChange={async (e) => {
                       const file = e.target.files[0]
                       if (!file) return

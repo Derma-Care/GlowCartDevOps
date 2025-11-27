@@ -381,7 +381,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center form-panel w-100"
+      className="d-flex justify-content-center align-items-center w-100"
       style={{
         height: '100vh',
 
@@ -404,7 +404,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
         {/* RIGHT PANEL SCROLL */}
         <div
-          className="thin-scroll form-panel"
+          className="thin-scroll "
           style={{
             width: '55%',
             height: '100%',
@@ -413,10 +413,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
           }}
         >
           {/* HEADER */}
-          <div
-            className="header-container"
-             
-          >
+          <div className="header-container">
             <div className="d-flex align-items-start gap-3 mb-2">
               <img
                 src={DermaCareLogo}
@@ -688,6 +685,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         name="mobile"
                         placeholder="Enter Mobile Number"
                         maxLength={10}
+                        inputMode="numeric"
                         value={form.mobile}
                         onChange={(e) => {
                           const value = e.target.value.replace(/\D/g, '')
@@ -784,6 +782,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       <div className="d-flex align-items-center" style={{ gap: '10px' }}>
                         <CFormInput
                           name="Aadhar"
+                          inputMode="numeric"
                           maxLength={12}
                           value={form.Aadhar}
                           onChange={(e) => {

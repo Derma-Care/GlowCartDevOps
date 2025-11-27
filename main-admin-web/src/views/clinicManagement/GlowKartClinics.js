@@ -125,10 +125,16 @@ const [linkInputValue,setLinkInputValue]=useState('')
 
   }
 
-  const handleSubmitModal = async () => {
-    await statusapi.rejectClinic(selectedClinicId)
-    setModalVisible(false)
+const handleSubmitModal = async () => {
+  try {
+    await statusapi.rejectClinic(selectedClinicId, inputValue);
+    toast.success("Clinic rejected successfully!");
+  } catch (err) {
+    toast.error("Failed to reject clinic");
   }
+  setModalVisible(false);
+};
+
 
   // --------------------- SEARCH & PAGINATION ---------------------
   const filteredClinics = clinics.filter(

@@ -19,14 +19,10 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
   }, [])
 
   useEffect(() => {
-    // smooth scroll window (fallback)
     window.scrollTo({ top: 0, behavior: 'smooth' })
 
-    // smooth scroll the scrollable container
-    const panel = document.querySelector('.form-panels')
-    if (panel) {
-      panel.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    const panel = document.querySelector('.form-panel')
+    if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   const loadSlices = async () => {
@@ -71,8 +67,9 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
 
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overflow = 'hidden'
-    const container = document.querySelector('.spin-container')
-    if (container) container.style.overflow = 'hidden'
+
+    const panel = document.querySelector('.form-panel')
+    if (panel) panel.style.overflow = 'hidden'
   }
 
   // ✅ FIX: return loader BEFORE rendering Wheel
@@ -135,8 +132,9 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
 
             document.body.style.overflow = 'auto'
             document.documentElement.style.overflow = 'auto'
-            const container = document.querySelector('.spin-container')
-            if (container) container.style.overflow = 'auto'
+
+            const panel = document.querySelector('.form-panel')
+            if (panel) panel.style.overflow = 'auto'
 
             const winner = {
               id: slices[prizeNumber].id,

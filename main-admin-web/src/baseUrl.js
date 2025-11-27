@@ -235,7 +235,8 @@ export const AllClinicData = `${BASE_URL_API}/clinics`
 export const statusapi = {
     startClinic: (id) => axios.put(`${AllClinicData}/${id}/start-verification`),
     verifyClinic: (id) => axios.put(`${AllClinicData}/${id}/verify`),
-    rejectClinic: (id) => axios.put(`${AllClinicData}/${id}/reject`), //payload reason
+    rejectClinic: (id, reason) =>
+        axios.put(`${AllClinicData}/${id}/reject`, { reason }),
 };
 export const NGkRegistrationLink = `https://glowkartapi.ashokfruit.shop/onboard/request-link`
 export const getAllQuestions = '/clinicQuestions/getAll'
