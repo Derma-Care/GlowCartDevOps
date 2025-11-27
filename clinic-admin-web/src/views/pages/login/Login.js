@@ -29,7 +29,7 @@ import { BASE_URL, SBASE_URL } from '../../../baseUrl'
 import { useHospital } from '../../Usecontext/HospitalContext'
 import ResetPassword from '../../../views/Resetpassword'
 import { http, httpPublic } from '../../../Utils/Interceptors'
-import DermaLogo from 'src/assets/images/DermaCare.png' // adjust path if needed
+import DermaLogo from 'src/assets/images/logoP.png' // adjust path if needed
 import { COLORS } from '../../../Constant/Themes'
 import { toast, ToastContainer } from 'react-toastify'
 import { showCustomToast } from '../../../Utils/Toaster'
@@ -223,24 +223,12 @@ const Login = () => {
                     style={{ width: 120, height: 'auto' }}
                   />
                   <h2 className="fw-bold mb-3" style={{ color: COLORS.primary }}>
-                    Welcome to Derma Care
+                    Welcome to Neha's GlowKart
                   </h2>
                   <p className="lead mb-4" style={{ opacity: 0.95, color: COLORS.primary }}>
-                    Manage dermatology operations seamlessly — appointments, records, billing &
+                    Manage dermatology operations seamlessly — appointments, procedures, slots &
                     more.
                   </p>
-
-                  <div className="d-flex justify-content-center gap-3 flex-wrap">
-                    <span className="badge" style={{ color: COLORS.primary }}>
-                      HIPAA-ready
-                    </span>
-                    <span className="badge" style={{ color: COLORS.primary }}>
-                      e-Prescriptions
-                    </span>
-                    <span className="badge" style={{ color: COLORS.primary }}>
-                      Smart Scheduling
-                    </span>
-                  </div>
                 </div>
               </CCol>
 
@@ -248,53 +236,12 @@ const Login = () => {
               <CCol md={6} className="d-flex align-items-center justify-content-center  md-5">
                 <CCard className="shadow-lg border-0 glass-card w-100" style={{ maxWidth: 460 }}>
                   <CCardBody className="p-4 p-md-5">
-                    <h3 className="text-center fw-bold mb-3" style={{ color: COLORS.primary }}>
-                      Derma Portal
+                    <h3
+                      className="text-center fw-bold mb-3"
+                      style={{ color: 'var(--color-black)' }}
+                    >
+                      Neha's GlowKart
                     </h3>
-                    <p className="text-center mb-4" style={{ color: COLORS.primary }}>
-                      Please choose your workspace to continue
-                    </p>
-
-                    {/* Tabs */}
-                    <CNav variant="pills" className="justify-content-center gap-2 mb-4">
-                      <CNavItem>
-                        <CNavLink
-                          active={activeTab === 'clinic'}
-                          onClick={() => setActiveTab('clinic')}
-                          style={{
-                            backgroundColor: activeTab === 'clinic' ? COLORS.primary : COLORS.white,
-                            color: activeTab === 'clinic' ? COLORS.white : COLORS.primary,
-                            border: `1px solid ${COLORS.primary}`,
-                            borderRadius: '8px',
-                            fontWeight: '500',
-                            padding: '8px 16px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Clinic
-                        </CNavLink>
-                      </CNavItem>
-
-                      <CNavItem>
-                        <CNavLink
-                          active={activeTab === 'doctor'}
-                          onClick={() =>
-                            (window.location.href = 'https://doctorweb.aesthetech.life')
-                          }
-                          style={{
-                            backgroundColor: activeTab === 'doctor' ? COLORS.primary : COLORS.white,
-                            color: activeTab === 'doctor' ? COLORS.white : COLORS.primary,
-                            border: `1px solid ${COLORS.primary}`,
-                            borderRadius: '8px',
-                            fontWeight: '500',
-                            padding: '8px 16px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Doctor
-                        </CNavLink>
-                      </CNavItem>
-                    </CNav>
 
                     {/* Error message */}
                     {errorMessage && (
@@ -304,21 +251,6 @@ const Login = () => {
                     {/* CLINIC TAB */}
                     {activeTab === 'clinic' && (
                       <CForm onSubmit={handleClinicLogin} noValidate>
-                        {/* Role */}
-                        <CFormSelect
-                          className="mb-3"
-                          value={role}
-                          onChange={(e) => setRole(e.target.value)}
-                        >
-                          <option value="admin">Admin</option>
-                          <option value="receptionist">Receptionist</option>
-                          <option value="nurse">Nurse</option>
-                          <option value="lab_technician">Lab Technician</option>
-                          <option value="pharmacist">Pharmacist</option>
-                          {/* <option value="wardBoy">Ward Boy / Attendant</option>
-                        <option value="security">Security Staff</option> */}
-                        </CFormSelect>
-
                         {/* Username */}
                         <CInputGroup className="mb-2">
                           <CInputGroupText>

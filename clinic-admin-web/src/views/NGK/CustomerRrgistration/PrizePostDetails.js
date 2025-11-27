@@ -150,7 +150,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             borderRadius: 20,
             padding: 24,
           }}
-          className="form-panel"
+          // className="form-panel"
         >
           <div>
             {/* TITLE */}

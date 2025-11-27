@@ -66,6 +66,17 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     fetchProcedures()
   }, [])
 
+  useEffect(() => {
+    // smooth scroll window (fallback)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // smooth scroll the scrollable container
+    const panel = document.querySelector('.form-panel')
+    if (panel) {
+      panel.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [])
+
   const [form, setForm] = useState({
     fullName: '',
     mobile: '',
@@ -370,7 +381,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center"
+      className="d-flex justify-content-center align-items-center form-panel w-100"
       style={{
         height: '100vh',
 
@@ -402,23 +413,28 @@ export default function NGlowKartPatientRegistration_CoreUI() {
           }}
         >
           {/* HEADER */}
-          <div className="d-flex align-items-start gap-3 mb-2">
-            <img
-              src={DermaCareLogo}
-              alt="logo"
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: 12,
-                objectFit: 'cover',
-                border: '1px solid #eee',
-              }}
-            />
-            <div>
-              <h4 className="m-0 fw-bold" style={{ color: '#ff4f9a' }}>
-                Neha's Glow Kart
-              </h4>
-              <small style={{ color: '#ff7bbf' }}>Registration</small>
+          <div
+            className="header-container"
+             
+          >
+            <div className="d-flex align-items-start gap-3 mb-2">
+              <img
+                src={DermaCareLogo}
+                alt="logo"
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 12,
+                  objectFit: 'cover',
+                  border: '1px solid #eee',
+                }}
+              />
+              <div>
+                <h4 className="m-0 fw-bold" style={{ color: '#ff4f9a' }}>
+                  Neha's Glow Kart
+                </h4>
+                <small style={{ color: '#ff7bbf' }}>Registration</small>
+              </div>
             </div>
           </div>
 
@@ -504,7 +520,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     )}
                   </>
                 ) : (
-                  <div className="w-100">
+                  <div className="w-100 mt-3">
                     {instagram ? (
                       <PrizePostDetails
                         userData={userData}
@@ -566,6 +582,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         Enter Your Registration Code
                       </h3>
 
+                      {/* <CFormInput
+                        name="fullName"
+                        value={form.fullName}
+                        onChange={handleChange}
+                        placeholder="Enter Full Name"
+                      /> */}
+
                       <CFormInput
                         name="registraionCode"
                         value={form.registraionCode}
@@ -574,8 +597,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         style={{
                           borderRadius: 12,
                           height: 45,
-                          border: '1px solid #e1cbe9',
-                          background: '#faf8ff',
+                          marginTop: '15px',
+                          textTransform: 'uppercase',
                           transition: '0.25s',
                           fontWeight: '500',
                         }}
@@ -928,6 +951,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             isMulti
                             placeholder="Select services received..."
                             onChange={handleProcedureChange}
+                            styles={selectStyles}
                             value={procedureOptions.filter(
                               (opt) => form.serviceType?.includes(opt.label), // ✔ match using label
                             )}
@@ -1042,4 +1066,32 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       </div>
     </div>
   )
+}
+const selectStyles = {
+  control: (base) => ({
+    ...base,
+    borderColor: '#ccc',
+    color: '#000',
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: '#000', // selected value color
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    color: '#000', // selected chips text
+  }),
+  option: (base, state) => ({
+    ...base,
+    color: '#000', // dropdown text
+    backgroundColor: state.isSelected ? '#ffe0f1' : '#fff',
+    ':hover': {
+      backgroundColor: '#ffeaf6',
+      color: '#000',
+    },
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: '#777', // placeholder grey
+  }),
 }

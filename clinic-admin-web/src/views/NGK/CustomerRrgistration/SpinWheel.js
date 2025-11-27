@@ -107,7 +107,7 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
   }
 
   return (
-    <div className="spin-container form-panels">
+    <div className="spin-container  ">
       <div className="wheel-wrapper ">
         <Wheel
           wheelSize={wheelSize}
