@@ -52,3 +52,11 @@ async:
   core-pool-size: 5
   max-pool-size: 20
   queue-capacity: 50
+
+# =================== Twilio Configuration ===================
+# =================== Twilio Configuration ===================
+twilio:
+  accountSid: ${TWILIO_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
+  authToken: ${TWILIO_AUTH_TOKEN:YOUR_TWILIO_AUTH_TOKEN}
+  fromPhone: ${TWILIO_FROM_PHONE:+1234567890}
+

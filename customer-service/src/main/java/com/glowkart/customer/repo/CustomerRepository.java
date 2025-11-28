@@ -8,6 +8,7 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
 
     Optional<Customer> findByMobile(String mobile);
     Optional<Customer> findByEmail(String email);
-    Optional<Customer> findByAadharNumber(String aadharNumber);
+    Optional<Customer> findByAadharHash(String aadharHash);
+
 	Customer findByRegistrationCode(String code);
 }

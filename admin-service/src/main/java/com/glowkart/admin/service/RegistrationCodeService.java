@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Sort;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -46,7 +47,9 @@ public class RegistrationCodeService {
                     MIN_DIGITS + random.nextInt(MAX_DIGITS - MIN_DIGITS + 1)
             );
 
-            if (!repo.existsByCode(code) && newCodes.stream().noneMatch(c -> c.getCode().equals(code))) {
+            if (!repo.existsByCode(code) &&
+                newCodes.stream().noneMatch(c -> c.getCode().equals(code))) {
+
                 newCodes.add(new RegistrationCode(code));
             }
         }
@@ -54,79 +57,91 @@ public class RegistrationCodeService {
         return repo.saveAll(newCodes);
     }
 
-
+    // ----------------------
+    // Verify code
+    // ----------------------
     @Transactional(readOnly = true)
     public RegistrationResponseDTO verifyCode(RegistrationRequestDTO dto) {
         RegistrationCode code = repo.findByCode(dto.getCode());
 
         if (code == null) {
-            return new RegistrationResponseDTO(dto.getCode(), false, false); // invalid
+            return new RegistrationResponseDTO(dto.getCode(), false, false);
         }
 
-        return new RegistrationResponseDTO(code.getCode(), code.isUsed(), true); // valid
+        return new RegistrationResponseDTO(code.getCode(), code.isUsed(), true);
     }
 
+    // ----------------------
+    // Mark code as used
+    // ----------------------
     @Transactional
     public RegistrationResponseDTO markCodeUsed(String codeStr) {
         RegistrationCode code = repo.findByCode(codeStr);
+
         if (code == null) {
-            return new RegistrationResponseDTO(codeStr, false, false); // invalid
+            return new RegistrationResponseDTO(codeStr, false, false);
         }
+
         if (!code.isUsed()) {
             code.setUsed(true);
             repo.save(code);
         }
-        return new RegistrationResponseDTO(codeStr, true, true); // valid & used
+
+        return new RegistrationResponseDTO(codeStr, true, true);
     }
 
+    // ----------------------
+    // Get all codes (unused first, used last)
+    // ----------------------
     public List<RegistrationResponseDTOWithCode> getAllCodes() {
-        return repo.findAll().stream()
+
+        // ⭐ BEST PRACTICE: Sorting by 'used' field in MongoDB
+        List<RegistrationCode> sortedCodes = repo.findAll(
+            Sort.by(Sort.Order.asc("used"))  // unused first → used last
+        );
+
+        return sortedCodes.stream()
                 .map(c -> new RegistrationResponseDTOWithCode(c.getCode(), c.isUsed()))
                 .collect(Collectors.toList());
     }
 
-    // ----------------------
     // Helper: generate random numeric string
-    // ----------------------
     private String generateRandomNumberString(int length) {
         StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(random.nextInt(10));
-        }
+        for (int i = 0; i < length; i++) sb.append(random.nextInt(10));
         if (sb.charAt(0) == '0') sb.setCharAt(0, (char) ('1' + random.nextInt(9)));
         return sb.toString();
     }
 
     // ----------------------
-    // Send codes as Excel attachment via email
+    // Send codes as Excel attachment
     // ----------------------
     public void sendCodesByEmail(List<RegistrationCode> codes, String emailTo) throws Exception {
         try (Workbook workbook = new XSSFWorkbook(); var out = new java.io.ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Registration Codes");
 
-            // Header row
             Row header = sheet.createRow(0);
             header.createCell(0).setCellValue("Code");
             header.createCell(1).setCellValue("Used");
 
-            // Data rows
             for (int i = 0; i < codes.size(); i++) {
                 RegistrationCode reg = codes.get(i);
                 Row row = sheet.createRow(i + 1);
+
                 row.createCell(0).setCellValue(reg.getCode());
                 row.createCell(1).setCellValue(reg.isUsed() ? "Yes" : "No");
             }
 
-            for (int i = 0; i < 2; i++) {
-                sheet.autoSizeColumn(i);
-            }
+            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(1);
 
             workbook.write(out);
             ByteArrayResource resource = new ByteArrayResource(out.toByteArray());
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
             helper.setTo(emailTo);
             helper.setSubject("GlowKart Registration Codes");
             helper.setText("Please find attached the registration codes Excel file.");
@@ -136,9 +151,7 @@ public class RegistrationCodeService {
         }
     }
 
-    // ----------------------
-    // DTO for listing all codes
-    // ----------------------
+    // DTO for listing codes
     public static class RegistrationResponseDTOWithCode {
         private String code;
         private boolean used;

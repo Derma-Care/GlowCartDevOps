@@ -1,14 +1,20 @@
 package com.glowkart.customer.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.glowkart.customer.dto.*;
+import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.CompleteRegistrationDTO;
+import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.SpinWheelDTO;
+import com.glowkart.customer.dto.WheelSliceDto;
+import com.glowkart.customer.feign.WheelSliceClient;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
-import com.glowkart.customer.feign.WheelSliceClient;
+import com.glowkart.customer.util.AadhaarUtils;
 
 @Service
 public class CustomerService {
@@ -34,7 +40,6 @@ public class CustomerService {
         }
 
         checkDuplicateMobile(dto.getMobile(), customer.getMobile());
-//        checkDuplicateEmail(dto.getEmail(), customer.getMobile());   // updated
         checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
 
         copyStep1Fields(dto, customer);
@@ -68,7 +73,6 @@ public class CustomerService {
 
     // ==================== STEP 3 ====================
     public ApiResponse<Customer> completeRegistrationByMobile(String mobile, CompleteRegistrationDTO dto) {
-
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
@@ -89,7 +93,7 @@ public class CustomerService {
             System.err.println("Failed to mark code as used: " + e.getMessage());
         }
 
-        return new ApiResponse<>(true, "Great! You’ve successfully completed Step-3. Your registration is now finished!", customer);
+        return new ApiResponse<>(true, "Registration completed successfully!", customer);
     }
 
 
@@ -131,7 +135,7 @@ public class CustomerService {
     private void copyStep1Fields(CustomerDetailsDTO dto, Customer customer) {
         customer.setFullName(dto.getFullName());
         customer.setMobile(dto.getMobile());
-        customer.setEmail(dto.getEmail()); // optional now
+        customer.setEmail(dto.getEmail());
         customer.setCity(dto.getCity());
         customer.setDob(dto.getDob());
         customer.setClinicName(dto.getClinicName());
@@ -141,27 +145,27 @@ public class CustomerService {
         customer.setBlood(dto.getBlood());
         customer.setRegistrationCode(dto.getRegistrationCode());
         customer.setReferBy(dto.getReferBy());
-        customer.setAadharNumber(dto.getAadharNumber());
         customer.setPrescription(dto.getPrescription());
+
+        // ---------- Secure Aadhaar ----------
+        String hash = AadhaarUtils.hashAadhaar(dto.getAadharNumber());
+        String last4 = AadhaarUtils.getLast4Digits(dto.getAadharNumber());
+        customer.setAadharHash(hash);
+        customer.setAadharLast4(last4);
     }
 
     private void checkDuplicateMobile(String mobile, String excludeMobile) {
         customerRepository.findByMobile(mobile)
-                .filter(c -> !c.getMobile().equals(excludeMobile))
+                .filter(c -> !Objects.equals(c.getMobile(), excludeMobile))
                 .ifPresent(c -> { throw new RuntimeException("Mobile number already exists"); });
     }
 
-//    private void checkDuplicateEmail(String email, String excludeMobile) {
-//        if (email == null || email.isBlank()) return; // email optional
-//
-//        customerRepository.findByEmail(email)
-//                .filter(c -> !c.getMobile().equals(excludeMobile))
-//                .ifPresent(c -> { throw new RuntimeException("Email already exists"); });
-//    }
-
-    private void checkDuplicateAadhar(String aadhar, String excludeMobile) {
-        customerRepository.findByAadharNumber(aadhar)
-                .filter(c -> !c.getMobile().equals(excludeMobile))
+    private void checkDuplicateAadhar(String aadhaar, String excludeMobile) {
+        String hash = AadhaarUtils.hashAadhaar(aadhaar);
+        customerRepository.findAll().stream()
+                .filter(c -> !Objects.equals(c.getMobile(), excludeMobile))
+                .filter(c -> hash.equals(c.getAadharHash()))
+                .findFirst()
                 .ifPresent(c -> { throw new RuntimeException("Aadhar number already exists"); });
     }
 }

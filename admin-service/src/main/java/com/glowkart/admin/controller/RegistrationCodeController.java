@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/admin")
 public class RegistrationCodeController {
@@ -19,7 +20,7 @@ public class RegistrationCodeController {
     @Autowired
     private RegistrationCodeService service;
 
-    // Generate 500 codes and email
+    // Generate 500 codes and send email
     @PostMapping("/api/registration/generate")
     public ApiResponse<String> generateAndSendDefaultEmail() {
         List<RegistrationCode> codes = service.generateAndSaveBatch(500);
@@ -29,14 +30,16 @@ public class RegistrationCodeController {
             service.sendCodesByEmail(codes, defaultEmail);
         } catch (Exception e) {
             return new ApiResponse<>(false,
-                    "Codes generated but failed to send email: " + e.getMessage(), null);
+                    "Codes generated but failed to send email: " + e.getMessage(),
+                    null);
         }
 
         return new ApiResponse<>(true,
-                "500 registration codes generated and emailId to " + defaultEmail, null);
+                "500 registration codes generated and emailed to " + defaultEmail,
+                null);
     }
 
-    // ---------------- Verify code ----------------
+    // Verify code
     @PostMapping("/api/registration/verify")
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> verifyCode(
             @RequestBody RegistrationRequestDTO dto) {
@@ -44,12 +47,10 @@ public class RegistrationCodeController {
         RegistrationResponseDTO result = service.verifyCode(dto);
 
         if (!result.isValid()) {
-            // Invalid code
             return ResponseEntity.badRequest()
                     .body(new ApiResponse<>(false, "Invalid code!", result));
         }
 
-        // Code is valid, but check if it is already used
         if (result.isUsed()) {
             return ResponseEntity.ok(
                     new ApiResponse<>(false, "Code already used!", result)
@@ -61,7 +62,7 @@ public class RegistrationCodeController {
         );
     }
 
-    // ---------------- Mark code as used ----------------
+    // Mark code used
     @PostMapping("/api/registration/mark-used")
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> markCodeUsed(
             @RequestBody RegistrationRequestDTO dto) {
@@ -73,7 +74,6 @@ public class RegistrationCodeController {
                     .body(new ApiResponse<>(false, "Invalid code!", result));
         }
 
-        // Code is valid, but if already used, mark success=false
         if (result.isUsed()) {
             return ResponseEntity.ok(
                     new ApiResponse<>(false, "Code already used!", result)
@@ -85,10 +85,13 @@ public class RegistrationCodeController {
         );
     }
 
-    // ---------------- Get all codes ----------------
+    // Get all codes (unused first)
     @GetMapping("/api/registration/all")
-    public ApiResponse<List<RegistrationCodeService.RegistrationResponseDTOWithCode>> getAllCodes() {
-        return new ApiResponse<>(true, "All registration codes retrieved successfully!",
-                service.getAllCodes());
+    public ApiResponse<List<RegistrationResponseDTOWithCode>> getAllCodes() {
+        return new ApiResponse<>(
+                true,
+                "All registration codes retrieved successfully!",
+                service.getAllCodes()
+        );
     }
 }
