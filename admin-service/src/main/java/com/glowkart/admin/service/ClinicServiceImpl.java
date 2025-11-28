@@ -137,6 +137,7 @@ public class ClinicServiceImpl implements ClinicService {
 
         repo.deleteById(clinicId);
     }
+    
     @Override
     public Clinic login(String username, String password) {
         Clinic clinic = repo.findByUsername(username);
@@ -146,6 +147,7 @@ public class ClinicServiceImpl implements ClinicService {
         }
         return clinic;
     }
+
 
     @Override
     public Clinic updateClinic(String clinicId, ClinicRegistrationDTO dto) {

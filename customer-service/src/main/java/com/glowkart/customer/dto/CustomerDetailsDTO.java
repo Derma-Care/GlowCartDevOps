@@ -3,12 +3,17 @@ package com.glowkart.customer.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomerDetailsDTO {
 
     @NotBlank(message = "fullName is required")
@@ -19,19 +24,29 @@ public class CustomerDetailsDTO {
     private String mobile;
 
     @Email(message = "email must be valid")
-    @Pattern(regexp = "^$|^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$", message = "email must be valid")
     private String email;
-
 
     private String city;
     private LocalDate dob;
 
+    // MUST send: 1 = YES, 2 = INTERESTED
+    @NotNull(message = "serviceStatus is required")
+    private Integer serviceStatus;
+
+    // YES fields
     private String clinicName;
     private String clinicCityArea;
     private LocalDate dateOfLastVisit;
     private List<String> serviceType;
-    private String blood;
+    private String prescription;
 
+    // INTERESTED fields
+    private String category;
+    private String concern;
+    private String skinTone;
+    private String photo;
+
+    private String blood;
     private String registrationCode;
     private String referBy;
 
@@ -39,7 +54,6 @@ public class CustomerDetailsDTO {
     @Pattern(regexp = "^[0-9]{12}$", message = "aadharNumber must be a valid 12-digit number")
     private String aadharNumber;
 
-
-    private String prescription;
+    @AssertTrue(message = "Aadhaar consent is required")
+    private Boolean aadhaarConsent;
 }
-

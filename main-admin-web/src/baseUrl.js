@@ -241,3 +241,4 @@ export const statusapi = {
 export const NGkRegistrationLink = `https://glowkartapi.ashokfruit.shop/onboard/request-link`
 export const getAllQuestions = '/clinicQuestions/getAll'
 export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'
+export const REGISTRATION_CODE_GET_ALL_URL=`${BASE_URL_API}/api/registration/all`

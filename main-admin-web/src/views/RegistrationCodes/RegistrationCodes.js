@@ -1,0 +1,420 @@
+import React, { useEffect, useState } from "react";
+import {
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CPagination,
+  CPaginationItem,
+  CFormSelect,
+  CFormInput,
+  CTooltip,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CButton,
+} from "@coreui/react";
+
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import { getAllRegistrationCodes } from "./RegistrationCodesApi";
+
+const RegistrationCodeManagement = () => {
+  const [codes, setCodes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("NGK-");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+
+  // Modal states
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCode, setSelectedCode] = useState("");
+  const [name, setName] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [customLink, setCustomLink] = useState(
+    "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
+  );
+
+  useEffect(() => {
+    fetchCodes();
+  }, []);
+
+  // Scroll page to top whenever page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
+
+  const fetchCodes = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllRegistrationCodes();
+      setCodes(response);
+    } catch (err) {
+      toast.error("Failed to load registration codes");
+    }
+    setLoading(false);
+  };
+
+  const filteredCodes = codes.filter((code) =>
+    code.code.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const usedCount = filteredCodes.filter((code) => code.used).length;
+  const unusedCount = filteredCodes.filter((code) => !code.used).length;
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentItems = filteredCodes.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filteredCodes.length / itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const openSendModal = (code) => {
+    setSelectedCode(code);
+    setName("");
+    setMobileNumber("");
+    setCustomLink(
+      "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
+    );
+    setModalVisible(true);
+  };
+
+  const sendWhatsApp = () => {
+    if (!name || !mobileNumber || !customLink) {
+      toast.error("Please fill all fields");
+      return;
+    }
+
+    if (mobileNumber.length !== 10) {
+      toast.error("Mobile number must be 10 digits");
+      return;
+    }
+
+    const fullNumber = `91${mobileNumber}`;
+
+    const message = `👋 Hello ${name}!
+
+🎉 Congratulations! You are just one step away from joining *Neha's GlowKart Program*.
+
+🎫 *Your Registration Code:* ${selectedCode}
+
+✨ By registering, you unlock amazing benefits:
+🎁* Exclusive gifts for new registrants
+💰* Special offers and discounts
+🚀* Priority access to our services
+
+🔗 Complete your registration and claim your gifts here:
+${customLink}
+
+❓ Need help or have questions? Reply to this message and we'll assist you.
+
+💚 We can’t wait to welcome you to *Neha's GlowKart*!
+
+Best regards,
+*Neha's GlowKart Team*`;
+
+    const encoded = encodeURIComponent(message);
+    const url = `https://wa.me/${fullNumber}?text=${encoded}`;
+    window.open(url, "_blank");
+
+    setModalVisible(false);
+  };
+
+  return (
+    <>
+      <ToastContainer />
+      <CCard className="mt-1">
+        <CCardHeader className="d-flex justify-content-between align-items-center flex-wrap">
+          <div>
+            <h4 className="mb-0">Registration Codes</h4>
+            <div style={{ fontSize: "0.9rem", marginTop: "5px" }}>
+              <span
+                style={{
+                  color: "#198754",
+                  fontWeight: 500,
+                  marginRight: "15px",
+                }}
+              >
+                Unused: {unusedCount}
+              </span>
+              <span style={{ color: "#dc3545", fontWeight: 500 }}>
+                Used: {usedCount}
+              </span>
+            </div>
+          </div>
+
+          <CFormInput
+            placeholder="Search code..."
+            value={searchText}
+            onChange={(e) => {
+              let val = e.target.value;
+              if (!val.startsWith("NGK-")) val = "NGK-";
+              setSearchText(val);
+              setCurrentPage(1);
+            }}
+            style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa" }}
+          />
+
+
+        </CCardHeader>
+
+        <CCardBody style={{ flex: 1, position: "relative" }}>
+          {loading ? (
+            <p className="text-center">Loading codes...</p>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    currentItems.length > 0
+                      ? "repeat(auto-fit, minmax(160px, 1fr))"
+                      : "1fr",
+                  gap: "15px",
+                  paddingBottom: "120px",
+                }}
+              >
+                {currentItems.length > 0 ? (
+                  currentItems.map((item, i) => {
+                    const isUsed = item.used;
+                    return (
+                      <CTooltip
+                        key={i}
+                        content={
+                          isUsed
+                            ? "This code has already been used"
+                            : "This code is unused"
+                        }
+                        placement="top"
+                      >
+                        <div
+                          style={{
+                            background: "#fff",
+                            border: "1px solid #dee2e6",
+                            borderRadius: "10px",
+                            padding: "12px",
+                            height: "110px",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between", // <-- ensures code at top, button at bottom
+                            alignItems: "center",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                            cursor: isUsed ? "not-allowed" : "pointer",
+                            opacity: isUsed ? 0.45 : 1,
+                          }}
+                        >
+                          <h6
+                            className="mb-2"
+                            style={{
+                              color: isUsed ? "#6c757d" : "var(--color-black)",
+                              fontSize: "1rem",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.code}
+                          </h6>
+
+                          {!isUsed && (
+                            <button
+                              onClick={() => openSendModal(item.code)}
+                              style={{
+                                background: "var(--color-bgcolor)",
+                                color: "var(--color-black)",
+                                border: "none",
+                                borderRadius: "6px",
+                                padding: "4px 12px",
+                                fontSize: "0.75rem",
+                                fontWeight: 500,
+                                cursor: "pointer",
+                                alignSelf: "center", // keep it centered horizontally
+                              }}
+                            >
+                              Send
+                            </button>
+                          )}
+                        </div>
+
+                      </CTooltip>
+                    );
+                  })
+                ) : (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                      color: "#6c757d",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    No registration codes found.
+                  </div>
+                )}
+              </div>
+
+              {filteredCodes.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    width: "100%",
+                    background: "#fff",
+                    borderTop: "1px solid #dee2e6",
+                    padding: "15px 20px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div className="d-flex align-items-center mb-2 mb-md-0">
+                    <label className="me-2">Rows per page:</label>
+                    <CFormSelect
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      style={{ width: "80px" }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                      <option value={200}>200</option>
+                    </CFormSelect>
+                  </div>
+
+                  <div className="text-end">
+                    <div className="mb-2">
+                      Showing {indexOfFirst + 1} to{" "}
+                      {Math.min(indexOfLast, filteredCodes.length)} of{" "}
+                      {filteredCodes.length} entries
+                    </div>
+                    <CPagination>
+                      <CPaginationItem
+                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                      >
+                        Previous
+                      </CPaginationItem>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          if (totalPages <= 5) return true;
+                          if (currentPage <= 3) return page <= 5;
+                          if (currentPage >= totalPages - 2)
+                            return page >= totalPages - 4;
+                          return page >= currentPage - 2 && page <= currentPage + 2;
+                        })
+                        .map((page) => (
+                          <CPaginationItem
+                            key={page}
+                            active={page === currentPage}
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </CPaginationItem>
+                        ))}
+
+                      <CPaginationItem
+                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                      >
+                        Next
+                      </CPaginationItem>
+                    </CPagination>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CCardBody>
+      </CCard>
+
+      {/* SEND CODE MODAL */}
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
+        <CModalHeader>
+          <CModalTitle>Send Registration Code</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <CFormInput
+            label="Name"
+            placeholder="Enter recipient's name"
+            value={name}
+            onChange={(e) => {
+              // Allow only alphabets and spaces
+              const onlyAlphabets = e.target.value.replace(/[^a-zA-Z ]/g, "");
+              setName(onlyAlphabets);
+            }}
+            className="mb-3"
+          />
+
+
+          <div className="mb-3">
+            <label className="form-label" style={{ fontWeight: 500 }}>
+              Mobile Number
+            </label>
+
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <span
+                style={{
+                  background: "#e9ecef",
+                  padding: "8px 12px",
+                  border: "1px solid #ced4da",
+                  borderRight: "none",
+                  borderRadius: "6px 0 0 6px",
+                  fontWeight: 600,
+                }}
+              >
+                +91
+              </span>
+
+              <input
+                type="text"
+                maxLength={10}
+                placeholder="Enter 10-digit number"
+                value={mobileNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setMobileNumber(val);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "8px 10px",
+                  border: "1px solid #ced4da",
+                  borderRadius: "0 6px 6px 0",
+                }}
+              />
+            </div>
+          </div>
+
+          <CFormInput
+            label="Link"
+            placeholder="Enter link"
+            value={customLink}
+            onChange={(e) => setCustomLink(e.target.value)}
+          />
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setModalVisible(false)}>
+            Cancel
+          </CButton>
+          <CButton
+            style={{ color: "#fff", backgroundColor: "var(--color-black)" }}
+            onClick={sendWhatsApp}
+          >
+            Send
+          </CButton>
+        </CModalFooter>
+      </CModal>
+    </>
+  );
+};
+
+export default RegistrationCodeManagement;

@@ -3,15 +3,23 @@ package com.glowkart.admin.controller;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ClinicLoginRequest;
-import com.glowkart.admin.dto.ClinicLoginResponse;
+import com.glowkart.admin.dto.ClinicPublicDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.ClinicRejectionRequest;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.service.ClinicService;
+import com.glowkart.admin.util.ClinicMapper;
 
 import jakarta.validation.Valid;
 
@@ -174,12 +182,8 @@ public class ClinicController {
 
         Clinic clinic = clinicService.login(request.getUsername(), request.getPassword());
 
-        ClinicLoginResponse response = new ClinicLoginResponse(
-                "Login successful",
-                clinic.getClinicId(),
-                clinic.getName(),
-                clinic.getStatus()
-        );
+        // Convert Clinic → Clean DTO (includes hospitalLogo, excludes documents)
+        ClinicPublicDTO response = ClinicMapper.toPublicDTO(clinic);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -189,4 +193,5 @@ public class ClinicController {
                 )
         );
     }
+
 }

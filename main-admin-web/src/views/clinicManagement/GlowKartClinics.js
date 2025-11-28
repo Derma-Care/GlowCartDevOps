@@ -103,37 +103,54 @@ const [linkInputValue,setLinkInputValue]=useState('')
   }
 
   // --------------------- STATUS CHANGE ---------------------
-  const handleStatusChange = async (newStatus, clinicId) => {
-    const backendStatus = mapUIStatusToBackend(newStatus)
-    try {
-      if (newStatus === "start") await statusapi.startClinic(clinicId)
-      else if (newStatus === "verified") await statusapi.verifyClinic(clinicId)
-      else if (newStatus === "rejected") {
-        setModalVisible(true)
-        setSelectedClinicId(clinicId)
-      }
+const handleStatusChange = async (newStatus, clinicId) => {
+  const backendStatus = mapUIStatusToBackend(newStatus);
 
-      setClinics(prev =>
-        prev.map(c =>
-          c.clinicId === clinicId ? { ...c, status: backendStatus } : c
-        )
-      )
-    } catch (err) {
-      console.error(err)
-      toast.error("Failed to update status")
+  try {
+    if (newStatus === "pending") {
+      toast.warning("Status set to Pending");
     }
 
+    if (newStatus === "start") {
+      await statusapi.startClinic(clinicId);
+      toast.info("Verification started!");
+    }
+
+    if (newStatus === "verified") {
+      await statusapi.verifyClinic(clinicId);
+      toast.success("Clinic verified successfully!");
+    }
+
+    if (newStatus === "rejected") {
+      setModalVisible(true);
+      setSelectedClinicId(clinicId);
+      return; // Open modal (toast will fire after submit)
+    }
+
+    // Update UI state
+    setClinics(prev =>
+      prev.map(c =>
+        c.clinicId === clinicId ? { ...c, status: backendStatus } : c
+      )
+    );
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update status");
   }
+};
+
 
 const handleSubmitModal = async () => {
   try {
     await statusapi.rejectClinic(selectedClinicId, inputValue);
-    toast.success("Clinic rejected successfully!");
+    toast.error("Clinic rejected successfully!"); // Red toast
   } catch (err) {
     toast.error("Failed to reject clinic");
   }
   setModalVisible(false);
 };
+
 
 
   // --------------------- SEARCH & PAGINATION ---------------------

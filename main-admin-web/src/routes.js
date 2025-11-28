@@ -1,4 +1,6 @@
+import { element } from 'prop-types'
 import React from 'react'
+
 
 // Lazy-loaded components
 const Login = React.lazy(() => import('./views/pages/login/Login'))
@@ -20,6 +22,7 @@ const MembershipManagement = React.lazy(() => import('./views/MembershipManageme
 const PackageManagement = React.lazy(() => import('./views/PackageManagement/PackageManagement'))
 const Payouts = React.lazy(() => import('./views/Payouts/Payout'))
 // const BranchDetails = React.lazy(() => import('./views/clinicManagement/BranchDetails'))
+const RegistrationCodeManagement= React.lazy(()=>import('./views/RegistrationCodes/RegistrationCodes'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -42,6 +45,7 @@ const routes = [
   // { path: '/branchManagement', name: 'BranchManagement', element: BranchManagement },
   { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
   { path: '/package-management', name: 'PackageManagement', element: PackageManagement },
+  { path: '/registration-codes', name: 'RegistrationCodeManagement', element: RegistrationCodeManagement },
 ]
 
 export default routes

@@ -8,12 +8,14 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.glowkart.customer.util.AadhaarUtils;
 
 import lombok.Data;
 
 @Data
 @Document(collection = "customers")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Customer {
 
     @Id
@@ -27,43 +29,60 @@ public class Customer {
     private String email;
     private String city;
     private LocalDate dob;
+    private Integer serviceStatus;
+
+    // YES fields
     private String clinicName;
     private String clinicCityArea;
     private LocalDate dateOfLastVisit;
     private List<String> serviceType;
+    private String prescription;
+
+    // INTERESTED fields
+    private String category;
+    private String concern;
+    private String skinTone;
+    private String photo;
+
+    private Boolean aadhaarConsent;
     private String blood;
     private String registrationCode;
     private String referBy;
 
-    // Aadhaar Storage (Secure)
+    // ===== Aadhaar =====
     @JsonIgnore
     @Indexed(unique = true)
-    private String aadharHash;     // SHA-256 hash stored securely
+    private String aadharHash;
 
     @JsonIgnore
-    private String aadharLast4;    // last 4 digits only, hidden from API
+    private String aadharSalt;
 
-    private String prescription;
+    @JsonIgnore
+    private String aadharLast4;
 
-    // Wheel Spin Reward
+    // Deterministic pre-hash for duplicate check
+    @JsonIgnore
+    @Indexed(unique = true)
+    private String aadharPreHash;
+
+    // Wheel fields
     private String spinRewardId;
     private String spinRewardValue;
     private String spinRewardImage;
 
-    // Final Registration
+    // Final registration
     private String prizePostScreenshot;
     private String followScreenshot;
     private String address;
 
-    // Step Flags
     private boolean registrationCodeVerified = false;
-    private boolean isUserProfileCompleted = false;   
-    private boolean isSpinWheelCompleted = false;     
-    private boolean isRegistrationCompleted = false;  
+    private boolean isUserProfileCompleted = false;
+    private boolean isSpinWheelCompleted = false;
+    private boolean isRegistrationCompleted = false;
 
-    // ================== UPDATED FIELD NAME ==================
-    // API will now return: "aadharNumber": "********3812"
+    /** Return masked Aadhaar for UI/API */
     public String getAadharNumber() {
-        return AadhaarUtils.maskAadhaar(this.aadharLast4);
+        if (aadharLast4 == null) return null;
+        return AadhaarUtils.maskAadhaar(aadharLast4);
     }
 }

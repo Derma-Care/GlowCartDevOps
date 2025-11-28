@@ -15,7 +15,7 @@ import {
 } from '@coreui/icons'
 
 const _nav = [
-    {
+  {
     component: CNavItem,
     name: 'Clinic Management',
     to: '/clinic-management',
@@ -27,7 +27,6 @@ const _nav = [
     to: '/customer-management',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },
-
   {
     component: CNavItem,
     name: 'Procedure Management',
@@ -63,6 +62,14 @@ const _nav = [
     name: 'Payouts',
     to: '/payouts',
     icon: <CIcon icon={cilWallet} customClassName="nav-icon" />,
+  },
+
+  // ✅ Added Registration Codes
+  {
+    component: CNavItem,
+    name: 'Registration Codes',
+    to: '/registration-codes',
+    icon: <CIcon icon={cilList} customClassName="nav-icon" />,
   },
 ]
 

@@ -48,7 +48,6 @@ const CustomerManagement = () => {
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
-
   const [isAdding, setIsAdding] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [currentMobile, setCurrentMobile] = useState(null)
@@ -77,9 +76,7 @@ const CustomerManagement = () => {
       setCurrentPage(page)
     }
   }
-  // Calculate today's date for minimum date restriction in the form
-  // const today = new Date()
-  // const todayISO = getISODate(today)
+
   const centeredMessageStyle = {
     display: 'flex',
     justifyContent: 'center',
@@ -273,11 +270,6 @@ const CustomerManagement = () => {
     }
   }
 
-  // const alreadyExists = customerData.some((cust) => cust.mobileNumber === formData.mobileNumber)
-  // if (!isEditing && alreadyExists) {
-  //   toast.error('Customer already exists.')
-  //   return
-  // }
 
   const handleCancel = () => {
     setIsAdding(false)
@@ -343,7 +335,7 @@ const CustomerManagement = () => {
       setCustomerIdToDelete(null)
     }
   }
-  
+
   const validateForm = () => {
     const errors = {}
 
@@ -413,7 +405,7 @@ const CustomerManagement = () => {
         <>
           <CRow className="d-flex align-items-center mb-3">
             <div className="col-md-9 d-flex">
-              <CForm className="w-100">
+              <CForm style={{ width: "50%" }}>
                 <CInputGroup>
                   <CFormInput
                     type="text"
@@ -427,14 +419,16 @@ const CustomerManagement = () => {
                   </CInputGroupText>
                 </CInputGroup>
               </CForm>
+
+
             </div>
 
-            <div className="col-md-3 d-flex justify-content-end">
+            {/* <div className="col-md-3 d-flex justify-content-end">
               <CButton color="secondary"
                 style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }} onClick={() => setIsAdding(true)}>
                 Add New Customer
               </CButton>
-            </div>
+            </div> */}
           </CRow>
 
           {loading ? (
@@ -484,13 +478,13 @@ const CustomerManagement = () => {
                             <Eye size={18} />
                           </button>
 
-                          <button
+                          {/* <button
                             className="actionBtn edit"
                             onClick={() => handleEditCustomer(customer?.mobileNumber)}
                             title="Edit"
                           >
                             <Edit2 size={18} />
-                          </button>
+                          </button> */}
 
                           <button
                             className="actionBtn delete"
@@ -504,7 +498,7 @@ const CustomerManagement = () => {
                           </button>
                         </div>
 
-                         <ConfirmationModal
+                        <ConfirmationModal
                           isVisible={isModalVisible}
                           message="Are you sure you want to delete this customer?"
                           onConfirm={confirmDeleteCustomer}
@@ -512,7 +506,7 @@ const CustomerManagement = () => {
                             setIsModalVisible(false)
                             setCustomerIdToDelete(null)
                           }}
-                        /> 
+                        />
                       </CTableDataCell>
                     </CTableRow>
                   ))}

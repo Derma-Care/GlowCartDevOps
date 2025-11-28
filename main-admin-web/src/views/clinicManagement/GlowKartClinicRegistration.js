@@ -30,6 +30,8 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { getClinicTimings } from './GlowKartgetTimingsAPI'
 import ClinicOnboardingSuccess from './SuccessOnboradClinic'
+import { colors } from '@mui/material'
+import { COLORS, NGK_COLORS } from '../../Constant/Themes'
 
 const ClinicRegistration = () => {
   const refs = {
@@ -88,7 +90,6 @@ const ClinicRegistration = () => {
     clinicSoftware: false,
     hospitalDocuments: null,
     contractorDocuments: null,
-
     clinicalEstablishmentCertificate: null,
     businessRegistrationCertificate: null,
     clinicType: '',                           // (Existing)
@@ -103,7 +104,6 @@ const ClinicRegistration = () => {
     professionalIndemnityInsurance: null,
     gstRegistrationCertificate: null,
     others: [],
-
     subscription: '',
     instagramHandle: '',
     twitterHandle: '',
@@ -113,13 +113,11 @@ const ClinicRegistration = () => {
     walkthrough: "",
     branch: "",
     nabhScore: nabhScore,
-
-    // 👇 Newly added fields
-    clinicSpecializationType: '',             // Dermatology / Aesthetic / Cosmetology / Multi-specialty
+    clinicSpecializationType: '',
     primaryContactPerson: '',
     designation: '',
     alternateContactNumber: '',
-    clinicManagementSoftwareUsage: '',        // yes/no or name of software
+    clinicManagementSoftwareUsage: '',
     bankAccountName: '',
     bankAccountNumber: '',
     ifscCode: '',
@@ -318,7 +316,7 @@ const ClinicRegistration = () => {
       newErrors.clinicType = "Please select a clinic type.";
     }
     if (!selectedPharmacistOption || selectedPharmacistOption.trim() === '') {
-      newErrors.hasPharmacist = 'Please select whether clinic has a valid pharmacist.'
+      newErrors.hasPharmacist = 'Please select whether clinic has a valid pharmacist.';
     }
 
     if (!formData.website.trim()) {
@@ -634,9 +632,6 @@ const ClinicRegistration = () => {
 
   const previewFromLocalStorage = JSON.parse(localStorage.getItem('clinicFormPreview'))
   console.log('📦 Loaded from localStorage for preview:', previewFromLocalStorage)
-
-
-
   // ✅ Extract token from URL and store in localStorage
   // Extract from URL and save in localStorage
   useEffect(() => {
@@ -668,96 +663,97 @@ const ClinicRegistration = () => {
 
 
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const isValid = validateForm();
-  if (!isValid) return;
+    const isValid = validateForm();
+    if (!isValid) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    // Convert files to base64
-    const convertIfExists = async (file) => {
-      if (!file) return "";
-      if (file.base64) return file.base64;
-      if (file instanceof Blob) return await convertFileToBase64(file);
-      if (typeof file === "string") return file;
-      return "";
-    };
+    try {
+      // Convert files to base64
+      const convertIfExists = async (file) => {
+        if (!file) return "";
+        if (file.base64) return file.base64;
+        if (file instanceof Blob) return await convertFileToBase64(file);
+        if (typeof file === "string") return file;
+        return "";
+      };
 
-    const convertMultipleIfExists = async (files) => {
-      if (!Array.isArray(files)) return [];
-      return Promise.all(files.map((file) => convertIfExists(file)));
-    };
+      const convertMultipleIfExists = async (files) => {
+        if (!Array.isArray(files)) return [];
+        return Promise.all(files.map((file) => convertIfExists(file)));
+      };
 
-    const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
-    const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
-    const othersBase64 = await convertMultipleIfExists(formData.others);
+      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
+      const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
+      const othersBase64 = await convertMultipleIfExists(formData.others);
 
-    const onboardingToken = localStorage.getItem("onboardingToken");
-    const onboardingEmail = localStorage.getItem("onboardingEmail");
+      const onboardingToken = localStorage.getItem("onboardingToken");
+      const onboardingEmail = localStorage.getItem("onboardingEmail");
 
-    const cleanValue = (val) => {
-      if (val === null || val === undefined) return "";
-      if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
-        return val;
-      if (val?.value) return val.value;
-      if (Array.isArray(val)) return val.map((v) => cleanValue(v));
-      return "";
-    };
+      const cleanValue = (val) => {
+        if (val === null || val === undefined) return "";
+        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
+          return val;
+        if (val?.value) return val.value;
+        if (Array.isArray(val)) return val.map((v) => cleanValue(v));
+        return "";
+      };
 
-    const clinicData = {
-      token: onboardingToken,
-      email: onboardingEmail,
-      contractorDocuments: contractorDocumentsBase64,
-      hospitalDocuments: hospitalDocumentsBase64,
-      others: othersBase64,
-      ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
-      website: normalizeWebsite(formData.website?.trim() || "")
-    };
+      const clinicData = {
+        token: onboardingToken,
+        email: onboardingEmail,
+        contractorDocuments: contractorDocumentsBase64,
+        hospitalDocuments: hospitalDocumentsBase64,
+        others: othersBase64,
+        ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
+        website: normalizeWebsite(formData.website?.trim() || "")
+      };
 
-    // API call
-    const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
-    const savedClinicData = response.data;
+      // API call
+      const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
+      const savedClinicData = response.data;
 
-    console.log(savedClinicData);
+      console.log(savedClinicData);
 
-    // SUCCESS CHECK (corrected)
-    if (savedClinicData?.success === true) {
-      navigate("/clinic-onboarding-success", {
-        state: {
-          clinicName: formData.name,
-          clinicId: savedClinicData.data?.clinicId,
-          message: savedClinicData.message,
-          status: savedClinicData.data?.status,
-          shouldClose: true,
-        },
-      });
-      return;
-    } else {
-      toast.error(savedClinicData.message || "Something went wrong");
+      // SUCCESS CHECK (corrected)
+      if (savedClinicData?.success === true) {
+        navigate("/clinic-onboarding-success", {
+          state: {
+            clinicName: formData.name,
+            clinicId: savedClinicData.data?.clinicId,
+            message: savedClinicData.message,
+            status: savedClinicData.data?.status,
+            shouldClose: true,
+          },
+        });
+        return;
+      } else {
+        toast.error(savedClinicData.message || "Something went wrong");
+      }
+
+    } catch (error) {
+      console.error("Error submitting clinic:", error);
+      toast.error(error.message || "Failed to submit clinic");
+    } finally {
+      setIsSubmitting(false);
     }
-
-  } catch (error) {
-    console.error("Error submitting clinic:", error);
-    toast.error(error.message || "Failed to submit clinic");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
   return (
     <div className="container mt-4">
       <ToastContainer />
       <CCard className="shadow-sm border-0 rounded-3">
-        <CCardHeader className="bg-primary text-white">
-          <h3 className="mb-0">Add New Clinic</h3>
+        <CCardHeader className="text-center text-white" style={{ backgroundColor: NGK_COLORS.primary }}>
+          <h3 className="mb-0">Clinic Registration</h3>
         </CCardHeader>
+
         <CCardBody>
           <CForm onSubmit={handleSubmit}>
-            <h5 className="mb-3 text-primary mt-6">Clinic Information</h5>
+            <h5 className="mb-3  mt-6" style={{color:NGK_COLORS.primary}}>Clinic Information</h5>
             <CRow className="mb-4 g-3">
               <CCol md={4}>
                 <CFormLabel>
@@ -1015,7 +1011,7 @@ const handleSubmit = async (e) => {
                 )}
               </CCol>
             </CRow>
-            <h5 className="mb-3 text-primary mt-6">Clinic Contact Details</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Clinic Contact Details</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
@@ -1117,7 +1113,7 @@ const handleSubmit = async (e) => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">Bank & Financial Information</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Bank & Financial Information</h5>
             <CRow className='mb-3'>
               <CCol md={4}>
                 <CFormLabel>
@@ -1272,7 +1268,7 @@ const handleSubmit = async (e) => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-4 text-primary fw-bold">Clinic Operations</h5>
+            <h5 className="mb-4 fw-bold" style={{color:NGK_COLORS.primary}}>Clinic Operations</h5>
 
             {/* Row 1 : Clinic Management Software + Subscription */}
             <CRow className="mb-4">
@@ -1434,7 +1430,7 @@ const handleSubmit = async (e) => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">Licenses & Certifications</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Licenses & Certifications</h5>
 
             <CRow className='mb-3'>
               <CCol md={6}>
@@ -1519,12 +1515,13 @@ const handleSubmit = async (e) => {
 
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">Virtual Tour & Branch Info</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Virtual Tour & Branch Info</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
-                  Virtual Clinic Tour <span style={{ color: 'red' }}>*</span>
+                  Virtual Clinic Tour
                 </CFormLabel>
+
                 <CFormInput
                   type="url"
                   placeholder="https://example.com/VirtualClinicTour"
@@ -1532,34 +1529,24 @@ const handleSubmit = async (e) => {
                   onChange={(e) => {
                     const { value } = e.target;
 
-                    // Update form data
-                    setFormData((prev) => ({ ...prev, walkthrough: value }));
-
-                    // Real-time validation
-                    let error = "";
-
+                    // Keep condition & URL validation
                     if (value.trim()) {
                       try {
-                        new URL(value); // throws if invalid
+                        new URL(value); // still checks URL format
                       } catch {
-                        error = "Enter a valid URL (e.g. https://example.com)";
+                        // ❗ Do nothing — validation stays silent
                       }
                     }
 
-                    // Set or clear error
-                    setErrors((prev) => ({
+                    // Only update state (no errors)
+                    setFormData((prev) => ({
                       ...prev,
-                      walkthrough: error || undefined,
+                      walkthrough: value,
                     }));
                   }}
-                  invalid={!!errors.walkthrough}
                 />
-                {errors.walkthrough && (
-                  <div style={{ color: 'red', fontSize: '0.9rem' }}>{errors.walkthrough}</div>
-                )}
-
-
               </CCol>
+
               {/* ✅ Branch Input */}
 
               <CCol md={6}>
@@ -1589,7 +1576,7 @@ const handleSubmit = async (e) => {
 
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">Social Media</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Social Media</h5>
             <CRow className="mb-3">
               <CCol md={4}>
                 <CFormLabel>Instagram</CFormLabel>
@@ -1625,7 +1612,7 @@ const handleSubmit = async (e) => {
                 />
               </CCol>
             </CRow>
-            <h5 className="mb-3 text-primary mt-6">Clinic Staff & Pharmacist</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Clinic Staff & Pharmacist</h5>
 
             <CRow className="mb-3">
               <CCol md={6}>
@@ -1633,6 +1620,7 @@ const handleSubmit = async (e) => {
                   Clinic has a valid pharmacist
                   <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
+
                 <CFormSelect
                   value={selectedPharmacistOption}
                   onChange={(e) => {
@@ -1645,7 +1633,11 @@ const handleSubmit = async (e) => {
                       hasPharmacist: value
                     }));
 
-                    setErrors(prev => ({ ...prev, hasPharmacist: '' }));
+                    // Only remove error if user selects a valid option
+                    setErrors(prev => ({
+                      ...prev,
+                      hasPharmacist: value ? '' : prev.hasPharmacist
+                    }));
                   }}
                 >
                   <option value="">Select an option</option>
@@ -1657,6 +1649,7 @@ const handleSubmit = async (e) => {
                   <CFormFeedback invalid>{errors.hasPharmacist}</CFormFeedback>
                 )}
               </CCol>
+
               {selectedPharmacistOption === 'Yes' && (
                 <FileInput
                   label="Pharmacist Certificate"
@@ -1669,7 +1662,7 @@ const handleSubmit = async (e) => {
                   inputRef={refs.pharmacistCertificate}
                 />)}
             </CRow>
-            <h5 className="mb-3 text-primary mt-6">Location & Coordinates</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Location & Coordinates</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
@@ -1752,7 +1745,7 @@ const handleSubmit = async (e) => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">Other Attachments / Documents</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Other Attachments / Documents</h5>
             <CRow className="mb-3">
               <FileInput
                 label="Clinic Contract"
@@ -1860,7 +1853,7 @@ const handleSubmit = async (e) => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 text-primary mt-6">NABH Accreditation</h5>
+            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>NABH Accreditation</h5>
             {/* ✅ NABH Score - Opens Modal */}
             <CRow className="mb-3">
               <CCol md={12} className='d-flex align-items-center'>
@@ -1869,9 +1862,10 @@ const handleSubmit = async (e) => {
                   <span className="me-3 fw-bold text-success">{nabhScore}</span>
                 )}
                 <CButton
-                  color="primary"
+                  
                   onClick={() => !nabhSubmitted && setShowNabhModal(true)}
                   disabled={nabhSubmitted}
+                  style={{backgroundColor:NGK_COLORS.primary,color:'white'}}
                 >
                   Open NABH Questionnaire
                 </CButton>
