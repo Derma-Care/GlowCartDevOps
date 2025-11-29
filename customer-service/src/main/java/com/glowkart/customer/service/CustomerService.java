@@ -41,25 +41,30 @@ public class CustomerService {
     // ==================== STEP 1: Save Customer ====================
     @Transactional
     public ApiResponse<Customer> saveCustomer(CustomerDetailsDTO dto) {
+        // Find customer by registration code
         Customer customer = customerRepository.findByRegistrationCode(dto.getRegistrationCode());
         if (customer == null) {
             log.warn("Invalid registration code: {}", dto.getRegistrationCode());
             throw new CustomerNotFoundException("Invalid user session");
         }
 
+        // Check if registration code is verified
         if (!customer.isRegistrationCodeVerified()) {
             return new ApiResponse<>(false, "Verify registration code first", customer);
         }
 
+        // Duplicate checks
         checkDuplicateMobile(dto.getMobile(), customer.getMobile());
         checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
 
+        // Step 1: Field validation
         List<String> missingFields = validateStep1Fields(dto);
         if (!missingFields.isEmpty()) {
             return new ApiResponse<>(false,
                     "Missing required fields: " + String.join(", ", missingFields), null);
         }
 
+        // Step 2: Copy fields to Customer entity
         copyStep1Fields(dto, customer);
         customer.setUserProfileCompleted(true);
         customerRepository.save(customer);
@@ -110,7 +115,7 @@ public class CustomerService {
         try {
             registrationService.markCodeUsed(customer.getRegistrationCode());
         } catch (Exception e) {
-            log.error("Failed to mark code as used for registrationCode {}: {}", 
+            log.error("Failed to mark code as used for registrationCode {}: {}",
                       customer.getRegistrationCode(), e.getMessage());
         }
 
@@ -151,9 +156,12 @@ public class CustomerService {
         return new ApiResponse<>(true, "Customer deleted successfully", mobile);
     }
 
-    // ==================== Step-1 Field Validation ====================
+    // ==================== VALIDATION ====================
     private List<String> validateStep1Fields(CustomerDetailsDTO dto) {
         List<String> missingFields = new ArrayList<>();
+
+        if (isEmpty(dto.getGender())) missingFields.add("gender");
+
         if (dto.getServiceStatus() == 1) {
             if (isEmpty(dto.getClinicName())) missingFields.add("clinicName");
             if (isEmpty(dto.getClinicCityArea())) missingFields.add("clinicCityArea");
@@ -167,6 +175,7 @@ public class CustomerService {
         } else {
             throw new InvalidInputException("Invalid serviceStatus value");
         }
+
         return missingFields;
     }
 
@@ -182,7 +191,7 @@ public class CustomerService {
         return false;
     }
 
-    // ==================== Copy Fields & Aadhaar ====================
+    // ==================== COPY FIELDS ====================
     private void copyStep1Fields(CustomerDetailsDTO dto, Customer customer) {
         customer.setFullName(dto.getFullName());
         customer.setMobile(dto.getMobile());
@@ -194,6 +203,7 @@ public class CustomerService {
         customer.setReferBy(dto.getReferBy());
         customer.setServiceStatus(dto.getServiceStatus());
         customer.setAadhaarConsent(dto.getAadhaarConsent());
+        customer.setGender(dto.getGender());
 
         if (dto.getServiceStatus() == 1) {
             customer.setClinicName(dto.getClinicName());
@@ -208,7 +218,7 @@ public class CustomerService {
             customer.setPhoto(dto.getPhoto());
         }
 
-        // Aadhaar Handling
+        // Aadhaar handling
         if (dto.getAadharNumber() != null && !dto.getAadharNumber().isBlank()) {
             String salt = AadhaarUtils.generateSalt();
             String hash = AadhaarUtils.hashAadhaar(dto.getAadharNumber(), salt);
@@ -224,7 +234,7 @@ public class CustomerService {
         }
     }
 
-    // ==================== Duplicate Checks ====================
+    // ==================== DUPLICATE CHECKS ====================
     private void checkDuplicateMobile(String mobile, String excludeMobile) {
         customerRepository.findByMobile(mobile)
                 .filter(c -> !Objects.equals(c.getMobile(), excludeMobile))
@@ -234,7 +244,6 @@ public class CustomerService {
                 });
     }
 
- // -------------------- Duplicate Checks --------------------
     private void checkDuplicateAadhar(String aadhaar, String excludeMobile) {
         if (aadhaar == null || aadhaar.isBlank()) return;
 
@@ -260,5 +269,4 @@ public class CustomerService {
             }
         }
     }
-
 }

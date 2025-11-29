@@ -31,6 +31,9 @@ public class Customer {
     private LocalDate dob;
     private Integer serviceStatus;
 
+    // New field
+    private String gender;
+
     // YES fields
     private String clinicName;
     private String clinicCityArea;
@@ -40,7 +43,7 @@ public class Customer {
 
     // INTERESTED fields
     private String category;
-    private String concern;
+    private List<String> concern;  // updated
     private String skinTone;
     private String photo;
 
@@ -49,7 +52,7 @@ public class Customer {
     private String registrationCode;
     private String referBy;
 
-    // ===== Aadhaar =====
+    // Aadhaar
     @JsonIgnore
     @Indexed(unique = true)
     private String aadharHash;
@@ -60,7 +63,6 @@ public class Customer {
     @JsonIgnore
     private String aadharLast4;
 
-    // Deterministic pre-hash for duplicate check
     @JsonIgnore
     @Indexed(unique = true)
     private String aadharPreHash;
@@ -80,7 +82,6 @@ public class Customer {
     private boolean isSpinWheelCompleted = false;
     private boolean isRegistrationCompleted = false;
 
-    /** Return masked Aadhaar for UI/API */
     public String getAadharNumber() {
         if (aadharLast4 == null) return null;
         return AadhaarUtils.maskAadhaar(aadharLast4);

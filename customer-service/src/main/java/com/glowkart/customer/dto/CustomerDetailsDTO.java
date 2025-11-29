@@ -29,7 +29,9 @@ public class CustomerDetailsDTO {
     private String city;
     private LocalDate dob;
 
-    // MUST send: 1 = YES, 2 = INTERESTED
+    @NotBlank(message = "gender is required")  // <-- Gender is now required
+    private String gender;
+
     @NotNull(message = "serviceStatus is required")
     private Integer serviceStatus;
 
@@ -42,7 +44,7 @@ public class CustomerDetailsDTO {
 
     // INTERESTED fields
     private String category;
-    private String concern;
+    private List<String> concern;  // updated
     private String skinTone;
     private String photo;
 
