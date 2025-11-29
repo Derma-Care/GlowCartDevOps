@@ -29,10 +29,7 @@ import { cilOptions } from '@coreui/icons'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
 import axios from 'axios'
-import { MainAdmin_URL, AllCustomerAdvertisements } from '../../baseUrl'
-// import { appointments_Ref } from '../../baseUrl'
-import { AppointmentData, GetBookingByClinicIdData } from '../AppointmentManagement/appointmentAPI'
-import { DoctorData, getDoctorByClinicIdData } from '../Doctors/DoctorAPI'
+
 import { COLORS } from '../../Constant/Themes'
 import './Widget.css'
 import LoadingIndicator from '../../Utils/loader'
@@ -46,32 +43,26 @@ const WidgetsDropdown = (props) => {
   const sliderRef = useRef(null)
   const currentIndex = useRef(0)
   const intervalRef = useRef(null)
-  const [bookings, setBookings] = useState([])
-  const [activeCard, setActiveCard] = useState('') // state to keep track of which card is clicked eg:"appointments"
-  const [len, setLen] = useState(0)
+
   const widgetChartRef1 = useRef(null)
   const widgetChartRef2 = useRef(null)
   const widgetChartRef3 = useRef(null)
   const [todayBookings, setTodayBookings] = useState([])
   const [totalAppointmentsCount, setTotalAppointmentsCount] = useState(0) // NEW: State to hold total appointments count
   const [totalDoctorsCount, setTotalDoctorsCount] = useState(0) // NEW: State to hold total appointments count
-  const [totalPatientsCount, setTotalPatientsCount] = useState(0) // NEW: State to hold total appointments count
+
   const [loadingAppointments, setLoadingAppointments] = useState(true) // New state for loading indicator
   const [appointmentError, setAppointmentError] = useState(null) // New state for appointment fetch error
-  const [loadingDoctors, setLoadingDoctors] = useState(true) // New state for loading indicator
-  const [doctorError, setDoctorError] = useState(null) // New state for appointment fetch error
-  const [doctors, setDoctors] = useState([])
+
   const { searchQuery } = useGlobalSearch()
-  const [filteredData, setFilteredData] = useState([])
+
   const [filterTypes, setFilterTypes] = useState([])
   const [statusFilters, setStatusFilters] = useState([])
-  const [selectedServiceTypes, setSelectedServiceTypes] = useState([])
-  const [selectedConsultationTypes, setSelectedConsultationTypes] = useState([])
+
   const [inprogressApt, setInprogressApt] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
 
-  const [showAppointments, setShowAppointments] = useState(false)
   const statusLabelMap = {
     'In-Progress': 'Active',
     Completed: 'Completed',
@@ -85,15 +76,6 @@ const WidgetsDropdown = (props) => {
     fetchPermissions()
   }, [])
 
-  const handleStatusChange = (e) => {
-    const value = e.target.value
-
-    if (statusFilters.includes(value)) {
-      setStatusFilters([]) // Deselect if the same one is clicked
-    } else {
-      setStatusFilters([value]) // Allow only one selection
-    }
-  }
   const navigate = useNavigate()
   const toggleFilter = (type) => {
     if (filterTypes.includes(type)) {
@@ -138,266 +120,6 @@ const WidgetsDropdown = (props) => {
   // Get today's date in YYYY-MM-DD format, using a consistent method
   const todayISO = new Date().toISOString().split('T')[0]
 
-  // Fetch Advertisements (unchanged)
-  const fetchAdvertisements = async () => {
-    try {
-      const response = await axios.get(`${MainAdmin_URL}/${AllCustomerAdvertisements}`) //TODO:chnage when apigetway call axios to http
-      console.log('✅ Advertisements Response:', response.data)
-      if (Array.isArray(response.data)) {
-        setSlides(response.data)
-      } else {
-        console.error('No advertisements found:', response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching advertisements:', error)
-    }
-  }
-
-  // Use useCallback for fetchAppointments to stabilize the function reference
-  const fetchAppointments = useCallback(
-    async (clinicId) => {
-      setLoadingAppointments(true)
-      setAppointmentError(null)
-
-      try {
-        const response = await GetBookingByClinicIdData(clinicId)
-        console.log('Raw Appointments Data:', response)
-
-        if (response && Array.isArray(response.data)) {
-          const allAppointments = response.data
-          setTotalAppointmentsCount(allAppointments.length)
-
-          const inprogreeAppointments = allAppointments.filter((item) => {
-            const itemDate = item.status.toLowerCase()
-            return itemDate === 'in-progress'
-          })
-          const filteredAppointments = allAppointments.filter((item) => {
-            const itemDate = item.serviceDate ? convertToISODate(item.serviceDate) : ''
-            return itemDate === todayISO && item.clinicId === clinicId
-          })
-          setInprogressApt(inprogreeAppointments)
-          setTodayBookings(filteredAppointments)
-        } else {
-          setTodayBookings([])
-          setAppointmentError('No  appointments found.')
-        }
-      } catch (error) {
-        console.error('Failed to fetch appointments:', error)
-        setAppointmentError('No Appointment Found')
-        setTodayBookings([])
-      } finally {
-        setLoadingAppointments(false)
-      }
-    },
-    [todayISO, convertToISODate],
-  )
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await GetBookingByClinicIdData()
-        console.log('Bookings Data:', response)
-
-        // ✅ Step 2: Extract patientId list and count unique ones
-        const patientIds = response?.data?.map((item) => item.patientId) || []
-
-        // If you only want unique patient count
-        const uniquePatients = [...new Set(patientIds)]
-        // setTotalPatients(uniquePatients.length)
-      } catch (error) {
-        console.error('Error fetching patients:', error)
-      }
-    }
-
-    fetchData()
-  }, [])
-  const fetchDoctors = useCallback(async (clinicId) => {
-    setLoadingDoctors(true)
-    setDoctorError(null)
-    try {
-      const branchId = localStorage.getItem('branchId')
-      const response = await getDoctorByClinicIdData(clinicId, branchId)
-      console.log('Raw Doctors Data:', response)
-
-      // ✅ Access the inner data array
-      const doctorArray = response?.data || []
-
-      if (Array.isArray(doctorArray)) {
-        setTotalDoctorsCount(doctorArray.length)
-        setDoctors(doctorArray)
-      } else {
-        console.error('Invalid doctors response format:', response)
-        setDoctorError('No doctors found.')
-      }
-    } catch (error) {
-      console.error('Failed to fetch doctors:', error)
-      setDoctorError('Failed to fetch doctors.')
-    } finally {
-      setLoadingDoctors(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchAdvertisements()
-  }, [])
-
-  useEffect(() => {
-    const hospitalId = localStorage.getItem('HospitalId')
-    console.log(hospitalId)
-    if (hospitalId) {
-      fetchAppointments(hospitalId)
-      fetchDoctors(hospitalId)
-      // Set up daily refresh:
-      // 1. Calculate time until next midnight
-      const now = new Date()
-      const tomorrow = new Date(now)
-      tomorrow.setDate(now.getDate() + 1)
-      tomorrow.setHours(0, 0, 0, 0) // Set to midnight of the next day
-
-      const timeUntilMidnight = tomorrow.getTime() - now.getTime()
-
-      // 2. Set a timeout to refresh exactly at midnight
-      const midnightTimeout = setTimeout(() => {
-        fetchAppointments(hospitalId) // Fetch date at midnight
-        // After the first midnight fetch, set up an interval for daily fetches
-        const dailyInterval = setInterval(() => fetchAppointments(hospitalId), 24 * 60 * 60 * 1000) // Fetch every 24 hours
-        return () => clearInterval(dailyInterval) // Cleanup interval on unmount
-      }, timeUntilMidnight)
-
-      // Cleanup the initial midnight timeout if the component unmounts
-      return () => clearTimeout(midnightTimeout)
-    } else {
-      // console.warn('No HospitalId in localStorage for fetching appointments')
-      setAppointmentError('No appointments found for this Hospital Id')
-      setLoadingAppointments(false)
-    }
-  }, [fetchAppointments, fetchDoctors]) // Depend on fetchAppointments
-
-  // confirmed appointments count for today
-  const confirmedTodayCount = todayBookings.filter(
-    (item) => item.status?.toLowerCase() === 'confirmed',
-  ).length
-
-  // Slider settings for react-slick
-  useEffect(() => {
-    // Clear existing interval
-    clearInterval(intervalRef.current)
-    if (slides.length === 0 || !sliderRef.current) return
-
-    const handleSlide = () => {
-      const currentSlide = slides[currentIndex.current]
-      const isVideo = currentSlide.mediaUrlOrImage?.toLowerCase().endsWith('.mp4')
-
-      if (isVideo) {
-        const video = document.getElementById(`video-${currentIndex.current}`)
-        if (video) {
-          video.onended = () => {
-            currentIndex.current = (currentIndex.current + 1) % slides.length
-            sliderRef.current.slickGoTo(currentIndex.current)
-            handleSlide()
-          }
-        }
-      } else {
-        intervalRef.current = setTimeout(() => {
-          currentIndex.current = (currentIndex.current + 1) % slides.length
-          sliderRef.current.slickGoTo(currentIndex.current)
-          handleSlide()
-        }, 3000)
-      }
-    }
-
-    handleSlide()
-
-    return () => {
-      clearInterval(intervalRef.current)
-    }
-  }, [slides])
-  const consultationTypeMap = {
-    'Service & Treatment': 'services & treatments',
-    'Tele Consultation': ['tele consultation', 'online consultation'], // Map a single button to multiple backend values
-    'In-clinic': 'in-clinic consultation',
-  }
-  const getMediaSrc = (src) => {
-    if (!src) return ''
-    if (src.startsWith('data:') || src.startsWith('http') || src.startsWith('blob:')) return src
-    if (src.toLowerCase().endsWith('.mp4')) return src // for external mp4 links
-    return `data:image/png;base64,${src}` // adjust type if JPG or SVG
-  }
-
-  const sliderSettings = {
-    dots: true,
-    infinite: slides.length > 1, // Only enable loop when more than 1
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: true,
-  }
-
-  // Auto-slide for images
-  useEffect(() => {
-    let imageTimer
-    if (slides.length > 0) {
-      // Watch current slide index
-      const handleBeforeChange = (oldIndex, newIndex) => {
-        // Clear previous timer
-        clearTimeout(imageTimer)
-
-        const current = slides[newIndex]
-        const isVideo = isVideoFile(current.mediaUrlOrImage)
-
-        if (!isVideo) {
-          // For images: move to next after 3s
-          imageTimer = setTimeout(() => {
-            if (sliderRef.current) {
-              sliderRef.current.slickNext()
-            }
-          }, 1000)
-        }
-      }
-
-      // attach to slider events
-      sliderRef.current?.innerSlider?.list.addEventListener('transitionend', () => {
-        // optionally handle something after transition
-      })
-
-      // If using react-slick, you can get current index in afterChange
-      sliderRef.current?.props?.afterChange && sliderRef.current.props.afterChange(0)
-
-      return () => {
-        clearTimeout(imageTimer)
-      }
-    }
-  }, [slides])
-
-  // After component mounts, attach ended listeners for each video
-  useEffect(() => {
-    slides.forEach((item, idx) => {
-      const videoEl = document.getElementById(`video-${idx}`)
-      if (videoEl) {
-        // Clean up previous listener
-        videoEl.onended = null
-        videoEl.onended = () => {
-          if (sliderRef.current) {
-            sliderRef.current.slickNext()
-          }
-        }
-      }
-    })
-  }, [slides])
-
-  // Helper to check if it's video
-  const isVideoFile = (src) => {
-    if (!src) return false
-    const lower = src.toLowerCase()
-    return (
-      lower.startsWith('data:video') ||
-      lower.endsWith('.mp4') ||
-      lower.endsWith('.webm') ||
-      lower.endsWith('.ogg') ||
-      lower.includes('video') // fallback if backend sends mime type
-    )
-  }
   return (
     <>
       {/*to display cards*/}
@@ -570,49 +292,23 @@ const WidgetsDropdown = (props) => {
               </CButton>
 
               <button
-                onClick={() => toggleFilter('Service & Treatment')}
+                onClick={() => toggleFilter('Pending')}
                 className={`btn ${
-                  filterTypes.includes('Service & Treatment') ? 'btn-selected' : 'btn-unselected'
+                  filterTypes.includes('Pending') ? 'btn-selected' : 'btn-unselected'
                 }`}
               >
-                Service & Treatment
+                Pending
               </button>
 
               <button
-                onClick={() => toggleFilter('In-clinic')}
+                onClick={() => toggleFilter('Completed')}
                 className={`btn ${
-                  filterTypes.includes('In-clinic') ? 'btn-selected' : 'btn-unselected'
+                  filterTypes.includes('Completed') ? 'btn-selected' : 'btn-unselected'
                 }`}
               >
-                In-Clinic Consultation
-              </button>
-
-              <button
-                onClick={() => toggleFilter('Tele Consultation')}
-                className={`btn ${
-                  filterTypes.includes('Tele Consultation') ? 'btn-selected' : 'btn-unselected'
-                }`}
-              >
-                Tele Consultation
+                Completed
               </button>
             </div>
-            {/* Right side reset button */}
-            {/* {!showAppointments && (
-              <CButton
-                style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-                onClick={() => setShowAppointments(true)}
-              >
-                Active Appointments ({inprogressApt?.length || 0})
-              </CButton>
-            )} */}
-
-            {/* Conditionally render table inside dashboard */}
-            {/* {showAppointments && (
-              <ActiveAppointmentsScreen
-                inprogressApt={inprogressApt}
-                onBack={() => setShowAppointments(false)}
-              />
-            )} */}
           </div>
         </div>
 
@@ -622,17 +318,17 @@ const WidgetsDropdown = (props) => {
               <CTableHeaderCell>S.No</CTableHeaderCell>
               <CTableHeaderCell>Patient File_ID</CTableHeaderCell>
               <CTableHeaderCell>Name</CTableHeaderCell>
-              <CTableHeaderCell>Doctor Name</CTableHeaderCell>
-              <CTableHeaderCell>Consultation Type</CTableHeaderCell>
+              {/* <CTableHeaderCell>Doctor Name</CTableHeaderCell> */}
+              {/* <CTableHeaderCell>Consultation Type</CTableHeaderCell> */}
               <CTableHeaderCell>Date</CTableHeaderCell>
-              <CTableHeaderCell>Time</CTableHeaderCell>
-              <CTableHeaderCell>Status</CTableHeaderCell>
+              {/* <CTableHeaderCell>Time</CTableHeaderCell> */}
               <CTableHeaderCell>Action</CTableHeaderCell>
+              <CTableHeaderCell>Status</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
 
           <CTableBody>
-            {loadingAppointments ? (
+            {!loadingAppointments ? (
               <CTableRow>
                 <CTableDataCell
                   colSpan="9"
@@ -710,17 +406,11 @@ const WidgetsDropdown = (props) => {
                       <CTableDataCell>{(currentPage - 1) * pageSize + index + 1}</CTableDataCell>
                       <CTableDataCell>{item.patientId}</CTableDataCell>
                       <CTableDataCell>{item.name}</CTableDataCell>
-                      <CTableDataCell>{item.doctorName}</CTableDataCell>
-                      <CTableDataCell>{item.consultationType}</CTableDataCell>
+                      {/* <CTableDataCell>{item.doctorName}</CTableDataCell> */}
+                      {/* <CTableDataCell>{item.consultationType}</CTableDataCell> */}
                       <CTableDataCell>{item.serviceDate}</CTableDataCell>
-                      <CTableDataCell>{item.slot || item.servicetime}</CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge
-                          style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
-                        >
-                          {statusLabelMap[item.status] || item.status}
-                        </CBadge>
-                      </CTableDataCell>
+                      {/* <CTableDataCell>{item.slot || item.servicetime}</CTableDataCell> */}
+
                       <CTableDataCell>
                         <CButton
                           style={{ backgroundColor: 'var(--color-black)' }}
@@ -734,6 +424,20 @@ const WidgetsDropdown = (props) => {
                         >
                           View
                         </CButton>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CFormSelect
+                          size="sm"
+                          value={item.status}
+                          onChange={(e) => handleStatusUpdate(item.bookingId, e.target.value)}
+                          style={{ minWidth: '120px' }}
+                        >
+                          <option value="Pending">Pending</option>
+                          {/* <option value="Confirmed">Confirmed</option> */}
+                          <option value="Completed">Completed</option>
+                          {/* <option value="In-Progress">In-Progress</option> */}
+                          {/* <option value="Rejected">Rejected</option> */}
+                        </CFormSelect>
                       </CTableDataCell>
                     </CTableRow>
                   ))

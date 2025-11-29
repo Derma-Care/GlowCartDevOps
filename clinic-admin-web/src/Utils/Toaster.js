@@ -12,26 +12,26 @@
 import React from 'react'
 import { toast } from 'react-toastify'
 import '../views/Style/CustomToast.css' // optional for extra styles
-import { useHospital } from '../views/Usecontext/HospitalContext'
+
+import NGKLogo from '../assets/images/logoP.png'
 
 const CustomToast = ({ message, type = 'success' }) => {
-  const { fetchHospital, selectedHospital } = useHospital()
   return (
     <div className={`custom-toast ${type}`}>
-      {selectedHospital?.data.hospitalLogo ? (
-        <img
-          className="profile-image"
-          src={
-            selectedHospital?.data.hospitalLogo.startsWith('data:')
-              ? selectedHospital?.data.hospitalLogo
-              : `data:image/jpeg;base64,${selectedHospital?.data.hospitalLogo}`
-          }
-          alt={selectedHospital?.data.name || 'Hospital Logo'}
-          style={{ width: '20px', height: '20px', marginBottom: '0px' }}
-        />
-      ) : (
-        <div className="spinner"></div>
-      )}
+      <img
+        className="profile-image"
+        src={NGKLogo}
+        alt="Logo"
+        style={{
+          width: '30px',
+          height: '30px',
+          marginBottom: '0px',
+          backgroundColor: 'white', // 💗 Your pink background
+          padding: '4px',
+          borderRadius: '10%', // Makes it circular
+        }}
+      />
+
       <div className="toast-message">{message}</div>
     </div>
   )

@@ -26,6 +26,9 @@ import { processFile } from '../Utills/fileUtils'
 import { UploadedPreview } from '../Utills/FileUpload'
 import { getAllProcedures } from '../APIs/procedureService'
 import { getCustomerByCode } from '../APIs/customerApiUsingRC'
+import OnboardingStepsCard from '../Widget/onboarding_steps_card'
+import OnboardingStepsModal from '../Widget/OnboardingStepsModal'
+import RegistrationCodeCard from '../Widget/RegistrationCodeCard'
 export default function NGlowKartPatientRegistration_CoreUI() {
   //   const today = new Date()
   const today = new Date()
@@ -59,6 +62,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         value: item.procedureId,
         label: item.procedureName,
       }))
+      formatted.push({
+        value: 'other',
+        label: 'Others',
+      })
 
       setProcedureOptions(formatted)
     }
@@ -83,17 +90,19 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     email: '',
     city: '',
     dob: '',
-    confirmedVisit: false,
+
     clinicName: '',
     clinicCityArea: '',
     dateOfLastVisit: '',
-    serviceType: '',
-    Blood: '',
+    serviceType: [],
+    blood: '',
     registraionCode: '',
     referBy: '',
     Aadhar: '',
     prescription: '',
     referBy: "Neha's GlowKart",
+    otherServiceName: '',
+    gender: '',
 
     spinRewardId: '',
     spinRewardValue: '',
@@ -102,6 +111,14 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     prizePostScreenshot: '',
     followScreenshot: '',
     address: '',
+
+    // Interested flow
+    serviceStatus: '',
+    interestCategory: '',
+    problemDescription: [],
+    skinTone: '',
+    samplePhoto: '',
+    aadhaarConsent: true,
   })
 
   function applyBackendStatus(status) {
@@ -163,9 +180,11 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   }
 
   const handleProcedureChange = (selected) => {
+    const labels = selected.map((item) => (item.value === 'other' ? 'other' : item.label))
+
     setForm((prev) => ({
       ...prev,
-      serviceType: selected.map((item) => item.label), // ✔ store labels
+      serviceType: labels,
     }))
   }
 
@@ -176,7 +195,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     setForm((prev) => {
       const next = { ...prev, [name]: type === 'checkbox' ? checked : value }
 
-      if (name === 'confirmedVisit' && !checked) {
+      if (name === 'serviceStatus' && !checked) {
         next.clinicName = ''
         next.clinicCityArea = ''
         next.dateOfLastVisit = ''
@@ -248,6 +267,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     }
   }
 
+  console.log(form.otherServiceName)
+
   function validate() {
     const e = {}
 
@@ -260,7 +281,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     if (!form.dob) e.dob = 'Date of birth required'
     else if (calculateAge(form.dob) < 18) e.dob = 'Must be at least 18 years old'
 
-    if (form.confirmedVisit) {
+    if (form.serviceStatus == '1') {
       if (!form.clinicName) e.clinicName = 'Clinic name required'
       if (!form.clinicCityArea) e.clinicCityArea = 'Clinic area required'
 
@@ -279,8 +300,20 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
       if (!form.serviceType) e.serviceType = 'Service required'
       if (!form.prescription)
-        e.prescription = 'Please upload your prescription or bill (PDF, JPG, JPEG, or PNG).'
+        e.prescription = 'Please upload your receipt (PDF, JPG, JPEG, or PNG).'
     }
+    // ✔ INTERESTED FLOW – Validate interest info
+    if (form.serviceStatus === '2') {
+      if (!form.interestCategory) e.interestCategory = 'Please select an interest category'
+      if (!form.problemDescription || form.problemDescription.length === 0)
+        e.problemDescription = 'Please select at least one concern'
+
+      if (!form.skinTone) e.skinTone = 'Please select your skin tone'
+      // samplePhoto optional
+    }
+
+    if (!form.aadhaarConsent)
+      e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
 
     setErrors(e)
     return Object.keys(e).length === 0
@@ -300,14 +333,28 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       clinicName: form.clinicName,
       clinicCityArea: form.clinicCityArea,
       dateOfLastVisit: form.dateOfLastVisit,
-      serviceType: form.serviceType,
-      blood: form.Blood,
+      serviceType: form.serviceType.map((s) => (s === 'other' ? form.otherServiceName : s)),
+      blood: form.blood,
       registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
       referBy: form.referBy,
       aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
       referBy: form.referBy,
+      gender: form.gender,
+      serviceStatus: form.serviceStatus,
+      concern: form.problemDescription.map((item) =>
+        item === 'other' ? form.otherServiceName : item,
+      ),
+      category: form.interestCategory,
+      skinTone: form.skinTone,
+      photo: form.samplePhoto,
+      aadhaarConsent: form.aadhaarConsent,
     }
+
+    console.log(form)
+    console.log(
+      form.problemDescription.map((item) => (item === 'other' ? form.otherServiceName : item)),
+    )
 
     try {
       setLoading(true)
@@ -344,10 +391,18 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       setShowWheel(state.showWheel)
       setInstagram(state.instagram)
       setUserData(state.userData || null)
-      setWinnerPrize(state.winnerPrize || null)
+      // setWinnerPrize(state.winnerPrize || null)
       setSpinWhell(state.spinWhell || false)
     }
   }, [])
+
+  function cleanUserData(data) {
+    if (!data) return null
+
+    const { prescription, samplePhoto, prizePostScreenshot, followScreenshot, ...rest } = data
+
+    return rest
+  }
 
   useEffect(() => {
     const stateToSave = {
@@ -355,14 +410,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       submitted,
       showWheel,
       instagram,
-      userData,
-      winnerPrize,
+      userData: cleanUserData(userData),
+      // winnerPrize,
       spinWhell,
     }
 
     sessionStorage.setItem('ngk_session', JSON.stringify(stateToSave))
   }, [isRegistration, submitted, showWheel, instagram, userData, winnerPrize, spinWhell])
 
+  console.log(form.serviceStatus)
   // useEffect(() => {
   //   localStorage.setItem('step_isRegistration', isRegistration)
   // }, [isRegistration])
@@ -430,7 +486,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                 <h4 className="m-0 fw-bold" style={{ color: '#ff4f9a' }}>
                   Neha's Glow Kart
                 </h4>
-                <small style={{ color: '#ff7bbf' }}>Registration</small>
+                <small style={{ color: '#ff7bbf', fontSize: '18px' }}>Registration</small>
               </div>
             </div>
           </div>
@@ -551,6 +607,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       display: 'flex',
                       justifyContent: 'center',
                       alignItems: 'center',
+                      alignContent: 'center',
                       width: '100%',
                       minHeight: '70vh',
                       padding: '20px 0',
@@ -567,7 +624,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         border: '1px solid #f4e7f9',
                       }}
                     >
-                      <h3
+                      {/* <h3
                         style={{
                           fontSize: 20,
 
@@ -577,7 +634,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         }}
                       >
                         Enter Your Registration Code
-                      </h3>
+                      </h3> */}
 
                       {/* <CFormInput
                         name="fullName"
@@ -595,7 +652,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           borderRadius: 12,
                           height: 45,
                           marginTop: '15px',
-                          textTransform: 'uppercase',
+                          marginBottom: '25px',
+                          // textTransform: 'uppercase',
                           transition: '0.25s',
                           fontWeight: '500',
                         }}
@@ -622,24 +680,32 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         color="primary"
                         style={{
                           marginTop: 18,
-                          width: '100%',
+                          width: '60%',
                           borderRadius: 12,
                           fontWeight: '600',
                           fontSize: 16,
                           padding: '12px 0',
+
                           background: isRegistration
-                            ? 'linear-gradient(90deg, #e33de9ff, #b26ad8)'
+                            ? 'linear-gradient(90deg, #ff4f9a, #e33de9ff)'
                             : '#c8c6d9',
                           border: 'none',
                           cursor: isRegistration ? 'pointer' : 'not-allowed',
                           boxShadow: isRegistration ? '0 4px 12px rgba(106,90,224,0.35)' : 'none',
                           transition: '0.25s',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          margin: '0 auto', // <-- This centers the button
                         }}
                         onClick={handleSubmitReferralCode}
                         disabled={!isRegistration || verifyLoading}
                       >
-                        {verifyLoading ? 'Verifying...' : 'Submit Registration Code'}
+                        {verifyLoading ? 'Verifying...' : 'Verify'}
                       </CButton>
+
+                      <div className="my-2">
+                        <OnboardingStepsModal />
+                      </div>
 
                       <p
                         style={{
@@ -649,16 +715,25 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           color: '#999',
                         }}
                       >
-                        You'll unlock an exclusive gift after submitting 💝
+                        🎁 Unlock your exclusive GlowKart gift after completing onboarding!
                       </p>
                     </div>
+
+                    {/* <RegistrationCodeCard
+                      form={form}
+                      error={error}
+                      isRegistration={isRegistration}
+                      verifyLoading={verifyLoading}
+                      handleRefChange={handleRefChange}
+                      handleSubmitReferralCode={handleSubmitReferralCode}
+                    /> */}
                   </div>
                 ) : (
                   <CRow className="g-4 mt-2">
                     {/* Full Name + Mobile */}
                     <CCol md={6}>
                       <CFormLabel>
-                        Full Name (as Per Aadhar Crad) <span className="text-danger">*</span>
+                        Full Name (As Per Aadhaar Crad) <span className="text-danger">*</span>
                       </CFormLabel>
                       <CFormInput
                         name="fullName"
@@ -679,7 +754,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                     <CCol md={6}>
                       <CFormLabel>
-                        Mobile <span className="text-danger">*</span>
+                        Mobile Number <span className="text-danger">*</span>
                       </CFormLabel>
                       <CFormInput
                         name="mobile"
@@ -704,9 +779,21 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     </CCol>
 
                     {/* DOB + City */}
-                    <CCol md={6}>
+
+                    <CCol md={4}>
+                      <CFormLabel>Gender</CFormLabel>
+                      <CFormSelect name="gender" value={form.gender} onChange={handleChange}>
+                        <option value="">Select Gender</option>
+                        <option value="A+">Male</option>
+                        <option value="A-">Female</option>
+                        <option value="B+">Others</option>
+                      </CFormSelect>
+
+                      {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
+                    </CCol>
+                    <CCol md={4}>
                       <CFormLabel>
-                        DOB <span className="text-danger">*</span>
+                        Date of birth <span className="text-danger">*</span>
                       </CFormLabel>
 
                       <CFormInput
@@ -728,7 +815,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
                     </CCol>
 
-                    <CCol md={6}>
+                    <CCol md={4}>
                       <CFormLabel>
                         City <span className="text-danger">*</span>
                       </CFormLabel>
@@ -762,7 +849,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                     <CCol md={6}>
                       <CFormLabel>Blood Group (Optional)</CFormLabel>
-                      <CFormSelect name="Blood" value={form.Blood} onChange={handleChange}>
+                      <CFormSelect name="blood" value={form.blood} onChange={handleChange}>
                         <option value="">Select Blood Group</option>
                         <option value="A+">A+</option>
                         <option value="A-">A-</option>
@@ -810,8 +897,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           placeholder="Enter 12-digit Aadhaar number"
                         />
                       </div>
-
-                      {/* Error */}
                       {errors.Aadhar && (
                         <p
                           style={{
@@ -821,30 +906,103 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           {errors.Aadhar}
                         </p>
                       )}
+                      <div style={{ marginTop: '15px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                          <input
+                            type="checkbox"
+                            checked={form.aadhaarConsent}
+                            onChange={(e) => {
+                              setForm({ ...form, aadhaarConsent: e.target.checked })
+
+                              // remove error when checked
+                              if (e.target.checked) {
+                                setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
+                              }
+                            }}
+                            style={{ marginTop: '4px', width: '16px', height: '16px' }}
+                          />
+
+                          <div style={{ fontSize: '13px', color: '#555' }}>
+                            <strong>🔒 Aadhaar Consent:</strong>
+                            <p style={{ marginTop: '6px' }} className="text-muted">
+                              By submitting your Aadhaar number, you consent to its use only for
+                              identity verification and duplicate-checking. Your Aadhaar number will
+                              not be stored permanently and will be deleted after verification. We
+                              do not share your Aadhaar information with any third party.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* ERROR MESSAGE */}
+                        {errors.aadhaarConsent && (
+                          <p style={{ color: '#ff2e85', fontSize: '12px', marginTop: '4px' }}>
+                            {errors.aadhaarConsent}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Error */}
                     </CCol>
 
                     {/* Consent */}
                     <CCol md={12}>
-                      <CFormCheck
+                      {/* <CFormCheck
                         className="custom-checkbox"
                         name="confirmedVisit"
                         checked={form.confirmedVisit}
                         onChange={handleChange}
                         label="I confirm that I have availed dermatology or cosmetic services from a verified clinic within the last 12 months and agree to N Glow Kart’s verification and data "
-                      />
-                      <a
-                        href="/pdf/privacy-policy.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: '#ff2e85',
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          marginLeft: '25px',
-                        }}
-                      >
-                        Privacy Policy
-                      </a>
+                      /> */}
+                      <div className="d-flex justify-content-between">
+                        <CFormLabel>Have you taken any service in the last 12 months?</CFormLabel>
+                        <a
+                          href="/pdf/privacy-policy.pdf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: '#ff2e85',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            marginLeft: '25px',
+                          }}
+                        >
+                          Privacy Policy
+                        </a>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <CButton
+                          style={{
+                            backgroundColor: form.serviceStatus === '1' ? '#ff2e85' : '#e4e4e4',
+                            color: form.serviceStatus === '1' ? '#fff' : '#444',
+                            border: 'none',
+                            padding: '8px 18px',
+                            borderRadius: '10px',
+                            fontWeight: 600,
+                            transition: '0.25s',
+                          }}
+                          onClick={() => setForm({ ...form, serviceStatus: '1' })}
+                        >
+                          Yes
+                        </CButton>
+
+                        <CButton
+                          // color={form.confirmedVisit === 'interested' ? 'primary' : 'secondary'}
+                          style={{
+                            backgroundColor: form.serviceStatus === '2' ? '#ff2e85' : '#e4e4e4',
+                            color: form.serviceStatus === '2' ? '#fff' : '#444',
+                            border: 'none',
+                            padding: '8px 18px',
+                            borderRadius: '10px',
+                            fontWeight: 600,
+                            transition: '0.25s',
+                          }}
+                          onClick={() => setForm({ ...form, serviceStatus: '2' })}
+                        >
+                          Interested
+                        </CButton>
+                      </div>
+
                       {/* <a
                         href="/pdf/privacy-policy.pdf"
                         download="Nehas_GlowKart_Privacy_Policy.pdf"
@@ -870,7 +1028,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     </CCol>
 
                     {/* Conditional fields */}
-                    {form.confirmedVisit && (
+                    {form.serviceStatus === '1' && (
                       <>
                         <CCol md={6}>
                           <CFormLabel>
@@ -952,7 +1110,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             onChange={handleProcedureChange}
                             styles={selectStyles}
                             value={procedureOptions.filter(
-                              (opt) => form.serviceType?.includes(opt.label), // ✔ match using label
+                              (opt) =>
+                                form.serviceType?.includes(opt.label) || // actual label
+                                (opt.value === 'other' && form.serviceType.includes('other')),
                             )}
                           />
 
@@ -981,8 +1141,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CCol>
                         <div>
                           <CFormLabel>
-                            Upload your last visit bill or prescription{' '}
-                            <span className="text-danger">*</span>
+                            Upload your last visit receipt <span className="text-danger">*</span>
                           </CFormLabel>
                           <div
                             style={{
@@ -1008,7 +1167,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                 fontSize: 15,
                               }}
                             >
-                              📁 Tap to upload Prescription / Bill
+                              📁 Tap to upload receipt
                               <input
                                 type="file"
                                 accept="image/*, application/pdf"
@@ -1046,11 +1205,201 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       </>
                     )}
 
+                    {form.serviceStatus === '2' && (
+                      <>
+                        {/* Category Dropdown */}
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Select Category <span className="text-danger">*</span>
+                          </CFormLabel>
+                          <CFormSelect
+                            name="interestCategory"
+                            value={form.interestCategory}
+                            onChange={handleChange}
+                          >
+                            <option value="">Select...</option>
+                            <option value="Skin">Skin</option>
+                            <option value="Hair">Hair</option>
+                            <option value="Laser">Laser</option>
+                            <option value="Body">Body</option>
+                            <option value="Other">Others</option>
+                          </CFormSelect>
+                          {errors.interestCategory && (
+                            <p
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.interestCategory}
+                            </p>
+                          )}
+                        </CCol>
+
+                        {/* Problem or Procedure */}
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Your Concern / Procedure <span className="text-danger">*</span>
+                          </CFormLabel>
+
+                          <Select
+                            options={[
+                              // remove any existing "Others" by checking label
+                              ...procedureOptions.filter(
+                                (op) => op.label.toLowerCase() !== 'others',
+                              ),
+                              { value: 'other', label: 'Others' }, // add one clean version
+                            ]}
+                            isMulti
+                            placeholder="Select your concerns or procedures..."
+                            value={[
+                              ...procedureOptions.filter((opt) =>
+                                form.problemDescription?.includes(opt.label),
+                              ),
+                              ...(form.problemDescription?.includes('other')
+                                ? [{ value: 'other', label: 'Others' }]
+                                : []),
+                            ]}
+                            onChange={(selected) => {
+                              const labels = selected.map((item) =>
+                                item.value === 'other' ? 'other' : item.label,
+                              )
+
+                              setForm((prev) => ({ ...prev, problemDescription: labels }))
+                              setErrors((prev) => ({ ...prev, problemDescription: '' }))
+                            }}
+                            styles={selectStyles}
+                          />
+
+                          {errors.problemDescription && (
+                            <p style={{ color: '#ff2e85' }}>{errors.problemDescription}</p>
+                          )}
+
+                          {/* Show Other input */}
+                          {form.problemDescription?.includes('other') && (
+                            <div style={{ marginTop: 10 }}>
+                              <CFormLabel>Specify Other Concern</CFormLabel>
+                              <CFormInput
+                                placeholder="Enter your concern"
+                                value={form.otherServiceName}
+                                onChange={(e) =>
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    otherServiceName: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+                          )}
+                        </CCol>
+
+                        {/* Skin Tone */}
+                        <CCol md={6}>
+                          <CFormLabel>
+                            Your Skin Tone <span className="text-danger">*</span>
+                          </CFormLabel>
+                          <CFormInput
+                            name="skinTone"
+                            placeholder="Eg: Medium, Dusky, Fair..."
+                            value={form.skinTone}
+                            onChange={handleChange}
+                          />
+                          {errors.skinTone && (
+                            <p
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.skinTone}
+                            </p>
+                          )}
+                        </CCol>
+
+                        {/* Upload Optional Photo */}
+                        {/* <CCol md={6}>
+                          <CFormLabel>Upload Photo (Optional)</CFormLabel>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files[0]
+                              if (!file) return
+                              const base64 = await processFile(file)
+                              setForm((p) => ({ ...p, samplePhoto: base64 }))
+                            }}
+                          />
+                          {form.samplePhoto && <UploadedPreview src={form.samplePhoto} />}
+                        </CCol> */}
+
+                        <CCol md={6}>
+                          <CFormLabel>Upload Photo (Optional)</CFormLabel>
+                          <div
+                            md={6}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: '10px',
+                              alignContent: 'center',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <label
+                              style={{
+                                border: '2px dashed #ff95c9',
+                                borderRadius: 12,
+                                padding: '18px',
+                                width: '100%',
+                                textAlign: 'center',
+                                display: 'block',
+                                cursor: 'pointer',
+                                background: '#fff8fc',
+                                color: '#ff2e85',
+                                fontWeight: '500',
+                                fontSize: 15,
+                              }}
+                            >
+                              📁 Upload Photo
+                              <input
+                                type="file"
+                                accept="image/*, application/pdf"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0]
+                                  if (!file) return
+
+                                  try {
+                                    const base64 = await processFile(file)
+                                    updateForm('samplePhoto', base64)
+                                  } catch (err) {
+                                    alert(err.message)
+                                    e.target.value = ''
+                                  }
+                                }}
+                                style={{ display: 'none' }}
+                              />
+                            </label>
+                            {form.samplePhoto && <UploadedPreview src={form.samplePhoto} />}
+                          </div>
+                          <small style={{ color: '#888', display: 'block' }}>
+                            Accepted formats: PDF, JPG, JPEG, PNG
+                          </small>
+
+                          {errors.samplePhoto && (
+                            <div
+                              style={{
+                                color: '#ff2e85',
+                              }}
+                            >
+                              {errors.samplePhoto}
+                            </div>
+                          )}
+                        </CCol>
+                      </>
+                    )}
+
                     {/* Submit */}
-                    <CCol md={12} className="mt-3 d-flex justify-content-end">
+                    <CCol md={12} className="mt-5 d-flex justify-content-end">
                       <CButton
                         style={{ background: '#ff4f9a', color: '#fff' }}
-                        disabled={!form.confirmedVisit || loading}
+                        disabled={!form.serviceStatus || loading}
                         type="submit"
                       >
                         {loading ? 'Submitting...' : 'Submit'}

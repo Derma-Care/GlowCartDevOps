@@ -82,21 +82,22 @@ export const getSubServiceById = async (hospitalId, subServiceId) => {
     return null
   }
 }
-export const GetSubServices_ByClinicId = async (hospitalId) => {
-  try {
-    const response = await http.get(`/${getService_ByClinicId}/${hospitalId}`)
-    return response.data?.data
-  } catch (error) {
-    if (error.response) {
-      console.error('Server responded with status:', error.response.status, error.response.data)
-    } else if (error.request) {
-      console.error('No response received:', error.request)
-    } else {
-      console.error('Axios error:', error.message)
-    }
-    return null
-  }
-}
+// export const GetSubServices_ByClinicId = async (hospitalId) => {
+//   try {
+//     const response = await http.get(`/${getService_ByClinicId}/${hospitalId}`)
+
+//     return response.data?.data
+//   } catch (error) {
+//     if (error.response) {
+//       console.error('Server responded with status:', error.response.status, error.response.data)
+//     } else if (error.request) {
+//       console.error('No response received:', error.request)
+//     } else {
+//       console.error('Axios error:', error.message)
+//     }
+//     return null
+//   }
+// }
 
 export const CategoryData = async () => {
   try {
@@ -115,13 +116,11 @@ export const CategoryData = async () => {
   }
 }
 
-export const postServiceData = async (serviceData, id) => {
-  console.log('Sending data to id:', id)
-
+export const postServiceData = async (serviceData) => {
   try {
     console.log('Sending data to API:', serviceData)
 
-    const response = await http.post(`/${AddSubService}/${id}`, serviceData, {
+    const response = await http.post(`/${AddSubService}`, serviceData, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -130,7 +129,7 @@ export const postServiceData = async (serviceData, id) => {
     return response
   } catch (error) {
     console.error('Error response:', error.response)
-   showCustomToast(`${error.response.data.message || error.response.statusText}`,'error')
+    showCustomToast(`${error.response.data.message || error.response.statusText}`, 'error')
   }
 }
 

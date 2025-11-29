@@ -38,7 +38,7 @@ export const getNavigation = (permissions = {}) => {
     // },
     {
       component: CNavItem,
-      to: '/doctor',
+      to: '/package',
       name: 'Employee management',
       as: NavLink,
       icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
@@ -69,7 +69,7 @@ export const getNavigation = (permissions = {}) => {
     },
   ]
 
-  // Only include items if permission exists
+  // // Only include items if permission exists
   if (!permissions || typeof permissions !== 'object') return []
 
   // return allNav.filter((item) => permissions[item.name])

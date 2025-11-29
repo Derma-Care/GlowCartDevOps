@@ -111,7 +111,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
         // document.body.removeChild(a)
 
         setLoading(false)
-      }, 3000)
+      }, 5000)
     } catch (err) {
       console.error('🔥 handleShare error:', err)
       setLoading(false)
@@ -294,9 +294,11 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                     textAlign: 'center',
                   }}
                 >
-                  {finalPrize.spinRewardValue} discount on all dermatology services on your{' '}
-                  <span style={{ fontWeight: 'bold', color: '#ff2e85' }}>First</span> service
-                  booking.
+                  <span style={{ fontWeight: 'bold', color: '#ff2e85' }}>
+                    {finalPrize.spinRewardValue}
+                  </span>{' '}
+                  discount on all dermatology products. Just show this coupon and you will get{' '}
+                  {finalPrize.spinRewardValue} off on dermatology products.
                 </p>
               </div>
               <div
@@ -340,7 +342,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
         }}
       >
         <p style={{ margin: 0 }}>
-          🔔 Share your winning moment on Instagram to continue to the next step.
+          Share your winning moment on Instagram to continue to the next step.
         </p>
         <p style={{ marginTop: 6, fontSize: 13 }}>
           <strong>Note:</strong> After posting, take a screenshot — you'll upload it next.
@@ -393,10 +395,12 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
 
             <div style={loaderStyles.textBlock}>
               <p style={loaderStyles.text}>Opening Instagram…</p>
+
               <p style={loaderStyles.textSmall}>
-                🎉 Image saved & caption copied! <br />
-                Now just upload the image on Instagram and <br />
-                paste the caption while posting.
+                📸 Your image has been downloaded and the caption has been copied. <br />
+                Please upload the image on Instagram and paste the caption while posting. <br />
+                Once posted, take a screenshot of your Instagram post and upload it on the next
+                screen.
               </p>
             </div>
           </div>
