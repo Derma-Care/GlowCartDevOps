@@ -4,7 +4,10 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomerResponseDTO {
     private String customerId;
     private String fullName;
@@ -12,6 +15,7 @@ public class CustomerResponseDTO {
     private String email;
     private String city;
     private LocalDate dob;
+    private String gender;
     private Integer serviceStatus;
 
     // YES fields
@@ -23,7 +27,7 @@ public class CustomerResponseDTO {
 
     // INTERESTED fields
     private String category;
-    private String concern;
+    private List<String> concern;  // updated
     private String skinTone;
     private String photo;
 

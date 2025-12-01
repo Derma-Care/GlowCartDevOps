@@ -1,9 +1,12 @@
 package com.glowkart.admin.util;
 
 import com.glowkart.admin.dto.ClinicPublicDTO;
+import com.glowkart.admin.dto.DoctorDTO;
 import com.glowkart.admin.model.Clinic;
+import com.glowkart.admin.model.Doctor;
 
 import java.util.Base64;
+import java.util.List;
 
 public class ClinicMapper {
 
@@ -26,10 +29,9 @@ public class ClinicMapper {
         dto.setOpeningTime(clinic.getOpeningTime());
         dto.setClosingTime(clinic.getClosingTime());
 
-        // Only logo included → Base64 encode
         if (clinic.getHospitalLogo() != null) {
-            dto.setHospitalLogo("data:image/png;base64," 
-                 + Base64.getEncoder().encodeToString(clinic.getHospitalLogo()));
+            dto.setHospitalLogo("data:image/png;base64,"
+                    + Base64.getEncoder().encodeToString(clinic.getHospitalLogo()));
         }
 
         dto.setWebsite(clinic.getWebsite());
@@ -65,6 +67,23 @@ public class ClinicMapper {
         dto.setIfscCode(clinic.getIfscCode());
         dto.setUpiId(clinic.getUpiId());
         dto.setPanNumber(clinic.getPanNumber());
+
+        // -------------------------------------------------------
+        // NEW: DOCTOR LIST MAPPING
+        // -------------------------------------------------------
+        if (clinic.getDoctors() != null) {
+            List<DoctorDTO> mappedDoctors = clinic.getDoctors().stream().map(doc -> {
+                DoctorDTO d = new DoctorDTO();
+                d.setDoctorName(doc.getDoctorName());
+                d.setRegistrationNumber(doc.getRegistrationNumber());
+                d.setAssociationNumber(doc.getAssociationNumber());
+                d.setAssociationName(doc.getAssociationName());
+                d.setSpecialization(doc.getSpecialization());
+                return d;
+            }).toList();
+
+            dto.setDoctors(mappedDoctors);
+        }
 
         return dto;
     }

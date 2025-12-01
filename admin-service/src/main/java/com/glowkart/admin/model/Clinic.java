@@ -85,4 +85,7 @@ public class Clinic {
     private String ifscCode;
     private String upiId; // Optional
     private String panNumber;
+    
+ // Add THIS:
+    private List<Doctor> doctors;
 }

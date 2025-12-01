@@ -3,6 +3,7 @@ package com.glowkart.procedure.dto;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +21,9 @@ public class ProcedurePricingDTO {
     private List<Map<String, List<String>>> procedureQA;
     private List<Map<String, List<String>>> postProcedureQA;
 
-    private int sittings; // NEW: number of sittings
-    
+    private int sittings;
+    private int minTime; // NEW
+
     private double price;
     private double discountPercentage;
     private double discountAmount;
@@ -29,10 +31,12 @@ public class ProcedurePricingDTO {
     private double taxAmount;
     private double gst;
     private double gstAmount;
-    private double platformFeePercentage;
-    private double platformFee;
     private double consultationFee;
     private double discountedCost;
     private double clinicPay;
     private double finalCost;
+
+    private Instant offerStart;     // NEW
+    private Instant offerValidDate; // NEW
+    private boolean offerActive;    // NEW
 }

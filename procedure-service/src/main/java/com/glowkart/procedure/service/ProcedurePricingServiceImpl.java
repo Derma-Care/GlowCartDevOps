@@ -1,6 +1,7 @@
 package com.glowkart.procedure.service;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,15 +36,12 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     public ProcedurePricingDTO create(ProcedurePricingDTO dto) {
         log.info("Creating pricing for procedureId={} and clinicId={}", dto.getProcedureId(), dto.getClinicId());
 
-        // Validate procedure
         Procedure procedure = procedureRepository.findById(dto.getProcedureId())
-                .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND", 
+                .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                         "Procedure not found with ID: " + dto.getProcedureId()));
 
-        // Validate clinic
         validateClinic(dto.getClinicId());
 
-        // Check duplicate pricing
         pricingRepository.findByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())
                 .ifPresent(existing -> {
                     String name = existing.getProcedureName() != null ? existing.getProcedureName() : "Unknown";
@@ -51,13 +49,12 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                             "Procedure '" + name + "' already has pricing set for this clinic.");
                 });
 
-        // Map DTO to entity
         ProcedurePricing entity = mapper.toEntity(dto);
         entity.setProcedureName(procedure.getProcedureName());
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
 
-        // Calculate pricing
+        setOfferActive(entity);
         calculatePricing(entity);
 
         ProcedurePricing saved = pricingRepository.save(entity);
@@ -67,7 +64,10 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     @Override
     public List<ProcedurePricingDTO> getByClinic(String clinicId) {
         validateClinic(clinicId);
+        // Fetch all pricings for the clinic, refresh offer and pricing dynamically
         return pricingRepository.findByClinicId(clinicId).stream()
+                .map(this::setOfferActive)      // refresh offerActive based on current time
+                .map(this::calculatePricing)    // recalculate all pricing fields
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -75,11 +75,26 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     @Override
     public ProcedurePricingDTO getByProcedureAndClinic(String procedureId, String clinicId) {
         validateClinic(clinicId);
-        ProcedurePricing entity = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
-                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
-                        "No pricing found for procedure ID " + procedureId + " in clinic " + clinicId));
-        return mapper.toDto(entity);
+
+        List<ProcedurePricing> pricings = pricingRepository.findByClinicId(clinicId).stream()
+                .filter(p -> p.getProcedureId().equals(procedureId))
+                .collect(Collectors.toList());
+
+        if (pricings.isEmpty()) {
+            throw new ResourceNotFoundException("PRICING_NOT_FOUND",
+                    "No pricing found for procedure ID " + procedureId + " in clinic " + clinicId);
+        }
+
+        // Pick the pricing with highest active discount
+        ProcedurePricing bestOffer = pricings.stream()
+                .map(this::setOfferActive)      // refresh offerActive
+                .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
+                .orElse(pricings.get(0));
+
+        calculatePricing(bestOffer);            // recalculate pricing fields
+        return mapper.toDto(bestOffer);
     }
+
 
     @Override
     @Transactional
@@ -90,7 +105,6 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
                         "Procedure pricing not found for procedure ID " + procedureId + " in clinic " + clinicId));
 
-        // Update procedure if changed
         if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
             Procedure procedure = procedureRepository.findById(dto.getProcedureId())
                     .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
@@ -102,6 +116,7 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         mapper.updateEntity(existing, dto);
         existing.setUpdatedAt(Instant.now());
 
+        setOfferActive(existing);
         calculatePricing(existing);
 
         ProcedurePricing updated = pricingRepository.save(existing);
@@ -121,7 +136,10 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
     @Override
     public List<ProcedurePricingDTO> getAll() {
+        // Fetch all pricings, refresh offer and pricing dynamically
         return pricingRepository.findAll().stream()
+                .map(this::setOfferActive)      // refresh offerActive based on current time
+                .map(this::calculatePricing)    // recalculate all pricing fields
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -137,29 +155,43 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         }
     }
 
-    private void calculatePricing(ProcedurePricing procedure) {
-        // 1. Calculate discount
-        double discountAmount = procedure.getPrice() * procedure.getDiscountPercentage() / 100.0;
-        procedure.setDiscountAmount(discountAmount);
+    private ProcedurePricing setOfferActive(ProcedurePricing procedure) {
+        Instant now = Instant.now();
+        Instant start = procedure.getOfferStart();
+        Instant end = procedure.getOfferValidDate();
 
-        double discountedPrice = procedure.getPrice() - discountAmount;
-        procedure.setDiscountedCost(discountedPrice);
+        if (start == null && end == null) {
+            procedure.setOfferActive(true);
+        } else if (start != null && end != null) {
+            boolean active = !now.isBefore(start) && !now.isAfter(end);  // inclusive
+            procedure.setOfferActive(active);
+        } else {
+            procedure.setOfferActive(false);
+        }
 
-        // 2. Calculate taxes and platform fee
-        double taxAmount = discountedPrice * procedure.getTaxPercentage() / 100.0;
-        double gstAmount = discountedPrice * procedure.getGst() / 100.0;
-        double platformFee = discountedPrice * procedure.getPlatformFeePercentage() / 100.0;
-
-        procedure.setTaxAmount(taxAmount);
-        procedure.setGstAmount(gstAmount);
-        procedure.setPlatformFee(platformFee);
-
-        // 3. Calculate final amounts
-        double clinicPay = discountedPrice + taxAmount + gstAmount - platformFee;
-        double finalCost = discountedPrice + procedure.getConsultationFee() + taxAmount + gstAmount + platformFee;
-
-        procedure.setClinicPay(clinicPay);
-        procedure.setFinalCost(finalCost);
+        return procedure;
     }
 
+    private ProcedurePricing calculatePricing(ProcedurePricing procedure) {
+        double price = procedure.getPrice();
+        double discountPercent = procedure.isOfferActive() ? procedure.getDiscountPercentage() : 0;
+
+        double discountAmount = price * discountPercent / 100.0;
+        double discountedPrice = price - discountAmount;
+
+        double taxAmount = discountedPrice * procedure.getTaxPercentage() / 100.0;
+        double gstAmount = discountedPrice * procedure.getGst() / 100.0;
+
+        double clinicPay = discountedPrice + taxAmount + gstAmount;
+        double finalCost = discountedPrice + procedure.getConsultationFee() + taxAmount + gstAmount;
+
+        procedure.setDiscountAmount(discountAmount);
+        procedure.setDiscountedCost(discountedPrice);
+        procedure.setTaxAmount(taxAmount);
+        procedure.setGstAmount(gstAmount);
+        procedure.setClinicPay(clinicPay);
+        procedure.setFinalCost(finalCost);
+
+        return procedure;
+    }
 }

@@ -24,8 +24,7 @@ public class ClinicPublicDTO {
     private String openingTime;
     private String closingTime;
 
-    // Only image to be included
-    private String hospitalLogo;  // Base64 encoded
+    private String hospitalLogo; 
 
     private String website;
     private String licenseNumber;
@@ -38,7 +37,6 @@ public class ClinicPublicDTO {
     private String drugLicenseFormType;
 
     private String hasPharmacist;
-
     private String subscription;
 
     private double latitude;
@@ -63,4 +61,6 @@ public class ClinicPublicDTO {
     private String ifscCode;
     private String upiId;
     private String panNumber;
+
+    private List<DoctorDTO> doctors;   // NEW
 }
