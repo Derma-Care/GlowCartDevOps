@@ -87,5 +87,5 @@ public class Clinic {
     private String panNumber;
     
  // Add THIS:
-    private List<Doctor> doctors;
+    private List<Doctor> doctorsList;
 }

@@ -1,17 +1,17 @@
 import axios from 'axios'
 import {
   BASE_URL,
-  CustomerAllData,
   AddCustomer,
   updateCustomer,
-  deleteCustomer,
+  CustomerAllData,
   getBasicDetails,
+  BASE_URL_API,
 } from '../../baseUrl'
 
 // Fetch all customers
 export const CustomerData = async () => {
   try {
-    const url = `${BASE_URL}/${CustomerAllData}`
+    const url = `${BASE_URL_API}/${CustomerAllData}`
     const response = await axios.get(url)
     console.log('customer doing ',response)
     // Assuming backend wraps list in response.data.data
@@ -40,7 +40,7 @@ export const addCustomer = async (customerDTO) => {
 export const getCustomerByMobile = async (mobileNumber) => {
   try {
     // Using the endpoint from your baseUrl configuration
-    const url = `${BASE_URL}/${getBasicDetails}/${mobileNumber}`
+    const url = `${BASE_URL_API}/${getBasicDetails}/${mobileNumber}`
     const response = await axios.get(url)
     return response.data
   } catch (error) {
@@ -76,7 +76,7 @@ export const updateCustomerData = async (mobileNumber, customerDTO) => {
 // Delete a customer
 export const deleteCustomerData = async (mobileNumber) => {
   try {
-    const url = `${BASE_URL}/${deleteCustomer}/${mobileNumber}`
+    const url = `${BASE_URL_API}/${getBasicDetails}/${mobileNumber}`
     const response = await axios.delete(url)
     return response.data
   } catch (error) {

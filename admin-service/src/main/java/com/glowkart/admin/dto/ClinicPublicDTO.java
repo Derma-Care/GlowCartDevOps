@@ -62,5 +62,5 @@ public class ClinicPublicDTO {
     private String upiId;
     private String panNumber;
 
-    private List<DoctorDTO> doctors;   // NEW
+    private List<DoctorDTO> doctorsList;  // NEW
 }

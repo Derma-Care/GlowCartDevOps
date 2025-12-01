@@ -232,11 +232,11 @@ public class ClinicServiceImpl implements ClinicService {
         // =====================================================================
         // DOCTOR UPDATE WITH DUPLICATE PROTECTION
         // =====================================================================
-        if (dto.getDoctors() != null) {
+        if (dto.getDoctorsList() != null) {
 
-            validateDuplicateDoctors(dto.getDoctors());
+            validateDuplicateDoctors(dto.getDoctorsList());
 
-            List<Doctor> doctorList = dto.getDoctors().stream().map(d -> {
+            List<Doctor> doctorList = dto.getDoctorsList().stream().map(d -> {
                 Doctor doc = new Doctor();
                 doc.setDoctorName(d.getDoctorName());
                 doc.setRegistrationNumber(d.getRegistrationNumber());
@@ -246,38 +246,37 @@ public class ClinicServiceImpl implements ClinicService {
                 return doc;
             }).toList();
 
-            clinic.setDoctors(doctorList);
+            clinic.setDoctorsList(doctorList);
         }
 
         return repo.save(clinic);
     }
 
- // =====================================================================
- // DOCTOR DUPLICATE VALIDATION
- // =====================================================================
- private void validateDuplicateDoctors(List<DoctorDTO> doctors) {
+    // =====================================================================
+    // DOCTOR DUPLICATE VALIDATION
+    // =====================================================================
+    private void validateDuplicateDoctors(List<DoctorDTO> doctorsList) {
 
-     // Check duplicate Registration Numbers
-     Set<String> regNos = doctors.stream()
-             .map(DoctorDTO::getRegistrationNumber)
-             .collect(Collectors.toSet());
+        // Check duplicate Registration Numbers
+        Set<String> regNos = doctorsList.stream()
+                .map(DoctorDTO::getRegistrationNumber)
+                .collect(Collectors.toSet());
 
-     if (regNos.size() != doctors.size()) {
-         throw new ProcedureServiceException("Duplicate doctor registrationNumber detected", 400, null);
-     }
+        if (regNos.size() != doctorsList.size()) {
+            throw new ProcedureServiceException("Duplicate doctor registrationNumber detected", 400, null);
+        }
 
-     // Check duplicate Association Numbers
-     Set<String> assocNos = doctors.stream()
-             .map(DoctorDTO::getAssociationNumber)
-             .collect(Collectors.toSet());
+        // Check duplicate Association Numbers
+        Set<String> assocNos = doctorsList.stream()
+                .map(DoctorDTO::getAssociationNumber)
+                .collect(Collectors.toSet());
 
-     if (assocNos.size() != doctors.size()) {
-         throw new ProcedureServiceException("Duplicate doctor associationNumber detected", 400, null);
-     }
+        if (assocNos.size() != doctorsList.size()) {
+            throw new ProcedureServiceException("Duplicate doctor associationNumber detected", 400, null);
+        }
 
-     // ✅ Removed doctorName duplicate check
- }
-
+        // ✅ Removed doctorName duplicate check
+    }
 
     // =====================================================================
     // HELPER
@@ -342,11 +341,11 @@ public class ClinicServiceImpl implements ClinicService {
         // =============================
         // DOCTOR DUPLICATE VALIDATION
         // =============================
-        if (dto.getDoctors() != null) {
+        if (dto.getDoctorsList() != null) {
 
-            validateDuplicateDoctors(dto.getDoctors());
+            validateDuplicateDoctors(dto.getDoctorsList());
 
-            List<Doctor> doctorList = dto.getDoctors().stream().map(d -> {
+            List<Doctor> doctorList = dto.getDoctorsList().stream().map(d -> {
                 Doctor doc = new Doctor();
                 doc.setDoctorName(d.getDoctorName());
                 doc.setRegistrationNumber(d.getRegistrationNumber());
@@ -356,7 +355,7 @@ public class ClinicServiceImpl implements ClinicService {
                 return doc;
             }).toList();
 
-            clinic.setDoctors(doctorList);
+            clinic.setDoctorsList(doctorList);
         }
     }
 

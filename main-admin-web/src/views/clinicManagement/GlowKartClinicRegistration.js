@@ -21,7 +21,7 @@ import {
   CModalHeader,
   CModalTitle,
   CModalBody,
-  CModalFooter,
+  CModalFooter, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell,
 } from '@coreui/react'
 import { AllClinicData, BASE_URL, BASE_URL_API, CLINIC_REGISTRATION_URL, ClinicAllData, getAllQuestions, postAllQuestionsAndAnswers } from '../../baseUrl'
 import { CategoryData } from '../categoryManagement/CategoryAPI'
@@ -32,6 +32,8 @@ import { getClinicTimings } from './GlowKartgetTimingsAPI'
 import ClinicOnboardingSuccess from './SuccessOnboradClinic'
 import { colors } from '@mui/material'
 import { COLORS, NGK_COLORS } from '../../Constant/Themes'
+import { Edit2, Trash2 } from 'lucide-react'
+import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
 
 const ClinicRegistration = () => {
   const refs = {
@@ -61,7 +63,7 @@ const ClinicRegistration = () => {
   const [selectedOption, setSelectedOption] = useState('')
   const [selectedPharmacistOption, setSelectedPharmacistOption] = useState('')
   const [clinicTypeOption, setClinicTypeOption] = useState('')
-
+  const [editDoctorIndex, setEditDoctorIndex] = useState(null);
   const [timings, setTimings] = useState([])
   const [loadingTimings, setLoadingTimings] = useState(false)
   const [nabhQuestions, setNabhQuestions] = useState([]);
@@ -73,6 +75,10 @@ const ClinicRegistration = () => {
   const [successResponse, setSuccessResponse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false)
+  // Doctors list
+  const [doctorsList, setDoctorsList] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [doctorIndexToDelete, setDoctorIndexToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -92,7 +98,7 @@ const ClinicRegistration = () => {
     contractorDocuments: null,
     clinicalEstablishmentCertificate: null,
     businessRegistrationCertificate: null,
-    clinicType: '',                           // (Existing)
+    clinicType: '',
     medicinesSoldOnSite: false,
     drugLicenseCertificate: null,
     drugLicenseFormType: "",
@@ -122,10 +128,20 @@ const ClinicRegistration = () => {
     bankAccountNumber: '',
     ifscCode: '',
     upiId: '',
-    panNumber: ''
+    panNumber: '',
+
+    // ✅ Add this line
+    doctorsList: [], // array of doctor objects
   });
 
 
+  const [doctorEntry, setDoctorEntry] = useState({
+    doctorName: "",
+    specialization: "",
+    registrationNumber: "",
+    associationNumber: "",
+    associationName: ""
+  });
   //get timings
   useEffect(() => {
     const fetchTimings = async () => {
@@ -152,6 +168,26 @@ const ClinicRegistration = () => {
       reader.readAsDataURL(file);
     });
   };
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      doctorsList: doctorsList
+    }));
+  }, [doctorsList]);
+  const handleDoctorChange = (e) => {
+    const { name, value } = e.target;
+
+    setDoctorEntry(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear error for this field as user types
+    setErrors(prevErrors => ({
+      ...prevErrors,
+      [name]: ''
+    }));
+  };
 
   const preventNumberInput = (e) => {
     const isNumber = /[0-9]/.test(e.key)
@@ -160,6 +196,54 @@ const ClinicRegistration = () => {
     }
 
   }
+  const confirmDeleteDoctor = () => {
+    if (doctorIndexToDelete !== null) {
+      setDoctorsList((prev) =>
+        prev.filter((_, index) => index !== doctorIndexToDelete)
+      );
+      setDoctorIndexToDelete(null);
+    }
+    setIsModalVisible(false);
+  };
+
+
+  const handleEditDoctor = (index) => {
+    const doctorToEdit = doctorsList[index];
+    setDoctorEntry({ ...doctorToEdit });
+    setEditDoctorIndex(index);
+  };
+
+
+  const handleAddDoctor = () => {
+    const { doctorName, specialization, registrationNumber, associationNumber, associationName } = doctorEntry;
+
+    if (!doctorName || !specialization || !registrationNumber || !associationNumber || !associationName) {
+      setErrors(prev => ({
+        ...prev,
+        doctorsList: "Please fill all doctor fields before adding"
+      }));
+      return;
+    }
+
+    if (editDoctorIndex !== null) {
+      const updatedDoctors = [...doctorsList];
+      updatedDoctors[editDoctorIndex] = { ...doctorEntry };
+      setDoctorsList(updatedDoctors);
+      setEditDoctorIndex(null);
+    } else {
+      setDoctorsList(prev => [...prev, { ...doctorEntry }]);
+    }
+
+    setDoctorEntry({
+      doctorName: "",
+      specialization: "",
+      registrationNumber: "",
+      associationNumber: "",
+      associationName: ""
+    });
+
+    setErrors(prev => ({ ...prev, doctorsList: "" }));
+  };
 
   const websiteRegex = /^(https?:\/\/)[\w\-]+(\.[\w\-]+)+[/#?]?.*$/
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
@@ -253,8 +337,6 @@ const ClinicRegistration = () => {
         newErrors.closingTime = 'Closing time must be after opening time'
       }
     }
-
-
 
     // License Number
     if (!formData.licenseNumber.trim()) {
@@ -422,10 +504,10 @@ const ClinicRegistration = () => {
     if (!formData.branch?.trim()) {
       newErrors.branch = "Branch name is required"
     }
-    if (!formData.nabhScore || !String(formData.nabhScore).trim()) {
-      newErrors.nabhScore = "NABH Score is required";
+    // ✅ At least one doctor
+    if (!doctorsList || doctorsList.length === 0) {
+      newErrors.doctorsList = "Please add at least one doctor with all details";
     }
-
     // No `else { newErrors.website = '' }`
 
     console.log('Validation errors:', newErrors)
@@ -441,8 +523,6 @@ const ClinicRegistration = () => {
     return true // all good
   }
 
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -455,7 +535,6 @@ const ClinicRegistration = () => {
       [name]: '',
     }))
   }
-
 
   const handleAppendFiles = async (e, fieldName, maxFiles = 6) => {
     const selectedFiles = Array.from(e.target.files || [])
@@ -705,12 +784,20 @@ const ClinicRegistration = () => {
       const clinicData = {
         token: onboardingToken,
         email: onboardingEmail,
+
+        ...Object.fromEntries(
+          Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])
+        ),
+
+        // ⬇️ THESE MUST COME AFTER SPREAD (so they cannot be overwritten)
         contractorDocuments: contractorDocumentsBase64,
         hospitalDocuments: hospitalDocumentsBase64,
         others: othersBase64,
-        ...Object.fromEntries(Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])),
+        doctorsList: formData.doctorsList,
+
         website: normalizeWebsite(formData.website?.trim() || "")
       };
+
 
       // API call
       const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
@@ -753,7 +840,7 @@ const ClinicRegistration = () => {
 
         <CCardBody>
           <CForm onSubmit={handleSubmit}>
-            <h5 className="mb-3  mt-6" style={{color:NGK_COLORS.primary}}>Clinic Information</h5>
+            <h5 className="mb-3  mt-6" style={{ color: NGK_COLORS.primary }}>Clinic Information</h5>
             <CRow className="mb-4 g-3">
               <CCol md={4}>
                 <CFormLabel>
@@ -1011,7 +1098,7 @@ const ClinicRegistration = () => {
                 )}
               </CCol>
             </CRow>
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Clinic Contact Details</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Clinic Contact Details</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
@@ -1113,7 +1200,7 @@ const ClinicRegistration = () => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Bank & Financial Information</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Bank & Financial Information</h5>
             <CRow className='mb-3'>
               <CCol md={4}>
                 <CFormLabel>
@@ -1268,7 +1355,7 @@ const ClinicRegistration = () => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-4 fw-bold" style={{color:NGK_COLORS.primary}}>Clinic Operations</h5>
+            <h5 className="mb-4 fw-bold" style={{ color: NGK_COLORS.primary }}>Clinic Operations</h5>
 
             {/* Row 1 : Clinic Management Software + Subscription */}
             <CRow className="mb-4">
@@ -1430,7 +1517,7 @@ const ClinicRegistration = () => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Licenses & Certifications</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Licenses & Certifications</h5>
 
             <CRow className='mb-3'>
               <CCol md={6}>
@@ -1515,7 +1602,7 @@ const ClinicRegistration = () => {
 
             </CRow>
 
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Virtual Tour & Branch Info</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Virtual Tour & Branch Info</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
@@ -1576,7 +1663,7 @@ const ClinicRegistration = () => {
 
             </CRow>
 
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Social Media</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Social Media</h5>
             <CRow className="mb-3">
               <CCol md={4}>
                 <CFormLabel>Instagram</CFormLabel>
@@ -1612,7 +1699,7 @@ const ClinicRegistration = () => {
                 />
               </CCol>
             </CRow>
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Clinic Staff & Pharmacist</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Clinic Staff & Pharmacist</h5>
 
             <CRow className="mb-3">
               <CCol md={6}>
@@ -1662,7 +1749,7 @@ const ClinicRegistration = () => {
                   inputRef={refs.pharmacistCertificate}
                 />)}
             </CRow>
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Location & Coordinates</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Location & Coordinates</h5>
             <CRow className="mb-3">
               <CCol md={6}>
                 <CFormLabel>
@@ -1745,7 +1832,7 @@ const ClinicRegistration = () => {
               </CCol>
             </CRow>
 
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>Other Attachments / Documents</h5>
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Other Attachments / Documents</h5>
             <CRow className="mb-3">
               <FileInput
                 label="Clinic Contract"
@@ -1808,23 +1895,28 @@ const ClinicRegistration = () => {
                 setErrors={setErrors}
                 inputRef={refs.biomedicalWasteManagementAuth}
               />
+
+              {/* OTHERS FILE UPLOAD */}
               <CCol md={6}>
                 <CTooltip content="NABH Accreditation / Aesthetic Procedure Training Certificate">
                   <CFormLabel>Others (NABH / Aesthetic Training)</CFormLabel>
                 </CTooltip>
+
                 <CFormInput
                   type="file"
                   name="others"
                   multiple
-                  onChange={(e) => handleAppendFiles(e, 'others', 6)}
+                  onChange={(e) => handleAppendFiles(e, "others", 6)}
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip"
                   invalid={!!errors.others}
+                  disabled={nabhSubmitted}                 // ❌ Disable upload when NABH submitted
                 />
 
+                {errors.others && (
+                  <CFormFeedback invalid>{errors.others}</CFormFeedback>
+                )}
 
-                {errors.others && <CFormFeedback invalid>{errors.others}</CFormFeedback>}
-
-                {/* Display selected file names below input */}
+                {/* Show Selected Files */}
                 {Array.isArray(formData.others) && formData.others.length > 0 && (
                   <div className="mt-2">
                     {formData.others.map((file, index) => (
@@ -1837,11 +1929,11 @@ const ClinicRegistration = () => {
                           type="button"
                           className="btn btn-sm btn-outline-danger"
                           onClick={() => {
-                            const updatedFiles = formData.others.filter((_, i) => i !== index)
+                            const updatedFiles = formData.others.filter((_, i) => i !== index);
                             setFormData((prev) => ({
                               ...prev,
                               others: updatedFiles,
-                            }))
+                            }));
                           }}
                         >
                           Remove
@@ -1851,31 +1943,170 @@ const ClinicRegistration = () => {
                   </div>
                 )}
               </CCol>
-            </CRow>
 
-            <h5 className="mb-3 mt-6" style={{color:NGK_COLORS.primary}}>NABH Accreditation</h5>
-            {/* ✅ NABH Score - Opens Modal */}
-            <CRow className="mb-3">
-              <CCol md={12} className='d-flex align-items-center'>
-                <CFormLabel className="me-3">NABH Score <span style={{ color: 'red' }}>*</span></CFormLabel>
+              {/* NABH SCORE + BUTTON */}
+              <CCol md={6}>
+                <CFormLabel className="me-3">NABH Score</CFormLabel>
+
                 {nabhScore !== null && (
                   <span className="me-3 fw-bold text-success">{nabhScore}</span>
                 )}
-                <CButton
-                  
-                  onClick={() => !nabhSubmitted && setShowNabhModal(true)}
-                  disabled={nabhSubmitted}
-                  style={{backgroundColor:NGK_COLORS.primary,color:'white'}}
-                >
-                  Open NABH Questionnaire
-                </CButton>
+
+                <div className="mt-2">
+                  <CButton
+                    onClick={() => !nabhSubmitted && setShowNabhModal(true)}
+                    disabled={
+                      nabhSubmitted || (formData.others && formData.others.length > 0)
+                    }
+                    style={{ backgroundColor: NGK_COLORS.primary, color: "white" }}
+                  >
+                    Open NABH Questionnaire
+                  </CButton>
+                </div>
               </CCol>
-              {errors.nabhScore && (
-                <CCol md={12}>
-                  <div className="text-danger mt-1">{errors.nabhScore}</div>
-                </CCol>
-              )}
             </CRow>
+
+            {/* Doctor Details */}
+            <h5 className="mb-3 mt-6" style={{ color: NGK_COLORS.primary }}>Doctor Details</h5>
+            <CRow className="mb-3">
+              <CCol md={4}>
+                <CFormLabel>Doctor Name<span style={{ color: 'red' }}>*</span></CFormLabel>
+                <CFormInput
+                  name="doctorName"
+                  value={doctorEntry.doctorName}
+                  onChange={handleDoctorChange}
+                  invalid={!!errors.doctorName}
+                />
+                <CFormFeedback invalid>{errors.doctorName}</CFormFeedback>
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>Specialization<span style={{ color: 'red' }}>*</span></CFormLabel>
+                <CFormInput
+                  name="specialization"
+                  value={doctorEntry.specialization}
+                  onChange={handleDoctorChange}
+                  invalid={!!errors.specialization}
+                />
+                <CFormFeedback invalid>{errors.specialization}</CFormFeedback>
+              </CCol>
+
+              <CCol md={4}>
+                <CFormLabel>Registration Number<span style={{ color: 'red' }}>*</span></CFormLabel>
+                <CFormInput
+                  name="registrationNumber"
+                  value={doctorEntry.registrationNumber}
+                  onChange={handleDoctorChange}
+                  invalid={!!errors.registrationNumber}
+                />
+                <CFormFeedback invalid>{errors.registrationNumber}</CFormFeedback>
+              </CCol>
+
+              <CCol md={4}>
+                <CFormLabel>Association Number<span style={{ color: 'red' }}>*</span></CFormLabel>
+                <CFormInput
+                  name="associationNumber"
+                  value={doctorEntry.associationNumber}
+                  onChange={handleDoctorChange}
+                  invalid={!!errors.associationNumber}
+                />
+                <CFormFeedback invalid>{errors.associationNumber}</CFormFeedback>
+              </CCol>
+
+              <CCol md={4}>
+                <CFormLabel>Association Name<span style={{ color: 'red' }}>*</span></CFormLabel>
+                <CFormInput
+                  name="associationName"
+                  value={doctorEntry.associationName}
+                  onChange={handleDoctorChange}
+                  invalid={!!errors.associationName}
+                />
+                <CFormFeedback invalid>{errors.associationName}</CFormFeedback>
+              </CCol>
+            </CRow>
+
+            <CButton color="primary" className="mb-3" onClick={handleAddDoctor}>
+              {editDoctorIndex !== null ? 'Update Doctor' : '+ Add Doctor'}
+            </CButton>
+
+            {errors.doctorsList && (
+              <p style={{ color: "red" }}>{errors.doctorsList}</p>
+            )}
+
+
+            {/* Doctor Table */}
+            {doctorsList.length > 0 && (
+              <div style={{ maxHeight: '300px', overflowY: 'auto' }}> {/* Scrollable container */}
+                <CTable striped hover responsive>
+                  <CTableHead className="pink-table">
+                    <CTableRow>
+                      <CTableHeaderCell>S.No</CTableHeaderCell>
+                      <CTableHeaderCell>Doctor Name</CTableHeaderCell>
+                      <CTableHeaderCell>Specialization</CTableHeaderCell>
+                      <CTableHeaderCell>Registration No</CTableHeaderCell>
+                      <CTableHeaderCell>Association No</CTableHeaderCell>
+                      <CTableHeaderCell>Association Name</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+
+                  <CTableBody className="pink-table">
+                    {doctorsList.map((doctor, index) => (
+                      <CTableRow key={index}>
+                        <CTableDataCell>{index + 1}</CTableDataCell>
+                        <CTableDataCell>{doctor.doctorName || '-'}</CTableDataCell>
+                        <CTableDataCell>{doctor.specialization || '-'}</CTableDataCell>
+                        <CTableDataCell>{doctor.registrationNumber || '-'}</CTableDataCell>
+                        <CTableDataCell>{doctor.associationNumber || '-'}</CTableDataCell>
+                        <CTableDataCell>{doctor.associationName || '-'}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <div className="d-flex justify-content-center align-items-center gap-2">
+                            <button
+                              className="actionBtn edit"
+                              onClick={() => handleEditDoctor(index)}
+                              title="Edit"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              className="actionBtn delete"
+                              onClick={() => {
+                                setDoctorIndexToDelete(index); // store which doctor to delete
+                                setIsModalVisible(true);        // show confirmation modal
+                              }}
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+
+
+                          </div>
+                          <CModal visible={isModalVisible} onClose={() => setIsModalVisible(false)}>
+                            <CModalHeader>
+                              <CModalTitle>Confirm Delete</CModalTitle>
+                            </CModalHeader>
+                            <CModalBody>
+                              Are you sure you want to delete this doctor?
+                            </CModalBody>
+                            <CModalFooter>
+                              <CButton color="danger" onClick={confirmDeleteDoctor}>
+                                Delete
+                              </CButton>
+                              <CButton color="secondary" onClick={() => setIsModalVisible(false)}>
+                                Cancel
+                              </CButton>
+                            </CModalFooter>
+                          </CModal>
+
+                        </CTableDataCell>
+
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              </div>
+            )}
+
+
             <CModal visible={showNabhModal} onClose={() => setShowNabhModal(false)} size="lg" className="custom-modal"
               backdrop="static">
               <CModalHeader>
@@ -1955,10 +2186,6 @@ const ClinicRegistration = () => {
               </CButton>
             </div>
           </CForm>
-
-
-
-
 
           <CModal
             visible={showSuccessModal}

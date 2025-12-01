@@ -71,8 +71,9 @@ public class ClinicMapper {
         // -------------------------------------------------------
         // NEW: DOCTOR LIST MAPPING
         // -------------------------------------------------------
-        if (clinic.getDoctors() != null) {
-            List<DoctorDTO> mappedDoctors = clinic.getDoctors().stream().map(doc -> {
+     // Change mapping
+        if (clinic.getDoctorsList() != null) {
+            List<DoctorDTO> mappedDoctors = clinic.getDoctorsList().stream().map(doc -> {
                 DoctorDTO d = new DoctorDTO();
                 d.setDoctorName(doc.getDoctorName());
                 d.setRegistrationNumber(doc.getRegistrationNumber());
@@ -82,7 +83,7 @@ public class ClinicMapper {
                 return d;
             }).toList();
 
-            dto.setDoctors(mappedDoctors);
+            dto.setDoctorsList(mappedDoctors);
         }
 
         return dto;

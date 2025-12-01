@@ -126,5 +126,5 @@ public class ClinicRegistrationDTO {
     @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "PAN number must be in valid format (e.g., ABCDE1234F)")
     private String panNumber;
 
-    private List<DoctorDTO> doctors;
+    private List<DoctorDTO> doctorsList;
 }
