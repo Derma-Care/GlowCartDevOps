@@ -123,7 +123,7 @@ const ClinicRegistration = () => {
     primaryContactPerson: '',
     designation: '',
     alternateContactNumber: '',
-    clinicManagementSoftwareUsage: '',
+    // clinicManagementSoftwareUsage: '',
     bankAccountName: '',
     bankAccountNumber: '',
     ifscCode: '',
@@ -463,9 +463,9 @@ const ClinicRegistration = () => {
     }
 
     // 🔹 Clinic Management Software
-    if (!formData.clinicManagementSoftwareUsage?.trim()) {
-      newErrors.clinicManagementSoftwareUsage = "Please specify if you use clinic software"
-    }
+    // if (!formData.clinicManagementSoftwareUsage?.trim()) {
+    //   newErrors.clinicManagementSoftwareUsage = "Please specify if you use clinic software"
+    // }
 
     // 🔹 Bank Account Name
     if (!formData.bankAccountName?.trim()) {
@@ -1359,7 +1359,7 @@ const ClinicRegistration = () => {
 
             {/* Row 1 : Clinic Management Software + Subscription */}
             <CRow className="mb-4">
-              <CCol md={6}>
+              {/* <CCol md={6}>
                 <CFormLabel>
                   Clinic Management Software <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
@@ -1381,7 +1381,7 @@ const ClinicRegistration = () => {
                 {errors.clinicManagementSoftwareUsage && (
                   <CFormFeedback invalid>{errors.clinicManagementSoftwareUsage}</CFormFeedback>
                 )}
-              </CCol>
+              </CCol> */}
 
               <CCol md={6}>
                 <CFormLabel>
@@ -1403,11 +1403,7 @@ const ClinicRegistration = () => {
                   <p className="text-danger small">{errors.subscription}</p>
                 )}
               </CCol>
-            </CRow>
-
-            {/* Row 2 : Medicines sold + conditional license fields */}
-            <CRow className="mb-4">
-              <CCol md={6}>
+                  <CCol md={6}>
                 <CFormLabel>Medicines sold on-site</CFormLabel>
                 <CFormSelect
                   name="medicinesSoldOnSite"
@@ -1428,6 +1424,8 @@ const ClinicRegistration = () => {
                 </CFormSelect>
               </CCol>
             </CRow>
+
+           
 
             {/* Row 3 : Drug License (conditional) */}
             {formData.medicinesSoldOnSite && (

@@ -1,6 +1,5 @@
 package com.glowkart.customer.feign;
 
-
 import java.util.List;
 
 import org.springframework.cloud.openfeign.FeignClient;
@@ -12,9 +11,18 @@ import com.glowkart.customer.dto.WheelSliceDto;
 @FeignClient(name = "admin-service", contextId = "wheelSliceClient")
 public interface WheelSliceClient {
 
-    @GetMapping("/admin/api/wheel-slices")
-    List<WheelSliceDto> getAllSlices();
+    // Fetch YES wheel slices
+    @GetMapping("/admin/api/wheel-slices/yes")
+    List<WheelSliceDto> getYesSlices();
 
-    @GetMapping("/admin/api/wheel-slices/{id}")
-    WheelSliceDto getSliceById(@PathVariable String id);
+    // Fetch INTERESTED wheel slices
+    @GetMapping("/admin/api/wheel-slices/interested")
+    List<WheelSliceDto> getInterestedSlices();
+
+    // Fetch slice by ID (generic)
+    @GetMapping("/admin/api/wheel-slices/yes/{id}")
+    WheelSliceDto getYesSliceById(@PathVariable String id);
+
+    @GetMapping("/admin/api/wheel-slices/interested/{id}")
+    WheelSliceDto getInterestedSliceById(@PathVariable String id);
 }

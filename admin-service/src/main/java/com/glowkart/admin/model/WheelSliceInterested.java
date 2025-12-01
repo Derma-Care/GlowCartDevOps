@@ -4,23 +4,22 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@Document(collection = "wheel_slices")
-public class WheelSlice {
+@Document(collection = "wheel_slices_interested")
+public class WheelSliceInterested {
 
     @Id
     private String id;
-
-    private String option;  // frontend option
+    private String option;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String src;  // Base64 image
+    private String src;
 
-    public WheelSlice() {}
+    public WheelSliceInterested() {}
 
-    public WheelSlice(String id, String option, String src) {
+    public WheelSliceInterested(String id, String option, String src) {
         this.id = id;
-        this.option = option;
-        this.src = (option != null && option.contains("%")) ? null : src;
+        setOption(option);
+        setSrc(src);
     }
 
     // Getters & Setters

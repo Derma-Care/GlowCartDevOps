@@ -1,126 +1,141 @@
 package com.glowkart.customer.util;
 
+import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class AadhaarUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(AadhaarUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(AadhaarUtils.class);
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int ITERATIONS = 200_000;
     private static final int KEY_LENGTH = 256; // bits
 
-    private static final String LEGACY_PEPPER = "LEGACY_ONLY_PEPPER";
-
-    // Fallback pepper (for local/dev only – avoids crashes)
-    private static final String DEFAULT_FALLBACK_PEPPER =
-            "R8k39sD93kf02lsPwQx91NfLzXePqT7A"; // 32+ chars
-
-    private static final String PEPPER = loadPepper();
+    // Load peppers securely
+    private static final String PEPPER = loadPepper("AADHAAR_PEPPER");
+    private static final String LEGACY_PEPPER = loadPepper("AADHAAR_LEGACY_PEPPER");
 
     private AadhaarUtils() {}
 
-    /**
-     * Load pepper from environment OR fall back to safe default.
-     */
-    private static String loadPepper() {
-        try {
-            String pepper = System.getenv("AADHAAR_PEPPER");
+    /** Secure pepper loader with production enforcement */
+    private static String loadPepper(String name) {
+        String pepper = System.getenv(name);
 
-            if (pepper == null || pepper.length() < 32) {
-                log.warn("⚠ AADHAAR_PEPPER not set or too short. Using fallback pepper (DEV MODE).");
-                return DEFAULT_FALLBACK_PEPPER;
+        if (pepper == null || pepper.length() < 32) {
+            String profile = System.getenv("APP_PROFILE");
+
+            if ("production".equalsIgnoreCase(profile)) {
+                throw new IllegalStateException(name + " missing or too short for production.");
             }
 
-            return pepper;
-
-        } catch (Exception e) {
-            log.error("❌ Failed loading AADHAAR_PEPPER, using fallback.", e);
-            return DEFAULT_FALLBACK_PEPPER;
+            logger.warn("{} missing! Using temporary DEV pepper. DO NOT USE IN PROD.", name);
+            return name + "_DEV_TEMPORARY_PEPPER_VALUE_123456789012345";
         }
+
+        return pepper;
     }
 
-    /** Hash Aadhaar using PBKDF2 + salt + pepper */
-    public static String hashAadhaar(String aadhaar, String salt) {
-        try {
-            PBEKeySpec spec = new PBEKeySpec(
-                    (aadhaar + PEPPER).toCharArray(),
-                    salt.getBytes(StandardCharsets.UTF_8),
-                    ITERATIONS,
-                    KEY_LENGTH
-            );
-            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-            byte[] hash = skf.generateSecret(spec).getEncoded();
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            throw new RuntimeException("Error hashing Aadhaar", e);
-        }
-    }
-
-    /** Deterministic pre-hash for duplicate detection */
-    public static String preHashAadhaar(String aadhaar) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest((aadhaar + PEPPER).getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            throw new RuntimeException("Error pre-hashing Aadhaar", e);
-        }
-    }
-
-    /** Legacy pre-hash using last 4 digits */
-    public static String legacyPreHash(String last4) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest((last4 + LEGACY_PEPPER).getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            throw new RuntimeException("Error pre-hashing legacy Aadhaar", e);
-        }
-    }
-
-    /** Generate secure 32-byte salt */
+    /** 32-byte secure salt */
     public static String generateSalt() {
         byte[] salt = new byte[32];
         RANDOM.nextBytes(salt);
         return Base64.getEncoder().encodeToString(salt);
     }
 
-    /** Return last 4 digits of Aadhaar */
+    /** Correct PBKDF2 hash using decoded Base64 salt */
+    public static String hashAadhaar(String aadhaar, String saltBase64) {
+        try {
+            byte[] salt = Base64.getDecoder().decode(saltBase64);
+
+            PBEKeySpec spec = new PBEKeySpec(
+                    (aadhaar + PEPPER).toCharArray(),
+                    salt,
+                    ITERATIONS,
+                    KEY_LENGTH
+            );
+
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] hash = skf.generateSecret(spec).getEncoded();
+
+            spec.clearPassword();
+            return Base64.getEncoder().encodeToString(hash);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error hashing Aadhaar", e);
+        }
+    }
+
+    /** Deterministic HMAC prehash (for duplicate detection) */
+    public static String preHashAadhaar(String aadhaar) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(PEPPER.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            return Base64.getEncoder().encodeToString(mac.doFinal(aadhaar.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating pre-hash", e);
+        }
+    }
+
+    /** Legacy last4 PBKDF2 hashing */
+    public static String secureLegacyPreHash(String last4, String saltBase64) {
+        try {
+            byte[] salt = Base64.getDecoder().decode(saltBase64);
+
+            PBEKeySpec spec = new PBEKeySpec(
+                    (last4 + LEGACY_PEPPER).toCharArray(),
+                    salt,
+                    ITERATIONS,
+                    KEY_LENGTH
+            );
+
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] hash = skf.generateSecret(spec).getEncoded();
+
+            spec.clearPassword();
+            return Base64.getEncoder().encodeToString(hash);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error hashing legacy Aadhaar", e);
+        }
+    }
+
+    /** Random pre-hash when Aadhaar missing */
+    public static String randomPreHash() {
+        byte[] bytes = new byte[32];
+        RANDOM.nextBytes(bytes);
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    /** Get last 4 digits */
     public static String getLast4Digits(String aadhaar) {
         if (!aadhaar.matches("\\d{12}"))
             throw new IllegalArgumentException("Invalid Aadhaar number");
         return aadhaar.substring(8);
     }
 
-    /** Return masked Aadhaar for display */
+    /** Mask for display */
     public static String maskAadhaar(String last4) {
         return "********" + last4;
     }
 
-    /** Constant-time comparison to prevent timing attacks */
+    /** Constant-time comparison */
     public static boolean constantTimeEquals(String a, String b) {
         byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
         byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
         if (aBytes.length != bBytes.length) return false;
-        int result = 0;
-        for (int i = 0; i < aBytes.length; i++) {
-            result |= aBytes[i] ^ bBytes[i];
-        }
-        return result == 0;
-    }
 
-    /** Generate random pre-hash for users without Aadhaar */
-    public static String randomPreHash() {
-        byte[] randomBytes = new byte[32];
-        RANDOM.nextBytes(randomBytes);
-        return Base64.getEncoder().encodeToString(randomBytes);
+        int result = 0;
+        for (int i = 0; i < aBytes.length; i++)
+            result |= aBytes[i] ^ bBytes[i];
+
+        return result == 0;
     }
 }

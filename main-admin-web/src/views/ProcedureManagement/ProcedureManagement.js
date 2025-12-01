@@ -169,7 +169,7 @@ const ProcedureManagement = () => {
           <LoadingIndicator message="Fetching Procedure Details, Please wait..." />
         ) : (
           <CTable striped hover responsive>
-            <CTableHead>
+            <CTableHead className='pink-table'>
               <CTableRow>
                 <CTableHeaderCell>S.No</CTableHeaderCell>
                 <CTableHeaderCell>Procedure</CTableHeaderCell>
@@ -177,7 +177,7 @@ const ProcedureManagement = () => {
               </CTableRow>
             </CTableHead>
 
-            <CTableBody>
+            <CTableBody className='pink-table'>
               {currentItems.length > 0 ? (
                 currentItems.map((row, index) => (
                   <CTableRow key={row.id}>

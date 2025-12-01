@@ -1,16 +1,8 @@
 package com.glowkart.admin.controller;
 
 import java.util.List;
-
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.glowkart.admin.dto.WheelSliceDto;
 import com.glowkart.admin.service.WheelSliceService;
@@ -25,36 +17,69 @@ public class WheelSliceController {
         this.service = service;
     }
 
-    @GetMapping("/api/wheel-slices")
-    public List<WheelSliceDto> getAllSlices() {
-        return service.getAllSlices();
+    // ================== YES ==================
+    @GetMapping("/api/wheel-slices/yes")
+    public List<WheelSliceDto> getYesSlices() {
+        return service.getYesSlices();
     }
 
-    @GetMapping("/api/wheel-slices/{id}")
-    public ResponseEntity<WheelSliceDto> getSlice(@PathVariable String id) {
-        return service.getSliceById(id)
+    @GetMapping("/api/wheel-slices/yes/{id}")
+    public ResponseEntity<WheelSliceDto> getYesSlice(@PathVariable String id) {
+        return service.getYesSliceById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/api/wheel-slices/create")
-    public WheelSliceDto createSlice(@RequestBody WheelSliceDto dto) {
-        return service.createSlice(dto);
+    @PostMapping("/api/wheel-slices/yes")
+    public WheelSliceDto createYesSlice(@RequestBody WheelSliceDto dto) {
+        return service.createYesSlice(dto);
     }
 
-    @PutMapping("/api/wheel-slices/{id}")
-    public ResponseEntity<WheelSliceDto> updateSlice(@PathVariable String id, @RequestBody WheelSliceDto dto) {
+    @PutMapping("/api/wheel-slices/yes/{id}")
+    public ResponseEntity<WheelSliceDto> updateYesSlice(@PathVariable String id, @RequestBody WheelSliceDto dto) {
         try {
-            return ResponseEntity.ok(service.updateSlice(id, dto));
+            return ResponseEntity.ok(service.updateYesSlice(id, dto));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @DeleteMapping("/api/wheel-slices/{id}")
-    public ResponseEntity<Void> deleteSlice(@PathVariable String id) {
-        service.deleteSlice(id);
+    @DeleteMapping("/api/wheel-slices/yes/{id}")
+    public ResponseEntity<Void> deleteYesSlice(@PathVariable String id) {
+        service.deleteYesSlice(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ================== INTERESTED ==================
+    @GetMapping("/api/wheel-slices/interested")
+    public List<WheelSliceDto> getInterestedSlices() {
+        return service.getInterestedSlices();
+    }
+
+    @GetMapping("/api/wheel-slices/interested/{id}")
+    public ResponseEntity<WheelSliceDto> getInterestedSlice(@PathVariable String id) {
+        return service.getInterestedSliceById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/api/wheel-slices/interested")
+    public WheelSliceDto createInterestedSlice(@RequestBody WheelSliceDto dto) {
+        return service.createInterestedSlice(dto);
+    }
+
+    @PutMapping("/api/wheel-slices/interested/{id}")
+    public ResponseEntity<WheelSliceDto> updateInterestedSlice(@PathVariable String id, @RequestBody WheelSliceDto dto) {
+        try {
+            return ResponseEntity.ok(service.updateInterestedSlice(id, dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/api/wheel-slices/interested/{id}")
+    public ResponseEntity<Void> deleteInterestedSlice(@PathVariable String id) {
+        service.deleteInterestedSlice(id);
         return ResponseEntity.noContent().build();
     }
 }
-

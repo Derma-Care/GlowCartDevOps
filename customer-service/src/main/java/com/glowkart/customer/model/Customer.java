@@ -64,7 +64,7 @@ public class Customer {
     private String aadharLast4;
 
     @JsonIgnore
-    @Indexed(unique = true)
+    @Indexed
     private String aadharPreHash;
 
     // Wheel fields

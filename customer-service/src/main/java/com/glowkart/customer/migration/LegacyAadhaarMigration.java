@@ -31,18 +31,18 @@ public class LegacyAadhaarMigration implements CommandLineRunner {
 
             if (customer.getAadharLast4() != null && customer.getAadharHash() == null) {
                 // Legacy user with only last 4 digits
-                String tempPreHash = AadhaarUtils.legacyPreHash(customer.getAadharLast4());
+                String salt = AadhaarUtils.generateSalt();
+                String tempPreHash = AadhaarUtils.secureLegacyPreHash(customer.getAadharLast4(), salt);
                 customer.setAadharPreHash(tempPreHash);
+                customer.setAadharSalt(salt);
 
             } else if (customer.getAadharHash() != null && customer.getAadharSalt() != null) {
                 // Full Aadhaar already present
                 log.info("Full Aadhaar exists for user: {}", customer.getMobile());
 
             } else {
-                // No Aadhaar at all, use default pre-hash + flag to avoid collisions
-                String tempPreHash = AadhaarUtils.legacyPreHash("0000");
-                customer.setAadharPreHash(tempPreHash);
-                // Optional: you could also store a boolean like customer.setHasAadhaar(false);
+                // No Aadhaar at all, generate random pre-hash
+                customer.setAadharPreHash(AadhaarUtils.randomPreHash());
             }
 
             toUpdate.add(customer);

@@ -73,7 +73,7 @@ public class CustomerService {
         return new ApiResponse<>(true, "Step-1 completed. Please proceed to the next step.", customer);
     }
 
-    // ==================== STEP 2: Spin Wheel ====================
+ // ==================== STEP 2: Spin Wheel ====================
     @Transactional
     public ApiResponse<Customer> completeSpinByMobile(String mobile, SpinWheelDTO dto) {
         Customer customer = customerRepository.findByMobile(mobile)
@@ -82,19 +82,50 @@ public class CustomerService {
         if (!customer.isUserProfileCompleted())
             return new ApiResponse<>(false, "Complete Profile first!", customer);
 
-        WheelSliceDto slice = wheelSliceClient.getSliceById(dto.getRewardId());
+        WheelSliceDto slice = null;
+
+        // Try to assign slice by rewardId first
+        if (dto.getRewardId() != null && !dto.getRewardId().isBlank()) {
+            if (customer.getServiceStatus() == 1) {
+                slice = wheelSliceClient.getYesSliceById(dto.getRewardId());
+            } else if (customer.getServiceStatus() == 2) {
+                slice = wheelSliceClient.getInterestedSliceById(dto.getRewardId());
+            }
+        }
+
+        // Fallback to random slice if rewardId is missing or invalid
+        if (slice == null) {
+            if (customer.getServiceStatus() == 1) {
+                List<WheelSliceDto> yesSlices = wheelSliceClient.getYesSlices();
+                if (!yesSlices.isEmpty()) {
+                    slice = yesSlices.get((int) (Math.random() * yesSlices.size()));
+                }
+            } else if (customer.getServiceStatus() == 2) {
+                List<WheelSliceDto> interestedSlices = wheelSliceClient.getInterestedSlices();
+                if (!interestedSlices.isEmpty()) {
+                    slice = interestedSlices.get((int) (Math.random() * interestedSlices.size()));
+                }
+            }
+        }
+
+        // Assign slice values to customer
         if (slice != null) {
             customer.setSpinRewardId(slice.getId());
             customer.setSpinRewardValue(slice.getOption());
             customer.setSpinRewardImage(slice.getSrc());
+        } else {
+            log.warn("No wheel slices available for serviceStatus {}", customer.getServiceStatus());
         }
 
         customer.setSpinWheelCompleted(true);
         customerRepository.save(customer);
 
-        log.info("Step-2 (Spin Wheel) completed for mobile: {}", mobile);
+        log.info("Step-2 (Spin Wheel) completed for mobile: {}, assigned slice: {}",
+                 mobile, slice != null ? slice.getOption() : "None");
+
         return new ApiResponse<>(true, "Step-2 completed. Please proceed to the next step.", customer);
     }
+
 
     // ==================== STEP 3: Complete Registration ====================
     @Transactional
@@ -123,11 +154,29 @@ public class CustomerService {
         return new ApiResponse<>(true, "Registration completed successfully!", customer);
     }
 
-    // ==================== Wheel Slices ====================
-    public ApiResponse<List<WheelSliceDto>> getWheelSlices() {
-        List<WheelSliceDto> slices = wheelSliceClient.getAllSlices();
-        return new ApiResponse<>(true, "Wheel slices fetched", slices);
+ // ==================== Wheel Slices ====================
+    public ApiResponse<List<WheelSliceDto>> getWheelSlices(String mobile) {
+        Customer customer = customerRepository.findByMobile(mobile)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+
+        List<WheelSliceDto> slices;
+
+        if (customer.getServiceStatus() == 1) { // YES customer
+            slices = wheelSliceClient.getYesSlices();
+        } else if (customer.getServiceStatus() == 2) { // INTERESTED customer
+            slices = wheelSliceClient.getInterestedSlices();
+        } else {
+            return new ApiResponse<>(false, "Invalid service status", null);
+        }
+
+        if (slices == null || slices.isEmpty()) {
+            return new ApiResponse<>(false, "No wheel slices found for this customer type", null);
+        }
+
+        return new ApiResponse<>(true, "Wheel slices fetched successfully", slices);
     }
+
+
 
     // ==================== CRUD ====================
     public ApiResponse<List<Customer>> getAllCustomers() {
@@ -234,6 +283,7 @@ public class CustomerService {
         }
     }
 
+
     // ==================== DUPLICATE CHECKS ====================
     private void checkDuplicateMobile(String mobile, String excludeMobile) {
         customerRepository.findByMobile(mobile)
@@ -248,9 +298,9 @@ public class CustomerService {
         if (aadhaar == null || aadhaar.isBlank()) return;
 
         String preHash = AadhaarUtils.preHashAadhaar(aadhaar);
-        String legacyPreHash = AadhaarUtils.legacyPreHash(AadhaarUtils.getLast4Digits(aadhaar));
+        String last4 = AadhaarUtils.getLast4Digits(aadhaar);
 
-        List<Customer> candidates = customerRepository.findByAadharPreHashIn(List.of(preHash, legacyPreHash));
+        List<Customer> candidates = customerRepository.findByAadharPreHashIn(List.of(preHash));
 
         for (Customer c : candidates) {
             if (Objects.equals(c.getMobile(), excludeMobile)) continue;
@@ -258,15 +308,15 @@ public class CustomerService {
             if (c.getAadharHash() != null && c.getAadharSalt() != null) {
                 String computedHash = AadhaarUtils.hashAadhaar(aadhaar, c.getAadharSalt());
                 if (AadhaarUtils.constantTimeEquals(computedHash, c.getAadharHash())) {
-                    log.warn("Duplicate Aadhaar detected: customerMobile={} conflictsWithMobile={}", excludeMobile, c.getMobile());
                     throw new DuplicateAadhaarException("Aadhaar number already exists");
                 }
             } else {
-                if (c.getAadharPreHash().equals(legacyPreHash)) {
-                    log.warn("Duplicate Aadhaar (legacy user) detected: customerMobile={} conflictsWithMobile={}", excludeMobile, c.getMobile());
+                // fallback: legacy pre-hash check
+                if (c.getAadharPreHash().equals(AadhaarUtils.secureLegacyPreHash(last4, c.getAadharSalt()))) {
                     throw new DuplicateAadhaarException("Aadhaar number already exists (legacy user)");
                 }
             }
         }
     }
+
 }

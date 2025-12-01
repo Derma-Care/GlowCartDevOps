@@ -49,11 +49,12 @@ public class CustomerController {
                 .body(response);
     }
 
-
     // ==================== GET Wheel Slices ====================
-    @GetMapping("/customer/wheel-slices")
-    public ResponseEntity<ApiResponse<List<WheelSliceDto>>> getWheelSlices() {
-        return ResponseEntity.ok(customerService.getWheelSlices());
+    @GetMapping("/customer/{mobile}/wheel-slices")
+    public ResponseEntity<ApiResponse<List<WheelSliceDto>>> getWheelSlices(@PathVariable String mobile) {
+        ApiResponse<List<WheelSliceDto>> response = customerService.getWheelSlices(mobile);
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
     }
 
     // ==================== CRUD ====================

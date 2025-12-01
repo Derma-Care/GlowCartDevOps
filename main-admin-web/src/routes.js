@@ -23,6 +23,7 @@ const PackageManagement = React.lazy(() => import('./views/PackageManagement/Pac
 const Payouts = React.lazy(() => import('./views/Payouts/Payout'))
 // const BranchDetails = React.lazy(() => import('./views/clinicManagement/BranchDetails'))
 const RegistrationCodeManagement= React.lazy(()=>import('./views/RegistrationCodes/RegistrationCodes'))
+const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/GlowKartClinicDetails'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -46,6 +47,7 @@ const routes = [
   { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
   { path: '/package-management', name: 'PackageManagement', element: PackageManagement },
   { path: '/registration-codes', name: 'RegistrationCodeManagement', element: RegistrationCodeManagement },
+   { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
 ]
 
 export default routes
