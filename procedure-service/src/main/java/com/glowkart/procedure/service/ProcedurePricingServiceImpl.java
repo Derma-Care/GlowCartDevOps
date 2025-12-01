@@ -155,22 +155,29 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         }
     }
 
-    private ProcedurePricing setOfferActive(ProcedurePricing procedure) {
-        Instant now = Instant.now();
-        Instant start = procedure.getOfferStart();
-        Instant end = procedure.getOfferValidDate();
+ // ---------------- Helper Methods ----------------
 
-        if (start == null && end == null) {
-            procedure.setOfferActive(true);
-        } else if (start != null && end != null) {
+    private ProcedurePricing setOfferActive(ProcedurePricing procedure) {
+        if (procedure.getOfferStart() == null || procedure.getOfferValidDate() == null) {
+            procedure.setOfferActive(false);
+            return procedure;
+        }
+
+        try {
+            Instant now = Instant.now();
+            Instant start = Instant.parse(procedure.getOfferStart());
+            Instant end = Instant.parse(procedure.getOfferValidDate());
+
             boolean active = !now.isBefore(start) && !now.isAfter(end);  // inclusive
             procedure.setOfferActive(active);
-        } else {
+        } catch (Exception e) {
+            log.warn("Invalid offerStart/offerValidDate format for procedureId={}", procedure.getProcedureId());
             procedure.setOfferActive(false);
         }
 
         return procedure;
     }
+
 
     private ProcedurePricing calculatePricing(ProcedurePricing procedure) {
         double price = procedure.getPrice();

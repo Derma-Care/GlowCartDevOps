@@ -26,7 +26,7 @@ public class ProcedurePricing {
     private List<Map<String, List<String>>> postProcedureQA;
 
     private int sittings; 
-    private int minTime; // NEW: minimum time in minutes
+    private String minTime; // STRING
 
     private double price;
     private double discountPercentage;
@@ -40,8 +40,8 @@ public class ProcedurePricing {
     private double clinicPay;
     private double finalCost;
 
-    private Instant offerStart;       // NEW
-    private Instant offerValidDate;   // NEW
+    private String offerStart;     // STRING
+    private String offerValidDate; // STRING
     private boolean offerActive;      // NEW, dynamically set
 
     private Instant createdAt;

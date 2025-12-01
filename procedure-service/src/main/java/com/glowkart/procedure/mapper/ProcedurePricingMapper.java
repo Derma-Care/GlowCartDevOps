@@ -1,10 +1,7 @@
 package com.glowkart.procedure.mapper;
 
-import java.time.Instant;
 import java.util.List;
-
 import org.springframework.stereotype.Component;
-
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
 import com.glowkart.procedure.model.ProcedurePricing;
 
@@ -23,12 +20,9 @@ public class ProcedurePricingMapper {
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
         entity.setSittings(dto.getSittings());
 
-        // convert "30 mins" -> 30
-        entity.setMinTime(parseMinTime(dto.getMinTime()));
-
-        // convert ISO string -> Instant
-        entity.setOfferStart(parseInstant(dto.getOfferStart()));
-        entity.setOfferValidDate(parseInstant(dto.getOfferValidDate()));
+        entity.setMinTime(dto.getMinTime());        // store string
+        entity.setOfferStart(dto.getOfferStart());  // store string
+        entity.setOfferValidDate(dto.getOfferValidDate()); // store string
 
         entity.setPrice(dto.getPrice());
         entity.setDiscountPercentage(dto.getDiscountPercentage());
@@ -51,12 +45,9 @@ public class ProcedurePricingMapper {
         dto.setPostProcedureQA(entity.getPostProcedureQA() != null ? entity.getPostProcedureQA() : List.of());
         dto.setSittings(entity.getSittings());
 
-        // int -> "30 mins"
-        dto.setMinTime(entity.getMinTime() + " mins");
-
-        // Instant -> ISO string
-        dto.setOfferStart(entity.getOfferStart() != null ? entity.getOfferStart().toString() : null);
-        dto.setOfferValidDate(entity.getOfferValidDate() != null ? entity.getOfferValidDate().toString() : null);
+        dto.setMinTime(entity.getMinTime());        // return string
+        dto.setOfferStart(entity.getOfferStart());  // return string
+        dto.setOfferValidDate(entity.getOfferValidDate()); // return string
 
         dto.setPrice(entity.getPrice());
         dto.setDiscountPercentage(entity.getDiscountPercentage());
@@ -82,33 +73,15 @@ public class ProcedurePricingMapper {
         entity.setProcedureQA(dto.getProcedureQA() != null ? dto.getProcedureQA() : List.of());
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
         entity.setSittings(dto.getSittings());
-        entity.setMinTime(parseMinTime(dto.getMinTime()));
+
+        entity.setMinTime(dto.getMinTime());        // store string
+        entity.setOfferStart(dto.getOfferStart());  // store string
+        entity.setOfferValidDate(dto.getOfferValidDate()); // store string
+
         entity.setPrice(dto.getPrice());
         entity.setDiscountPercentage(dto.getDiscountPercentage());
         entity.setTaxPercentage(dto.getTaxPercentage());
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
-        entity.setOfferStart(parseInstant(dto.getOfferStart()));
-        entity.setOfferValidDate(parseInstant(dto.getOfferValidDate()));
-    }
-
-    // ------------------- Helper Methods -------------------
-    private int parseMinTime(String minTimeStr) {
-        if (minTimeStr == null || minTimeStr.isEmpty()) return 0;
-        try {
-            return Integer.parseInt(minTimeStr.replaceAll("[^0-9]", ""));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-    private Instant parseInstant(String instantStr) {
-        if (instantStr == null || instantStr.isEmpty()) return null;
-        try {
-            return Instant.parse(instantStr);
-        } catch (Exception e) {
-            return null;
-        }
     }
 }
-
