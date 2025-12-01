@@ -20,7 +20,8 @@ public class ProcedurePricingDTO {
     private List<Map<String, List<String>>> postProcedureQA;
     
     private int sittings;
-    private int minTime; // NEW
+    private String minTime; // NEW
+
 
     private double price;
     private double discountPercentage;
@@ -34,7 +35,7 @@ public class ProcedurePricingDTO {
     private double clinicPay;
     private double finalCost;
 
-    private Instant offerStart;     // NEW
-    private Instant offerValidDate; // NEW
+    private String offerStart;      // <-- frontend sends ISO string
+    private String offerValidDate;  // <-- frontend sends ISO string
     private boolean offerActive;    // NEW
 }

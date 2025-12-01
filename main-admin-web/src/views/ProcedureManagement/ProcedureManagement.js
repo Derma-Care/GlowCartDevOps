@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
   CFormInput,
-  CFormSelect,
   CButton,
   CModal,
   CModalHeader,
@@ -17,13 +16,12 @@ import {
   CPagination,
   CPaginationItem,
   CCard,
-  CCardHeader,
+  CCardHeader, CFormSelect
 } from '@coreui/react'
 
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-/* ✅ USE PROCEDURE APIs */
 import {
   createProcedure,
   getAllProcedures,
@@ -39,6 +37,7 @@ import { COLORS } from '../../Constant/Themes'
 const ProcedureManagement = () => {
   const [procedures, setProcedures] = useState([])
   const [procedureInput, setProcedureInput] = useState('')
+  const [tempProcedures, setTempProcedures] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [viewModal, setViewModal] = useState(false)
   const [selectedProcedure, setSelectedProcedure] = useState(null)
@@ -57,19 +56,11 @@ const ProcedureManagement = () => {
     fetchProcedures()
   }, [])
 
-  /* ======================================================
-      GET ALL PROCEDURES
-  ====================================================== */
   const fetchProcedures = async () => {
     setLoading(true)
     try {
       const response = await getAllProcedures()
-
-      const formatted = response.map((proc) => ({
-        id: proc.procedureId,
-        name: proc.procedureName,
-      }))
-
+      const formatted = response.map((proc) => ({ id: proc.procedureId, name: proc.procedureName }))
       setProcedures(formatted)
     } catch (error) {
       toast.error('Failed to fetch procedures')
@@ -77,58 +68,54 @@ const ProcedureManagement = () => {
     setLoading(false)
   }
 
-  /* ======================================================
-      ADD / UPDATE PROCEDURE
-  ====================================================== */
-  const handleSubmit = async () => {
+  /* ===========================
+      ADD PROCEDURE TO TEMP LIST
+     =========================== */
+  const handleAddToTemp = () => {
     const trimmed = procedureInput.trim()
     if (!trimmed) {
       setErrors({ procedure: 'Procedure name is required' })
       return
     }
 
-    const duplicate = procedures.some(
-      (p) => p.name.toLowerCase() === trimmed.toLowerCase() && p.id !== editProcedureId
-    )
-    if (duplicate) {
-      setErrors({ procedure: 'Procedure already exists' })
+    if (tempProcedures.map(p => p.toLowerCase()).includes(trimmed.toLowerCase())) {
+      setErrors({ procedure: 'Procedure already added in the list' })
       return
     }
 
-    try {
-      const payload = { procedureName: trimmed }
-
-      let res
-      if (editMode) {
-        res = await updateProcedure(editProcedureId, payload)
-        toast.success('Procedure updated successfully')
-      } else {
-        res = await createProcedure(payload)
-        toast.success('Procedure added successfully')
-      }
-
-      fetchProcedures()
-      setProcedureInput('')
-      setErrors({ procedure: '' })
-      setEditMode(false)
-      setEditProcedureId(null)
-      setShowModal(false)
-    } catch (error) {
-      toast.error('Failed to save procedure')
-    }
+    setTempProcedures([...tempProcedures, trimmed])
+    setProcedureInput('')
+    setErrors({ procedure: '' })
   }
 
-  /* ======================================================
-      VIEW PROCEDURE
-  ====================================================== */
+  /* ===========================
+      SUBMIT ALL TEMP PROCEDURES
+     =========================== */
+  const handleSubmitAll = async () => {
+    for (const name of tempProcedures) {
+      try {
+        const res = await createProcedure({ procedureName: name })
+        // If API returns 200 with success: true
+        if (res && res.success !== false) {
+          toast.success(`Procedure "${name}" added successfully`)
+        }
+      } catch (err) {
+        // Axios error object
+        const apiMessage = err.response?.data?.message || 'Failed to save procedure'
+        toast.error(`Failed to add "${name}": ${apiMessage}`)
+      }
+    }
+
+    fetchProcedures()
+    setTempProcedures([])
+    setShowModal(false)
+  }
+
   const handleView = (procedure) => {
     setSelectedProcedure(procedure)
     setViewModal(true)
   }
 
-  /* ======================================================
-      EDIT PROCEDURE
-  ====================================================== */
   const handleEdit = (procedure) => {
     setEditMode(true)
     setEditProcedureId(procedure.id)
@@ -136,9 +123,6 @@ const ProcedureManagement = () => {
     setShowModal(true)
   }
 
-  /* ======================================================
-      DELETE PROCEDURE
-  ====================================================== */
   const confirmDelete = (id) => {
     setDeleteId(id)
     setShowDeleteModal(true)
@@ -155,9 +139,6 @@ const ProcedureManagement = () => {
     setShowDeleteModal(false)
   }
 
-  /* ======================================================
-      PAGINATION
-  ====================================================== */
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = procedures.slice(indexOfFirstItem, indexOfLastItem)
@@ -170,21 +151,17 @@ const ProcedureManagement = () => {
       <CCard className="mt-4">
         <CCardHeader>
           <div className="d-flex justify-content-between align-items-center">
-            <h4 className="mb-0" style={{ color: COLORS.black }}>
-              Procedure Management
-            </h4>
-
+            <h4 className="mb-0" style={{ color: COLORS.black }}>Procedure Management</h4>
             <CButton
               color="secondary"
               style={{ backgroundColor: COLORS.black, color: COLORS.white }}
               onClick={() => {
                 setEditMode(false)
                 setProcedureInput('')
+                setTempProcedures([])
                 setShowModal(true)
               }}
-            >
-              + Add New Procedure
-            </CButton>
+            >+ Add New Procedure</CButton>
           </div>
         </CCardHeader>
 
@@ -211,11 +188,9 @@ const ProcedureManagement = () => {
                         <button className="actionBtn" onClick={() => handleView(row)}>
                           <Eye size={18} />
                         </button>
-
                         <button className="actionBtn" onClick={() => handleEdit(row)}>
                           <Edit2 size={18} />
                         </button>
-
                         <button className="actionBtn" onClick={() => confirmDelete(row.id)}>
                           <Trash2 size={18} />
                         </button>
@@ -225,26 +200,20 @@ const ProcedureManagement = () => {
                 ))
               ) : (
                 <CTableRow>
-                  <CTableDataCell colSpan={3} className="text-center">
-                    No procedures found
-                  </CTableDataCell>
+                  <CTableDataCell colSpan={3} className="text-center">No procedures found</CTableDataCell>
                 </CTableRow>
               )}
             </CTableBody>
           </CTable>
         )}
 
-        {/* Pagination */}
         {procedures.length > 0 && (
           <div className="d-flex justify-content-between px-3 pb-3 mt-3">
             <div>
               <label className="me-2">Rows per page:</label>
               <CFormSelect
                 value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value))
-                  setCurrentPage(1)
-                }}
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                 style={{ width: '80px' }}
               >
                 <option value={5}>5</option>
@@ -254,65 +223,48 @@ const ProcedureManagement = () => {
             </div>
 
             <div>
-              <div>
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, procedures.length)} of{' '}
-                {procedures.length} entries
-              </div>
+              <div>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, procedures.length)} of {procedures.length} entries</div>
 
               <CPagination align="end">
-                <CPaginationItem
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                >
-                  Previous
-                </CPaginationItem>
-
+                <CPaginationItem disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Previous</CPaginationItem>
                 {[...Array(totalPages)].map((_, i) => (
-                  <CPaginationItem
-                    active={i + 1 === currentPage}
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </CPaginationItem>
+                  <CPaginationItem active={i + 1 === currentPage} key={i} onClick={() => setCurrentPage(i + 1)}>{i + 1}</CPaginationItem>
                 ))}
-
-                <CPaginationItem
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                >
-                  Next
-                </CPaginationItem>
+                <CPaginationItem disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Next</CPaginationItem>
               </CPagination>
             </div>
           </div>
         )}
       </CCard>
 
-      {/* Add/Edit Modal */}
+      {/* Add Procedures Modal */}
       <CModal visible={showModal} onClose={() => setShowModal(false)}>
         <CModalHeader closeButton>
-          <CModalTitle>{editMode ? 'Edit Procedure' : 'Add New Procedure'}</CModalTitle>
+          <CModalTitle>Add Procedures</CModalTitle>
         </CModalHeader>
+
         <CModalBody>
           <CFormInput
-            placeholder="Enter Procedure Name"
+            placeholder="Enter procedure"
             value={procedureInput}
-            onChange={(e) => {
-              setProcedureInput(e.target.value)
-              if (e.target.value.trim()) setErrors({ procedure: '' })
-            }}
+            onChange={(e) => setProcedureInput(e.target.value)}
             invalid={!!errors.procedure}
           />
-          {errors.procedure && <p className="text-danger mt-1">{errors.procedure}</p>}
+          {errors.procedure && <p className="text-danger mt-1">{errors.procedure}</p>}<br />
+
+          <CButton color="primary" onClick={handleAddToTemp}>Add</CButton>
+
+          {tempProcedures.length > 0 && (
+            <div className="mt-3">
+              <h6>Procedures to be added:</h6>
+              <ul>{tempProcedures.map((p, i) => <li key={i}>{p}</li>)}</ul>
+            </div>
+          )}
         </CModalBody>
+
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </CButton>
-          <CButton color="primary" onClick={handleSubmit}>
-            {editMode ? 'Update' : 'Add'}
-          </CButton>
+          <CButton color="secondary" onClick={() => setShowModal(false)}>Cancel</CButton>
+          <CButton color="primary" onClick={handleSubmitAll} disabled={tempProcedures.length === 0}>Submit All</CButton>
         </CModalFooter>
       </CModal>
 
@@ -330,7 +282,6 @@ const ProcedureManagement = () => {
         </CModalFooter>
       </CModal>
 
-      {/* Delete Confirmation */}
       {showDeleteModal && (
         <ConfirmationModal
           isVisible={showDeleteModal}
