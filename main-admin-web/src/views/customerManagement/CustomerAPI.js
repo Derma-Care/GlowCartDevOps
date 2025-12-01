@@ -1,17 +1,17 @@
 import axios from 'axios'
 import {
   BASE_URL,
-  CustomerAllData,
   AddCustomer,
   updateCustomer,
-  deleteCustomer,
+  CustomerAllData,
   getBasicDetails,
+  BASE_URL_API,
 } from '../../baseUrl'
 
 // Fetch all customers
 export const CustomerData = async () => {
   try {
-    const url = `${BASE_URL}/${CustomerAllData}`
+    const url = `${BASE_URL_API}/${CustomerAllData}`
     const response = await axios.get(url)
     console.log('customer doing ',response)
     // Assuming backend wraps list in response.data.data
@@ -23,24 +23,24 @@ export const CustomerData = async () => {
 }
 
 // Add a new customer
-export const addCustomer = async (customerDTO) => {
-  try {
-    const url = `${BASE_URL}/${AddCustomer}`
-    const response = await axios.post(url, customerDTO, {
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return response.data
-  } catch (error) {
-    console.error('Failed to add customer:', error)
-    throw error
-  }
-}
+// export const addCustomer = async (customerDTO) => {
+//   try {
+//     const url = `${BASE_URL}/${AddCustomer}`
+//     const response = await axios.post(url, customerDTO, {
+//       headers: { 'Content-Type': 'application/json' },
+//     })
+//     return response.data
+//   } catch (error) {
+//     console.error('Failed to add customer:', error)
+//     throw error
+//   }
+// }
 
 // Get one customer by mobile number
 export const getCustomerByMobile = async (mobileNumber) => {
   try {
     // Using the endpoint from your baseUrl configuration
-    const url = `${BASE_URL}/${getBasicDetails}/${mobileNumber}`
+    const url = `${BASE_URL_API}/${getBasicDetails}/${mobileNumber}`
     const response = await axios.get(url)
     return response.data
   } catch (error) {
@@ -60,23 +60,23 @@ export const getCustomerByMobile = async (mobileNumber) => {
 }
 
 // Update existing customer
-export const updateCustomerData = async (mobileNumber, customerDTO) => {
-  try {
-    const url = `${BASE_URL}/${updateCustomer}/${mobileNumber}`
-    const response = await axios.put(url, customerDTO, {
-      headers: { 'Content-Type': 'application/json' },
-    })
-    return response.data
-  } catch (error) {
-    console.error('Failed to update customer:', error)
-    throw error
-  }
-}
+// export const updateCustomerData = async (mobileNumber, customerDTO) => {
+//   try {
+//     const url = `${BASE_URL}/${updateCustomer}/${mobileNumber}`
+//     const response = await axios.put(url, customerDTO, {
+//       headers: { 'Content-Type': 'application/json' },
+//     })
+//     return response.data
+//   } catch (error) {
+//     console.error('Failed to update customer:', error)
+//     throw error
+//   }
+// }
 
 // Delete a customer
 export const deleteCustomerData = async (mobileNumber) => {
   try {
-    const url = `${BASE_URL}/${deleteCustomer}/${mobileNumber}`
+    const url = `${BASE_URL_API}/${getBasicDetails}/${mobileNumber}`
     const response = await axios.delete(url)
     return response.data
   } catch (error) {

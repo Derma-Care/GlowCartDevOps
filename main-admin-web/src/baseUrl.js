@@ -64,15 +64,15 @@ export const GetBranches_ByClinicId = 'admin/getBranchByClinicId'
 export const getDoctorsByHospitalIdAndBranchId = 'admin/getDoctorsByHospitalIdAndBranchId'
 
 // Customer Management
-export const CustomerAllData = 'admin/getAllCustomers'
+
 
 export const AddCustomer = 'admin/saveBasicDetails'
 
 export const updateCustomer = 'admin/updateCustomerBasicDetails'
 
-export const deleteCustomer = 'admin/deleteCustomerBasicDetails'
 
-export const getBasicDetails = 'admin/getBasicDetails'
+
+
 // export const bookServices ='customers/bookServices'
 // export const deleteAppointments ='customers/deleteService'
 
@@ -242,3 +242,5 @@ export const NGkRegistrationLink = `https://glowkartapi.ashokfruit.shop/onboard/
 export const getAllQuestions = '/clinicQuestions/getAll'
 export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'
 export const REGISTRATION_CODE_GET_ALL_URL=`${BASE_URL_API}/api/registration/all`
+export const getBasicDetails = 'customers'
+export const CustomerAllData = 'customers/all'

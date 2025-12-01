@@ -58,10 +58,10 @@ const CustomerManagement = () => {
 
   const [formData, setFormData] = useState({
     fullName: '',
-    mobileNumber: '',
+    mobile: '',
     gender: '',
     emailId: '',
-    dateOfBirth: '',
+    dob: '',
     referCode: '',
   })
 
@@ -121,7 +121,7 @@ const CustomerManagement = () => {
     const filtered = customerData.filter((customer) => {
       return (
         (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery) ||
-        (customer?.mobileNumber || '').toString().startsWith(trimmedQuery) ||
+        (customer?.mobile || '').toString().startsWith(trimmedQuery) ||
         (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
       )
     })
@@ -130,19 +130,19 @@ const CustomerManagement = () => {
     setCurrentPage(1)
   }, [searchQuery, customerData])
 
-  const handleCustomerViewDetails = (mobileNumber) => {
-    navigate(`/customer-management/${mobileNumber}`)
+  const handleCustomerViewDetails = (mobile) => {
+    navigate(`/customer-management/${mobile}`)
   }
 
-  const handleDeleteCustomer = async (mobileNumber) => {
+  const handleDeleteCustomer = async (mobile) => {
     // const confirmed = window.confirm('Are you sure you want to delete this customer?')
-    setCustomerIdToDelete(mobileNumber)
+    setCustomerIdToDelete(mobile)
     setIsModalVisible(true)
 
     try {
-      await deleteCustomerData(mobileNumber)
+      await deleteCustomerData(mobile)
       toast.success('Customer deleted successfully')
-      const updatedData = customerData.filter((customer) => customer?.mobileNumber !== mobileNumber)
+      const updatedData = customerData.filter((customer) => customer?.mobile !== mobile)
       setCustomerData(updatedData)
       setFilteredData(updatedData)
     } catch (error) {
@@ -151,18 +151,18 @@ const CustomerManagement = () => {
     }
   }
 
-  const handleEditCustomer = async (mobileNumber) => {
+  const handleEditCustomer = async (mobile) => {
     try {
       setLoading(true)
-      const response = await getCustomerByMobile(mobileNumber)
+      const response = await getCustomerByMobile(mobile)
       const customer = response.data || response
 
       console.log('Customer data:', customer)
 
       let formattedDate = ''
 
-      if (customer.dateOfBirth) {
-        const dobStr = customer.dateOfBirth.trim()
+      if (customer.dob) {
+        const dobStr = customer.dob.trim()
 
         if (/^\d{2}-\d{2}-\d{4}$/.test(dobStr)) {
           // Format: DD-MM-YYYY — safely parse manually
@@ -182,14 +182,14 @@ const CustomerManagement = () => {
 
       setFormData({
         fullName: customer.fullName || '',
-        mobileNumber: customer.mobileNumber || '',
+        mobile: customer.mobile || '',
         gender: customer.gender || '',
         emailId: customer.emailId || '',
-        dateOfBirth: formattedDate,
+        dob: formattedDate,
         referCode: customer.referCode || '',
       })
 
-      setCurrentMobile(mobileNumber)
+      setCurrentMobile(mobile)
       setIsEditing(true)
       setIsAdding(true)
     } catch (error) {
@@ -225,7 +225,7 @@ const CustomerManagement = () => {
       return
     }
     if (!isEditing) {
-      const alreadyExists = customerData.some((cust) => cust.mobileNumber === formData.mobileNumber)
+      const alreadyExists = customerData.some((cust) => cust.mobile === formData.mobile)
       const alreadyExistsEmial = customerData.some((cust) => cust.emailId === formData.emailId)
       if (alreadyExists) {
         toast.error('Mobile Number already exists.')
@@ -240,18 +240,18 @@ const CustomerManagement = () => {
       const updatedFormData = { ...formData }
 
       // Format DOB if exists
-      if (updatedFormData.dateOfBirth) {
-        const dateObj = new Date(updatedFormData.dateOfBirth)
+      if (updatedFormData.dob) {
+        const dateObj = new Date(updatedFormData.dob)
         if (!isNaN(dateObj)) {
           const day = String(dateObj.getDate()).padStart(2, '0')
           const month = String(dateObj.getMonth() + 1).padStart(2, '0')
           const year = dateObj.getFullYear()
-          updatedFormData.dateOfBirth = `${day}-${month}-${year}`
+          updatedFormData.dob = `${day}-${month}-${year}`
         }
       }
 
       if (isEditing) {
-        await updateCustomerData(updatedFormData.mobileNumber, updatedFormData)
+        await updateCustomerData(updatedFormData.mobile, updatedFormData)
         toast.success('Customer updated successfully')
       } else {
         await addCustomer(updatedFormData)
@@ -277,10 +277,10 @@ const CustomerManagement = () => {
     setCurrentMobile(null)
     setFormData({
       fullName: '',
-      mobileNumber: '',
+      mobile: '',
       gender: '',
       emailId: '',
-      dateOfBirth: '',
+      dob: '',
       referCode: '',
     })
     setFormErrors({})
@@ -301,8 +301,8 @@ const CustomerManagement = () => {
     return ''
   }
   useEffect(() => {
-    if (formData.dateOfBirth) {
-      const dateObj = new Date(formData.dateOfBirth)
+    if (formData.dob) {
+      const dateObj = new Date(formData.dob)
       if (!isNaN(dateObj)) {
         const day = String(dateObj.getDate()).padStart(2, '0')
         const month = String(dateObj.getMonth() + 1).padStart(2, '0')
@@ -314,7 +314,7 @@ const CustomerManagement = () => {
     } else {
       setFormattedDisplayDate('')
     }
-  }, [formData.dateOfBirth])
+  }, [formData.dob])
 
   const confirmDeleteCustomer = async () => {
     try {
@@ -322,10 +322,10 @@ const CustomerManagement = () => {
       toast.success('Customer deleted successfully')
 
       setCustomerData((prev) =>
-        prev.filter((c) => c.mobileNumber !== customerIdToDelete)
+        prev.filter((c) => c.mobile !== customerIdToDelete)
       )
       setFilteredData((prev) =>
-        prev.filter((c) => c.mobileNumber !== customerIdToDelete)
+        prev.filter((c) => c.mobile !== customerIdToDelete)
       )
     } catch (error) {
       console.error('Delete failed:', error)
@@ -347,10 +347,10 @@ const CustomerManagement = () => {
     }
 
     // Mobile Number Validation
-    if (!formData.mobileNumber.trim()) {
-      errors.mobileNumber = 'Mobile number is required'
-    } else if (!/^[1-9]\d{9}$/.test(formData.mobileNumber)) {
-      errors.mobileNumber = 'Mobile number must be 10 digits (starting from 1-9)'
+    if (!formData.mobile.trim()) {
+      errors.mobile = 'Mobile number is required'
+    } else if (!/^[1-9]\d{9}$/.test(formData.mobile)) {
+      errors.mobile = 'Mobile number must be 10 digits (starting from 1-9)'
     }
 
     // ✅ Email ID Validation
@@ -361,25 +361,25 @@ const CustomerManagement = () => {
     }
 
     // ✅ Date of Birth Validation
-    if (!formData.dateOfBirth.trim()) {
-      errors.dateOfBirth = 'Date of Birth is required'
+    if (!formData.dob.trim()) {
+      errors.dob = 'Date of Birth is required'
     } else {
-      const date = new Date(formData.dateOfBirth)
+      const date = new Date(formData.dob)
       const year = date.getFullYear()
       const today = new Date()
 
       if (isNaN(date)) {
-        errors.dateOfBirth = 'Invalid Date of Birth'
+        errors.dob = 'Invalid Date of Birth'
       } else if (year.toString().length !== 4) {
-        errors.dateOfBirth = 'Year must be 4 digits'
+        errors.dob = 'Year must be 4 digits'
       } else if (date > today) {
-        errors.dateOfBirth = 'Date of Birth cannot be in the future'
+        errors.dob = 'Date of Birth cannot be in the future'
       } else {
         const oldestAllowedDate = new Date()
         oldestAllowedDate.setFullYear(today.getFullYear() - 100)
 
         if (date < oldestAllowedDate) {
-          errors.dateOfBirth = 'Date of Birth must not be more than 120 years ago'
+          errors.dob = 'Date of Birth must not be more than 120 years ago'
         }
       }
     }
@@ -461,18 +461,18 @@ const CustomerManagement = () => {
 
                 <CTableBody className='pink-table'>
                   {currentItems.map((customer, index) => (
-                    <CTableRow key={customer.mobileNumber || index}>
+                    <CTableRow key={customer.mobile || index}>
                       <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
                       <CTableDataCell>{customer?.fullName || '-'}</CTableDataCell>
-                      <CTableDataCell>{customer?.mobileNumber || '-'}</CTableDataCell>
+                      <CTableDataCell>{customer?.mobile || '-'}</CTableDataCell>
                       <CTableDataCell>{customer?.gender || '-'}</CTableDataCell>
-                      <CTableDataCell>{customer?.dateOfBirth || '-'}</CTableDataCell>
+                      <CTableDataCell>{customer?.dob || '-'}</CTableDataCell>
 
                       <CTableDataCell className="text-center">
                         <div className="d-flex justify-content-center align-items-center gap-2">
                           <button
                             className="actionBtn view"
-                            onClick={() => handleCustomerViewDetails(customer?.mobileNumber)}
+                            onClick={() => handleCustomerViewDetails(customer?.mobile)}
                             title="View"
                           >
                             <Eye size={18} />
@@ -480,7 +480,7 @@ const CustomerManagement = () => {
 
                           {/* <button
                             className="actionBtn edit"
-                            onClick={() => handleEditCustomer(customer?.mobileNumber)}
+                            onClick={() => handleEditCustomer(customer?.mobile)}
                             title="Edit"
                           >
                             <Edit2 size={18} />
@@ -489,7 +489,7 @@ const CustomerManagement = () => {
                           <button
                             className="actionBtn delete"
                             onClick={() => {
-                              setCustomerIdToDelete(customer?.mobileNumber)
+                              setCustomerIdToDelete(customer?.mobile)
                               setIsModalVisible(true)
                             }}
                             title="Delete"
@@ -598,8 +598,8 @@ const CustomerManagement = () => {
                   <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
-                  name="mobileNumber"
-                  value={formData.mobileNumber}
+                  name="mobile"
+                  value={formData.mobile}
                   onChange={handleInputChange}
                   // disabled
                   onKeyDown={(e) => {
@@ -609,12 +609,12 @@ const CustomerManagement = () => {
                   }}
                   onPaste={(e) => e.preventDefault()}
                   maxLength={10}
-                  invalid={!!formErrors.mobileNumber}
+                  invalid={!!formErrors.mobile}
                   disabled={isEditing}
                 />
 
-                {formErrors.mobileNumber && (
-                  <div className="text-danger small">{formErrors.mobileNumber}</div>
+                {formErrors.mobile && (
+                  <div className="text-danger small">{formErrors.mobile}</div>
                 )}
               </CCol>
             </CRow>
@@ -642,16 +642,16 @@ const CustomerManagement = () => {
                   <span className="text-danger">*</span>
                 </CFormLabel>
                 <CFormInput
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
+                  name="dob"
+                  value={formData.dob}
                   onChange={handleInputChange}
                   type="date"
                   max={new Date().toISOString().split('T')[0]} // 🚫 Future dates disabled
-                  invalid={!!formErrors.dateOfBirth}
+                  invalid={!!formErrors.dob}
                 />
 
-                {formErrors.dateOfBirth && (
-                  <div className="text-danger small">{formErrors.dateOfBirth}</div>
+                {formErrors.dob && (
+                  <div className="text-danger small">{formErrors.dob}</div>
                 )}
 
                 {formattedDisplayDate && (

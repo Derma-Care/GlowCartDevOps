@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
-  CCardHeader,
-  CTabs,
   CNav,
   CNavItem,
   CNavLink,
@@ -12,15 +10,16 @@ import {
   CRow,
   CCol,
   CSpinner,
-  CButton,
+  CButton
 } from '@coreui/react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { getCustomerByMobile } from './CustomerAPI'
-import { useNavigate } from 'react-router-dom'
+import { NGK_COLORS } from '../../Constant/Themes'
 
 const CustomerViewDetails = () => {
   const navigate = useNavigate()
   const { mobileNumber } = useParams()
+
   const [activeTab, setActiveTab] = useState(0)
   const [customerData, setCustomerData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -38,7 +37,7 @@ const CustomerViewDetails = () => {
         setCustomerData({
           ...data,
           email: data.email || data.emailId,
-          appointments: data.appointments || [],
+          appointments: data.appointments || []
         })
       } catch (err) {
         setError('Failed to load customer details.')
@@ -51,131 +50,261 @@ const CustomerViewDetails = () => {
     fetchCustomer()
   }, [mobileNumber])
 
+  const renderField = (label, value, isImage = false) => {
+    if (!value) return null
 
+    return (
+      <CCol sm="6">
+        <strong>{label}:</strong>
+        <div>
+          {isImage ? (
+            <img
+              src={value}
+              alt={label}
+              style={{ width: '80px', height: '80px', borderRadius: '8px' }}
+            />
+          ) : (
+            value
+          )}
+        </div>
+      </CCol>
+    )
+  }
 
-  // 🌀 Centered Loading State
+  // -------------------------
+  // TAB VISIBILITY CONDITIONS
+  // -------------------------
+
+  const tabs = [
+    {
+      id: 0,
+      title: 'Basic',
+      visible: customerData && (
+        customerData.fullName ||
+        customerData.email ||
+        customerData.mobile ||
+        customerData.gender ||
+        customerData.city
+      )
+    },
+    {
+      id: 1,
+      title: 'Clinic',
+      visible: customerData && (
+        customerData.clinicName ||
+        customerData.clinicCityArea ||
+        customerData.dateOfLastVisit ||
+        customerData.serviceType
+      )
+    },
+    {
+      id: 2,
+      title: 'Spin Wheel',
+      visible: customerData && (
+        customerData.spinRewardId ||
+        customerData.spinRewardValue ||
+        customerData.spinWheelCompleted
+      )
+    },
+    {
+      id: 3,
+      title: 'KYC',
+      visible: customerData && (
+        customerData.aadharNumber ||
+        customerData.registrationCode ||
+        customerData.registrationCompleted
+      )
+    },
+    {
+      id: 4,
+      title: 'Images',
+      visible: customerData && (
+        customerData.photo ||
+        customerData.followScreenshot ||
+        customerData.prizePostScreenshot ||
+        customerData.prescription
+      )
+    },
+    {
+      id: 5,
+      title: 'Other',
+      visible: customerData && (
+        customerData.skinTone ||
+        customerData.concern ||
+        customerData.referBy
+      )
+    }
+  ]
+
+  // FILTER OUT HIDDEN TABS
+  const visibleTabs = tabs.filter(t => t.visible)
+
   if (loading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '70vh',
-          textAlign: 'center',
-        }}
-      >
+      <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: '70vh' }}>
         <CSpinner color="primary" />
-        <p style={{ marginTop: '10px', fontWeight: 500 }}>
-          Loading customer details...
-        </p>
+        <p className="mt-2 fw-semibold">Loading customer details...</p>
       </div>
     )
   }
 
-  // ❌ Centered Error State
   if (error || !customerData) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '70vh',
-          flexDirection: 'column',
-          textAlign: 'center',
-        }}
-      >
-        <p
-          className="text-danger"
-          style={{
-            fontSize: '1.2rem',
-            fontWeight: '600',
-            color: '#d32f2f',
-            padding: '12px 24px',
-            borderRadius: '10px',
-          }}
-        >
-          {error || 'Customer not found.'}
-        </p>
+      <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: '70vh' }}>
+        <p className="text-danger fw-bold">{error || 'Customer not found.'}</p>
       </div>
     )
   }
 
   return (
     <CCard>
-      <div className="bg-info text-white p-3 d-flex justify-content-between align-items-center rounded">
-        {/* Left section: Booking ID and Status */}
-        <div>
-          <h5 className="mb-1 text" style={{ color: "white" }}>Customer Details: {customerData.fullName}</h5>
-        </div>
 
-        <div className="d-flex gap-2">
-          <CButton
-            size="sm"
-            style={{
-              background: '#fff',
-              color: '#00838F',
-              border: 'none',
-              fontWeight: '600',
-              borderRadius: '8px',
-              padding: '6px 14px',
-            }}
-            onClick={() => navigate(-1)}
-          >
-            Back
-          </CButton>
-        </div>
+      {/* HEADER */}
+      <div
+        className="text-white p-3 d-flex justify-content-between align-items-center rounded"
+        style={{ backgroundColor: NGK_COLORS.primary }}
+      >
+        <h5 className="mb-1" style={{ color: 'white' }}>
+          Customer Details: {customerData.fullName}
+        </h5>
+
+        <CButton
+          size="sm"
+          style={{
+            background: '#fff',
+            color: NGK_COLORS.primary,
+            border: 'none',
+            fontWeight: '600',
+            borderRadius: '8px',
+            padding: '6px 14px'
+          }}
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </CButton>
       </div>
 
       <CCardBody>
-        <CTabs activeTab={activeTab} onActiveTabChange={setActiveTab}>
-          <CNav variant="tabs">
-            <CNavItem>
-              <CNavLink active={activeTab === 0}>Basic Details</CNavLink>
+
+        {/* TABS WITH SPACE BELOW */}
+        <CNav variant="tabs" className="mb-3">
+
+          {visibleTabs.map(tab => (
+            <CNavItem key={tab.id}>
+              <CNavLink
+                active={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                {tab.title}
+              </CNavLink>
             </CNavItem>
-           
-          </CNav>
-          <CTabContent>
-            <CTabPane visible={activeTab === 0}>
-              <CCard className="p-3 shadow-sm rounded-3 border-light">
-                <CRow className="gy-3">
-                  <CCol sm="6">
-                    <strong>Customer Id:</strong>
-                    <div>{customerData.customerId || '-'}</div>
-                  </CCol>
-                  <CCol sm="6">
-                    <strong>Full Name:</strong>
-                    <div>{customerData.fullName || '-'}</div>
-                  </CCol>
-                  <CCol sm="6">
-                    <strong>Email:</strong>
-                    <div>{customerData.email || '-'}</div>
-                  </CCol>
-                  <CCol sm="6">
-                    <strong>Mobile Number:</strong>
-                    <div>{customerData.mobileNumber || '-'}</div>
-                  </CCol>
-                  <CCol sm="6">
-                    <strong>Gender:</strong>
-                    <div>{customerData.gender || '-'}</div>
-                  </CCol>
-                  <CCol sm="6">
-                    <strong>Date of Birth:</strong>
-                    <div>{customerData.dateOfBirth || '-'}</div>
-                  </CCol>
-                  <CCol sm="6">
-                    <strong>Refer Code:</strong>
-                    <div>{customerData.referCode || '-'}</div>
-                  </CCol>
-                 
-                </CRow>
-              </CCard>
-            </CTabPane>
-       
-          </CTabContent>
-        </CTabs>
+          ))}
+
+        </CNav>
+
+        {/* TAB CONTENT */}
+        <CTabContent>
+
+          {/* BASIC */}
+          <CTabPane visible={activeTab === 0}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+                {renderField('Customer ID', customerData.customerId)}
+                {renderField('Full Name', customerData.fullName)}
+                {renderField('Email', customerData.email)}
+                {renderField('Mobile Number', customerData.mobile)}
+                {renderField('Gender', customerData.gender)}
+                {renderField('DOB', customerData.dob)}
+                {renderField('City', customerData.city)}
+                {renderField('Address', customerData.address)}
+              </CRow>
+            </CCard>
+          </CTabPane>
+
+          {/* CLINIC */}
+          <CTabPane visible={activeTab === 1}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+                {renderField('Clinic Name', customerData.clinicName)}
+                {renderField('Clinic Area', customerData.clinicCityArea)}
+                {renderField('Last Visit', customerData.dateOfLastVisit)}
+                {renderField(
+                  'Service Type',
+                  Array.isArray(customerData.serviceType)
+                    ? customerData.serviceType.join(', ')
+                    : customerData.serviceType
+                )}
+                {renderField('Service Status', customerData.serviceStatus)}
+              </CRow>
+            </CCard>
+          </CTabPane>
+
+          {/* SPIN WHEEL */}
+          <CTabPane visible={activeTab === 2}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+                {renderField('Spin Reward Id', customerData.spinRewardId)}
+                {renderField('Spin Reward Value', customerData.spinRewardValue)}
+                {renderField('Spin Wheel Completed', customerData.spinWheelCompleted ? 'Yes' : 'No')}
+                {renderField(
+                  'Spin Reward Image',
+                  customerData.spinRewardImage ? `data:image/png;base64,${customerData.spinRewardImage}` : null,
+                  true
+                )}
+              </CRow>
+            </CCard>
+          </CTabPane>
+
+          {/* KYC */}
+          <CTabPane visible={activeTab === 3}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+                {renderField('Aadhaar Number', customerData.aadharNumber)}
+                {renderField(
+                  'Aadhaar Consent',
+                  customerData.aadhaarConsent === null
+                    ? null
+                    : customerData.aadhaarConsent
+                    ? 'Yes'
+                    : 'No'
+                )}
+                {renderField('Registration Code', customerData.registrationCode)}
+                {renderField('Registration Verified', customerData.registrationCodeVerified ? 'Yes' : 'No')}
+                {renderField('Registration Completed', customerData.registrationCompleted ? 'Yes' : 'No')}
+              </CRow>
+            </CCard>
+          </CTabPane>
+
+          {/* IMAGES */}
+          <CTabPane visible={activeTab === 4}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+                {renderField(
+                  'Photo',
+                  customerData.photo ? `data:image/png;base64,${customerData.photo}` : null,
+                  true
+                )}
+                {renderField('Follow Screenshot', customerData.followScreenshot, true)}
+                {renderField('Prize Screenshot', customerData.prizePostScreenshot, true)}
+                {renderField('Prescription', customerData.prescription, true)}
+              </CRow>
+            </CCard>
+          </CTabPane>
+
+          {/* OTHER */}
+          <CTabPane visible={activeTab === 5}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+                {renderField('Skin Tone', customerData.skinTone)}
+                {renderField('Concern', customerData.concern)}
+                {renderField('Referral By', customerData.referBy)}
+                {renderField('User Profile Completed', customerData.userProfileCompleted ? 'Yes' : 'No')}
+              </CRow>
+            </CCard>
+          </CTabPane>
+
+        </CTabContent>
       </CCardBody>
     </CCard>
   )
