@@ -1,5 +1,6 @@
 package com.glowkart.procedure.mapper;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ public class ProcedurePricingMapper {
 
     public ProcedurePricing toEntity(ProcedurePricingDTO dto) {
         ProcedurePricing entity = new ProcedurePricing();
+
         entity.setProcedureId(dto.getProcedureId());
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
@@ -20,14 +22,20 @@ public class ProcedurePricingMapper {
         entity.setProcedureQA(dto.getProcedureQA() != null ? dto.getProcedureQA() : List.of());
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
         entity.setSittings(dto.getSittings());
-        entity.setMinTime(dto.getMinTime());
+
+        // convert "30 mins" -> 30
+        entity.setMinTime(parseMinTime(dto.getMinTime()));
+
+        // convert ISO string -> Instant
+        entity.setOfferStart(parseInstant(dto.getOfferStart()));
+        entity.setOfferValidDate(parseInstant(dto.getOfferValidDate()));
+
         entity.setPrice(dto.getPrice());
         entity.setDiscountPercentage(dto.getDiscountPercentage());
         entity.setTaxPercentage(dto.getTaxPercentage());
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
-        entity.setOfferStart(dto.getOfferStart());
-        entity.setOfferValidDate(dto.getOfferValidDate());
+
         return entity;
     }
 
@@ -42,7 +50,14 @@ public class ProcedurePricingMapper {
         dto.setProcedureQA(entity.getProcedureQA() != null ? entity.getProcedureQA() : List.of());
         dto.setPostProcedureQA(entity.getPostProcedureQA() != null ? entity.getPostProcedureQA() : List.of());
         dto.setSittings(entity.getSittings());
-        dto.setMinTime(entity.getMinTime());
+
+        // int -> "30 mins"
+        dto.setMinTime(entity.getMinTime() + " mins");
+
+        // Instant -> ISO string
+        dto.setOfferStart(entity.getOfferStart() != null ? entity.getOfferStart().toString() : null);
+        dto.setOfferValidDate(entity.getOfferValidDate() != null ? entity.getOfferValidDate().toString() : null);
+
         dto.setPrice(entity.getPrice());
         dto.setDiscountPercentage(entity.getDiscountPercentage());
         dto.setDiscountAmount(entity.getDiscountAmount());
@@ -54,9 +69,8 @@ public class ProcedurePricingMapper {
         dto.setDiscountedCost(entity.getDiscountedCost());
         dto.setClinicPay(entity.getClinicPay());
         dto.setFinalCost(entity.getFinalCost());
-        dto.setOfferStart(entity.getOfferStart());
-        dto.setOfferValidDate(entity.getOfferValidDate());
         dto.setOfferActive(entity.isOfferActive());
+
         return dto;
     }
 
@@ -68,13 +82,33 @@ public class ProcedurePricingMapper {
         entity.setProcedureQA(dto.getProcedureQA() != null ? dto.getProcedureQA() : List.of());
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
         entity.setSittings(dto.getSittings());
-        entity.setMinTime(dto.getMinTime());
+        entity.setMinTime(parseMinTime(dto.getMinTime()));
         entity.setPrice(dto.getPrice());
         entity.setDiscountPercentage(dto.getDiscountPercentage());
         entity.setTaxPercentage(dto.getTaxPercentage());
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
-        entity.setOfferStart(dto.getOfferStart());
-        entity.setOfferValidDate(dto.getOfferValidDate());
+        entity.setOfferStart(parseInstant(dto.getOfferStart()));
+        entity.setOfferValidDate(parseInstant(dto.getOfferValidDate()));
+    }
+
+    // ------------------- Helper Methods -------------------
+    private int parseMinTime(String minTimeStr) {
+        if (minTimeStr == null || minTimeStr.isEmpty()) return 0;
+        try {
+            return Integer.parseInt(minTimeStr.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private Instant parseInstant(String instantStr) {
+        if (instantStr == null || instantStr.isEmpty()) return null;
+        try {
+            return Instant.parse(instantStr);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
+
