@@ -125,7 +125,7 @@ const PackageManagement = ({ service }) => {
                           <CTableDataCell className="text-center">{clinic?.email || "N/A"}</CTableDataCell>
                           <CTableDataCell className="text-center">{clinic?.city || "N/A"}</CTableDataCell>
                           <CTableDataCell className="text-center">
-                            {clinic?.verified ? (
+                            {clinic?.status ? (
                               <span className="text-success fw-bold">Verified</span>
                             ) : (
                               <span className="text-danger fw-bold">Not Verified</span>

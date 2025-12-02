@@ -225,7 +225,7 @@ const ClinicManagement = ({ service }) => {
                 />
               </div>
               <div className="col-2 text-end">
-                No.of Hospitals: {filteredClinics.length}
+                No.of Clinics: {filteredClinics.length}
               </div>
             </div>
 

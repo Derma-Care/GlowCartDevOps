@@ -17,7 +17,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilLockUnlocked } from '@coreui/icons'
 import Logo from '../login/GlowKaart.png'
-import {BASE_URL_API} from '../../../baseUrl'
+import { BASE_URL, BASE_URL_API, endPoint } from '../../../baseUrl'
 
 const Login = () => {
   const [userName, setUserName] = useState('')
@@ -32,72 +32,64 @@ const Login = () => {
 
   const from = location.state?.from?.pathname || '/clinic-management'
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!userName && !password) {
-      setErrorMessage('Username and password are required.')
-      return
-    }
-
-    if (!userName) {
-      setErrorMessage('Username is required.')
-      return
-    }
-
-    if (!password) {
-      setErrorMessage('Password is required.')
-      return
-    }
-
-    setIsLoading(true)
-    setErrorMessage(null)
-
-    try {
-      const data = { userName, password }
-      const response = await axios.post(`${BASE_URL_API}/login`, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      // Log response to verify backend format
-      console.log('API Response:', response.data)
-
-      // Check for success message (correct spelling!)
-      if (response.status === 200) {
-        console.log('Login successful')
-        navigate('/clinic-management')
-        localStorage.setItem('userName', userName)
-        localStorage.setItem('authentication', true) //flag
-        navigate(from, { replace: true })
-      } else {
-        setErrorMessage(response.data || 'Invalid login credentials.')
-      }
-    } catch (error) {
-      const backendMessage = error.response?.data?.message || 'An unexpected error occurred.'
-
-      const lowerMessage = backendMessage.toLowerCase()
-
-      if (lowerMessage.includes('both')) {
-        setErrorMessage('Both Username and Password are Invalid.')
-      } else if (lowerMessage.includes('username') && lowerMessage.includes('password')) {
-        // in case backend sends a combined message
-        setErrorMessage('Both Username and Password are Invalid.')
-      } else if (lowerMessage.includes('username')) {
-        setErrorMessage('Invalid username.')
-      } else if (lowerMessage.includes('password')) {
-        setErrorMessage('Invalid password.')
-      } else {
-        // generic or unexpected
-        setErrorMessage(backendMessage)
-      }
-
-      console.error('Error details:', error.response || error.message)
-    } finally {
-      setIsLoading(false)
-    }
+  if (!userName && !password) {
+    setErrorMessage("Mobile number and password are required.");
+    return;
   }
+
+  if (!userName) {
+    setErrorMessage("Mobile number is required.");
+    return;
+  }
+
+  if (!password) {
+    setErrorMessage("Password is required.");
+    return;
+  }
+
+  setIsLoading(true);
+  setErrorMessage(null);
+
+  try {
+    const data = {
+      mobileNumber: userName, // Backend expects mobileNumber
+      password: password,
+    };
+
+    const response = await axios.post(`${BASE_URL_API}/login`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("API Response:", response.data);
+
+    if (response.data.success === true) {
+      const userData = response.data.data;
+
+      // Save backend data
+      localStorage.setItem("authentication", "true");
+      localStorage.setItem("userName", userData.userName);
+      localStorage.setItem("mobileNumber", userData.mobileNumber);
+      localStorage.setItem("userId", userData.id);
+
+      navigate("/clinic-management");
+    } else {
+      setErrorMessage(response.data.message || "Invalid login credentials.");
+    }
+  } catch (error) {
+    const message =
+      error.response?.data?.message || "An unexpected error occurred.";
+    setErrorMessage(message);
+    console.error("Error details:", error.response || error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
 
@@ -125,11 +117,12 @@ const Login = () => {
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
                       <CFormInput
-                        placeholder="Username"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        autoComplete="username"
-                      />
+  placeholder="Mobile Number"
+  value={userName}
+  onChange={(e) => setUserName(e.target.value)}
+  autoComplete="tel"
+/>
+
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText
