@@ -76,54 +76,75 @@ public class CustomerService {
  // ==================== STEP 2: Spin Wheel ====================
     @Transactional
     public ApiResponse<Customer> completeSpinByMobile(String mobile, SpinWheelDTO dto) {
+
+        // Fetch customer
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
-        if (!customer.isUserProfileCompleted())
+        if (!customer.isUserProfileCompleted()) {
             return new ApiResponse<>(false, "Complete Profile first!", customer);
+        }
 
-        WheelSliceDto slice = null;
+        Integer rank = customer.getRegistrationRank();
 
-        // Try to assign slice by rewardId first
+        // Fetch slices based on service status
+        List<WheelSliceDto> allSlices = (customer.getServiceStatus() == 1) ?
+                wheelSliceClient.getYesSlices() :
+                wheelSliceClient.getInterestedSlices();
+
+        if (allSlices == null || allSlices.isEmpty()) {
+            return new ApiResponse<>(false, "Wheel slices not configured!", customer);
+        }
+
+        List<WheelSliceDto> allowedSlices = new ArrayList<>();
+
+        // ==================== YES USERS → Apply Rank Logic ====================
+        if (customer.getServiceStatus() == 1) {
+            if (rank == null) {
+                return new ApiResponse<>(false, "Rank missing! Verify code first.", customer);
+            }
+
+            if (rank <= 500) {
+                allowedSlices.addAll(allSlices.subList(0, Math.min(6, allSlices.size())));
+            } else {
+                allowedSlices.addAll(allSlices.subList(Math.min(6, allSlices.size()), allSlices.size()));
+            }
+        }
+        // ==================== INTERESTED USERS → All slices allowed ====================
+        else if (customer.getServiceStatus() == 2) {
+            allowedSlices.addAll(allSlices);
+        }
+
+        if (allowedSlices.isEmpty()) {
+            return new ApiResponse<>(false, "No eligible wheel slices found!", customer);
+        }
+
+        // ==================== Validate rewardId ====================
+        WheelSliceDto selectedSlice = null;
         if (dto.getRewardId() != null && !dto.getRewardId().isBlank()) {
-            if (customer.getServiceStatus() == 1) {
-                slice = wheelSliceClient.getYesSliceById(dto.getRewardId());
-            } else if (customer.getServiceStatus() == 2) {
-                slice = wheelSliceClient.getInterestedSliceById(dto.getRewardId());
-            }
-        }
+            selectedSlice = allowedSlices.stream()
+                    .filter(s -> s.getId().equals(dto.getRewardId()))
+                    .findFirst().orElse(null);
 
-        // Fallback to random slice if rewardId is missing or invalid
-        if (slice == null) {
-            if (customer.getServiceStatus() == 1) {
-                List<WheelSliceDto> yesSlices = wheelSliceClient.getYesSlices();
-                if (!yesSlices.isEmpty()) {
-                    slice = yesSlices.get((int) (Math.random() * yesSlices.size()));
-                }
-            } else if (customer.getServiceStatus() == 2) {
-                List<WheelSliceDto> interestedSlices = wheelSliceClient.getInterestedSlices();
-                if (!interestedSlices.isEmpty()) {
-                    slice = interestedSlices.get((int) (Math.random() * interestedSlices.size()));
-                }
+            if (selectedSlice == null) {
+                return new ApiResponse<>(false,
+                        "Invalid rewardId for your profile! You can only select slices in your allowed range.",
+                        customer);
             }
-        }
-
-        // Assign slice values to customer
-        if (slice != null) {
-            customer.setSpinRewardId(slice.getId());
-            customer.setSpinRewardValue(slice.getOption());
-            customer.setSpinRewardImage(slice.getSrc());
         } else {
-            log.warn("No wheel slices available for serviceStatus {}", customer.getServiceStatus());
+            // Auto-select random slice if rewardId not provided
+            selectedSlice = allowedSlices.get((int) (Math.random() * allowedSlices.size()));
         }
 
+        // ==================== Save spin reward ====================
+        customer.setSpinRewardId(selectedSlice.getId());
+        customer.setSpinRewardValue(selectedSlice.getOption());
+        customer.setSpinRewardImage(selectedSlice.getSrc());
         customer.setSpinWheelCompleted(true);
+
         customerRepository.save(customer);
 
-        log.info("Step-2 (Spin Wheel) completed for mobile: {}, assigned slice: {}",
-                 mobile, slice != null ? slice.getOption() : "None");
-
-        return new ApiResponse<>(true, "Step-2 completed. Please proceed to the next step.", customer);
+        return new ApiResponse<>(true, "Spin completed successfully!", customer);
     }
 
 

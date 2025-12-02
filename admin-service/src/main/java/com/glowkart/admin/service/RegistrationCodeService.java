@@ -36,50 +36,68 @@ public class RegistrationCodeService {
 
     private final Random random = new SecureRandom();
 
-    // ----------------------
-    // Generate batch of unique codes
-    // ----------------------
+    // -------------------------
+    // Generate batch of codes
+    // -------------------------
     public List<RegistrationCode> generateAndSaveBatch(int batchSize) {
         Set<RegistrationCode> newCodes = new HashSet<>();
 
         while (newCodes.size() < batchSize) {
             String code = CODE_PREFIX + generateRandomNumberString(
-                    MIN_DIGITS + random.nextInt(MAX_DIGITS - MIN_DIGITS + 1)
+                MIN_DIGITS + random.nextInt(MAX_DIGITS - MIN_DIGITS + 1)
             );
 
-            if (!repo.existsByCode(code) &&
-                newCodes.stream().noneMatch(c -> c.getCode().equals(code))) {
-
+            if (!repo.existsByCode(code)) {
                 newCodes.add(new RegistrationCode(code));
             }
         }
-
         return repo.saveAll(newCodes);
     }
 
-    // ----------------------
-    // Verify code
-    // ----------------------
+    // -------------------------
+    // Calculate rank (1…N)
+    // -------------------------
+    public int getCodeRank(String code) {
+        List<RegistrationCode> sorted = repo.findAll(Sort.by(Sort.Direction.ASC, "id"));
+
+        for (int i = 0; i < sorted.size(); i++) {
+            if (sorted.get(i).getCode().equals(code)) {
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+
+    // -------------------------
+    // Verify Registration Code
+    // -------------------------
     @Transactional(readOnly = true)
     public RegistrationResponseDTO verifyCode(RegistrationRequestDTO dto) {
         RegistrationCode code = repo.findByCode(dto.getCode());
 
         if (code == null) {
-            return new RegistrationResponseDTO(dto.getCode(), false, false);
+            return new RegistrationResponseDTO(dto.getCode(), false, false, -1);
         }
 
-        return new RegistrationResponseDTO(code.getCode(), code.isUsed(), true);
+        int rank = getCodeRank(code.getCode());
+
+        return new RegistrationResponseDTO(
+                code.getCode(),
+                code.isUsed(),
+                true,
+                rank
+        );
     }
 
-    // ----------------------
-    // Mark code as used
-    // ----------------------
+    // -------------------------
+    // Mark Code Used
+    // -------------------------
     @Transactional
     public RegistrationResponseDTO markCodeUsed(String codeStr) {
         RegistrationCode code = repo.findByCode(codeStr);
 
         if (code == null) {
-            return new RegistrationResponseDTO(codeStr, false, false);
+            return new RegistrationResponseDTO(codeStr, false, false, -1);
         }
 
         if (!code.isUsed()) {
@@ -87,17 +105,17 @@ public class RegistrationCodeService {
             repo.save(code);
         }
 
-        return new RegistrationResponseDTO(codeStr, true, true);
+        int rank = getCodeRank(code.getCode());
+
+        return new RegistrationResponseDTO(codeStr, true, true, rank);
     }
 
-    // ----------------------
-    // Get all codes (unused first, used last)
-    // ----------------------
+    // -------------------------
+    // Get all codes
+    // -------------------------
     public List<RegistrationResponseDTOWithCode> getAllCodes() {
-
-        // ⭐ BEST PRACTICE: Sorting by 'used' field in MongoDB
         List<RegistrationCode> sortedCodes = repo.findAll(
-            Sort.by(Sort.Order.asc("used"))  // unused first → used last
+            Sort.by(Sort.Order.asc("used"))
         );
 
         return sortedCodes.stream()
@@ -105,7 +123,7 @@ public class RegistrationCodeService {
                 .collect(Collectors.toList());
     }
 
-    // Helper: generate random numeric string
+    // Helper function
     private String generateRandomNumberString(int length) {
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) sb.append(random.nextInt(10));
@@ -113,9 +131,9 @@ public class RegistrationCodeService {
         return sb.toString();
     }
 
-    // ----------------------
-    // Send codes as Excel attachment
-    // ----------------------
+    // -------------------------
+    // Email codes as Excel
+    // -------------------------
     public void sendCodesByEmail(List<RegistrationCode> codes, String emailTo) throws Exception {
         try (Workbook workbook = new XSSFWorkbook(); var out = new java.io.ByteArrayOutputStream()) {
 
@@ -132,9 +150,6 @@ public class RegistrationCodeService {
                 row.createCell(0).setCellValue(reg.getCode());
                 row.createCell(1).setCellValue(reg.isUsed() ? "Yes" : "No");
             }
-
-            sheet.autoSizeColumn(0);
-            sheet.autoSizeColumn(1);
 
             workbook.write(out);
             ByteArrayResource resource = new ByteArrayResource(out.toByteArray());

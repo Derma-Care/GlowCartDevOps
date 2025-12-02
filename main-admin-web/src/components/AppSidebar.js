@@ -51,7 +51,7 @@ const AppSidebar = () => {
             className="d-flex justify-content-center underline-none"
             style={{ marginLeft: '20px' }}
           >
-            <h1
+            {/* <h1
               style={{
                 fontSize: '30px',
                 background: 'linear-gradient(to right, #0072CE, #00AEEF)',
@@ -61,7 +61,7 @@ const AppSidebar = () => {
               }}
             >
               GlowKart
-            </h1>
+            </h1> */}
           </div>
         </div>
       </CSidebarHeader>

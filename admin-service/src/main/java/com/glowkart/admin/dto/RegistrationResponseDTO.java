@@ -11,4 +11,6 @@ public class RegistrationResponseDTO {
     private String code;
     private boolean used;
     private boolean valid;  // true only when used = true
+    private int rank; // ⭐ NEW — Position of the code (1…N)
+   
 }

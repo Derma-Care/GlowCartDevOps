@@ -450,11 +450,11 @@ const CustomerManagement = () => {
               <CTable striped hover responsive>
                 <CTableHead className='pink-table'>
                   <CTableRow>
-                    <CTableHeaderCell>S.No</CTableHeaderCell>
-                    <CTableHeaderCell>Full Name</CTableHeaderCell>
-                    <CTableHeaderCell>Mobile Number</CTableHeaderCell>
-                    <CTableHeaderCell>Gender</CTableHeaderCell>
-                    <CTableHeaderCell>Date Of Birth</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Full Name</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Mobile Number</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Gender</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Date Of Birth</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -462,11 +462,11 @@ const CustomerManagement = () => {
                 <CTableBody className='pink-table'>
                   {currentItems.map((customer, index) => (
                     <CTableRow key={customer.mobile || index}>
-                      <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
-                      <CTableDataCell>{customer?.fullName || '-'}</CTableDataCell>
-                      <CTableDataCell>{customer?.mobile || '-'}</CTableDataCell>
-                      <CTableDataCell>{customer?.gender || '-'}</CTableDataCell>
-                      <CTableDataCell>{customer?.dob || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
+                      <CTableDataCell className="text-center">{customer?.fullName || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-center">{customer?.mobile || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-center">{customer?.gender || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-center">{customer?.dob || '-'}</CTableDataCell>
 
                       <CTableDataCell className="text-center">
                         <div className="d-flex justify-content-center align-items-center gap-2">

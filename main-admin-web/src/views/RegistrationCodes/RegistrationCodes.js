@@ -99,7 +99,7 @@ const RegistrationCodeManagement = () => {
 
     const message = `👋 Hello ${name}!
 
-🎉 Congratulations! You are just one step away from joining *Neha's GlowKart Program*.
+🎉 Congratulations! You are just one step away from joining *Neeha's GlowKart Program*.
 
 🎫 *Your Registration Code:* ${selectedCode}
 
@@ -113,10 +113,10 @@ ${customLink}
 
 ❓ Need help or have questions? Reply to this message and we'll assist you.
 
-💚 We can’t wait to welcome you to *Neha's GlowKart*!
+💚 We can’t wait to welcome you to *Neeha's GlowKart*!
 
 Best regards,
-*Neha's GlowKart Team*`;
+*Neeha's GlowKart Team*`;
 
     const encoded = encodeURIComponent(message);
     const url = `https://wa.me/${fullNumber}?text=${encoded}`;

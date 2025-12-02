@@ -12,6 +12,7 @@ public class RegistrationResponseDTO {
     private String code;
     private boolean used;     // true only when registration completed
     private boolean valid;    // true if code exists
+    private Integer rank;     // 🔥 added rank field
 
     private boolean isRegistrationCodeVerified;
     private boolean isUserProfileCompleted;

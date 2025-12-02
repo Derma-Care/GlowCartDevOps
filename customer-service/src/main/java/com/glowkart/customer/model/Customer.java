@@ -52,6 +52,8 @@ public class Customer {
     private String registrationCode;
     private String referBy;
 
+    private Integer registrationRank; // NEW — rank assigned after verify code
+
     // Aadhaar
     @JsonIgnore
     @Indexed(unique = true)

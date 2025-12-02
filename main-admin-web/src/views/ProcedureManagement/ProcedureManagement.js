@@ -168,43 +168,38 @@ const ProcedureManagement = () => {
         {loading ? (
           <LoadingIndicator message="Fetching Procedure Details, Please wait..." />
         ) : (
-          <CTable striped hover responsive>
-            <CTableHead className='pink-table'>
-              <CTableRow>
-                <CTableHeaderCell>S.No</CTableHeaderCell>
-                <CTableHeaderCell>Procedure</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
+         <CTable striped hover responsive>
+  <CTableHead className='pink-table'>
+    <CTableRow>
+      <CTableHeaderCell className="text-center" style={{ width: "10%" }}>S.No</CTableHeaderCell>
+      <CTableHeaderCell className="text-center" style={{ width: "60%" }}>Procedure</CTableHeaderCell>
+      <CTableHeaderCell className="text-center" style={{ width: "30%" }}>Actions</CTableHeaderCell>
+    </CTableRow>
+  </CTableHead>
 
-            <CTableBody className='pink-table'>
-              {currentItems.length > 0 ? (
-                currentItems.map((row, index) => (
-                  <CTableRow key={row.id}>
-                    <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
-                    <CTableDataCell>{row.name}</CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <div className="d-flex justify-content-center gap-2">
-                        <button className="actionBtn" onClick={() => handleView(row)}>
-                          <Eye size={18} />
-                        </button>
-                        <button className="actionBtn" onClick={() => handleEdit(row)}>
-                          <Edit2 size={18} />
-                        </button>
-                        <button className="actionBtn" onClick={() => confirmDelete(row.id)}>
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </CTableDataCell>
-                  </CTableRow>
-                ))
-              ) : (
-                <CTableRow>
-                  <CTableDataCell colSpan={3} className="text-center">No procedures found</CTableDataCell>
-                </CTableRow>
-              )}
-            </CTableBody>
-          </CTable>
+  <CTableBody className='pink-table'>
+    {currentItems.length > 0 ? (
+      currentItems.map((row, index) => (
+        <CTableRow key={row.id}>
+          <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
+          <CTableDataCell className="text-center">{row.name}</CTableDataCell>
+          <CTableDataCell className="text-center">
+            <div className="d-flex justify-content-center gap-2">
+              <button className="actionBtn" onClick={() => handleView(row)}><Eye size={18}/></button>
+              <button className="actionBtn" onClick={() => handleEdit(row)}><Edit2 size={18}/></button>
+              <button className="actionBtn" onClick={() => confirmDelete(row.id)}><Trash2 size={18}/></button>
+            </div>
+          </CTableDataCell>
+        </CTableRow>
+      ))
+    ) : (
+      <CTableRow>
+        <CTableDataCell colSpan={3} className="text-center">No procedures found</CTableDataCell>
+      </CTableRow>
+    )}
+  </CTableBody>
+</CTable>
+
         )}
 
         {procedures.length > 0 && (

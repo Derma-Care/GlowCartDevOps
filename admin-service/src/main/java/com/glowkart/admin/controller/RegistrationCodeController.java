@@ -20,7 +20,7 @@ public class RegistrationCodeController {
     @Autowired
     private RegistrationCodeService service;
 
-    // Generate 500 codes and send email
+    // Generate 500 codes & send email
     @PostMapping("/api/registration/generate")
     public ApiResponse<String> generateAndSendDefaultEmail() {
         List<RegistrationCode> codes = service.generateAndSaveBatch(500);
@@ -30,16 +30,16 @@ public class RegistrationCodeController {
             service.sendCodesByEmail(codes, defaultEmail);
         } catch (Exception e) {
             return new ApiResponse<>(false,
-                    "Codes generated but failed to send email: " + e.getMessage(),
+                    "Codes generated but email failed: " + e.getMessage(),
                     null);
         }
 
         return new ApiResponse<>(true,
-                "500 registration codes generated and emailed to " + defaultEmail,
+                "500 registration codes generated & emailed!",
                 null);
     }
 
-    // Verify code
+    // Verify Code
     @PostMapping("/api/registration/verify")
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> verifyCode(
             @RequestBody RegistrationRequestDTO dto) {
@@ -62,7 +62,7 @@ public class RegistrationCodeController {
         );
     }
 
-    // Mark code used
+    // Mark Code as Used
     @PostMapping("/api/registration/mark-used")
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> markCodeUsed(
             @RequestBody RegistrationRequestDTO dto) {
@@ -81,16 +81,16 @@ public class RegistrationCodeController {
         }
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Code marked as used successfully!", result)
+                new ApiResponse<>(true, "Code marked as used!", result)
         );
     }
 
-    // Get all codes (unused first)
+    // List all codes
     @GetMapping("/api/registration/all")
     public ApiResponse<List<RegistrationResponseDTOWithCode>> getAllCodes() {
         return new ApiResponse<>(
                 true,
-                "All registration codes retrieved successfully!",
+                "All registration codes retrieved!",
                 service.getAllCodes()
         );
     }
