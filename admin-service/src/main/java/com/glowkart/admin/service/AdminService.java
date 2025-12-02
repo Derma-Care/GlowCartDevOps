@@ -35,18 +35,17 @@ public class AdminService {
         return new ApiResponse<>(true, "Admin registered successfully", responseDTO);
     }
 
-    // Login admin
+ // Login admin
     public ApiResponse<AdminResponseDTO> loginAdmin(AdminLoginDTO request) {
 
         Optional<Admin> adminOpt = adminRepository.findByMobileNumber(request.getMobileNumber());
 
-        // Generic login failure
         if (adminOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), adminOpt.get().getPassword())) {
             return new ApiResponse<>(false, "Invalid username or password", null);
         }
 
-        Admin admin = adminOpt.get();
-        AdminResponseDTO responseDTO = new AdminResponseDTO(admin.getId(), admin.getUserName(), admin.getMobileNumber());
-        return new ApiResponse<>(true, "Login successful", responseDTO);
+        // Return WITHOUT data
+        return new ApiResponse<>(true, "Login successful", null);
     }
+
 }

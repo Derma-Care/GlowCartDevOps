@@ -180,22 +180,33 @@ public class CustomerService {
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
-        List<WheelSliceDto> slices;
-
-        if (customer.getServiceStatus() == 1) { // YES customer
-            slices = wheelSliceClient.getYesSlices();
-        } else if (customer.getServiceStatus() == 2) { // INTERESTED customer
-            slices = wheelSliceClient.getInterestedSlices();
+        List<WheelSliceDto> allSlices;
+        if (customer.getServiceStatus() == 1) {
+            allSlices = wheelSliceClient.getYesSlices();
+        } else if (customer.getServiceStatus() == 2) {
+            allSlices = wheelSliceClient.getInterestedSlices();
         } else {
             return new ApiResponse<>(false, "Invalid service status", null);
         }
 
-        if (slices == null || slices.isEmpty()) {
-            return new ApiResponse<>(false, "No wheel slices found for this customer type", null);
+        // Apply rank logic for YES users
+        List<WheelSliceDto> allowedSlices = new ArrayList<>();
+        if (customer.getServiceStatus() == 1) {
+            Integer rank = customer.getRegistrationRank();
+            if (rank != null && !allSlices.isEmpty()) {
+                if (rank <= 500) {
+                    allowedSlices.addAll(allSlices.subList(0, Math.min(6, allSlices.size())));
+                } else {
+                    allowedSlices.addAll(allSlices.subList(Math.min(6, allSlices.size()), allSlices.size()));
+                }
+            }
+        } else {
+            allowedSlices.addAll(allSlices);
         }
 
-        return new ApiResponse<>(true, "Wheel slices fetched successfully", slices);
+        return new ApiResponse<>(true, "Wheel slices fetched successfully", allowedSlices);
     }
+
 
 
 
