@@ -30,12 +30,11 @@ import { useHospital } from '../../Usecontext/HospitalContext'
 import ResetPassword from '../../../views/Resetpassword'
 import { http, httpPublic } from '../../../Utils/Interceptors'
 import DermaLogo from 'src/assets/images/logoP.png' // adjust path if needed
-import { COLORS } from '../../../Constant/Themes'
+import { COLORS, NGK_COLORS } from '../../../Constant/Themes'
 import { toast, ToastContainer } from 'react-toastify'
 import { showCustomToast } from '../../../Utils/Toaster'
 
 const Login = () => {
-  const [activeTab, setActiveTab] = useState('clinic') // clinic | doctor
   const [userName, setUserName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('admin')
@@ -44,7 +43,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
-
+  const [loading, setLoading] = useState(false)
   // const { fetchHospitalDetails,selectedHospital } = useHospital()
   const { selectedHospital, setUser, setHospitalId, setSelectedHospital, fetchAllData } =
     useHospital()
@@ -65,134 +64,79 @@ const Login = () => {
   }, [])
 
   const handleClinicLogin = async (e) => {
-    if (e && e.preventDefault) e.preventDefault()
+    if (e?.preventDefault) e.preventDefault()
+
     if (!validateForm()) return
+
     setIsLoading(true)
     setErrorMessage('')
 
     try {
-      let res
+      // 🔥 API CALL
+      const response = await http.post(
+        `/login`,
+        { username: userName, password },
+        { headers: { 'Content-Type': 'application/json' } },
+      )
 
-      // ✅ Call correct API based on role
-      if (role.toLowerCase() === 'admin') {
-        const resposnse = await http.post(
-          `/clinicLogin`,
-          { userName, password, role },
-          { headers: { 'Content-Type': 'application/json' } },
-        )
-        res = resposnse
-      } else {
-        const resposnse = await http.post(
-          `/loginUsingRoles`,
-          { userName, password, role },
-          { headers: { 'Content-Type': 'application/json' } },
-        )
-        res = resposnse.data
+      console.log('Login response:', response.data)
+
+      if (!response.data?.success) {
+        showCustomToast(response.data?.message || 'Login failed', 'error')
+        return
       }
 
-      console.log('✅ Login API response:', res.data)
+      const data = response.data.data
 
-      // ✅ Success check
-      if (res?.status === 200) {
-        const payload = res.data
-        if (!payload) {
-          showCustomToast(res?.message || 'Invalid login response', 'error')
-          return
-        }
-
-        const HospitalId = payload.hospitalId
-        const HospitalName = payload.hospitalName
-        const staffId = payload.staffId
-        const staffName = payload.staffName
-        const token = payload.accessToken
-        const permissions = payload.permissions
-        const branchId = payload.branchId
-        const branchName = payload.branchName
-        console.log(HospitalId, HospitalName, selectedHospital, role)
-
-        // ✅ Store in localStorage
-        if (HospitalId) {
-          localStorage.setItem('HospitalId', HospitalId)
-          setHospitalId(HospitalId)
-        }
-
-        if (HospitalName) {
-          localStorage.setItem('HospitalName', HospitalName)
-        }
-
-        if (token) {
-          localStorage.setItem('token', token)
-        }
-
-        if (role) {
-          localStorage.setItem('role', role)
-        }
-        if (branchId) {
-          localStorage.setItem('branchId', branchId)
-        }
-        if (staffId) {
-          localStorage.setItem('staffId', staffId)
-        }
-        if (staffName) {
-          localStorage.setItem('staffName', staffName)
-        }
-        if (branchName) {
-          localStorage.setItem('branchName', branchName)
-        }
-
-        if (payload.accessToken) {
-          localStorage.setItem('token', payload.accessToken)
-        }
-
-        // if (token) localStorage.setItem('token', token)
-        // localStorage.setItem('role', role)
-
-        await new Promise((resolve) => setTimeout(resolve, 100))
-
-        if (HospitalId) {
-          const hospitalData = payload.hospitalData || {} // logo, name, etc.
-
-          // 1. Set user in context & localStorage
-          const userData = { name: HospitalName || staffName, role, permissions }
-          setUser(userData)
-          localStorage.setItem('hospitalUser', JSON.stringify(userData))
-          localStorage.setItem('permissions', JSON.stringify(permissions))
-
-          // 2. Set hospital in context & localStorage
-          const hospitalContextData = {
-            hospitalId: HospitalId,
-            hospitalName: HospitalName,
-            data: hospitalData,
-          }
-          setSelectedHospital(hospitalContextData)
-          localStorage.setItem('selectedHospital', JSON.stringify(hospitalContextData))
-
-          setHospitalId(HospitalId)
-          localStorage.setItem('HospitalId', HospitalId)
-          await fetchAllData(HospitalId)
-          showCustomToast(res.data?.message || 'Login successful!', 'success')
-          navigate('/dashboard') // immediately navigates to dashboard with context updated
-        }
+      // 🛑 Reject if clinic not VERIFIED
+      if (data.status !== 'VERIFIED') {
+        showCustomToast('Clinic is not verified. Please contact support.', 'error')
+        return
       }
+
+      // 🎯 Extract Required Data
+      const clinicId = data.clinicId
+      const clinicName = data.name
+      const permissions = data.permissions || {}
+
+      // 🧠 Store Required Data Only
+      localStorage.setItem('HospitalId', clinicId)
+      localStorage.setItem('permissions', JSON.stringify(permissions))
+      localStorage.setItem('HospitalName', clinicName)
+      // localStorage.setItem('permissions', JSON.stringify(permissions))
+
+      // 🔥 Store user in context
+      setUser({
+        name: clinicName,
+        role: 'clinic',
+        permissions,
+      })
+
+      const hospitalContextData = {
+        hospitalId: clinicId,
+        hospitalName: clinicName,
+        data: data,
+      }
+
+      // 🔥 Store selected clinic in context
+      setSelectedHospital(hospitalContextData)
+
+      showCustomToast(`${data.message || 'Login successful!'}`, 'success')
+
+      // Redirect
+      navigate('/dashboard')
     } catch (err) {
       console.error('Login error:', err)
 
-      const backendMessage = err?.response?.data?.message
+      const msg = err?.response?.data?.message
 
-      if (backendMessage) {
-        if (backendMessage.toLowerCase().includes('username')) {
-          setErrorMessage('Invalid username. Please try again.')
-          showCustomToast('Invalid username. Please try again.', 'error')
-        } else if (backendMessage.toLowerCase().includes('password')) {
-          setErrorMessage('Invalid password. Please try again.')
-          showCustomToast('Invalid password. Please try again.', 'error')
-        } else {
-          setErrorMessage(backendMessage)
-          showCustomToast(backendMessage, 'error')
-        }
+      if (msg) {
+        showCustomToast(msg, 'error')
+        setErrorMessage(msg)
       } else {
-        setErrorMessage('An unexpected error occurred. Please try again later.')
-        showCustomToast('An unexpected error occurred. Please try again later.', 'error')
+        const generic = 'Unexpected error occurred. Please try again.'
+        showCustomToast(generic, 'error')
+        setErrorMessage(generic)
       }
     } finally {
       setIsLoading(false)
@@ -212,20 +156,20 @@ const Login = () => {
               {/* LEFT: Brand / Hero */}
               <CCol
                 md={6}
-                className="d-none d-md-flex flex-column justify-content-center derma-hero px-5 py-4"
+                className="d-none d-md-flex flex-column justify-content-center   px-5 py-4"
               >
                 <div />
-                <div className="text-center px-3" style={{ color: COLORS.primary }}>
+                <div className="hero-highlight text-center px-3">
                   <img
                     src={DermaLogo}
                     alt="Derma Care"
                     className="mb-4"
                     style={{ width: 120, height: 'auto' }}
                   />
-                  <h2 className="fw-bold mb-3" style={{ color: COLORS.primary }}>
+                  <h2 className="fw-bold mb-3" style={{ color: NGK_COLORS.primary }}>
                     Welcome to Neha's GlowKart
                   </h2>
-                  <p className="lead mb-4" style={{ opacity: 0.95, color: COLORS.primary }}>
+                  <p className="lead mb-4" style={{ opacity: 0.95, color: NGK_COLORS.textDark }}>
                     Manage dermatology operations seamlessly — appointments, procedures, slots &
                     more.
                   </p>
@@ -233,14 +177,14 @@ const Login = () => {
               </CCol>
 
               {/* RIGHT: Card + Tabs + Form */}
-              <CCol md={6} className="d-flex align-items-center justify-content-center  md-5">
-                <CCard className="shadow-lg border-0 glass-card w-100" style={{ maxWidth: 460 }}>
-                  <CCardBody className="p-4 p-md-5">
-                    <h3
-                      className="text-center fw-bold mb-3"
-                      style={{ color: 'var(--color-black)' }}
-                    >
-                      Neha's GlowKart
+              <CCol md={6} className="d-flex align-items-center justify-content-center md-5 ">
+                <CCard
+                  className="shadow-lg border-1 derma-hero w-100 "
+                  style={{ maxWidth: 460, borderColor: NGK_COLORS.primary }}
+                >
+                  <CCardBody className="p-4 p-md-5 ">
+                    <h3 className="text-center fw-bold mb-5" style={{ color: NGK_COLORS.primary }}>
+                      NGK Login
                     </h3>
 
                     {/* Error message */}
@@ -249,82 +193,98 @@ const Login = () => {
                     )}
 
                     {/* CLINIC TAB */}
-                    {activeTab === 'clinic' && (
-                      <CForm onSubmit={handleClinicLogin} noValidate>
-                        {/* Username */}
-                        <CInputGroup className="mb-2">
-                          <CInputGroupText>
-                            <CIcon icon={cilUser} />
-                          </CInputGroupText>
-                          <CFormInput
-                            placeholder="Username"
-                            value={userName}
-                            onChange={(e) => {
-                              setUserName(e.target.value)
-                              if (fieldErrors.userName)
-                                setFieldErrors((p) => ({ ...p, userName: '' }))
+
+                    <CForm onSubmit={handleClinicLogin} noValidate>
+                      {/* Username */}
+                      <CInputGroup>
+                        <CInputGroupText style={{ backgroundColor: NGK_COLORS.primary }}>
+                          <CIcon
+                            icon={cilUser}
+                            style={{
+                              cursor: 'pointer',
+                              color: 'white',
                             }}
-                            aria-invalid={!!fieldErrors.userName}
-                            autoComplete="username"
                           />
-                        </CInputGroup>
-                        {fieldErrors.userName && (
-                          <small className="text-danger">{fieldErrors.userName}</small>
-                        )}
+                        </CInputGroupText>
+                        <CFormInput
+                          placeholder="Username"
+                          value={userName}
+                          style={{
+                            cursor: 'pointer',
+                            borderColor: NGK_COLORS.borderSoft,
+                          }}
+                          onChange={(e) => {
+                            setUserName(e.target.value)
+                            if (fieldErrors.userName)
+                              setFieldErrors((p) => ({ ...p, userName: '' }))
+                          }}
+                          aria-invalid={!!fieldErrors.userName}
+                          autoComplete="username"
+                        />
+                      </CInputGroup>
+                      {fieldErrors.userName && (
+                        <small className="text-danger">{fieldErrors.userName}</small>
+                      )}
 
-                        {/* Password */}
-                        <CInputGroup className="mt-3 mb-2">
-                          <CInputGroupText
-                            onClick={() => setShowPassword((s) => !s)}
-                            style={{ cursor: 'pointer' }}
-                            title={showPassword ? 'Hide password' : 'Show password'}
-                          >
-                            <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
-                          </CInputGroupText>
-                          <CFormInput
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => {
-                              setPassword(e.target.value)
-                              if (fieldErrors.password)
-                                setFieldErrors((p) => ({ ...p, password: '' }))
-                            }}
-                            aria-invalid={!!fieldErrors.password}
-                            autoComplete="current-password"
+                      {/* Password */}
+                      <CInputGroup className="mt-3 ">
+                        <CInputGroupText
+                          onClick={() => setShowPassword((s) => !s)}
+                          style={{ cursor: 'pointer', backgroundColor: NGK_COLORS.primary }}
+                          title={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          <CIcon
+                            icon={showPassword ? cilLockUnlocked : cilLockLocked}
+                            style={{ color: 'white' }}
                           />
-                        </CInputGroup>
-                        {fieldErrors.password && (
-                          <small className="text-danger">{fieldErrors.password}</small>
-                        )}
+                        </CInputGroupText>
+                        <CFormInput
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Password"
+                          value={password}
+                          style={{
+                            cursor: 'pointer',
+                            borderColor: NGK_COLORS.borderSoft,
+                          }}
+                          onChange={(e) => {
+                            setPassword(e.target.value)
+                            if (fieldErrors.password)
+                              setFieldErrors((p) => ({ ...p, password: '' }))
+                          }}
+                          aria-invalid={!!fieldErrors.password}
+                          autoComplete="current-password"
+                        />
+                      </CInputGroup>
+                      {fieldErrors.password && (
+                        <small className="text-danger">{fieldErrors.password}</small>
+                      )}
 
-                        <div
-                          className="d-flex justify-content-between mt-2"
-                          style={{ color: COLORS.primary }}
+                      <div
+                        className="d-flex justify-content-between mt-2"
+                        style={{ color: NGK_COLORS.primary }}
+                      >
+                        <a
+                          style={{ color: NGK_COLORS.primary }}
+                          href="#"
+                          className="text-decoration-none derma-link"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setShowResetModal(true)
+                          }}
                         >
-                          <a
-                            style={{ color: COLORS.primary }}
-                            href="#"
-                            className="text-decoration-none derma-link"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              setShowResetModal(true)
-                            }}
-                          >
-                            Forgot password?
-                          </a>
-                        </div>
+                          Forgot password?
+                        </a>
+                      </div>
 
-                        <CButton
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-100 mt-4 derma-btn"
-                          style={{ backgroundColor: COLORS.primary, color: 'white' }}
-                        >
-                          {isLoading ? <CSpinner size="sm" /> : 'Login'}
-                        </CButton>
-                      </CForm>
-                    )}
+                      <CButton
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-100 mt-4 derma-btn"
+                        style={{ backgroundColor: NGK_COLORS.primary, color: 'white' }}
+                      >
+                        {isLoading ? <CSpinner size="sm" /> : 'Login'}
+                      </CButton>
+                    </CForm>
                   </CCardBody>
                 </CCard>
               </CCol>
@@ -335,37 +295,51 @@ const Login = () => {
         {/* Sticky Footer */}
         <footer
           className="d-flex justify-content-around small py-2 opacity-75 mt-auto"
-          style={{ color: COLORS.primary, backgroundColor: '#f8f9fa' }}
+          style={{ color: NGK_COLORS.primary, backgroundColor: '#f8f9fa' }}
         >
           <span
             className="d-inline-flex align-items-center gap-2"
-            style={{ color: COLORS.primary }}
+            style={{ color: NGK_COLORS.primary }}
           >
             <CIcon icon={cilShieldAlt} /> Secure by design
           </span>
-          <span style={{ color: COLORS.primary }}>
+          <span style={{ color: NGK_COLORS.primary }}>
             © {new Date().getFullYear()} Chiselon Technologies
           </span>
           <a
             href="https://chiselontechnologies.com"
             target="_blank"
-            style={{ color: COLORS.primary }}
+            style={{ color: NGK_COLORS.primary }}
           >
             About Chiselon Technologies
           </a>
         </footer>
 
         {/* Reset Modal */}
-        <CModal visible={showResetModal} onClose={() => setShowResetModal(false)}>
+        <CModal
+          visible={showResetModal}
+          size="lg"
+          onClose={() => setShowResetModal(false)}
+          backdrop="static"
+          className="custom-modal"
+        >
           <CModalHeader>
-            <CModalTitle>Reset Password</CModalTitle>
+            <CModalTitle style={{ color: NGK_COLORS.primary }}>Reset Password</CModalTitle>
           </CModalHeader>
           <CModalBody>
-            <ResetPassword onClose={() => setShowResetModal(false)} />
+            <ResetPassword onClose={() => setShowResetModal(false)} setLoading={setLoading} />
           </CModalBody>
           <CModalFooter>
             <CButton color="secondary" onClick={() => setShowResetModal(false)}>
               Close
+            </CButton>
+            <CButton
+              type="submit"
+              color="primary"
+              disabled={loading}
+              style={{ backgroundColor: NGK_COLORS.primary, border: 'none' }}
+            >
+              {loading ? 'Updating...' : 'Update Password'}
             </CButton>
           </CModalFooter>
         </CModal>

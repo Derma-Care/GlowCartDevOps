@@ -1,5 +1,6 @@
 package com.glowkart.admin.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -171,6 +172,21 @@ public class ClinicController {
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Clinic deleted successfully", null)
+        );
+    }
+
+    @GetMapping("/clinics/verified")
+    public ResponseEntity<ApiResponse<?>> getVerifiedClinics() {
+        List<Clinic> verifiedClinics = clinicService.getVerifiedClinics();
+
+        String message = verifiedClinics.isEmpty() ? "No verified clinics found" : "Fetched verified clinics successfully";
+
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                message,
+                verifiedClinics
+            )
         );
     }
 

@@ -44,9 +44,7 @@ const AppHeader = () => {
   const HospitalName = localStorage.getItem('staffName')
     ? localStorage.getItem('staffName')
     : localStorage.getItem('HospitalName')?.split(' ')[0] || 'Hospital'
-  const branch = localStorage.getItem('branchName')
-    ? localStorage.getItem('branchName')
-    : localStorage.getItem('branchName') || 'branchName'
+
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -108,7 +106,7 @@ const AppHeader = () => {
             }}
           >
             <div style={{ fontSize: '1.2rem' }}>Welcome, {HospitalName}</div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 'normal', opacity: 0.9 }}>{branch}</div>
+            {/* <div style={{ fontSize: '0.9rem', fontWeight: 'normal', opacity: 0.9 }}>{branch}</div> */}
           </div>
 
           <div

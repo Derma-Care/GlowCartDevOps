@@ -1,5 +1,6 @@
 import { element } from 'prop-types'
 import React from 'react'
+import PackageDetails from './views/PackageManagement/PackageDetails'
 
 
 // Lazy-loaded components
@@ -22,7 +23,7 @@ const MembershipManagement = React.lazy(() => import('./views/MembershipManageme
 const PackageManagement = React.lazy(() => import('./views/PackageManagement/PackageManagement'))
 const Payouts = React.lazy(() => import('./views/Payouts/Payout'))
 // const BranchDetails = React.lazy(() => import('./views/clinicManagement/BranchDetails'))
-const RegistrationCodeManagement= React.lazy(()=>import('./views/RegistrationCodes/RegistrationCodes'))
+const RegistrationCodeManagement = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodes'))
 const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/GlowKartClinicDetails'))
 
 const routes = [
@@ -47,7 +48,9 @@ const routes = [
   { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
   { path: '/package-management', name: 'PackageManagement', element: PackageManagement },
   { path: '/registration-codes', name: 'RegistrationCodeManagement', element: RegistrationCodeManagement },
-   { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
+  { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
+  { path: "/PackageDetails/:clinicId", name: 'PackageDetails', element: PackageDetails }
+
 ]
 
 export default routes

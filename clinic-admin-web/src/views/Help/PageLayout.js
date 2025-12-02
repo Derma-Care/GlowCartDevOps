@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { CContainer } from '@coreui/react'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
-import { GetClinicBranches } from '../Doctors/DoctorAPI'
+// import { GetClinicBranches } from '../Doctors/DoctorAPI'
 
 const PageLayout = ({ title, children, branch }) => {
   const { selectedHospital } = useHospital()
@@ -12,24 +12,24 @@ const PageLayout = ({ title, children, branch }) => {
   const [loading, setLoading] = useState(false)
 
   // 🔹 Fetch Branch List
-  useEffect(() => {
-    const fetchBranches = async () => {
-      if (!hospital?.hospitalId) return
-      try {
-        setLoading(true)
-        const response = await GetClinicBranches(hospital.hospitalId)
-        // ✅ Remove 0th index (main branch)
-        const filteredBranches = response?.data?.slice(1) || []
-        setBranches(filteredBranches)
-      } catch (error) {
-        console.error('Error fetching branches:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  // useEffect(() => {
+  //   const fetchBranches = async () => {
+  //     if (!hospital?.hospitalId) return
+  //     try {
+  //       setLoading(true)
+  //       const response = await GetClinicBranches(hospital.hospitalId)
+  //       // ✅ Remove 0th index (main branch)
+  //       const filteredBranches = response?.data?.slice(1) || []
+  //       setBranches(filteredBranches)
+  //     } catch (error) {
+  //       console.error('Error fetching branches:', error)
+  //     } finally {
+  //       setLoading(false)
+  //     }
+  //   }
 
-    if (branch) fetchBranches()
-  }, [hospital?.hospitalId, branch])
+  //   if (branch) fetchBranches()
+  // }, [hospital?.hospitalId, branch])
 
   return (
     <CContainer fluid className="p-2">

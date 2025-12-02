@@ -148,6 +148,14 @@ public class ClinicServiceImpl implements ClinicService {
 
         repo.deleteById(clinicId);
     }
+    
+    @Override
+    public List<Clinic> getVerifiedClinics() {
+        // Use repository query to avoid case sensitivity issues
+        return repo.findByStatusIgnoreCase("VERIFIED");
+    }
+
+
 
     @Override
     public Clinic login(String username, String password) {

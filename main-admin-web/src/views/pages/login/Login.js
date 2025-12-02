@@ -17,7 +17,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilLockUnlocked } from '@coreui/icons'
 import Logo from '../login/GlowKaart.png'
-import { BASE_URL, endPoint } from '../../../baseUrl'
+import {BASE_URL_API} from '../../../baseUrl'
 
 const Login = () => {
   const [userName, setUserName] = useState('')
@@ -55,7 +55,7 @@ const Login = () => {
 
     try {
       const data = { userName, password }
-      const response = await axios.post(`${BASE_URL}/${endPoint}`, data, {
+      const response = await axios.post(`${BASE_URL_API}/login`, data, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -67,7 +67,7 @@ const Login = () => {
       // Check for success message (correct spelling!)
       if (response.status === 200) {
         console.log('Login successful')
-        navigate('/dashboard')
+        navigate('/clinic-management')
         localStorage.setItem('userName', userName)
         localStorage.setItem('authentication', true) //flag
         navigate(from, { replace: true })

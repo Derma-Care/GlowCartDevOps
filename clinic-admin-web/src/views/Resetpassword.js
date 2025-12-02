@@ -13,8 +13,9 @@ import {
 } from '@coreui/react'
 import { BASE_URL } from '../baseUrl'
 import { http } from '../Utils/Interceptors'
+import { NGK_COLORS } from '../Constant/Themes'
 
-const ResetPassword = ({ onClose }) => {
+const ResetPassword = ({ onClose, setLoading }) => {
   const [form, setForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -23,7 +24,7 @@ const ResetPassword = ({ onClose }) => {
   })
 
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -62,14 +63,11 @@ const ResetPassword = ({ onClose }) => {
     setMessage('')
 
     try {
-      const response = await http.put(
-        `/updatePassword/${form.username}`,
-        {
-          password: currentPassword,
-          newPassword: newPassword,
-          confirmPassword: confirmPassword,
-        },
-      )
+      const response = await http.put(`/updatePassword/${form.username}`, {
+        password: currentPassword,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      })
 
       if (response.data.success) {
         setMessage('✅ Password updated successfully!')
@@ -93,10 +91,10 @@ const ResetPassword = ({ onClose }) => {
   }
 
   return (
-    <div className="container mt-4">
-      <CCard>
-        <CCardBody>
-          <h4 className="mb-3">🔐 Change Password</h4>
+    <div className="container mt-2">
+      <div>
+        <div>
+          {/* <h4 className="mb-3">🔐 Change Password</h4> */}
           <CForm onSubmit={handleSubmit}>
             <div className="mb-3">
               <CFormLabel>User Name</CFormLabel>
@@ -104,6 +102,12 @@ const ResetPassword = ({ onClose }) => {
                 <CFormInput
                   type="text"
                   name="username"
+                  placeholder="Enter User Name"
+                  // style={{
+                  //   cursor: 'pointer',
+                  //   borderColor: NGK_COLORS.borderSoft,
+
+                  // }}
                   value={form.username}
                   onChange={handleChange}
                 />
@@ -120,6 +124,7 @@ const ResetPassword = ({ onClose }) => {
               <CFormLabel>Current Password</CFormLabel>
               <CInputGroup>
                 <CFormInput
+                  placeholder="ENter Current Password"
                   type={showCurrent ? 'text' : 'password'}
                   name="currentPassword"
                   value={form.currentPassword}
@@ -156,6 +161,7 @@ const ResetPassword = ({ onClose }) => {
               <CFormLabel>Confirm New Password</CFormLabel>
               <CInputGroup>
                 <CFormInput
+                  placeholder="ENter Confirm Password"
                   type={showConfirm ? 'text' : 'password'}
                   name="confirmPassword"
                   value={form.confirmPassword}
@@ -174,12 +180,9 @@ const ResetPassword = ({ onClose }) => {
             {message && <div className="mb-3 text-danger fw-bold">{message}</div>}
 
             {/* Submit */}
-            <CButton type="submit" color="primary" disabled={loading}>
-              {loading ? 'Updating...' : 'Update Password'}
-            </CButton>
           </CForm>
-        </CCardBody>
-      </CCard>
+        </div>
+      </div>
     </div>
   )
 }

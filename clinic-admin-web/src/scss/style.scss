@@ -1,13 +1,13 @@
 // @import "variables";
 
-@import "@coreui/coreui/scss/coreui";
-@import "@coreui/chartjs/scss/coreui-chartjs";
+@import '@coreui/coreui/scss/coreui';
+@import '@coreui/chartjs/scss/coreui-chartjs';
 
-@import "vendors/simplebar";
+@import 'vendors/simplebar';
 
-@import "theme";
+@import 'theme';
 
-@import "custom";
+@import 'custom';
 
 $breakpoints: (
   xs: 0,
@@ -15,7 +15,7 @@ $breakpoints: (
   md: 768px,
   lg: 992px,
   xl: 1200px,
-  xxl: 1400px
+  xxl: 1400px,
 );
 
 @media (max-width: map-get($breakpoints, sm)) {
@@ -32,7 +32,7 @@ $breakpoints: (
 
 @media (min-width: map-get($breakpoints, xl)) {
   .custom-header {
-    font-size: 1.5rem; 
+    font-size: 1.5rem;
   }
 }
 
@@ -45,5 +45,23 @@ $breakpoints: (
   @media (min-width: 1200px) {
     margin: 2rem;
     padding: 2rem;
+  }
+}
+
+/* Mobile layout: Procedure 60%, Sittings 20%, Delete 10% */
+@media (max-width: 576px) {
+  .procedure-row .procedure-col {
+    flex: 0 0 60% !important;
+    max-width: 60% !important;
+  }
+
+  .procedure-row .sitting-col {
+    flex: 0 0 20% !important;
+    max-width: 20% !important;
+  }
+
+  .procedure-row .delete-col {
+    flex: 0 0 10% !important;
+    max-width: 10% !important;
   }
 }

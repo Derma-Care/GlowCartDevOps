@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { updateStep2 } from '../APIs/FinalRegistrationApi'
 import { processFile } from '../Utills/fileUtils'
 import { UploadedPreview } from '../Utills/FileUpload'
+import { showCustomToast } from '../../../Utils/Toaster'
 
 export default function PrizePostDetails({ form, setForm, onSubmit, userData }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
@@ -31,7 +32,8 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
   const handleGetLocation = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        alert('Location is not supported on this device')
+        showCustomToast('Location is not supported on this device', 'error')
+
         resolve(false)
         return
       }
@@ -50,7 +52,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             const readable = data.display_name || `${latitude}, ${longitude}`
             updateForm('address', readable)
           } catch {
-            alert('Unable to fetch address')
+            showCustomToast('Unable to fetch address', 'error')
           }
 
           setLoadingLocation(false)
@@ -58,7 +60,9 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
         },
         () => {
           setLoadingLocation(false)
-          alert('Location permission denied')
+          showCustomToast('Location permission denied', 'error')
+
+          // alert('Location permission denied')
           resolve(false)
         },
       )
@@ -80,19 +84,25 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
       }
 
       if (!form.prizePostScreenshot) {
-        alert('Upload your Prize Post screenshot!')
+        showCustomToast('Upload your Prize Post screenshot!', 'error')
+
+        // alert('Upload your Prize Post screenshot!')
         setLoading(false)
         return
       }
 
       if (!form.address.trim()) {
-        alert('Address is required!')
+        showCustomToast('Address is required!', 'error')
+
+        // alert('Address is required!')
         setLoading(false)
         return
       }
 
       if (!form.followScreenshot) {
-        alert('Upload your Follow Page screenshot!')
+        showCustomToast('Upload your Follow Page screenshot!', 'error')
+
+        // alert('Upload your Follow Page screenshot!')
         setLoading(false)
         return
       }
@@ -109,11 +119,16 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
       console.log('Sending Step2 Payload:', step2Payload)
 
       const result = await updateStep2(userData.mobile, step2Payload)
-
+      console.log(result)
       if (!result.success) {
-        alert('Failed to update Step 2!')
+        const errorMessage = result.message || 'Failed to update Step 2!'
+        showCustomToast(errorMessage, 'error')
         setLoading(false)
         return
+      }
+      if (result.status == 400) {
+        const errorMessage = result.message || 'Failed to update Step 2!'
+        showCustomToast(errorMessage, 'error')
       }
 
       // On success:
@@ -132,8 +147,18 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
 
       console.log('Success..Moving to onboard success')
     } catch (err) {
-      console.log('Error:', err)
-      alert('Something went wrong!')
+      console.log('🔥 FULL ERROR:', err)
+
+      // Extract API message safely
+      const apiMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.data?.message ||
+        err?.response?.data?.error ||
+        null
+
+      const finalMessage = apiMessage || 'Something went wrong!'
+
+      showCustomToast(finalMessage, 'error')
     }
 
     setLoading(false) // 🔥 HIDE LOADER
@@ -214,7 +239,8 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                         const base64 = await processFile(file)
                         updateForm('prizePostScreenshot', base64)
                       } catch (err) {
-                        alert(err.message)
+                        showCustomToast('err.message', 'error')
+                        // alert(err.message)
                         e.target.value = ''
                       }
                     }}
@@ -370,7 +396,8 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                         const base64 = await processFile(file)
                         updateForm('followScreenshot', base64)
                       } catch (err) {
-                        alert(err.message)
+                        showCustomToast('err.message', 'error')
+                        // alert(err.message)
                         e.target.value = ''
                       }
                     }}

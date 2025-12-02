@@ -25,4 +25,7 @@ public interface ClinicService {
     void deleteClinic(String clinicId);
 
     Clinic login(String username, String password);
+
+ // NEW: Get Verified Clinics
+	List<Clinic> getVerifiedClinics();
 }

@@ -24,7 +24,7 @@ export const subService_URL = `http://${ipUrl}/admin`
 export const ADD_SERVICE = 'addService'
 export const GET_ALL_SERVICES = 'getAllServices'
 export const DELETE_SERVICE_URL = `deleteService`
-export const updateService = 'updateByServiceId'
+
 
 export const getService = 'getServiceById'
 // export const getServiceByServiceId='getServiceByServiceId'
@@ -145,7 +145,7 @@ export const DeleteBookings = 'admin/deleteServiceByBookedId'
 // Service management
 // export const getService = 'admin/getAllServices'
 export const getServiceByCategory = 'admin/getServiceById'
-export const deleteService = 'admin/deleteService'
+
 
 //categoryAdvertisement
 export const getAllCategoryAdvertisement = 'admin/categoryAdvertisement/getAll'
@@ -174,7 +174,7 @@ export const getservice = 'admin/getServiceById'
 
 export const addDoctorUrl = `admin/addDoctor`
 
-export const AddSubService = 'admin/addSubService'
+
 
 export const getService_ByClinicId = 'admin/getSubServiceByHospitalId'
 
@@ -244,3 +244,7 @@ export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'
 export const REGISTRATION_CODE_GET_ALL_URL=`${BASE_URL_API}/api/registration/all`
 export const getBasicDetails = 'customers'
 export const CustomerAllData = 'customers/all'
+export const ClinicBase_urls=`https://glowkartapi.ashokfruit.shop/clinic-admin`
+export const deleteService = 'procedure-pricing/delete'
+export const updateService = 'procedure-pricing/update'
+export const AddSubService = 'procedure-pricing/create'

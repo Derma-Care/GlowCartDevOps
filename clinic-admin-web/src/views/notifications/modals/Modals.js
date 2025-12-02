@@ -507,7 +507,7 @@ const Modals = () => {
             <DocsExample href="components/modal">
               <CModal
                 className="show d-block position-static"
-                backdrop={false}
+                backdrop="static"
                 keyboard={false}
                 portal={false}
                 visible

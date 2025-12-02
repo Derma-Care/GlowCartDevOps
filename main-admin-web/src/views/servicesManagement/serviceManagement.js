@@ -525,7 +525,7 @@ const ServiceManagement = () => {
       <CCard>
 
         <CCardHeader className="d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Service Management</h5>
+          <h5 className="mb-0">Procedure Management</h5>
           <div className="d-flex" style={{ gap: '1rem' }}>
             <CInputGroup style={{ width: '300px' }}>
               <CFormInput

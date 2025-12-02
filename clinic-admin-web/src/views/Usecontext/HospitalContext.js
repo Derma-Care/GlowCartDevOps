@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { http } from '../../Utils/Interceptors'
-import { GetSubServices_ByClinicId } from '../ProcedureManagement/ProcedureManagementAPI'
+// import { GetSubServices_ByClinicId } from '../ProcedureManagement/ProcedureManagementAPI'
 import { BASE_URL, getDoctorByClinicId } from '../../baseUrl'
 
 const HospitalContext = createContext()
@@ -71,70 +71,55 @@ export const HospitalProvider = ({ children }) => {
   }, [selectedHospital])
 
   // Fetch hospital details
-  const fetchHospital = useCallback(async (id) => {
-    // ✅ also update permissions on refresh or hospital change
+  // const fetchHospital = useCallback(async (id) => {
+  //   // ✅ also update permissions on refresh or hospital change
 
-    if (!id) return
-    setLoading(true)
-    try {
-      const res = await http.get(`/getClinic/${id}`)
-      if (res.status === 200 && res.data) {
-        setSelectedHospital(res.data)
-      }
-      return res.data // ✅ return data here
-      console.log(res.data)
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('Error fetching hospital data.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  //   if (!id) return
+  //   setLoading(true)
+  //   try {
+  //     const res = await http.get(`/getClinic/${id}`)
+  //     if (res.status === 200 && res.data) {
+  //       setSelectedHospital(res.data)
+  //     }
+  //     return res.data // ✅ return data here
+  //     console.log(res.data)
+  //   } catch (err) {
+  //     console.error(err)
+  //     setErrorMessage('Error fetching hospital data.')
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }, [])
 
-  // Fetch doctors by hospital and branch
-  const fetchDoctors = useCallback(async () => {
-    if (!hospitalId) return
-    setLoading(true)
-    try {
-      const branchId = localStorage.getItem('branchId')
-      const hospitalId = localStorage.getItem('HospitalId')
-      const res = await http.get(`${getDoctorByClinicId}/${hospitalId}/${branchId}`)
-      if (res.status === 200 && res.data) setDoctorData(res.data)
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('Error fetching doctors.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+ 
 
   // Fetch subservices by hospital
-  const fetchSubServices = useCallback(async () => {
-    const hospitalId = localStorage.getItem('HospitalId')
-    if (!hospitalId) return
-    setLoading(true)
-    try {
-      const res = await GetSubServices_ByClinicId(hospitalId)
-      const list = Array.isArray(res?.data) ? res.data : []
-      setSubServices(list.filter((s) => s.hospitalId === hospitalId))
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('Error fetching subservices.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  // const fetchSubServices = useCallback(async () => {
+  //   const hospitalId = localStorage.getItem('HospitalId')
+  //   if (!hospitalId) return
+  //   setLoading(true)
+  //   try {
+  //     const res = await GetSubServices_ByClinicId(hospitalId)
+  //     const list = Array.isArray(res?.data) ? res.data : []
+  //     setSubServices(list.filter((s) => s.hospitalId === hospitalId))
+  //   } catch (err) {
+  //     console.error(err)
+  //     setErrorMessage('Error fetching subservices.')
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }, [])
 
   const fetchAllData = useCallback(
     async (id = hospitalId) => {
       if (!id) return
       setHydrated(false)
-      await fetchHospital(id)
-      await fetchDoctors()
-      await fetchSubServices()
+      // await fetchHospital(id)
+    
+      // await fetchSubServices()
       setHydrated(true)
     },
-    [hospitalId, fetchHospital, fetchDoctors, fetchSubServices],
+    [hospitalId,],
   )
 
   // Auto-fetch on hospitalId change
@@ -169,9 +154,9 @@ export const HospitalProvider = ({ children }) => {
         setHospitalId,
         setNotificationCount,
         fetchAllData,
-        fetchDoctors,
-        fetchHospital,
-        fetchSubServices,
+   
+      
+        // fetchSubServices,
         fetchPermissions, // expose for manual calls (like after login)
       }}
     >

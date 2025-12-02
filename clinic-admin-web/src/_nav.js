@@ -16,6 +16,10 @@ import {
   cilLightbulb,
   cilBell,
   cilPeople,
+  cilCreditCard,
+  cilStorage,
+  cilGift,
+  cilTask,
 } from '@coreui/icons'
 import { CNavItem } from '@coreui/react'
 import { NavLink } from 'react-router-dom'
@@ -36,20 +40,27 @@ export const getNavigation = (permissions = {}) => {
     //   as: NavLink,
     //   icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
     // },
-    {
-      component: CNavItem,
-      to: '/doctor',
-      name: 'Employee management',
-      as: NavLink,
-      icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
-    },
 
     {
       component: CNavItem,
       to: '/Procedure-Management',
       name: 'Procedure Management',
       as: NavLink,
-      icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
+      icon: <CIcon icon={cilClipboard} customClassName="nav-icon" />,
+    },
+    {
+      component: CNavItem,
+      to: '/package',
+      name: 'Package Management',
+      as: NavLink,
+      icon: <CIcon icon={cilGift} customClassName="nav-icon" />,
+    },
+    {
+      component: CNavItem,
+      to: '/Membership',
+      name: 'Membership',
+      as: NavLink,
+      icon: <CIcon icon={cilCreditCard} customClassName="nav-icon" />,
     },
 
     {
@@ -69,7 +80,7 @@ export const getNavigation = (permissions = {}) => {
     },
   ]
 
-  // Only include items if permission exists
+  // // Only include items if permission exists
   if (!permissions || typeof permissions !== 'object') return []
 
   // return allNav.filter((item) => permissions[item.name])

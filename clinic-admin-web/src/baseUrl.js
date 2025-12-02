@@ -161,9 +161,17 @@ export const getService_ByClinicId = 'getSubServiceByHospitalId'
 
 export const Category = 'getAllCategories'
 //main
-export const AddSubService = 'addSubService'
-export const updateService = 'updateSubService'
-export const deleteService = 'deleteSubService'
+export const AddSubService = 'procedure-pricing/create'  // need
+export const updateService = 'procedure-pricing/update' //need
+export const deleteService = 'procedure-pricing/delete' // need
+
+//package
+
+export const getPackage = 'packages'  // need
+export const addPackage = 'packages/create'  // need
+export const updatePackage = 'packages/update' //need
+export const deletePackage = 'packages/delete' // need
+ 
 
 //opt  SUb Service
 export const subservice = 'getSubServicesByServiceId'
