@@ -7,20 +7,11 @@ import { showCustomToast } from '../../../Utils/Toaster'
 import { toast } from 'react-toastify'
 import LoadingIndicator from '../../../Utils/loader'
 import './SpinWheel.css'
+import { NGK_COLORS } from '../../../Constant/Themes'
 export default function SpinResultCard({ prize, onReset, setInstagram, form, userData }) {
   const cardRef = useRef(null)
   const [loading, setLoading] = useState(false)
   const [localPrize, setLocalPrize] = useState(null)
-
-  // useEffect(() => {
-  //   if (!prize) {
-  //     const saved = localStorage.getItem('saved_winnerPrize')
-  //     if (saved) {
-  //       const parsed = JSON.parse(saved)
-  //       setLocalPrize(parsed) // store it inside component state
-  //     }
-  //   }
-  // }, [])
 
   const finalPrize = userData || prize
 
@@ -135,7 +126,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           width: '100%',
           borderRadius: 22,
           border: 'none',
-          background: 'linear-gradient(135deg, #ffe6f1, #ffd8ec)',
+          background: 'linear-gradient(135deg, #e6efffff, #ffd8ec)',
           boxShadow: '0 8px 30px rgba(255, 0, 102, 0.15)',
 
           backgroundImage: `url(${bg})`,
@@ -145,40 +136,18 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       >
         <CCardBody style={{ padding: '20px 18px' }}>
           {/* HEADER */}
-          <div
-            className="d-flex align-items-center justify-content-between"
-            style={{
-              gap: '10px',
-              marginBottom: 15,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <h4
-                style={{
-                  margin: 0,
-                  color: '#ff2e85',
-                  fontSize: 'clamp(16px, 4vw, 20px)',
-                  fontWeight: 700,
-                  lineHeight: 1.2,
-                }}
-              >
-                Neha’s Glow Kart
-              </h4>
-              <small style={{ color: '#FF7BBF', fontSize: '14px', textAlign: 'center' }}>
-                Beauty & Skin Essentials
-              </small>
-            </div>
+          <div className="d-flex align-items-center justify-content-start">
             <img
               src={DermaCareLogo}
               alt="logo"
               style={{
-                width: 52,
-                height: 52,
-                padding: 8,
+                // width: 52,
+                height: 70,
+                // padding: 8,
                 borderRadius: 14,
-                background: '#fff',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.12)',
+
+                // background: '#fff',
+                // boxShadow: '0 4px 10px rgba(0,0,0,0.12)',
               }}
             />
           </div>
@@ -187,7 +156,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           <h3
             style={{
               fontFamily: 'AmsterdamTwo, sans-serif',
-              color: '#ff2e85',
+              color: NGK_COLORS.primary,
               marginBottom: 10,
               fontSize: 'clamp(20px, 5vw, 26px)',
               fontWeight: 700,
@@ -205,7 +174,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
               marginTop: '15px',
               display: 'inline-block',
               padding: '5px 15px',
-              backgroundColor: '#ff4f9a', // or any color for the strip
+              backgroundColor: NGK_COLORS.primary, // or any color for the strip
               color: 'white', // text color
               borderRadius: '5px', // optional for rounded strip
             }}
@@ -213,7 +182,15 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
             {finalPrize.fullName}
           </p>
 
-          <p style={{ textAlign: 'center', fontSize: 15, marginTop: '5px', fontWeight: 'bold' }}>
+          <p
+            style={{
+              textAlign: 'center',
+              fontSize: 15,
+              marginTop: '5px',
+              fontWeight: 'bold',
+              color: NGK_COLORS.primary,
+            }}
+          >
             You Won:
           </p>
 
@@ -228,8 +205,8 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 <h4
                   style={{
                     margin: 0,
-                    color: '#ff005c',
-                    fontSize: 'clamp(18px, 5vw, 22px)',
+                    color: NGK_COLORS.primary,
+                    fontSize: 'clamp(20px, 5vw, 24px)',
                     textAlign: 'center',
                   }}
                 >
@@ -336,7 +313,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           background: '#fff3fa',
           borderRadius: 12,
           padding: '14px 16px',
-          borderLeft: '4px solid #ff007f',
+          borderLeft: `4px solid ${NGK_COLORS.primary}`,
           fontSize: 15,
           animation: 'blinkGlow 1.6s infinite ease-in-out',
         }}
@@ -361,61 +338,44 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       </style>
 
       {/* BUTTON */}
-
-      <CButton
-        style={{
-          width: '100%',
-          marginTop: '20px',
-          background: '#ff007f',
-          border: 'none',
-          padding: '14px 5px',
-          borderRadius: 12,
-          fontSize: 'clamp(16px, 4vw, 18px)',
-          fontWeight: '600',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          color: 'white',
-        }}
-        disabled={false}
-        onClick={handleShare}
-      >
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
-          style={{ width: 22, height: 22 }}
-        />
-        Share on Instagram
-      </CButton>
+      <div className="d-flex justify-content-end">
+        <CButton className="share-btn" onClick={handleShare}>
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
+            className="ig-icon"
+            alt="instagram"
+            style={{ backgroundColor: 'white', padding: '2px', borderRadius: '10px' }}
+          />
+          Share on Instagram
+        </CButton>
+      </div>
 
       {loading && (
         <div style={loaderStyles.overlay}>
-          <div style={loaderStyles.loaderWrapper}>
-            <div className="spinner"></div>
+          <div style={loaderStyles.card}>
+            <div className="spin-loader"></div>
 
-            <div style={loaderStyles.textBlock}>
-              <p style={loaderStyles.text}>Opening Instagram…</p>
+            <h3 style={loaderStyles.title}>Opening Instagram…</h3>
 
-              <p style={loaderStyles.textSmall}>
-                📸 Your image has been downloaded and the caption has been copied. <br />
-                Please upload the image on Instagram and paste the caption while posting. <br />
-                Once posted, take a screenshot of your Instagram post and upload it on the next
-                screen.
-              </p>
-            </div>
+            <p style={loaderStyles.desc}>
+              📸 Your image has been downloaded and the caption has been copied.
+              <br />
+              Please upload it on Instagram and paste the caption.
+              <br />
+              After posting, take a screenshot and upload it on the next screen.
+            </p>
           </div>
 
           <style>
             {`
-        .spinner {
-          width: 58px;
-          height: 58px;
+        .spin-loader {
+          width: 65px;
+          height: 65px;
           border: 6px solid #ffd4ec;
-          border-top-color: #ff007f;
+          border-top-color: #D2025B;
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -431,38 +391,37 @@ const loaderStyles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(255, 255, 255, 0.95)',
+    background: 'rgba(255, 255, 255, 0.96)',
     backdropFilter: 'blur(6px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
-  },
-
-  loaderWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    maxWidth: '380px', // 👈 keeps paragraphs aligned
     padding: '20px',
   },
 
-  textBlock: {
-    marginTop: '20px',
+  card: {
+    textAlign: 'center',
+    maxWidth: '450px',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '20px',
   },
 
-  text: {
-    fontSize: '20px',
+  title: {
+    fontSize: '22px',
     fontWeight: 700,
-    color: '#ff007f',
-    marginBottom: '10px',
+    color: '#D2025B',
+    margin: 0,
   },
 
-  textSmall: {
+  desc: {
     fontSize: '15px',
     fontWeight: 500,
-    color: '#ff007f',
+    color: '#D2025B',
     lineHeight: '22px',
+    margin: 0,
   },
 }

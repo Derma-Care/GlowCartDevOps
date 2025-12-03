@@ -6,6 +6,7 @@ import { updateStep2 } from '../APIs/FinalRegistrationApi'
 import { processFile } from '../Utills/fileUtils'
 import { UploadedPreview } from '../Utills/FileUpload'
 import { showCustomToast } from '../../../Utils/Toaster'
+import { NGK_COLORS } from '../../../Constant/Themes'
 
 export default function PrizePostDetails({ form, setForm, onSubmit, userData }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
@@ -182,7 +183,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             <h3
               className="fw-bold"
               style={{
-                color: '#ff2e85',
+                color: NGK_COLORS.primary,
                 textAlign: 'center',
                 marginBottom: 30,
                 fontSize: 28,
@@ -221,7 +222,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                     textAlign: 'center',
                     cursor: 'pointer',
                     background: '#fff6fb',
-                    color: '#ff2e85',
+                    color: NGK_COLORS.primary,
                     fontWeight: '600',
                     fontSize: 15,
                     transition: '0.3s',
@@ -315,7 +316,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                 style={{
                   margin: 0,
                   fontSize: 16,
-                  color: '#ff2e85',
+                  color: NGK_COLORS.primary,
                   fontWeight: 700,
                 }}
               >
@@ -326,7 +327,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             <CButton
               style={{
                 width: '100%',
-                background: '#ff2e85',
+                background: NGK_COLORS.primary,
                 color: 'white',
                 padding: '12px 0',
                 borderRadius: 12,
@@ -345,7 +346,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             >
               <img
                 src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
-                style={{ width: 22, height: 22 }}
+                style={{ width: 22, height: 22,backgroundColor:"white",padding:"4px",borderRadius:"5px" }}
               />
               Visit Instagram Profile
             </CButton>
@@ -379,7 +380,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                     textAlign: 'center',
                     cursor: 'pointer',
                     background: '#fff6fb',
-                    color: '#ff2e85',
+                    color: NGK_COLORS.primary,
                     fontWeight: '600',
                     fontSize: 15,
                   }}
@@ -413,7 +414,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             {canSubmit && (
               <CButton
                 style={{
-                  backgroundColor: '#ff2e85',
+                  backgroundColor: NGK_COLORS.primary,
                   width: '100%',
                   padding: '14px 0',
                   borderRadius: 12,

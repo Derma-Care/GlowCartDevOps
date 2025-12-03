@@ -1,9 +1,13 @@
 .spin-container {
   width: 100%;
   display: flex;
-  justify-content: center;
- 
+  height: 80vh;
+  justify-content: center; /* horizontal center */
+  align-items: center; /* vertical center */
+  min-height: 80vh; /* take full screen height */
   overflow: hidden !important;
+  padding: 20px 0; /* avoids clipping for pointer */
+  box-sizing: border-box;
 }
 
 .wheel-wrapper {
@@ -108,4 +112,25 @@
     background: none !important;
     box-shadow: none !important;
   }
+}
+.share-btn {
+  margin-top: 20px;
+  background: #D2025B !important; /* Your theme color */
+  border: none !important;
+  padding: 14px 15px !important;
+  border-radius: 12px !important;
+  font-size: clamp(16px, 4vw, 18px) !important;
+  font-weight: 600 !important;
+
+  display: flex !important;
+  justify-content: end !important;
+  align-items: end !important;
+  gap: 10px !important;
+  color: #fff !important;
+  transition: all 0.3s ease !important;
+}
+
+.ig-icon {
+  width: 22px;
+  height: 22px;
 }

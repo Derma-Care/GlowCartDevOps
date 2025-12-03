@@ -109,9 +109,29 @@ a {
   overflow-y: auto; /* enable vertical scroll */
   flex: 1; /* take available space */
 }
- @font-face {
+@font-face {
   font-family: 'AmsterdamTwo';
   src: url('/src/assets/fonts/AmsterdamTwo.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+}
+@keyframes pulseGlow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(255, 46, 133, 0.3);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 14px rgba(255, 46, 133, 0.45);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(255, 46, 133, 0.3);
+  }
+}
+
+/* Hover effect */
+.insta-hover:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 26px rgba(255, 46, 133, 0.35);
 }

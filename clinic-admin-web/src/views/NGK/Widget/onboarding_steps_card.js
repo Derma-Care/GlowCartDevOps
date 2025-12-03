@@ -1,6 +1,5 @@
 import React from 'react'
-import '../CSS/OnboardingStepsCard.css' // <-- optional if you want clean CSS
-import { Button } from 'bootstrap'
+import '../CSS/OnboardingStepsCard.css'
 
 export default function OnboardingStepsCard({ setVisible }) {
   const steps = [
@@ -26,42 +25,61 @@ export default function OnboardingStepsCard({ setVisible }) {
       number: '4',
       icon: '📸',
       title: 'Upload Winning Proof',
-      subtitle: 'Upload winning screenshot, follow Instagram & submit delivery address.',
+      subtitle:
+        'Share your reward-winning screenshot and tag us on Instagram [optional], then submit your delivery address.',
     },
   ]
 
+  const colors = ['#ff8ed6', '#ffca78', '#4db7ff', '#53e0d4'] // step colors
+
   return (
-    <div>
-      <div className="header">
-        <div className='d-flex gap-4 justify-content-center align-content-center align-items-center'> 
+    <div className="steps-wrapper custom-modal" style={{ height: '80vh' }}>
+      <div className="header ">
+        <div className="d-flex gap-4 justify-content-center align-items-center">
           <span className="star">✨</span>
-          <h2>How Neha’s GlowKart Onboarding Works</h2>
+          <h2>How Neeha’s GlowKart Onboarding Works</h2>
         </div>
-        {/* <Button>X</Button> */}
+
         <button onClick={() => setVisible(false)} className="close-btn">
           ✖
         </button>
       </div>
 
-      {steps.map((step, index) => (
-        <div key={index} className="step-row">
-          <div className="step-number">{step.number}</div>
-
-          <div className="step-content">
-            <div className="step-icon">{step.icon}</div>
-
-            <div>
-              <h4 className="step-title">{step.title}</h4>
-              <p className="step-subtitle">{step.subtitle}</p>
+      <div className="steps-flow ">
+        {steps.map((step, index) => (
+          <div
+            key={index}
+            className="step-box"
+            style={{
+              background: colors[index],
+              marginLeft: `${index * 50}px`, // Creates staircase effect
+            }}
+          >
+            <div className="step-number-box">
+              <span className="step-label">Step-</span>
+              <span className="step-count">{step.number}</span>
             </div>
+
+            <div className="step-info">
+              <div className="step-icon">{step.icon}</div>
+
+              <div>
+                <h4 className="step-title text-dark">{step.title}</h4>
+                <p className="step-subtitle text-dark m-1">{step.subtitle}</p>
+              </div>
+            </div>
+
+            {/* <div className="step-arrow text-dark"></div> */}
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-    <div className="delivery-box justify-content-center text-center fw-bold">
-  🚚 <span className="blink-text">Your gift will be delivered within 7 days after completion.</span>
-</div>
-
+      <div className="delivery-box text-center fw-bold">
+        🚚{' '}
+        <span className="blink-text">
+          Your gift will be delivered within 7 days after completion of registration.
+        </span>
+      </div>
     </div>
   )
 }
