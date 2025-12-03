@@ -33,24 +33,20 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     @Override
     public ProcedurePackageDTO create(ProcedurePackageDTO dto) {
 
-        // FETCH & VALIDATE CLINIC
         ClinicResponse clinic = fetchClinic(dto.getClinicId());
-
-        // CHECK DUPLICATE PACKAGE
         checkDuplicatePackageName(dto.getClinicId(), dto.getPackageName());
-
-        // VALIDATE PROCEDURES
         validateProcedures(dto);
 
-        // TOTAL SITTINGS
         dto.setSittings(dto.getProcedures().stream()
                 .mapToInt(ProcedureItemDTO::getNoOfSittings)
                 .sum());
 
-        // PRICE CALCULATION
+        // Set offerActive first
+        setOfferActive(dto);
+
+        // Calculate price
         calculatePricing(dto);
 
-        // AUTO-FILL CLINIC DETAILS
         dto.setClinicName(clinic.getName());
         dto.setClinicAddress(clinic.getAddress());
 
@@ -70,11 +66,9 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
         ProcedurePackage existing = repo.findById(packageId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "RESOURCE_NOT_FOUND",
-                        "Package not found: " + packageId
+                        "RESOURCE_NOT_FOUND", "Package not found: " + packageId
                 ));
 
-        // FETCH & VALIDATE CLINIC
         ClinicResponse clinic = fetchClinic(dto.getClinicId());
 
         if (!existing.getPackageName().equalsIgnoreCase(dto.getPackageName())) {
@@ -84,13 +78,17 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         validateProcedures(dto);
 
         dto.setPackageId(existing.getId());
+
         dto.setSittings(dto.getProcedures().stream()
                 .mapToInt(ProcedureItemDTO::getNoOfSittings)
                 .sum());
 
+        // Apply offer logic
+        setOfferActive(dto);
+
+        // Recalculate pricing
         calculatePricing(dto);
 
-        // AUTO-FILL CLINIC NAME + ADDRESS
         dto.setClinicName(clinic.getName());
         dto.setClinicAddress(clinic.getAddress());
 
@@ -107,26 +105,40 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
     @Override
     public List<ProcedurePackageDTO> getAll() {
-        return repo.findAll().stream()
-                .map(mapper::toDto)
+        return repo.findAll()
+                .stream()
+                .map(entity -> {
+                    ProcedurePackageDTO dto = mapper.toDto(entity);
+                    setOfferActive(dto);
+                    calculatePricing(dto);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     public ProcedurePackageDTO getById(String packageId) {
-        return mapper.toDto(
-                repo.findById(packageId)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "RESOURCE_NOT_FOUND",
-                                "Package not found: " + packageId
-                        ))
-        );
+        ProcedurePackage entity = repo.findById(packageId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "RESOURCE_NOT_FOUND", "Package not found: " + packageId
+                ));
+
+        ProcedurePackageDTO dto = mapper.toDto(entity);
+        setOfferActive(dto);
+        calculatePricing(dto);
+        return dto;
     }
 
     @Override
     public List<ProcedurePackageDTO> getByClinic(String clinicId) {
-        return repo.findByClinicId(clinicId).stream()
-                .map(mapper::toDto)
+        return repo.findByClinicId(clinicId)
+                .stream()
+                .map(entity -> {
+                    ProcedurePackageDTO dto = mapper.toDto(entity);
+                    setOfferActive(dto);
+                    calculatePricing(dto);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -143,15 +155,18 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
             );
         }
 
-        return mapper.toDto(pkg);
+        ProcedurePackageDTO dto = mapper.toDto(pkg);
+        setOfferActive(dto);
+        calculatePricing(dto);
+
+        return dto;
     }
 
     @Override
     public void delete(String packageId) {
         if (!repo.existsById(packageId)) {
             throw new ResourceNotFoundException(
-                    "RESOURCE_NOT_FOUND",
-                    "Package not found: " + packageId
+                    "RESOURCE_NOT_FOUND", "Package not found: " + packageId
             );
         }
         repo.deleteById(packageId);
@@ -161,22 +176,17 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     // HELPER METHODS
     // ============================================================
 
-    /**
-     * Fetch clinic details from Admin Service (Feign call)
-     */
     private ClinicResponse fetchClinic(String clinicId) {
         ClinicResponse response = clinicClient.getClinicById(clinicId);
         if (response == null) {
-            throw new BadRequestException(
-                    "INVALID_CLINIC",
-                    "Invalid clinicId: " + clinicId
-            );
+            throw new BadRequestException("INVALID_CLINIC", "Invalid clinicId: " + clinicId);
         }
         return response;
     }
 
     private void checkDuplicatePackageName(String clinicId, String packageName) {
-        boolean exists = repo.findByClinicId(clinicId).stream()
+        boolean exists = repo.findByClinicId(clinicId)
+                .stream()
                 .anyMatch(p -> p.getPackageName().equalsIgnoreCase(packageName));
 
         if (exists) {
@@ -189,7 +199,6 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
     private void validateProcedures(ProcedurePackageDTO dto) {
         for (ProcedureItemDTO item : dto.getProcedures()) {
-
             boolean exists = procedurePricingRepository.existsByProcedureIdAndClinicId(
                     getProcedureIdByName(item.getProcedureName(), dto.getClinicId()),
                     dto.getClinicId()
@@ -198,39 +207,81 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
             if (!exists) {
                 throw new BadRequestException(
                         "INVALID_PROCEDURE",
-                        "Invalid procedure: " + item.getProcedureName() +
-                                " for this clinic"
+                        "Invalid procedure: " + item.getProcedureName()
                 );
             }
         }
     }
 
     private String getProcedureIdByName(String procedureName, String clinicId) {
-
-        return procedurePricingRepository.findByClinicId(clinicId).stream()
+        return procedurePricingRepository.findByClinicId(clinicId)
+                .stream()
                 .filter(p -> p.getProcedureName().equalsIgnoreCase(procedureName))
                 .map(p -> p.getProcedureId())
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException(
                         "PROCEDURE_NOT_FOUND",
-                        "Procedure not found: " + procedureName + " for clinic " + clinicId
+                        "Procedure not found: " + procedureName
                 ));
     }
 
+    // ============================================================
+    // OFFER LOGIC (Same as ProcedurePricing)
+    // ============================================================
+
+    private void setOfferActive(ProcedurePackageDTO dto) {
+        Instant now = Instant.now();
+
+        try {
+            if (dto.getOfferStart() == null || dto.getOfferStart().isBlank()) {
+                dto.setOfferActive(false);
+                return;
+            }
+
+            Instant start = Instant.parse(dto.getOfferStart());
+
+            if (dto.getOfferValidDate() == null || dto.getOfferValidDate().isBlank()) {
+                dto.setOfferActive(!now.isBefore(start));
+                return;
+            }
+
+            Instant end = Instant.parse(dto.getOfferValidDate());
+            boolean active = !now.isBefore(start) && !now.isAfter(end);
+
+            dto.setOfferActive(active);
+
+        } catch (Exception e) {
+            dto.setOfferActive(false);
+        }
+    }
+
+    // ============================================================
+    // PRICING LOGIC (Same as ProcedurePricing)
+    // ============================================================
+
     private void calculatePricing(ProcedurePackageDTO dto) {
-        double discountAmount = dto.getPrice() * dto.getDiscountPercentage() / 100.0;
+
+        double discountPercent = dto.isOfferActive()
+                ? dto.getDiscountPercentage()
+                : 0;
+
+        double discountAmount = dto.getPrice() * discountPercent / 100.0;
         double discountedPrice = dto.getPrice() - discountAmount;
+
         double taxAmount = discountedPrice * dto.getTaxPercentage() / 100.0;
         double gstAmount = discountedPrice * dto.getGst() / 100.0;
-        double platformFee = discountedPrice * dto.getPlatformFeePercentage() / 100.0;
-        double consultationFee = dto.getConsultationFee() != null ? dto.getConsultationFee() : 0.0;
+
+        double consultationFee = dto.getConsultationFee() != null
+                ? dto.getConsultationFee()
+                : 0.0;
 
         dto.setDiscountAmount(discountAmount);
         dto.setDiscountedCost(discountedPrice);
+
         dto.setTaxAmount(taxAmount);
         dto.setGstAmount(gstAmount);
-        dto.setPlatformFee(platformFee);
-        dto.setClinicPay(discountedPrice + taxAmount + gstAmount - platformFee);
-        dto.setFinalCost(discountedPrice + taxAmount + gstAmount + platformFee + consultationFee);
+
+        dto.setClinicPay(discountedPrice + taxAmount + gstAmount);
+        dto.setFinalCost(discountedPrice + taxAmount + gstAmount + consultationFee);
     }
 }

@@ -32,13 +32,17 @@ public class ProcedurePackage {
     private double taxAmount;
     private double gst;
     private double gstAmount;
-    private double platformFeePercentage;
-    private double platformFee;
+
     private Double consultationFee;
 
     private double discountedCost;
     private double clinicPay;
     private double finalCost;
+
+    // ⭐ NEW OFFER FIELDS ⭐
+    private String offerStart;      // ISO date string
+    private String offerValidDate;  // ISO date string
+    private boolean offerActive;
 
     private Instant createdAt;
     private Instant updatedAt;

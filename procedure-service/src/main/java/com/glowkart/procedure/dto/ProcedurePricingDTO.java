@@ -3,14 +3,13 @@ package com.glowkart.procedure.dto;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 @Data
 public class ProcedurePricingDTO {
     private String procedureId;
-    private String procedureName; // auto-fetched
+    private String procedureName;
     @NotBlank(message = "Clinic ID is required")
     private String clinicId;
 
@@ -22,7 +21,7 @@ public class ProcedurePricingDTO {
     private List<Map<String, List<String>>> postProcedureQA;
 
     private int sittings;
-    private String minTime; // NEW
+    private String minTime;
 
     private double price;
     private double discountPercentage;
@@ -36,7 +35,7 @@ public class ProcedurePricingDTO {
     private double clinicPay;
     private double finalCost;
 
-    private String offerStart;      // <-- frontend sends ISO string
-    private String offerValidDate;  // <-- frontend sends ISO string
-    private boolean offerActive;    // NEW
+    private String offerStart;
+    private String offerValidDate;
+    private boolean offerActive;
 }

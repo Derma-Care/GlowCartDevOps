@@ -24,11 +24,14 @@ public class ProcedurePackageDTO {
     private double taxAmount;
     private double gst;
     private double gstAmount;
-    private double platformFeePercentage;
-    private double platformFee;
     private Double consultationFee;
 
     private double discountedCost;
     private double clinicPay;
     private double finalCost;
+    
+    // ⭐ NEW OFFER FIELDS ⭐
+    private String offerStart;
+    private String offerValidDate;
+    private boolean offerActive;
 }

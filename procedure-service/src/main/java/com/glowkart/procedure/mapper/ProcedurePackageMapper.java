@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 @Component
 public class ProcedurePackageMapper {
 
-    // DTO → Entity
     public ProcedurePackage toEntity(ProcedurePackageDTO dto) {
         ProcedurePackage entity = new ProcedurePackage();
         entity.setId(dto.getPackageId());
@@ -21,10 +20,10 @@ public class ProcedurePackageMapper {
         entity.setClinicName(dto.getClinicName());
         entity.setClinicAddress(dto.getClinicAddress());
 
-        entity.setProcedures(dto.getProcedures() != null ? 
+        entity.setProcedures(dto.getProcedures() != null ?
                 dto.getProcedures().stream()
-                    .map(this::toEntityItem)
-                    .collect(Collectors.toList()) : null);
+                        .map(this::toEntityItem)
+                        .collect(Collectors.toList()) : null);
 
         entity.setSittings(dto.getSittings());
         entity.setDescription(dto.getDescription());
@@ -37,13 +36,16 @@ public class ProcedurePackageMapper {
         entity.setTaxAmount(dto.getTaxAmount());
         entity.setGst(dto.getGst());
         entity.setGstAmount(dto.getGstAmount());
-        entity.setPlatformFeePercentage(dto.getPlatformFeePercentage());
-        entity.setPlatformFee(dto.getPlatformFee());
         entity.setConsultationFee(dto.getConsultationFee());
 
         entity.setDiscountedCost(dto.getDiscountedCost());
         entity.setClinicPay(dto.getClinicPay());
         entity.setFinalCost(dto.getFinalCost());
+
+        // ⭐ OFFER FIELDS
+        entity.setOfferStart(dto.getOfferStart());
+        entity.setOfferValidDate(dto.getOfferValidDate());
+        entity.setOfferActive(dto.isOfferActive());
 
         return entity;
     }
@@ -55,7 +57,6 @@ public class ProcedurePackageMapper {
         return item;
     }
 
-    // Entity → DTO
     public ProcedurePackageDTO toDto(ProcedurePackage entity) {
         ProcedurePackageDTO dto = new ProcedurePackageDTO();
         dto.setPackageId(entity.getId());
@@ -64,10 +65,10 @@ public class ProcedurePackageMapper {
         dto.setClinicName(entity.getClinicName());
         dto.setClinicAddress(entity.getClinicAddress());
 
-        dto.setProcedures(entity.getProcedures() != null ? 
+        dto.setProcedures(entity.getProcedures() != null ?
                 entity.getProcedures().stream()
-                    .map(this::toDtoItem)
-                    .collect(Collectors.toList()) : null);
+                        .map(this::toDtoItem)
+                        .collect(Collectors.toList()) : null);
 
         dto.setSittings(entity.getSittings());
         dto.setDescription(entity.getDescription());
@@ -80,13 +81,16 @@ public class ProcedurePackageMapper {
         dto.setTaxAmount(entity.getTaxAmount());
         dto.setGst(entity.getGst());
         dto.setGstAmount(entity.getGstAmount());
-        dto.setPlatformFeePercentage(entity.getPlatformFeePercentage());
-        dto.setPlatformFee(entity.getPlatformFee());
         dto.setConsultationFee(entity.getConsultationFee());
 
         dto.setDiscountedCost(entity.getDiscountedCost());
         dto.setClinicPay(entity.getClinicPay());
         dto.setFinalCost(entity.getFinalCost());
+
+        // ⭐ OFFER FIELDS
+        dto.setOfferStart(entity.getOfferStart());
+        dto.setOfferValidDate(entity.getOfferValidDate());
+        dto.setOfferActive(entity.isOfferActive());
 
         return dto;
     }

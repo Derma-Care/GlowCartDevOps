@@ -20,9 +20,9 @@ public class ProcedurePricingMapper {
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
         entity.setSittings(dto.getSittings());
 
-        entity.setMinTime(dto.getMinTime());        // store string
-        entity.setOfferStart(dto.getOfferStart());  // store string
-        entity.setOfferValidDate(dto.getOfferValidDate()); // store string
+        entity.setMinTime(dto.getMinTime());
+        entity.setOfferStart(dto.getOfferStart());
+        entity.setOfferValidDate(dto.getOfferValidDate());
 
         entity.setPrice(dto.getPrice());
         entity.setDiscountPercentage(dto.getDiscountPercentage());
@@ -35,6 +35,7 @@ public class ProcedurePricingMapper {
 
     public ProcedurePricingDTO toDto(ProcedurePricing entity) {
         ProcedurePricingDTO dto = new ProcedurePricingDTO();
+
         dto.setProcedureId(entity.getProcedureId());
         dto.setProcedureName(entity.getProcedureName());
         dto.setClinicId(entity.getClinicId());
@@ -45,9 +46,9 @@ public class ProcedurePricingMapper {
         dto.setPostProcedureQA(entity.getPostProcedureQA() != null ? entity.getPostProcedureQA() : List.of());
         dto.setSittings(entity.getSittings());
 
-        dto.setMinTime(entity.getMinTime());        // return string
-        dto.setOfferStart(entity.getOfferStart());  // return string
-        dto.setOfferValidDate(entity.getOfferValidDate()); // return string
+        dto.setMinTime(entity.getMinTime());
+        dto.setOfferStart(entity.getOfferStart());
+        dto.setOfferValidDate(entity.getOfferValidDate());
 
         dto.setPrice(entity.getPrice());
         dto.setDiscountPercentage(entity.getDiscountPercentage());
@@ -74,9 +75,9 @@ public class ProcedurePricingMapper {
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
         entity.setSittings(dto.getSittings());
 
-        entity.setMinTime(dto.getMinTime());        // store string
-        entity.setOfferStart(dto.getOfferStart());  // store string
-        entity.setOfferValidDate(dto.getOfferValidDate()); // store string
+        entity.setMinTime(dto.getMinTime());
+        entity.setOfferStart(dto.getOfferStart());
+        entity.setOfferValidDate(dto.getOfferValidDate());
 
         entity.setPrice(dto.getPrice());
         entity.setDiscountPercentage(dto.getDiscountPercentage());

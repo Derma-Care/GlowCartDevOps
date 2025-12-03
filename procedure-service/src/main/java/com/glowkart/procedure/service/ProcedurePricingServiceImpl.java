@@ -34,20 +34,16 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     @Override
     @Transactional
     public ProcedurePricingDTO create(ProcedurePricingDTO dto) {
-        log.info("Creating pricing for procedureId={} and clinicId={}", dto.getProcedureId(), dto.getClinicId());
-
         Procedure procedure = procedureRepository.findById(dto.getProcedureId())
                 .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                         "Procedure not found with ID: " + dto.getProcedureId()));
 
         validateClinic(dto.getClinicId());
 
-        pricingRepository.findByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())
-                .ifPresent(existing -> {
-                    String name = existing.getProcedureName() != null ? existing.getProcedureName() : "Unknown";
-                    throw new DuplicateResourceException("DUPLICATE_PRICING",
-                            "Procedure '" + name + "' already has pricing set for this clinic.");
-                });
+        if (pricingRepository.existsByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())) {
+            throw new DuplicateResourceException("DUPLICATE_PRICING",
+                    "Pricing already exists for this procedure and clinic.");
+        }
 
         ProcedurePricing entity = mapper.toEntity(dto);
         entity.setProcedureName(procedure.getProcedureName());
@@ -57,17 +53,15 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         setOfferActive(entity);
         calculatePricing(entity);
 
-        ProcedurePricing saved = pricingRepository.save(entity);
-        return mapper.toDto(saved);
+        return mapper.toDto(pricingRepository.save(entity));
     }
 
     @Override
     public List<ProcedurePricingDTO> getByClinic(String clinicId) {
         validateClinic(clinicId);
-        // Fetch all pricings for the clinic, refresh offer and pricing dynamically
         return pricingRepository.findByClinicId(clinicId).stream()
-                .map(this::setOfferActive)      // refresh offerActive based on current time
-                .map(this::calculatePricing)    // recalculate all pricing fields
+                .map(this::setOfferActive)
+                .map(this::calculatePricing)
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -78,23 +72,20 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         List<ProcedurePricing> pricings = pricingRepository.findByClinicId(clinicId).stream()
                 .filter(p -> p.getProcedureId().equals(procedureId))
-                .collect(Collectors.toList());
+                .toList();
 
-        if (pricings.isEmpty()) {
+        if (pricings.isEmpty())
             throw new ResourceNotFoundException("PRICING_NOT_FOUND",
                     "No pricing found for procedure ID " + procedureId + " in clinic " + clinicId);
-        }
 
-        // Pick the pricing with highest active discount
         ProcedurePricing bestOffer = pricings.stream()
-                .map(this::setOfferActive)      // refresh offerActive
+                .map(this::setOfferActive)
                 .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
                 .orElse(pricings.get(0));
 
-        calculatePricing(bestOffer);            // recalculate pricing fields
+        calculatePricing(bestOffer);
         return mapper.toDto(bestOffer);
     }
-
 
     @Override
     @Transactional
@@ -103,7 +94,7 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
                 .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
-                        "Procedure pricing not found for procedure ID " + procedureId + " in clinic " + clinicId));
+                        "Procedure pricing not found for procedure ID " + procedureId));
 
         if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
             Procedure procedure = procedureRepository.findById(dto.getProcedureId())
@@ -119,8 +110,7 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         setOfferActive(existing);
         calculatePricing(existing);
 
-        ProcedurePricing updated = pricingRepository.save(existing);
-        return mapper.toDto(updated);
+        return mapper.toDto(pricingRepository.save(existing));
     }
 
     @Override
@@ -129,55 +119,61 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         validateClinic(clinicId);
         ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
                 .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
-                        "Procedure pricing not found for procedure ID " + procedureId + " in clinic " + clinicId));
+                        "Procedure pricing not found for procedure ID " + procedureId));
         pricingRepository.delete(existing);
-        log.info("Deleted pricing for procedureId={} and clinicId={}", procedureId, clinicId);
     }
 
     @Override
     public List<ProcedurePricingDTO> getAll() {
-        // Fetch all pricings, refresh offer and pricing dynamically
         return pricingRepository.findAll().stream()
-                .map(this::setOfferActive)      // refresh offerActive based on current time
-                .map(this::calculatePricing)    // recalculate all pricing fields
+                .map(this::setOfferActive)
+                .map(this::calculatePricing)
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    // ---------------- Helper Methods ----------------
+    // ---------------- Helpers ----------------
 
     private void validateClinic(String clinicId) {
         try {
             clinicFeignClient.getClinicById(clinicId);
         } catch (Exception e) {
-            log.warn("Clinic not found: {}", clinicId);
             throw new ResourceNotFoundException("CLINIC_NOT_FOUND", "Clinic not found with ID: " + clinicId);
         }
     }
 
- // ---------------- Helper Methods ----------------
+    // ✅ UPDATED OFFER LOGIC
+    private ProcedurePricing setOfferActive(ProcedurePricing p) {
 
-    private ProcedurePricing setOfferActive(ProcedurePricing procedure) {
-        if (procedure.getOfferStart() == null || procedure.getOfferValidDate() == null) {
-            procedure.setOfferActive(false);
-            return procedure;
-        }
+        Instant now = Instant.now();
 
         try {
-            Instant now = Instant.now();
-            Instant start = Instant.parse(procedure.getOfferStart());
-            Instant end = Instant.parse(procedure.getOfferValidDate());
+            // 1️⃣ If no offerStart -> no offer
+            if (p.getOfferStart() == null || p.getOfferStart().isBlank()) {
+                p.setOfferActive(false);
+                return p;
+            }
 
-            boolean active = !now.isBefore(start) && !now.isAfter(end);  // inclusive
-            procedure.setOfferActive(active);
+            Instant start = Instant.parse(p.getOfferStart());
+
+            // 2️⃣ If start exists but no validDate -> offer active indefinitely
+            if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
+                boolean active = !now.isBefore(start); // active when now >= start
+                p.setOfferActive(active);
+                return p;
+            }
+
+            // 3️⃣ Both dates exist -> normal validation
+            Instant end = Instant.parse(p.getOfferValidDate());
+            boolean active = !now.isBefore(start) && !now.isAfter(end);
+            p.setOfferActive(active);
+
         } catch (Exception e) {
-            log.warn("Invalid offerStart/offerValidDate format for procedureId={}", procedure.getProcedureId());
-            procedure.setOfferActive(false);
+            p.setOfferActive(false);
         }
 
-        return procedure;
+        return p;
     }
-
 
     private ProcedurePricing calculatePricing(ProcedurePricing procedure) {
         double price = procedure.getPrice();
