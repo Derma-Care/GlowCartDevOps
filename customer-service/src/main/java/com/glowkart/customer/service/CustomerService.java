@@ -1,7 +1,9 @@
 package com.glowkart.customer.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -74,21 +76,21 @@ public class CustomerService {
     }
 
  // ==================== STEP 2: Spin Wheel ====================
+
     @Transactional
     public ApiResponse<Customer> completeSpinByMobile(String mobile, SpinWheelDTO dto) {
-
-        // Fetch customer
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
         if (!customer.isUserProfileCompleted()) {
-            return new ApiResponse<>(false, "Complete Profile first!", customer);
+            return new ApiResponse<>(false, "Complete profile first!", customer);
         }
 
-        Integer rank = customer.getRegistrationRank();
+        if (customer.isSpinWheelCompleted()) {
+            return new ApiResponse<>(false, "Spin already completed!", customer);
+        }
 
-        // Fetch slices based on service status
-        List<WheelSliceDto> allSlices = (customer.getServiceStatus() == 1) ?
+        List<WheelSliceDto> allSlices = customer.getServiceStatus() == 1 ?
                 wheelSliceClient.getYesSlices() :
                 wheelSliceClient.getInterestedSlices();
 
@@ -96,52 +98,30 @@ public class CustomerService {
             return new ApiResponse<>(false, "Wheel slices not configured!", customer);
         }
 
-        List<WheelSliceDto> allowedSlices = new ArrayList<>();
-
-        // ==================== YES USERS → Apply Rank Logic ====================
-        if (customer.getServiceStatus() == 1) {
-            if (rank == null) {
-                return new ApiResponse<>(false, "Rank missing! Verify code first.", customer);
-            }
-
-            if (rank <= 500) {
-                allowedSlices.addAll(allSlices.subList(0, Math.min(6, allSlices.size())));
-            } else {
-                allowedSlices.addAll(allSlices.subList(Math.min(6, allSlices.size()), allSlices.size()));
-            }
-        }
-        // ==================== INTERESTED USERS → All slices allowed ====================
-        else if (customer.getServiceStatus() == 2) {
-            allowedSlices.addAll(allSlices);
-        }
-
-        if (allowedSlices.isEmpty()) {
-            return new ApiResponse<>(false, "No eligible wheel slices found!", customer);
-        }
-
-        // ==================== Validate rewardId ====================
-        WheelSliceDto selectedSlice = null;
+        WheelSliceDto winningSlice;
         if (dto.getRewardId() != null && !dto.getRewardId().isBlank()) {
-            selectedSlice = allowedSlices.stream()
+            winningSlice = allSlices.stream()
                     .filter(s -> s.getId().equals(dto.getRewardId()))
-                    .findFirst().orElse(null);
-
-            if (selectedSlice == null) {
-                return new ApiResponse<>(false,
-                        "Invalid rewardId for your profile! You can only select slices in your allowed range.",
-                        customer);
+                    .findFirst()
+                    .orElse(null);
+            if (winningSlice == null) {
+                return new ApiResponse<>(false, "Invalid rewardId!", customer);
             }
         } else {
-            // Auto-select random slice if rewardId not provided
-            selectedSlice = allowedSlices.get((int) (Math.random() * allowedSlices.size()));
+            if (customer.getServiceStatus() == 1) {
+                Integer rank = customer.getRegistrationRank();
+                if (rank == null) rank = Integer.MAX_VALUE;
+                winningSlice = rank <= 500 ? allSlices.get(0) : allSlices.get(Math.min(6, allSlices.size() - 1));
+            } else {
+                int randomIndex = (int) (Math.random() * allSlices.size());
+                winningSlice = allSlices.get(randomIndex);
+            }
         }
 
-        // ==================== Save spin reward ====================
-        customer.setSpinRewardId(selectedSlice.getId());
-        customer.setSpinRewardValue(selectedSlice.getOption());
-        customer.setSpinRewardImage(selectedSlice.getSrc());
+        customer.setSpinRewardId(winningSlice.getId());
+        customer.setSpinRewardValue(winningSlice.getOption());
+        customer.setSpinRewardImage(winningSlice.getSrc());
         customer.setSpinWheelCompleted(true);
-
         customerRepository.save(customer);
 
         return new ApiResponse<>(true, "Spin completed successfully!", customer);
@@ -175,8 +155,8 @@ public class CustomerService {
         return new ApiResponse<>(true, "Registration completed successfully!", customer);
     }
 
- // ==================== Wheel Slices ====================
-    public ApiResponse<List<WheelSliceDto>> getWheelSlices(String mobile) {
+ // ==================== GET WHEEL SLICES ====================
+    public ApiResponse<Map<String, Object>> getWheelSlices(String mobile) {
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
@@ -189,23 +169,52 @@ public class CustomerService {
             return new ApiResponse<>(false, "Invalid service status", null);
         }
 
-        // Apply rank logic for YES users
-        List<WheelSliceDto> allowedSlices = new ArrayList<>();
-        if (customer.getServiceStatus() == 1) {
-            Integer rank = customer.getRegistrationRank();
-            if (rank != null && !allSlices.isEmpty()) {
-                if (rank <= 500) {
-                    allowedSlices.addAll(allSlices.subList(0, Math.min(6, allSlices.size())));
-                } else {
-                    allowedSlices.addAll(allSlices.subList(Math.min(6, allSlices.size()), allSlices.size()));
-                }
-            }
-        } else {
-            allowedSlices.addAll(allSlices);
+        if (allSlices == null || allSlices.isEmpty()) {
+            return new ApiResponse<>(false, "Wheel slices not configured", null);
         }
 
-        return new ApiResponse<>(true, "Wheel slices fetched successfully", allowedSlices);
+        WheelSliceDto winningSlice;
+
+        // 🎯 If spin already completed → Always return the stored result
+        if (customer.isSpinWheelCompleted() && customer.getSpinRewardId() != null) {
+            winningSlice = allSlices.stream()
+                    .filter(s -> s.getId().equals(customer.getSpinRewardId()))
+                    .findFirst()
+                    .orElse(allSlices.get(0));
+        } 
+        else {
+            // 🎯 First time → decide winner RANDOMLY but in allowed range
+            if (customer.getServiceStatus() == 1) {
+                // YES USERS
+                Integer rank = customer.getRegistrationRank();
+                if (rank == null) rank = Integer.MAX_VALUE;
+
+                if (rank <= 500) {
+                    // ⭐ HIGH-VALUE USERS → RANDOM BETWEEN INDEX 0–5
+                    int randomIndex = (int) (Math.random() * 6); // 0–5
+                    winningSlice = allSlices.get(randomIndex);
+                } else {
+                    // ⭐ LOW-VALUE USERS → RANDOM BETWEEN INDEX 6–11
+                    int min = 6;
+                    int max = allSlices.size(); // exclusive
+                    int randomIndex = min + (int)(Math.random() * (max - min)); // 6–11
+                    winningSlice = allSlices.get(randomIndex);
+                }
+            } 
+            else {
+                // INTERESTED USERS → RANDOM BETWEEN 0–11
+                int randomIndex = (int) (Math.random() * allSlices.size());
+                winningSlice = allSlices.get(randomIndex);
+            }
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("allSlices", allSlices);
+        response.put("winningSliceId", winningSlice.getId());
+
+        return new ApiResponse<>(true, "Wheel slices fetched successfully", response);
     }
+
 
 
 

@@ -1,13 +1,23 @@
 package com.glowkart.customer.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.glowkart.customer.dto.*;
+import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.CompleteRegistrationDTO;
+import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.service.CustomerService;
 
@@ -29,13 +39,18 @@ public class CustomerController {
                 .body(response);
     }
 
-    // ==================== STEP 2 ====================
+ // ==================== STEP 2: Spin Wheel ====================
     @PostMapping("/customer/{mobile}/spin")
-    public ResponseEntity<ApiResponse<Customer>> step2(@PathVariable String mobile, @RequestBody @Valid SpinWheelDTO dto) {
+    public ResponseEntity<ApiResponse<Customer>> step2(
+            @PathVariable String mobile,
+            @RequestBody(required = false) SpinWheelDTO dto) { // optional DTO
+        if (dto == null) dto = new SpinWheelDTO(); // allow empty DTO
         ApiResponse<Customer> response = customerService.completeSpinByMobile(mobile, dto);
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
                 .body(response);
     }
+
+
 
     // ==================== STEP 3 ====================
     @PostMapping("/customer/{mobile}/complete")
@@ -51,11 +66,12 @@ public class CustomerController {
 
     // ==================== GET Wheel Slices ====================
     @GetMapping("/customer/{mobile}/wheel-slices")
-    public ResponseEntity<ApiResponse<List<WheelSliceDto>>> getWheelSlices(@PathVariable String mobile) {
-        ApiResponse<List<WheelSliceDto>> response = customerService.getWheelSlices(mobile);
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getWheelSlices(@PathVariable String mobile) {
+        ApiResponse<Map<String, Object>> response = customerService.getWheelSlices(mobile);
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
                 .body(response);
     }
+
 
     // ==================== CRUD ====================
     @GetMapping("/customer/all")
