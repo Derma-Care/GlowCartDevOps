@@ -34,7 +34,8 @@ public class OnboardingController {
     public ResponseEntity<ApiResponse<OnboardingTokenResponseDTO>> requestLink(
             @Valid @RequestBody RequestLinkDTO dto) {
 
-        String token = service.createAndSendToken(dto.getWhatsappNumber(), dto.getEmail());
+        // Pass the name to the service
+        String token = service.createAndSendToken(dto.getWhatsappNumber(), dto.getEmail(), dto.getName());
         OnboardingToken t = service.validateToken(token);
 
         OnboardingTokenResponseDTO response = new OnboardingTokenResponseDTO(

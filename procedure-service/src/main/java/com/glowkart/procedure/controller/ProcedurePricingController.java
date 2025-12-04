@@ -38,6 +38,13 @@ public class ProcedurePricingController {
         return new ApiResponse<>(true, "Procedure pricing fetched successfully",
                 service.getByProcedureAndClinic(procedureId, clinicId));
     }
+    
+    @GetMapping("/pricing/get/{procedureId}")
+    public ApiResponse<ProcedurePricingDTO> getByProcedure(@PathVariable String procedureId) {
+        return new ApiResponse<>(true, "Procedure pricing fetched successfully",
+                service.getByProcedureId(procedureId));
+    }
+
 
     @PutMapping("/pricing/update/{procedureId}/{clinicId}")
     public ApiResponse<ProcedurePricingDTO> update(

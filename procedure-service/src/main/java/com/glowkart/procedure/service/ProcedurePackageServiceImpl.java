@@ -37,14 +37,14 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         checkDuplicatePackageName(dto.getClinicId(), dto.getPackageName());
         validateProcedures(dto);
 
+        // NEW: Validate Discount & Offer Rules
+        validateDiscountAndOffer(dto);
+
         dto.setSittings(dto.getProcedures().stream()
                 .mapToInt(ProcedureItemDTO::getNoOfSittings)
                 .sum());
 
-        // Set offerActive first
         setOfferActive(dto);
-
-        // Calculate price
         calculatePricing(dto);
 
         dto.setClinicName(clinic.getName());
@@ -62,12 +62,14 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     // ============================================================
 
     @Override
-    public ProcedurePackageDTO update(String packageId, ProcedurePackageDTO dto) {
+    public ProcedurePackageDTO updateWithClinic(String packageId, String clinicId, ProcedurePackageDTO dto) {
 
         ProcedurePackage existing = repo.findById(packageId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "RESOURCE_NOT_FOUND", "Package not found: " + packageId
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("RESOURCE_NOT_FOUND", "Package not found: " + packageId));
+
+        if (!existing.getClinicId().equals(clinicId)) {
+            throw new BadRequestException("PACKAGE_CLINIC_MISMATCH", "Package does not belong to the specified clinic");
+        }
 
         ClinicResponse clinic = fetchClinic(dto.getClinicId());
 
@@ -76,17 +78,14 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         }
 
         validateProcedures(dto);
+        validateDiscountAndOffer(dto);
 
         dto.setPackageId(existing.getId());
-
         dto.setSittings(dto.getProcedures().stream()
-                .mapToInt(ProcedureItemDTO::getNoOfSittings)
+                .mapToInt(p -> p.getNoOfSittings())
                 .sum());
 
-        // Apply offer logic
         setOfferActive(dto);
-
-        // Recalculate pricing
         calculatePricing(dto);
 
         dto.setClinicName(clinic.getName());
@@ -97,6 +96,18 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         updated.setUpdatedAt(Instant.now());
 
         return mapper.toDto(repo.save(updated));
+    }
+
+    @Override
+    public void deleteWithClinic(String packageId, String clinicId) {
+        ProcedurePackage existing = repo.findById(packageId)
+                .orElseThrow(() -> new ResourceNotFoundException("RESOURCE_NOT_FOUND", "Package not found: " + packageId));
+
+        if (!existing.getClinicId().equals(clinicId)) {
+            throw new BadRequestException("PACKAGE_CLINIC_MISMATCH", "Package does not belong to the specified clinic");
+        }
+
+        repo.delete(existing);
     }
 
     // ============================================================
@@ -162,15 +173,7 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         return dto;
     }
 
-    @Override
-    public void delete(String packageId) {
-        if (!repo.existsById(packageId)) {
-            throw new ResourceNotFoundException(
-                    "RESOURCE_NOT_FOUND", "Package not found: " + packageId
-            );
-        }
-        repo.deleteById(packageId);
-    }
+   
 
     // ============================================================
     // HELPER METHODS
@@ -226,7 +229,34 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     }
 
     // ============================================================
-    // OFFER LOGIC (Same as ProcedurePricing)
+    // VALIDATE DISCOUNT & OFFER LOGIC
+    // ============================================================
+
+    private void validateDiscountAndOffer(ProcedurePackageDTO dto) {
+
+        Double discount = dto.getDiscountPercentage();
+        String offerStart = dto.getOfferStart();
+
+        boolean hasDiscount = discount != null && discount > 0;
+        boolean hasOfferStart = offerStart != null && !offerStart.isBlank();
+
+        if (hasOfferStart && !hasDiscount) {
+            throw new BadRequestException(
+                    "DISCOUNT_REQUIRED",
+                    "discountPercentage is required when offerStart is provided"
+            );
+        }
+
+        if (hasDiscount && !hasOfferStart) {
+            throw new BadRequestException(
+                    "OFFER_START_REQUIRED",
+                    "offerStart is required when discountPercentage > 0"
+            );
+        }
+    }
+
+    // ============================================================
+    // OFFER LOGIC
     // ============================================================
 
     private void setOfferActive(ProcedurePackageDTO dto) {
@@ -256,7 +286,7 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     }
 
     // ============================================================
-    // PRICING LOGIC (Same as ProcedurePricing)
+    // PRICING LOGIC
     // ============================================================
 
     private void calculatePricing(ProcedurePackageDTO dto) {

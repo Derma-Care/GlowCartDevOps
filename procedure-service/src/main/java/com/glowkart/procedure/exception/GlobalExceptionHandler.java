@@ -27,9 +27,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    /** ✅ FIX: Handle IllegalArgumentException (e.g., discount without offerStart) */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        ApiResponse<Void> response = new ApiResponse<>(false, ex.getMessage(), null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        ex.printStackTrace(); // Optional: log the error
+        ex.printStackTrace(); // Logs complete stack trace
         ApiResponse<Void> response = new ApiResponse<>(false, "Internal server error", null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }

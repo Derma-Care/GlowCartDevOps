@@ -23,22 +23,31 @@ public class EmailSender {
         this.frontendBaseUrl = frontendBaseUrl;
     }
 
-    public void sendOnboardingEmail(String to, String token, String email, String whatsappNumber) {
+    public void sendOnboardingEmail(String to, String token, String email, String whatsappNumber, String name) {
         if (to == null || to.isBlank()) return;
 
         String link = buildOnboardingLink(token, email, whatsappNumber);
+        String displayName = (name != null && !name.isBlank()) ? name : "User";
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
         message.setTo(to);
-        message.setSubject("Complete Your Clinic Onboarding");
+        message.setSubject("✨ GlowKart Clinic Registration – Complete Your Onboarding ✨");
         message.setText(
-                "👋 Complete your clinic onboarding: " + link +
-                "\n(Expires in 60 minutes)"
+            "👋 Dear " + displayName + ",\n\n" +
+            "Thank you for choosing GlowKart.\n" +
+            "To complete your clinic onboarding, please use the secure link below:\n\n" +
+            "🔗 Complete Registration:\n" +
+            link + "\n\n" +
+            "⏰ Please note that this link is valid for 60 minutes.\n" +
+            "❗ If you did not request this registration, please ignore this email.\n\n" +
+            "🙏 Thank you,\n" +
+            "GlowKart Team"
         );
 
         mailSender.send(message);
     }
+
 
     private String buildOnboardingLink(String token, String email, String whatsappNumber) {
         StringBuilder link = new StringBuilder(frontendBaseUrl)

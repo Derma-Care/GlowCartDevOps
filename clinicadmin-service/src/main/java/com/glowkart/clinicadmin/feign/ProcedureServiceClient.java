@@ -39,12 +39,17 @@ public interface ProcedureServiceClient {
             @PathVariable("clinicId") String clinicId,
             @PathVariable("packageId") String packageId);
 
-    @PutMapping("/procedures/packages/update/{packageId}")
+ // Update package with clinicId
+    @PutMapping("/procedures/packages/update/{packageId}/clinic/{clinicId}")
     ResponseEntity<ApiResponse<ProcedurePackageDTO>> updatePackage(
             @PathVariable("packageId") String packageId,
+            @PathVariable("clinicId") String clinicId,
             @RequestBody ProcedurePackageDTO dto);
 
-    @DeleteMapping("/procedures/packages/delete/{packageId}")
+    // Delete package with clinicId
+    @DeleteMapping("/procedures/packages/delete/{packageId}/clinic/{clinicId}")
     ResponseEntity<ApiResponse<Void>> deletePackage(
-            @PathVariable("packageId") String packageId);
+            @PathVariable("packageId") String packageId,
+            @PathVariable("clinicId") String clinicId);
+
 }

@@ -13,6 +13,8 @@ public class RequestLinkDTO {
     @Email(message = "Invalid email address")
     private String email;
 
+    private String name; // Optional user's name
+
     // At least one field should be provided
     public boolean isValid() {
         return (whatsappNumber != null && !whatsappNumber.isBlank())

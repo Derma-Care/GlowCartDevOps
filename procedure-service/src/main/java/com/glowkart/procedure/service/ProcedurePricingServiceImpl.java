@@ -34,11 +34,13 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     @Override
     @Transactional
     public ProcedurePricingDTO create(ProcedurePricingDTO dto) {
+
+        validateDiscountAndOffer(dto);
+        validateClinic(dto.getClinicId());
+
         Procedure procedure = procedureRepository.findById(dto.getProcedureId())
                 .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                         "Procedure not found with ID: " + dto.getProcedureId()));
-
-        validateClinic(dto.getClinicId());
 
         if (pricingRepository.existsByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())) {
             throw new DuplicateResourceException("DUPLICATE_PRICING",
@@ -59,6 +61,7 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     @Override
     public List<ProcedurePricingDTO> getByClinic(String clinicId) {
         validateClinic(clinicId);
+
         return pricingRepository.findByClinicId(clinicId).stream()
                 .map(this::setOfferActive)
                 .map(this::calculatePricing)
@@ -74,22 +77,26 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 .filter(p -> p.getProcedureId().equals(procedureId))
                 .toList();
 
-        if (pricings.isEmpty())
+        if (pricings.isEmpty()) {
             throw new ResourceNotFoundException("PRICING_NOT_FOUND",
                     "No pricing found for procedure ID " + procedureId + " in clinic " + clinicId);
+        }
 
-        ProcedurePricing bestOffer = pricings.stream()
+        ProcedurePricing best = pricings.stream()
                 .map(this::setOfferActive)
                 .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
                 .orElse(pricings.get(0));
 
-        calculatePricing(bestOffer);
-        return mapper.toDto(bestOffer);
+        calculatePricing(best);
+
+        return mapper.toDto(best);
     }
 
     @Override
     @Transactional
     public ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto) {
+
+        validateDiscountAndOffer(dto);
         validateClinic(clinicId);
 
         ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
@@ -97,9 +104,11 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                         "Procedure pricing not found for procedure ID " + procedureId));
 
         if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
+
             Procedure procedure = procedureRepository.findById(dto.getProcedureId())
                     .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                             "Procedure not found with ID: " + dto.getProcedureId()));
+
             existing.setProcedureId(procedure.getId());
             existing.setProcedureName(procedure.getProcedureName());
         }
@@ -117,9 +126,11 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     @Transactional
     public void delete(String procedureId, String clinicId) {
         validateClinic(clinicId);
+
         ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
                 .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
                         "Procedure pricing not found for procedure ID " + procedureId));
+
         pricingRepository.delete(existing);
     }
 
@@ -132,23 +143,48 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 .collect(Collectors.toList());
     }
 
-    // ---------------- Helpers ----------------
+    // ------------------ VALIDATIONS ------------------
 
     private void validateClinic(String clinicId) {
         try {
             clinicFeignClient.getClinicById(clinicId);
         } catch (Exception e) {
-            throw new ResourceNotFoundException("CLINIC_NOT_FOUND", "Clinic not found with ID: " + clinicId);
+            throw new ResourceNotFoundException("CLINIC_NOT_FOUND",
+                    "Clinic not found with ID: " + clinicId);
         }
     }
 
-    // ✅ UPDATED OFFER LOGIC
+    /** NEW LOGIC */
+    private void validateDiscountAndOffer(ProcedurePricingDTO dto) {
+
+        Double discount = dto.getDiscountPercentage();
+        String offerStart = dto.getOfferStart();
+
+        boolean hasDiscount = discount != null && discount > 0;
+        boolean hasOfferStart = offerStart != null && !offerStart.isBlank();
+
+        // CASE 1: offerStart exists but discount is missing or 0
+        if (hasOfferStart && !hasDiscount) {
+            throw new IllegalArgumentException("discountPercentage is required when offerStart is provided");
+        }
+
+        // CASE 2: discount exists but offerStart missing
+        if (hasDiscount && !hasOfferStart) {
+            throw new IllegalArgumentException("offerStart is required when discountPercentage > 0");
+        }
+
+        // CASE 3: both missing → OK
+        // CASE 4: both present → OK
+    }
+
+
+    // ------------------ OFFER LOGIC ------------------
+
     private ProcedurePricing setOfferActive(ProcedurePricing p) {
 
         Instant now = Instant.now();
 
         try {
-            // 1️⃣ If no offerStart -> no offer
             if (p.getOfferStart() == null || p.getOfferStart().isBlank()) {
                 p.setOfferActive(false);
                 return p;
@@ -156,17 +192,13 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
             Instant start = Instant.parse(p.getOfferStart());
 
-            // 2️⃣ If start exists but no validDate -> offer active indefinitely
             if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
-                boolean active = !now.isBefore(start); // active when now >= start
-                p.setOfferActive(active);
+                p.setOfferActive(!now.isBefore(start));
                 return p;
             }
 
-            // 3️⃣ Both dates exist -> normal validation
             Instant end = Instant.parse(p.getOfferValidDate());
-            boolean active = !now.isBefore(start) && !now.isAfter(end);
-            p.setOfferActive(active);
+            p.setOfferActive(!now.isBefore(start) && !now.isAfter(end));
 
         } catch (Exception e) {
             p.setOfferActive(false);
@@ -175,7 +207,10 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         return p;
     }
 
+    // ------------------ PRICING CALCULATION ------------------
+
     private ProcedurePricing calculatePricing(ProcedurePricing procedure) {
+
         double price = procedure.getPrice();
         double discountPercent = procedure.isOfferActive() ? procedure.getDiscountPercentage() : 0;
 
@@ -186,7 +221,10 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         double gstAmount = discountedPrice * procedure.getGst() / 100.0;
 
         double clinicPay = discountedPrice + taxAmount + gstAmount;
-        double finalCost = discountedPrice + procedure.getConsultationFee() + taxAmount + gstAmount;
+        double finalCost = discountedPrice +
+                procedure.getConsultationFee() +
+                taxAmount +
+                gstAmount;
 
         procedure.setDiscountAmount(discountAmount);
         procedure.setDiscountedCost(discountedPrice);
@@ -197,4 +235,32 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         return procedure;
     }
+
+    @Override
+    public ProcedurePricingDTO getByProcedureId(String procedureId) {
+
+        // Fetch procedure entity to ensure it exists
+        Procedure procedure = procedureRepository.findById(procedureId)
+                .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
+                        "Procedure not found with ID: " + procedureId));
+
+        // Fetch all pricing entries for this procedure across clinics
+        List<ProcedurePricing> pricings = pricingRepository.findByProcedureId(procedureId);
+
+        if (pricings.isEmpty()) {
+            throw new ResourceNotFoundException("PRICING_NOT_FOUND",
+                    "No pricing found for procedure ID " + procedureId);
+        }
+
+        // Choose the best offer if multiple entries exist
+        ProcedurePricing best = pricings.stream()
+                .map(this::setOfferActive)
+                .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
+                .orElse(pricings.get(0));
+
+        calculatePricing(best);
+
+        return mapper.toDto(best);
+    }
+
 }

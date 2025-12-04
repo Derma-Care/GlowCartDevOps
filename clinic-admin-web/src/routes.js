@@ -35,6 +35,8 @@ const routes = [
   // { path: '/help', name: 'Help', element: Help },
   // { path: '/help', name: 'Help', element: NGlowKartPatientRegistration },
   { path: '/help', name: 'Help', element: ClinicRatingsAdmin },
+  // { path: '/reviews', name: 'Help', element: ClinicRatingsAdmin },
+
 
   { path: '/reset-password', name: 'Reset Password', element: Resetpassword },
 

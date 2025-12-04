@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { CContainer } from '@coreui/react'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
-// import { GetClinicBranches } from '../Doctors/DoctorAPI'
+ 
 
 const PageLayout = ({ title, children, branch }) => {
   const { selectedHospital } = useHospital()

@@ -36,8 +36,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    public String createAndSendToken(String whatsappNumber, String email) {
-
+    public String createAndSendToken(String whatsappNumber, String email, String name) {
         if ((whatsappNumber == null || whatsappNumber.isBlank()) &&
             (email == null || email.isBlank())) {
             throw new BadRequestException("Provide either WhatsApp number or Email");
@@ -78,14 +77,17 @@ public class OnboardingServiceImpl implements OnboardingService {
             logger.info("Reusing existing active token {}", tokenToSend.getId());
         }
 
-        // NOW ALWAYS SEND CONSISTENT URL
-        emailSender.sendOnboardingEmail(email, tokenToSend.getId(), email, whatsappNumber);
+        // Send Email and WhatsApp with dynamic name
+        if (email != null && !email.isBlank()) {
+            emailSender.sendOnboardingEmail(email, tokenToSend.getId(), email, whatsappNumber, name);
+        }
         if (whatsappNumber != null && !whatsappNumber.isBlank()) {
-            whatsAppSender.sendOnboardingWhatsApp(whatsappNumber, tokenToSend.getId(), email, whatsappNumber);
+            whatsAppSender.sendOnboardingWhatsApp(whatsappNumber, tokenToSend.getId(), email, whatsappNumber, name);
         }
 
         return tokenToSend.getId();
     }
+
 
     @Override
     public OnboardingToken validateToken(String token) {

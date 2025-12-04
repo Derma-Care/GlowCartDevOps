@@ -11,9 +11,10 @@ public interface ProcedurePackageService {
 
     ProcedurePackageDTO getById(String packageId);
 
-    ProcedurePackageDTO update(String packageId, ProcedurePackageDTO dto);
+    ProcedurePackageDTO updateWithClinic(String packageId, String clinicId, ProcedurePackageDTO dto);
 
-    void delete(String packageId);
+    void deleteWithClinic(String packageId, String clinicId);
+
 
     List<ProcedurePackageDTO> getAll();
 

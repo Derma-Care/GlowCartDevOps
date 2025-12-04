@@ -30,23 +30,22 @@ public class WhatsAppSender {
         this.frontendBaseUrl = frontendBaseUrl;
     }
 
-    public void sendOnboardingWhatsApp(String to, String token, String email, String whatsappNumber) {
-
+    public void sendOnboardingWhatsApp(String to, String token, String email, String whatsappNumber, String name) {
         if (to == null || to.isBlank()) return;
 
         String link = buildOnboardingLink(token, email, whatsappNumber);
+        String greeting = (name != null && !name.isBlank()) ? name : "User";
 
-        // mock mode
+        // Mock mode
         if (accountSid.isBlank() || authToken.isBlank() || from.isBlank()) {
-            System.out.println("[MOCK WHATSAPP] to=" + to + " link=" + link);
+            System.out.println("[MOCK WHATSAPP] to=" + to + " message=Dear " + greeting + ", Complete onboarding: " + link);
             return;
         }
 
         Twilio.init(accountSid, authToken);
 
-        String body =
-                "👋 Complete your clinic onboarding: " + link +
-                "\n(Expires in 60 minutes)";
+        String body = "Dear " + greeting + ",\n👋 Complete your clinic onboarding: " + link +
+                      "\n(Expires in 60 minutes)";
 
         Message.creator(
                 new PhoneNumber("whatsapp:" + to),
@@ -54,6 +53,7 @@ public class WhatsAppSender {
                 body
         ).create();
     }
+
 
     private String buildOnboardingLink(String token, String email, String whatsappNumber) {
         StringBuilder link = new StringBuilder(frontendBaseUrl)

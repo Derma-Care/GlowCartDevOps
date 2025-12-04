@@ -17,6 +17,7 @@ import { injectTheme } from './Constant/Themes'
 import OnboardSuccess from './views/NGK/CustomerRrgistration/OnboardSuccess'
 import NGlowKartPatientRegistration_CoreUI from './views/NGK/CustomerRrgistration/CustomerRegistration'
 import SpinResultCard from './views/NGK/CustomerRrgistration/SpinResultCard'
+import RegistrationSoon from './views/NGK/CustomerRrgistration/RegistrationSoon'
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -49,7 +50,9 @@ const App = () => {
         <Route path="/404" element={<Page404 />} />
         <Route path="/500" element={<Page500 />} />
         <Route path="/NGK-Registration-Form" element={<NGlowKartPatientRegistration_CoreUI />} />
-        {/* <Route path="/" element={<SpinResultCard />} /> */}    
+        <Route path="/launch" element={<RegistrationSoon/>} />
+
+        {/* <Route path="/" element={<SpinResultCard />} /> */}
         <Route path="/onboard-success" element={<OnboardSuccess />} />
 
         {/* Protected routes - catch all */}

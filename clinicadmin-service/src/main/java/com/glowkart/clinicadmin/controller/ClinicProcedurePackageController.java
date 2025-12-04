@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/clinic-admin")
 @RequiredArgsConstructor
-public class ProcedurePackageController {
+public class ClinicProcedurePackageController {
 
     private final ProcedurePackageService service;
 
@@ -27,24 +27,23 @@ public class ProcedurePackageController {
     }
 
     // UPDATE PACKAGE
-    @PutMapping("/packages/update/{packageId}")
-    public ResponseEntity<ApiResponse<ProcedurePackageDTO>> update(
+    @PutMapping("/procedure-packages/update/{packageId}/clinic/{clinicId}")
+    public ProcedurePackageDTO updatePackage(
             @PathVariable String packageId,
+            @PathVariable String clinicId,
             @RequestBody ProcedurePackageDTO dto) {
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, "Package updated successfully", service.update(packageId, dto))
-        );
+        dto.setClinicId(clinicId);
+        return service.update(packageId, dto);
     }
 
-    // DELETE PACKAGE
-    @DeleteMapping("/packages/delete/{packageId}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String packageId) {
-        service.delete(packageId);
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, "Package deleted successfully", null)
-        );
+    // Delete PACKAGE
+    @DeleteMapping("/procedure-packages/delete/{packageId}/clinic/{clinicId}")
+    public void deletePackage(
+            @PathVariable String packageId,
+            @PathVariable String clinicId) {
+        service.delete(packageId, clinicId);
     }
+
 
     // GET PACKAGE BY ID
     @GetMapping("/packages/{packageId}")

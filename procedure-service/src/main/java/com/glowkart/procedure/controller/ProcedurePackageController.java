@@ -65,24 +65,25 @@ public class ProcedurePackageController {
         );
     }
 
-    @PutMapping("/packages/update/{packageId}")
+ // Update package with clinicId
+    @PutMapping("/packages/update/{packageId}/clinic/{clinicId}")
     public ResponseEntity<ApiResponse<ProcedurePackageDTO>> update(
             @PathVariable String packageId,
+            @PathVariable String clinicId,
             @Valid @RequestBody ProcedurePackageDTO dto) {
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, "Procedure package updated successfully",
-                        service.update(packageId, dto))
-        );
+        ProcedurePackageDTO updated = service.updateWithClinic(packageId, clinicId, dto);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Procedure package updated successfully", updated));
     }
 
-    @DeleteMapping("/packages/delete/{packageId}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String packageId) {
+    // Delete package with clinicId
+    @DeleteMapping("/packages/delete/{packageId}/clinic/{clinicId}")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable String packageId,
+            @PathVariable String clinicId) {
 
-        service.delete(packageId);
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, "Procedure package deleted successfully", null)
-        );
+        service.deleteWithClinic(packageId, clinicId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Procedure package deleted successfully", null));
     }
+
 }

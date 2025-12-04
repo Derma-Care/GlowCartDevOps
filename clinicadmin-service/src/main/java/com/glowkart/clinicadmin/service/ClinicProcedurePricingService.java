@@ -36,6 +36,11 @@ public class ClinicProcedurePricingService {
         return feignClient.delete(procedureId, clinicId);
     }
     
+ // New method to fetch procedure pricing by procedureId
+    public ApiResponse<ProcedurePricingDTO> getByProcedureId(String procedureId) {
+        return feignClient.getByProcedureId(procedureId);
+    }
+
     // New method to call Feign Client's getAll() to fetch all procedure pricing data
     public ApiResponse<List<ProcedurePricingDTO>> getAllProcedurePricing() {
         return feignClient.getAll();

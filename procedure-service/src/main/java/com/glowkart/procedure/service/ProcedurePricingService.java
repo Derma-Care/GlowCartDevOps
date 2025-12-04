@@ -17,4 +17,7 @@ public interface ProcedurePricingService {
     void delete(String procedureId, String clinicId);
 
     List<ProcedurePricingDTO> getAll();
+    
+    ProcedurePricingDTO getByProcedureId(String procedureId);
+
 }

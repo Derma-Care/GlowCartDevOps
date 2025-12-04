@@ -11,4 +11,5 @@ public interface ProcedurePricingRepository extends MongoRepository<ProcedurePri
     Optional<ProcedurePricing> findByProcedureIdAndClinicId(String procedureId, String clinicId);
     boolean existsByProcedureIdAndClinicId(String procedureId, String clinicId);
     void deleteByProcedureIdAndClinicId(String procedureId, String clinicId);
+	List<ProcedurePricing> findByProcedureId(String procedureId);
 }
