@@ -25,19 +25,24 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     }
 
     @Override
-    public ProcedurePackageDTO update(String packageId, ProcedurePackageDTO dto) {
+    public ApiResponse<ProcedurePackageDTO> update(String packageId, ProcedurePackageDTO dto) {
+
         if (dto.getClinicId() == null) {
             throw new IllegalArgumentException("clinicId is required for update");
         }
-        ResponseEntity<ApiResponse<ProcedurePackageDTO>> response = 
+
+        ResponseEntity<ApiResponse<ProcedurePackageDTO>> response =
                 client.updatePackage(packageId, dto.getClinicId(), dto);
-        return response.getBody().getData();
+
+        return response.getBody(); // return full object
     }
 
+
     @Override
-    public void delete(String packageId, String clinicId) {
-        client.deletePackage(packageId, clinicId);
+    public ApiResponse<Void> delete(String packageId, String clinicId) {
+        return client.deletePackage(packageId, clinicId).getBody();
     }
+
 
 
     @Override

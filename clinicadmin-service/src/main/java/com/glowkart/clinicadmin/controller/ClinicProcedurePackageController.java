@@ -28,20 +28,29 @@ public class ClinicProcedurePackageController {
 
     // UPDATE PACKAGE
     @PutMapping("/procedure-packages/update/{packageId}/clinic/{clinicId}")
-    public ProcedurePackageDTO updatePackage(
+    public ApiResponse<ProcedurePackageDTO> updatePackage(
             @PathVariable String packageId,
             @PathVariable String clinicId,
             @RequestBody ProcedurePackageDTO dto) {
+
         dto.setClinicId(clinicId);
         return service.update(packageId, dto);
     }
 
+
     // Delete PACKAGE
     @DeleteMapping("/procedure-packages/delete/{packageId}/clinic/{clinicId}")
-    public void deletePackage(
+    public ApiResponse<Void> deletePackage(
             @PathVariable String packageId,
             @PathVariable String clinicId) {
+
         service.delete(packageId, clinicId);
+
+        return new ApiResponse<>(
+                true,
+                "Procedure package deleted successfully",
+                null
+        );
     }
 
 

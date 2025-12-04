@@ -1,5 +1,6 @@
 package com.glowkart.clinicadmin.service;
 
+import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.dto.ProcedurePackageDTO;
 import java.util.List;
 
@@ -7,9 +8,9 @@ public interface ProcedurePackageService {
 
     ProcedurePackageDTO create(ProcedurePackageDTO dto);
 
-    ProcedurePackageDTO update(String packageId, ProcedurePackageDTO dto);
+    ApiResponse<ProcedurePackageDTO> update(String packageId, ProcedurePackageDTO dto);
 
-    void delete(String packageId, String clinicId);
+    ApiResponse<Void> delete(String packageId, String clinicId);
 
 
     ProcedurePackageDTO getById(String packageId);
