@@ -17,8 +17,14 @@ export const COLORS = {
 }
 
 export const NGK_COLORS = {
-  primary: '#ff2e85',
-  primaryLight: '#ff95c9',
+  // primary: '#3A3EA2',
+  // primary: '#ff2e85',
+  primary: '#D2025B',
+  // #E34765
+  // primaryLight: '#D1EBFA',
+  // #A82E4C
+  primaryLight: '#A82E4C',
+  // primaryLight: '#ff95c9',
   primarySoft: '#ffeaf4',
   textDark: '#222222',
   borderSoft: '#ffd1e6',
@@ -54,6 +60,8 @@ export const compareSvg = [
     M352 96l64 64-64 64-32-32 32-32-32-32z
   `,
 ]
+
+
 
 export const injectTheme = () => {
   const root = document.documentElement

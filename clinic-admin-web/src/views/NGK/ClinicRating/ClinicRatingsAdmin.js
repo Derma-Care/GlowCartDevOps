@@ -504,8 +504,12 @@ export default function ClinicRatingsAdmin({ reviews: propReviews = null }) {
     <div className="cr-container">
       {/* Header */}
       <div className="cr-header">
-        <h2>Clinic Reviews & Ratings</h2>
-        <button className="btn-primary" onClick={exportCSV}>
+        <h2 style={{ color: 'var(--color-black)' }}>Clinic Reviews & Ratings</h2>
+        <button
+          className="btn"
+          style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+          onClick={exportCSV}
+        >
           Export CSV
         </button>
       </div>
@@ -552,6 +556,7 @@ export default function ClinicRatingsAdmin({ reviews: propReviews = null }) {
 
         <select
           className="cr-filter-select"
+          style={{ color: 'var(--color-black)' }}
           value={ratingFilter}
           onChange={(e) => setRatingFilter(e.target.value)}
         >
@@ -563,14 +568,19 @@ export default function ClinicRatingsAdmin({ reviews: propReviews = null }) {
           <option value="1">1 star</option>
         </select>
 
-        <select className="cr-filter-select" value={sort} onChange={(e) => setSort(e.target.value)}>
+        <select
+          className="cr-filter-select"
+          style={{ color: 'var(--color-black)' }}
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+        >
           <option value="newest">Newest</option>
           <option value="oldest">Oldest</option>
           <option value="highest">Highest rating</option>
           <option value="lowest">Lowest rating</option>
         </select>
 
-        <div className="cr-total-reviews">
+        <div className="cr-total-reviews" style={{ color: 'var(--color-black)' }}>
           Showing <strong>{filtered.length}</strong> results
         </div>
       </div>

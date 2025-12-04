@@ -65,6 +65,14 @@ export const getNavigation = (permissions = {}) => {
 
     {
       component: CNavItem,
+      to: '/reviews',
+      name: 'Reviews & Ratings',
+      as: NavLink,
+      icon: <CIcon icon={cilCreditCard} customClassName="nav-icon" />,
+    },
+
+    {
+      component: CNavItem,
       to: '/payouts',
       name: 'Payouts',
       as: NavLink,

@@ -29,6 +29,7 @@ import { getCustomerByCode } from '../APIs/customerApiUsingRC'
 import OnboardingStepsCard from '../Widget/onboarding_steps_card'
 import OnboardingStepsModal from '../Widget/OnboardingStepsModal'
 import RegistrationCodeCard from '../Widget/RegistrationCodeCard'
+import { NGK_COLORS } from '../../../Constant/Themes'
 export default function NGlowKartPatientRegistration_CoreUI() {
   //   const today = new Date()
   const today = new Date()
@@ -54,6 +55,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const [showWheel, setShowWheel] = useState(false)
   const [instagram, setInstagram] = useState(false)
   const [isRegistration, setIsRegistration] = useState(true)
+  const [showAadhaarModal, setShowAadhaarModal] = useState(false)
+  const [showConsentModal, setShowConsentModal] = useState(false)
+  const [serviceStatusError, setServiceStatusError] = useState('')
+
   useEffect(() => {
     async function fetchProcedures() {
       const list = await getAllProcedures()
@@ -118,7 +123,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     problemDescription: [],
     skinTone: '',
     samplePhoto: '',
-    aadhaarConsent: true,
+    aadhaarConsent: false,
+    userConsent: false,
+    privacyConsent: false,
   })
 
   function applyBackendStatus(status) {
@@ -316,6 +323,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     if (!form.aadhaarConsent)
       e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
 
+    if (!form.userConsent) e.userConsent = 'You must agree to the User Consent Disclaimer.'
+
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -397,6 +406,22 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     }
   }, [])
 
+  const handleServiceStatusSelect = (status) => {
+    let missing = []
+
+    if (!form.userConsent) missing.push('User Consent Disclaimer')
+    if (!form.privacyConsent) missing.push('Privacy Policy')
+    if (!form.aadhaarConsent) missing.push('Aadhaar Consent')
+
+    if (missing.length > 0) {
+      setServiceStatusError(`Please agree to: ${missing.join(', ')}.`)
+      return
+    }
+
+    setServiceStatusError('') // ⭐ Clear when no missing consents
+    setForm({ ...form, serviceStatus: status })
+  }
+
   function cleanUserData(data) {
     if (!data) return null
 
@@ -447,6 +472,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     >
       <div className="d-flex w-100 bgCard">
         {/* LEFT IMAGE */}
+
         <div
           className="d-none d-md-block left-image"
           style={{
@@ -457,7 +483,19 @@ export default function NGlowKartPatientRegistration_CoreUI() {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
           }}
-        ></div>
+        >
+          {' '}
+          <img
+            src={DermaCareLogo}
+            alt="logo"
+            style={{
+              height: 100,
+              borderRadius: 12,
+              objectFit: 'fill',
+              // border: '1px solid #eee',
+            }}
+          />
+        </div>
 
         {/* RIGHT PANEL SCROLL */}
         <div
@@ -471,25 +509,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         >
           {/* HEADER */}
           <div className="header-container">
-            <div className="d-flex align-items-start gap-3 mb-2">
-              <img
-                src={DermaCareLogo}
-                alt="logo"
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  objectFit: 'fill',
-                  border: '1px solid #eee',
-                }}
-              />
-              <div>
-                <h4 className="m-0 fw-bold" style={{ color: '#ff4f9a' }}>
-                  Neha's Glow Kart
-                </h4>
-                <small style={{ color: '#ff7bbf', fontSize: '18px' }}>Registration</small>
-              </div>
-            </div>
+            {!spinWhell ? (
+              <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
+            ) : !instagram ? (
+              <h4 className="m-0 fw-bold text-center w-100 gradient-text">Spin and Win</h4>
+            ) : (
+              ''
+            )}
+            {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
+            {/* <small className="sub-gradient-text">Registration</small> */}
           </div>
 
           {/* SUCCESS MESSAGE */}
@@ -507,46 +535,59 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                 {showWheel ? (
                   <>
                     {!spinWhell ? (
-                      <div>
-                        <h3 className="fw-bold">🎉 Verification Pending</h3>
-                        <p className="mt-2" style={{ maxWidth: 380 }}>
-                          Thanks for joining N Glow Kart! We’re reviewing your information. Your
-                          referral credit will be activated within **48 hours** once verified.
-                        </p>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          minHeight: '80vh', // Vertically centers
+                          textAlign: 'center',
+                          padding: '20px',
+                        }}
+                      >
+                        <div>
+                          <h3 className="fw-bold" style={{ color: NGK_COLORS.primary }}>
+                            🎉 Verification Pending
+                          </h3>
 
-                        <div className="text-center mt-4">
-                          {/* Pink Button */}
-                          <CButton
-                            className="btn"
-                            style={{
-                              background: '#ff2e85',
-                              border: 'none',
-                              padding: '14px 25px',
-                              borderRadius: '10px',
-                              fontSize: '18px',
-                              fontWeight: '600',
-                              color: '#fff',
-                              boxShadow: '0 4px 12px rgba(255,46,133,0.4)',
-                              width: '220px',
-                            }}
-                            onClick={() => setSpinWhell(true)}
-                          >
-                            🎡 Spin The Wheel
-                          </CButton>
-
-                          {/* Bottom Text */}
                           <p
-                            style={{
-                              marginTop: '10px',
-                              color: '#ff2e85',
-                              fontSize: '14px',
-                              fontWeight: '500',
-                            }}
+                            className="mt-2"
+                            style={{ maxWidth: 380, color: NGK_COLORS.textDark, margin: '0 auto' }}
                           >
-                            Spin the wheel and get a gift 🎁
-                            <br />
-                            Complete your registration to claim it!
+                            Thanks for joining N Glow Kart!! Verification is underway. You can spin
+                            now, and rewards will be dispatched after successful verification.
                           </p>
+
+                          <div className="text-center mt-4">
+                            <CButton
+                              className="btn"
+                              style={{
+                                background: NGK_COLORS.primary,
+                                border: 'none',
+                                padding: '14px 25px',
+                                borderRadius: '10px',
+                                fontSize: '18px',
+                                fontWeight: '600',
+                                color: '#fff',
+                                boxShadow: `0 4px 12px ${NGK_COLORS.primary}`,
+                                width: '220px',
+                              }}
+                              onClick={() => setSpinWhell(true)}
+                            >
+                              🎡 Spin and Win
+                            </CButton>
+
+                            <p
+                              style={{
+                                marginTop: '10px',
+                                color: NGK_COLORS.primary,
+                                fontSize: '14px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Complete your registration to claim it!
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -574,7 +615,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     )}
                   </>
                 ) : (
-                  <div className="w-100 mt-3">
+                  <div className="w-100  ">
                     {instagram ? (
                       <PrizePostDetails
                         userData={userData}
@@ -625,25 +666,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         border: '1px solid #f4e7f9',
                       }}
                     >
-                      {/* <h3
-                        style={{
-                          fontSize: 20,
-
-                          fontWeight: 700,
-                          color: '#d81b60',
-                          textAlign: 'center',
-                        }}
-                      >
-                        Enter Your Registration Code
-                      </h3> */}
-
-                      {/* <CFormInput
-                        name="fullName"
-                        value={form.fullName}
-                        onChange={handleChange}
-                        placeholder="Enter Full Name"
-                      /> */}
-
                       <CFormInput
                         name="registraionCode"
                         value={form.registraionCode}
@@ -688,7 +710,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           padding: '12px 0',
 
                           background: isRegistration
-                            ? 'linear-gradient(90deg, #ff4f9a, #e33de9ff)'
+                            ? 'linear-gradient(90deg, #D2025B, #A82E4C)'
                             : '#c8c6d9',
                           border: 'none',
                           cursor: isRegistration ? 'pointer' : 'not-allowed',
@@ -716,7 +738,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           color: '#999',
                         }}
                       >
-                        🎁 Unlock your exclusive GlowKart gift after completing onboarding!
+                        Provide valid registration details and get a free spin for a chance to win
+                        amazing prizes.
                       </p>
                     </div>
 
@@ -734,7 +757,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     {/* Full Name + Mobile */}
                     <CCol md={6}>
                       <CFormLabel className="label-gradient">
-                        Full Name (As Per Aadhaar Crad) <span className="text-danger">*</span>
+                        Full Name (As Per Aadhaar Card) <span className="text-danger">*</span>
                       </CFormLabel>
                       <CFormInput
                         name="fullName"
@@ -910,30 +933,144 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                       {/* Error */}
                     </CCol>
+                    <CCol md={12} style={{ marginTop: '20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        {/* Checkbox */}
+                        <input
+                          type="checkbox"
+                          checked={form.userConsent}
+                          disabled={form.userConsent}
+                          onChange={(e) => {
+                            setForm({ ...form, userConsent: e.target.checked })
+
+                            if (e.target.checked) {
+                              setErrors((prev) => ({ ...prev, userConsent: '' }))
+                              setServiceStatusError('')
+                            }
+                          }}
+                          style={{
+                            width: '15px',
+                            height: '15px',
+                            accentColor: NGK_COLORS.primary, // Checkbox color
+                            cursor: 'pointer',
+                            marginTop: '3px',
+                          }}
+                        />
+
+                        {/* Text with clickable link */}
+                        <div style={{ fontSize: '16px', color: '#555' }}>
+                          I agree to the{' '}
+                          <span
+                            style={{
+                              color: NGK_COLORS.primary,
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                            }}
+                            onClick={() => setShowConsentModal(true)}
+                          >
+                            User Consent Disclaimer
+                          </span>
+                          .
+                        </div>
+                      </div>
+
+                      {/* Error */}
+                      {errors.userConsent && (
+                        <p style={{ color: NGK_COLORS.primary, marginTop: '5px' }}>
+                          {errors.userConsent}
+                        </p>
+                      )}
+                    </CCol>
+
+                    <div
+                      className="d-flex align-items-start  "
+                      style={{ gap: '10px', marginTop: '10px' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.privacyConsent}
+                        disabled={form.privacyConsent}
+                        onChange={(e) => {
+                          setForm({ ...form, privacyConsent: e.target.checked })
+                          if (e.target.checked) {
+                            setErrors((prev) => ({ ...prev, privacyConsent: '' }))
+                            setServiceStatusError('')
+                          }
+                        }}
+                        style={{
+                          width: '15px',
+                          height: '15px',
+                          accentColor: NGK_COLORS.primary, // Checkbox color
+                          cursor: 'pointer',
+                          marginTop: '3px',
+                        }}
+                      />
+
+                      <label style={{ fontSize: '16px', color: '#555', cursor: 'pointer' }}>
+                        I have read understood{' '}
+                        <a
+                          href="/pdf/privacy-policy.pdf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: NGK_COLORS.primary,
+                            textDecoration: 'underline',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Privacy Policy
+                        </a>
+                      </label>
+                    </div>
+
+                    {/* Error Message */}
+                    {errors.privacyConsent && (
+                      <p style={{ color: '#ff2e85', fontSize: '13px', marginLeft: '28px' }}>
+                        {errors.privacyConsent}
+                      </p>
+                    )}
+
                     <CCol md={12}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                           <input
                             type="checkbox"
                             checked={form.aadhaarConsent}
+                            disabled={form.aadhaarConsent}
                             onChange={(e) => {
                               setForm({ ...form, aadhaarConsent: e.target.checked })
 
                               // remove error when checked
                               if (e.target.checked) {
                                 setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
+                                setServiceStatusError('')
                               }
                             }}
-                            style={{ marginTop: '4px', width: '16px', height: '16px' }}
+                            style={{
+                              width: '15px',
+                              height: '15px',
+                              accentColor: NGK_COLORS.primary, // Checkbox color
+                              cursor: 'pointer',
+                              marginTop: '3px',
+                            }}
                           />
 
-                          <div style={{ fontSize: '13px', color: '#555' }}>
-                            <strong>🔒 Aadhaar Consent:</strong>
+                          <div style={{ fontSize: '15px', color: '#555' }}>
+                            <strong>Aadhaar Consent:</strong>
                             <p style={{ marginTop: '6px' }} className="text-muted">
-                              By submitting your Aadhaar number, you consent to its use only for
-                              identity verification and duplicate-checking. Your Aadhaar number will
-                              not be stored permanently and will be deleted after verification. We
-                              do not share your Aadhaar information with any third party.
+                              <strong>{form.fullName}</strong> I hereby give explicit and voluntary
+                              consent to <strong>Udit CosmeTech Private Limited</strong> to collect
+                              and securely process my Aadhaar number for identity verification and
+                              duplicate-account prevention purposes on Neeha’s Glow Kart. I have
+                              read and understood the{' '}
+                              <span
+                                className="aadhaar-link"
+                                onClick={() => setShowAadhaarModal(true)}
+                              >
+                                Aadhaar Consent Notice.
+                              </span>
                             </p>
                           </div>
                         </div>
@@ -946,37 +1083,29 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         )}
                       </div>
                     </CCol>
+                    {serviceStatusError && (
+                      <p style={{ color: '#ff2e85', marginTop: '5px', fontSize: '14px' }}>
+                        {serviceStatusError}
+                      </p>
+                    )}
 
                     {/* Consent */}
                     <CCol md={12}>
-                      {/* <CFormCheck
-                        className="custom-checkbox"
-                        name="confirmedVisit"
-                        checked={form.confirmedVisit}
-                        onChange={handleChange}
-                        label="I confirm that I have availed dermatology or cosmetic services from a verified clinic within the last 12 months and agree to N Glow Kart’s verification and data "
-                      /> */}
                       <div className="d-flex justify-content-between">
-                        <CFormLabel>Have you taken any service in the last 12 months?</CFormLabel>
-                        <a
-                          href="/pdf/privacy-policy.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: '#ff2e85',
-                            textDecoration: 'underline',
-                            cursor: 'pointer',
-                            marginLeft: '25px',
-                          }}
-                        >
-                          Privacy Policy
-                        </a>
+                        <CFormLabel>
+                          Have you taken any dermatology related service [Botx, PRP, Laser, etc...]
+                          in the last 12 months?
+                        </CFormLabel>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '10px' }}>
+                      <div
+                        style={{ display: 'flex', gap: '20px' }}
+                        className="d-flex justify-content-end"
+                      >
                         <CButton
                           style={{
-                            backgroundColor: form.serviceStatus === '1' ? '#ff2e85' : '#e4e4e4',
+                            backgroundColor:
+                              form.serviceStatus === '1' ? NGK_COLORS.primary : '#e4e4e4',
                             color: form.serviceStatus === '1' ? '#fff' : '#444',
                             border: 'none',
                             padding: '8px 18px',
@@ -984,15 +1113,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             fontWeight: 600,
                             transition: '0.25s',
                           }}
-                          onClick={() => setForm({ ...form, serviceStatus: '1' })}
+                          onClick={() => handleServiceStatusSelect('1')}
                         >
                           Yes
                         </CButton>
 
                         <CButton
-                          // color={form.confirmedVisit === 'interested' ? 'primary' : 'secondary'}
                           style={{
-                            backgroundColor: form.serviceStatus === '2' ? '#ff2e85' : '#e4e4e4',
+                            backgroundColor:
+                              form.serviceStatus === '2' ? NGK_COLORS.primary : '#e4e4e4',
                             color: form.serviceStatus === '2' ? '#fff' : '#444',
                             border: 'none',
                             padding: '8px 18px',
@@ -1000,9 +1129,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             fontWeight: 600,
                             transition: '0.25s',
                           }}
-                          onClick={() => setForm({ ...form, serviceStatus: '2' })}
+                          onClick={() => handleServiceStatusSelect('2')}
                         >
-                          Interested
+                          No, Interested
                         </CButton>
                       </div>
 
@@ -1056,11 +1185,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                         <CCol md={6}>
                           <CFormLabel className="label-gradient">
-                            Clinic Area <span className="text-danger">*</span>
+                            Clinic Area Pincode <span className="text-danger">*</span>
                           </CFormLabel>
                           <CFormInput
+                            inputMode="numeric"
+                            maxLength={6}
                             name="clinicCityArea"
-                            placeholder="Enter Clinic City/Area"
+                            placeholder="Enter Clinic City/Area pincode"
                             value={form.clinicCityArea}
                             onChange={handleChange}
                           />
@@ -1077,7 +1208,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                         <CCol md={6}>
                           <CFormLabel className="label-gradient">
-                            Last Visit <span className="text-danger">*</span>
+                            Last Visit Date <span className="text-danger">*</span>
                           </CFormLabel>
 
                           <CFormInput
@@ -1159,15 +1290,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           >
                             <label
                               style={{
-                                border: '2px dashed #ff95c9',
+                                border: `2px dashed ${NGK_COLORS.primaryLight}`,
                                 borderRadius: 12,
                                 padding: '18px',
                                 width: '100%',
                                 textAlign: 'center',
                                 display: 'block',
                                 cursor: 'pointer',
-                                background: '#fff8fc',
-                                color: '#ff2e85',
+                                background: NGK_COLORS.primarySoft,
+                                color: NGK_COLORS.primary,
                                 fontWeight: '500',
                                 fontSize: 15,
                               }}
@@ -1255,7 +1386,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               { value: 'other', label: 'Others' }, // add one clean version
                             ]}
                             isMulti
-                            placeholder="Select your concerns/procedures..."
+                            placeholder="your concerns/procedures..."
                             value={[
                               ...procedureOptions.filter((opt) =>
                                 form.problemDescription?.includes(opt.label),
@@ -1405,20 +1536,201 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                     )}
 
                     {/* Submit */}
-                    <CCol md={12} className="mt-5 d-flex justify-content-end">
-                      <CButton
-                        style={{ background: '#ff4f9a', color: '#fff' }}
-                        disabled={!form.serviceStatus || loading}
-                        type="submit"
-                      >
-                        {loading ? 'Submitting...' : 'Submit'}
-                      </CButton>
-                    </CCol>
+                    {form.serviceStatus && (
+                      <CCol md={12} className="mt-5 d-flex justify-content-end">
+                        <CButton
+                          style={{ background: NGK_COLORS.primary, color: '#fff' }}
+                          disabled={!form.serviceStatus || loading}
+                          type="submit"
+                        >
+                          {loading ? 'Submitting...' : 'Submit'}
+                        </CButton>
+                      </CCol>
+                    )}
                   </CRow>
                 )}
               </CForm>
             )}
           </div>
+          {showAadhaarModal && (
+            <div className="aadhaar-modal-backdrop text-black">
+              <div className="aadhaar-modal">
+                <h2>Aadhaar Consent Notice</h2>
+
+                <div className="aadhaar-modal-content">
+                  <p>
+                    Udit CosmeTech Private Limited (“we”, “us”, “our”), the operator of the mobile
+                    application Neeha’s Glow Kart, is committed to protecting your personal data in
+                    accordance with the Digital Personal Data Protection Act, 2023 (DPDP Act).
+                    <br />
+                    <br />
+                    To ensure genuine, unique, and non-duplicate registrations, we request you to
+                    voluntarily provide your Aadhaar Number for identity verification and
+                    fraud-prevention purposes.
+                    <br />
+                    <br />
+                    Please read the information below carefully before providing your consent.
+                    <br />
+                    <br />
+                    <b>1. Purpose of Collecting Your Aadhaar Number</b>
+                    <br />
+                    Your Aadhaar number is collected solely for the following limited purposes:
+                    <br />
+                    <br />
+                    • To ensure unique and genuine customer registration on Neeha’s Glow Kart.
+                    <br />
+                    • To prevent duplicate accounts, fraudulent sign-ups, misuse of
+                    referral/spin-wheel rewards, or unauthorized benefits.
+                    <br />
+                    • To maintain the integrity and authenticity of users participating in the
+                    platform.
+                    <br />
+                    <br />
+                    We do NOT use Aadhaar for:
+                    <br />
+                    • Marketing
+                    <br />
+                    • Profiling
+                    <br />
+                    • Sharing with clinics, external agencies, or advertisers
+                    <br />
+                    • Any purpose other than identity uniqueness verification
+                    <br />
+                    <br />
+                    <b>2. How Your Aadhaar Information Is Handled</b>
+                    <br />
+                    We follow strict security protocols:
+                    <br />
+                    <br />
+                    • Your Aadhaar number is not stored in readable or plain-text form.
+                    <br />
+                    • Your Aadhaar is immediately converted into a secure one-way cryptographic hash
+                    (SHA-256).
+                    <br />
+                    • Only the hashed value is stored to check uniqueness.
+                    <br />
+                    • The original Aadhaar number is discarded immediately after hashing.
+                    <br />
+                    <br />
+                    We never share, disclose, or transfer your Aadhaar number or hash to any third
+                    party.
+                    <br />
+                    <br />
+                    <b>3. Voluntary Consent</b>
+                    <br />
+                    Providing your Aadhaar number is voluntary but may be required to access certain
+                    features such as:
+                    <br />
+                    <br />
+                    • Registration on an invite-only basis
+                    <br />
+                    • Eligibility for promotional rewards (e.g., spin wheel)
+                    <br />
+                    • Fraud-free participation in offers and benefits
+                    <br />
+                    <br />
+                    <b>4. Your Rights Under the DPDP Act</b>
+                    <br />
+                    You have the right to:
+                    <br />
+                    <br />
+                    • Withdraw your consent at any time
+                    <br />
+                    • Request deletion of your stored hashed Aadhaar identifier
+                    <br />
+                    • Access the details of how your data is processed
+                    <br />
+                    • Submit grievances regarding your personal data
+                    <br />• <a href="mailto:support@ngkderma.com">support@ngkderma.com</a>
+                    <br />
+                    <br />
+                    <b>Contact our Data Protection Officer (DPO):</b>
+                    <br />
+                    Email: support@uditcosmetech.com
+                    <br />
+                    Address: Udit CosmeTech Private Limited, 7/111E, Plot No. 80/1,P&K,Nest, Chil
+                    SEZ IT Park Rd,Coimbatore North, Coimbatore, Tamil Nadu, India - 641035.
+                    <br />
+                    <br />
+                    <b>5. Retention & Deletion Policy</b>
+                    <br />
+                    We retain only the hashed Aadhaar identifier and only as long as required.
+                    <br />
+                    <br />
+                    <b>6. By Proceeding, You Consent to the Following:</b>
+                    <br />
+                    • You voluntarily provide your Aadhaar number.
+                    <br />
+                    • You understand the specific and limited purpose of collection.
+                    <br />
+                    • You agree to its secure hashing and processing.
+                    <br />• You authorize Udit CosmeTech Private Limited to process your data in
+                    accordance with the DPDP Act.
+                  </p>
+                </div>
+
+                <button className="aadhaar-close-btn" onClick={() => setShowAadhaarModal(false)}>
+                  Agree
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showConsentModal && (
+            <div className="aadhaar-modal-backdrop">
+              <div className="aadhaar-modal">
+                {/* CLOSE ICON (Top Right) */}
+                {/* <button className="close-icon-btn" onClick={() => setShowConsentModal(false)}>
+                  ✕
+                </button> */}
+
+                <h2>User Consent Disclaimer</h2>
+
+                <div className="aadhaar-modal-content">
+                  <p>
+                    <b>Neeha’s Glow Kart – Udit CosmeTech Private Limited</b>
+                    <br />
+                    <br />
+                    <b>Disclaimer:</b>
+                    <br />
+                    Neeha’s Glow Kart is a listing and offer-discovery platform only. We do not
+                    provide medical treatments, and we are not responsible for treatment results,
+                    side effects, complications, or service quality at any clinic.
+                    <br />
+                    <br />
+                    All dermatology, skin, hair, cosmetic, and aesthetic procedures involve risks.
+                    <br />
+                    <b>
+                      All treatments are fully and solely the responsibility of the respective
+                      clinic/doctor.
+                    </b>
+                    <br />
+                    <br />
+                    By continuing, you acknowledge and agree that:
+                    <br />
+                    <br />
+                    • You choose to visit or consult a clinic at your own discretion and risk.
+                    <br />
+                    • Neeha’s Glow Kart is not liable for reactions, side effects, dissatisfaction,
+                    or post-treatment issues.
+                    <br />
+                    • You will interact directly with the clinic for medical advice, risks,
+                    aftercare, or disputes.
+                    <br />
+                    • The platform’s role is only to share offers & clinic information provided by
+                    the clinics.
+                    <br />
+                    <br />
+                  </p>
+                </div>
+
+                {/* BOTTOM CLOSE BUTTON */}
+                <button className="aadhaar-close-btn" onClick={() => setShowConsentModal(false)}>
+                  Agree
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

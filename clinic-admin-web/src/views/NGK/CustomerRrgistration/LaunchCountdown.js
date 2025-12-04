@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
+import { NGK_COLORS } from '../../../Constant/Themes'
 
-export default function LaunchCountdown() {
-  const targetDate = new Date('2025-12-31T00:00:00').getTime()
+export default function LaunchCountdown({onComplete}) {
+  const targetDate = new Date('2026-03-08T00:00:00').getTime()
   const [timeLeft, setTimeLeft] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -14,6 +15,7 @@ export default function LaunchCountdown() {
         clearInterval(interval)
         setTimeLeft({})
         setLoading(false)
+        if (onComplete) onComplete()
         return
       }
 
@@ -29,11 +31,18 @@ export default function LaunchCountdown() {
 
     return () => clearInterval(interval)
   }, [])
+  const handleAppStore = () => {
+    window.open('https://apps.apple.com/in/app/whatsapp-messenger/id310633997', '_blank')
+  }
+
+  const handlePlayStore = () => {
+    window.open('https://play.google.com/store/apps/details?id=com.whatsapp', '_blank')
+  }
 
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #ff99c8, #ff2e85)',
+        background: `linear-gradient(135deg, ${NGK_COLORS.primary}, ${NGK_COLORS.primaryLight})`,
         padding: '24px',
         borderRadius: '18px',
         color: '#fff',
@@ -43,37 +52,111 @@ export default function LaunchCountdown() {
         boxShadow: '0 8px 25px rgba(255,0,128,0.25)',
       }}
     >
-      <h2 style={{ marginBottom: 8, fontSize: 24, fontWeight: 700, color: 'white' }}>
-        🚀 Launching the App Soon
-      </h2>
-
-      <p style={{ fontSize: 16, opacity: 0.9, marginBottom: 20, color: 'white' }}>
-        Going live on <strong>31st December 2025</strong>
-      </p>
-
       {/* 🔥 Show loader before the first countdown is calculated */}
       {loading || !timeLeft ? (
         <div style={{ fontSize: 18, fontWeight: 600 }}>⏳ Loading...</div>
       ) : timeLeft.days !== undefined ? (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-          {['days', 'hours', 'minutes', 'seconds'].map((unit) => (
-            <div
-              key={unit}
+        <>
+          <h2 style={{ marginBottom: 8, fontSize: 24, fontWeight: 700, color: 'white' }}>
+            🚀 Launching the App Soon
+          </h2>
+          <p style={{ fontSize: 16, opacity: 0.9, marginBottom: 20, color: 'white' }}>
+            Going live on <strong>8th March 2026</strong>
+          </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+            {['days', 'hours', 'minutes', 'seconds'].map((unit) => (
+              <div
+                key={unit}
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  padding: '12px 10px',
+                  borderRadius: 12,
+                  width: 70,
+                  backdropFilter: 'blur(5px)',
+                }}
+              >
+                <div style={{ fontSize: 24, fontWeight: 700 }}>{timeLeft[unit]}</div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>{unit.toUpperCase()}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        /* 🎉 Successfully launched */
+        <div style={{ marginTop: 10 }}>
+          <h3 style={{ color: 'white', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
+            🎉 App Launched!
+          </h3>
+
+          <p
+            style={{
+              fontSize: 15,
+              fontWeight: 500,
+              marginBottom: 16,
+              marginTop: 20,
+              opacity: 0.9,
+              color: '#fff',
+            }}
+          >
+            Download the app now from the App Store or Play Store.
+          </p>
+
+          {/* DOWNLOAD BUTTONS */}
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              onClick={handleAppStore}
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                padding: '12px 10px',
+                flex: 1,
+                padding: '6px 0',
+                background: '#000',
+                border: 'none',
                 borderRadius: 12,
-                width: 70,
-                backdropFilter: 'blur(5px)',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: 15,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                cursor: 'pointer',
               }}
             >
-              <div style={{ fontSize: 24, fontWeight: 700 }}>{timeLeft[unit]}</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>{unit.toUpperCase()}</div>
-            </div>
-          ))}
+              <img
+                src="https://logos-world.net/wp-content/uploads/2021/02/App-Store-Logo.png"
+                style={{ width: 50 }}
+                alt="App Store"
+              />
+              App Store
+            </button>
+
+            <button
+              onClick={handlePlayStore}
+              style={{
+                flex: 1,
+                padding: '6px 0',
+                background: '#04A777',
+                border: 'none',
+                borderRadius: 12,
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: 15,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                cursor: 'pointer',
+              }}
+            >
+              <img
+                src="https://www.androidheadlines.com/wp-content/uploads/2017/05/Google-Play-Store-New-App-Icon.png"
+                style={{ width: 40 }}
+                alt="Play Store"
+              />
+              Play Store
+            </button>
+          </div>
         </div>
-      ) : (
-        <h3 style={{ margin: 0 }}>🎉 We Are Live!</h3>
       )}
     </div>
   )
