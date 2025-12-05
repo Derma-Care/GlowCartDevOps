@@ -103,8 +103,7 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
               from { transform: rotate(0deg); }
               to { transform: rotate(360deg); }
             }
-          `}
-              {' '}
+          `}{' '}
             </style>
           </div>
         </div>
@@ -113,54 +112,62 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
   }
 
   return (
-    <div className="spin-container">
-      <div className="wheel-wrapper">
-        <Wheel
-          wheelSize={wheelSize}
-          mustStartSpinning={mustSpin}
-          prizeNumber={prizeNumber}
-          data={data}
-          textColors={['#ffffff']}
-          backgroundColors={['#ff9933', '#ffcc00', '#ff6666', '#66cc66', '#66a3ff', '#cc66ff']}
-          radiusLineColor="#fff"
-          radiusLineWidth={2}
-          outerBorderColor="#000"
-          outerBorderWidth={4}
-          innerBorderColor="#000"
-          innerBorderWidth={6}
-          perpendicularText={false}
-          fontSize={16}
-          pointerProps={{
-            style: {
-              transform: window.innerWidth < 480 ? 'scale(0.50)' : 'scale(0.75)',
-              transformOrigin: 'top',
-            },
-          }}
-          onStopSpinning={async () => {
-            setMustSpin(false)
-            document.body.style.overflow = 'auto'
-            document.documentElement.style.overflow = 'auto'
+    <>
+      <div className="header-container">
+        <h4 className="m-0 fw-bold text-center w-100 gradient-text">Spin And Win</h4>
 
-            const winner = slices[prizeNumber]
-            onResult(winner)
-
-            const payload = { rewardId: winner.id }
-            const response = await sendSpinReward(userData.mobile, payload)
-
-            if (response.success) {
-              showCustomToast('🎉 Reward saved!', 'success')
-              setUserData(response.data)
-            } else {
-              showCustomToast(response.message || 'Failed to save reward', 'error')
-            }
-          }}
-        />
-
-        <button className="spin-btn" onClick={handleSpinClick} disabled={mustSpin}>
-          Spin
-        </button>
+        {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
+        {/* <small className="sub-gradient-text">Registration</small> */}
       </div>
-    </div>
+      <div className="spin-container">
+        <div className="wheel-wrapper">
+          <Wheel
+            wheelSize={wheelSize}
+            mustStartSpinning={mustSpin}
+            prizeNumber={prizeNumber}
+            data={data}
+            textColors={['#ffffff']}
+            backgroundColors={['#ff9933', '#ffcc00', '#ff6666', '#66cc66', '#66a3ff', '#cc66ff']}
+            radiusLineColor="#fff"
+            radiusLineWidth={2}
+            outerBorderColor="#000"
+            outerBorderWidth={4}
+            innerBorderColor="#000"
+            innerBorderWidth={6}
+            perpendicularText={false}
+            fontSize={16}
+            pointerProps={{
+              style: {
+                transform: window.innerWidth < 480 ? 'scale(0.50)' : 'scale(0.75)',
+                transformOrigin: 'top',
+              },
+            }}
+            onStopSpinning={async () => {
+              setMustSpin(false)
+              document.body.style.overflow = 'auto'
+              document.documentElement.style.overflow = 'auto'
+
+              const winner = slices[prizeNumber]
+              onResult(winner)
+
+              const payload = { rewardId: winner.id }
+              const response = await sendSpinReward(userData.mobile, payload)
+
+              if (response.success) {
+                showCustomToast('🎉 Reward saved!', 'success')
+                setUserData(response.data)
+              } else {
+                showCustomToast(response.message || 'Failed to save reward', 'error')
+              }
+            }}
+          />
+
+          <button className="spin-btn" onClick={handleSpinClick} disabled={mustSpin}>
+            Spin
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
 

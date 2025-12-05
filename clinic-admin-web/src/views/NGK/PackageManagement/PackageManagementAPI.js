@@ -55,7 +55,7 @@ export const updatePackageData = async (packageId, hospitalId, packageData) => {
 
   try {
     const response = await http.put(
-      `/${updatePackage}/${packageId}/${hospitalId}`, //use 'id' here
+      `/${updatePackage}/${packageId}/clinic/${hospitalId}`, //use 'id' here
       packageData,
       {
         headers: {
@@ -75,7 +75,7 @@ export const updatePackageData = async (packageId, hospitalId, packageData) => {
 export const deletePackageData = async (packageId, id) => {
   try {
     console.log('Service name:', packageId)
-    const response = await http.delete(`/${deletePackage}/${packageId}/${id}`)
+    const response = await http.delete(`/${deletePackage}/${packageId}/clinic/${id}`)
 
     console.log('Service deleted successfully:', response.data)
     return response.data

@@ -178,25 +178,49 @@ const PackageManagement = () => {
       newErrors.consultationFee = 'Consultation Fee must be greater than or equal to 0.'
     }
 
-    if (!newService.minTimeValue || newService.minTimeValue.trim() === '') {
-      newErrors.minTimeValue = 'Enter minimum time.'
-    } else if (!/^\d+$/.test(newService.minTimeValue)) {
-      newErrors.minTimeValue = 'Minimum time must be a number.'
-    } else if (Number(newService.minTimeValue) <= 0) {
-      newErrors.minTimeValue = 'Minimum time must be greater than zero.'
+    // ----- DISCOUNT + OFFER DATE VALIDATION -----
+    if (newService.discount && newService.discount.trim() !== '') {
+      // discount exists → validate dates
+      if (!newService.offerValidDate) {
+        newErrors.offerValidDate = 'Offer Start Date is required when discount is applied.'
+      }
+
+      // if (!newService.offerEndDate) {
+      //   newErrors.offerEndDate = 'Offer End Date is required when discount is applied.'
+      // }
+    }
+    if (newService.offerValidDate && newService.offerEndDate) {
+      const start = new Date(newService.offerValidDate)
+      const end = new Date(newService.offerEndDate)
+
+      if (start > end) {
+        newErrors.offerValidDate = 'Start date cannot be greater than End date.'
+        newErrors.offerEndDate = 'End date must be after Start date.'
+      }
+    }
+    if (newService.discount && Number(newService.discount) > 100) {
+      newErrors.discount = 'Discount cannot exceed 100%.'
     }
 
-    if (!newService.minTimeUnit) {
-      newErrors.minTimeUnit = 'Please select a time unit.'
-    }
+    // if (!newService.minTimeValue || newService.minTimeValue.trim() === '') {
+    //   newErrors.minTimeValue = 'Enter minimum time.'
+    // } else if (!/^\d+$/.test(newService.minTimeValue)) {
+    //   newErrors.minTimeValue = 'Minimum time must be a number.'
+    // } else if (Number(newService.minTimeValue) <= 0) {
+    //   newErrors.minTimeValue = 'Minimum time must be greater than zero.'
+    // }
+
+    // if (!newService.minTimeUnit) {
+    //   newErrors.minTimeUnit = 'Please select a time unit.'
+    // }
 
     if (!newService.viewDescription || newService.viewDescription.trim() === '') {
       newErrors.viewDescription = 'View description is required.'
     }
 
-    if (!newService.serviceImage) {
-      newErrors.serviceImage = 'Please upload a package image.'
-    }
+    // if (!newService.serviceImage) {
+    //   newErrors.serviceImage = 'Please upload a package image.'
+    // }
 
     // --- Validate at least 2 procedures ---
     if (!newService.packageProcedures || newService.packageProcedures.length < 2) {
@@ -432,11 +456,11 @@ const PackageManagement = () => {
       minTimeUnit: timeUnit || '',
       sittings: String(service.sittings ?? ''),
 
-      offerValidDate: service.offerValidDate || '',
-      offerEndDate: service.offerEndDate || '',
+      offerValidDate: service.offerStart || '',
+      offerEndDate: service.offerValidDate || '',
 
-      serviceImage: fullImage,
-      serviceImageFile: null,
+      // serviceImage: fullImage,
+      // serviceImageFile: null,
 
       viewDescription: service.description || '',
       procedureQA: service.procedureQA || [],
@@ -477,9 +501,9 @@ const PackageManagement = () => {
       const finalCost = clinicPay + gstAmount + consultationFee
       const formattedMinTime = `${newService.minTimeValue} ${newService.minTimeUnit}`
 
-      const base64ImageToSend = newService.serviceImage?.startsWith('data:')
-        ? newService.serviceImage.split(',')[1]
-        : newService.serviceImage
+      // const base64ImageToSend = newService.serviceImage?.startsWith('data:')
+      //   ? newService.serviceImage.split(',')[1]
+      //   : newService.serviceImage
 
       const payload = {
         clinicId: localStorage.getItem('HospitalId'),
@@ -500,8 +524,8 @@ const PackageManagement = () => {
         platformFeePercentage: 2, // static or dynamic
         consultationFee: Number(newService.consultationFee),
         // minTime: formattedMinTime,
-        // offerValidDate: newService.offerValidDate || '',
-        // offerEndDate: newService.offerEndDate || '',
+        offerStart: newService.offerValidDate || '',
+        offerValidDate: newService.offerEndDate || '',
         // procedureImage: base64ImageToSend,
       }
 
@@ -510,6 +534,8 @@ const PackageManagement = () => {
         showCustomToast(response.data.message, 'success')
         handleCloseFormModal()
         fetchProcedurePricing()
+      } else {
+        showCustomToast(response.data.message, 'error')
       }
     } catch (error) {
       console.error('Error in handleAddService:', error?.response || error)
@@ -562,8 +588,8 @@ const PackageManagement = () => {
         // minTime: newService.minTimeValue
         //   ? `${newService.minTimeValue} ${newService.minTimeUnit}`
         //   : '',
-        // offerValidDate: newService.offerValidDate || '',
-        // offerEndDate: newService.offerEndDate || '',
+        offerStart: newService.offerValidDate || '',
+        offerValidDate: newService.offerEndDate || '',
 
         price: Number(newService.price || 0),
         discountPercentage: Number(newService.discount || 0),
@@ -576,10 +602,12 @@ const PackageManagement = () => {
       const response = await updatePackageData(newService.packageId, hospitalId, updatedService) // imported from ProcedureManagementAPI
 
       if (response.success) {
-        showCustomToast('Procedure updated successfully!', 'success')
+        showCustomToast(`${response.message}` || 'Procedure updated successfully!', 'success')
         handleCloseFormModal()
 
         fetchProcedurePricing()
+      } else {
+        showCustomToast(`${result.message}`, 'error')
       }
     } catch (error) {
       console.error('Update failed:', error)
@@ -599,9 +627,14 @@ const PackageManagement = () => {
     try {
       setDelLoading(true)
       const result = await deletePackageData(serviceIdToDelete, hospitalId)
-      console.log('Service deleted:', result)
-      showCustomToast('Procedure deleted successfully!', 'success')
-      fetchProcedurePricing()
+      if (result.success) {
+        console.log('Service deleted:', result)
+
+        showCustomToast(`${result.message}` || 'Package deleted successfully!', 'success')
+        fetchProcedurePricing()
+      } else {
+        showCustomToast(`${result.message}`, 'error')
+      }
     } catch (error) {
       console.error('Error deleting Procedure:', error)
     } finally {

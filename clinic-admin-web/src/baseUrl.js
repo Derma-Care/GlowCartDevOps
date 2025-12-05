@@ -169,8 +169,8 @@ export const deleteService = 'procedure-pricing/delete' // need
 
 export const getPackage = 'packages'  // need
 export const addPackage = 'packages/create'  // need
-export const updatePackage = 'packages/update' //need
-export const deletePackage = 'packages/delete' // need
+export const updatePackage = 'procedure-packages/update' //need
+export const deletePackage = 'procedure-packages/delete' // need
  
 
 //opt  SUb Service

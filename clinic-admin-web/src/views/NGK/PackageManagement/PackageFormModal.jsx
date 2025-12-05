@@ -16,6 +16,7 @@ import {
   CButton,
 } from '@coreui/react'
 import ProcedureQA from './QASection'
+import SearchableSelect from '../Widget/SearchableSelect'
 
 const PackageFormModal = ({
   visible,
@@ -55,6 +56,7 @@ const PackageFormModal = ({
                 Package Name <span className="text-danger">*</span>
               </h6>
               <CFormInput
+                disabled={isEdit}
                 type="text"
                 placeholder="Package Name"
                 name="packageName"
@@ -94,6 +96,7 @@ const PackageFormModal = ({
                   e.target.value = e.target.value.replace(/[^0-9.]/g, '')
                 }}
               />
+              {errors.discount && <CFormText className="text-danger">{errors.discount}</CFormText>}
             </CCol>
 
             <CCol md={3} className="mb-4">
@@ -133,6 +136,9 @@ const PackageFormModal = ({
                 value={newService.offerValidDate || ''}
                 onChange={onChange}
               />
+              {errors.offerValidDate && (
+                <CFormText className="text-danger">{errors.offerValidDate}</CFormText>
+              )}
             </CCol>
 
             <CCol md={3} className="mb-4">
@@ -145,8 +151,23 @@ const PackageFormModal = ({
                 onChange={onChange}
               />
             </CCol>
-
             <CCol md={3} className="mb-4">
+              <h6>
+                Consultation Fee <span className="text-danger">*</span>
+              </h6>
+              <CFormInput
+                type="text"
+                name="consultationFee"
+                value={newService.consultationFee || ''}
+                onChange={onChange}
+                placeholder="Enter Consultation Fee"
+              />
+              {errors.consultationFee && (
+                <CFormText className="text-danger">{errors.consultationFee}</CFormText>
+              )}
+            </CCol>
+
+            {/* <CCol md={3} className="mb-4">
               <h6>
                 Min Time <span className="text-danger">*</span>
               </h6>
@@ -180,7 +201,7 @@ const PackageFormModal = ({
               {errors.minTimeUnit && (
                 <CFormText className="text-danger">{errors.minTimeUnit}</CFormText>
               )}
-            </CCol>
+            </CCol> */}
 
             {/* <CCol md={3} className="mb-4">
               <h6>
@@ -199,23 +220,7 @@ const PackageFormModal = ({
 
           {/* Consultation Fee + Min Time + Image + Description */}
           <CRow>
-            <CCol md={3} className="mb-4">
-              <h6>
-                Consultation Fee <span className="text-danger">*</span>
-              </h6>
-              <CFormInput
-                type="text"
-                name="consultationFee"
-                value={newService.consultationFee || ''}
-                onChange={onChange}
-                placeholder="Enter Consultation Fee"
-              />
-              {errors.consultationFee && (
-                <CFormText className="text-danger">{errors.consultationFee}</CFormText>
-              )}
-            </CCol>
-
-            <CCol md={3} className="mb-4">
+            {/* <CCol md={3} className="mb-4">
               <h6>
                 Package Image <span className="text-danger">*</span>
               </h6>
@@ -234,7 +239,7 @@ const PackageFormModal = ({
               {errors.serviceImage && (
                 <CFormText className="text-danger">{errors.serviceImage}</CFormText>
               )}
-            </CCol>
+            </CCol> */}
 
             <CCol md={6} className="mb-4">
               <h6>
@@ -283,29 +288,31 @@ const PackageFormModal = ({
             newService.packageProcedures.map((item, index) => (
               <CRow key={index} className="mb-3 align-items-center procedure-row">
                 <CCol md={6} xs={7} className="procedure-col">
-                  <CFormSelect
+                  <SearchableSelect
                     value={item.procedureId}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       onChange({
                         target: {
                           name: 'updateProcedure',
-                          value: { index, procedureId: e.target.value },
+                          value: { index, procedureId: val },
                           type: 'custom',
                         },
                       })
                     }
-                  >
-                    <option value="">Select Procedure</option>
-                    {isProcedure?.map((p) => (
-                      <option key={p.procedureId} value={p.procedureId}>
-                        {p.procedureName}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                    options={isProcedure.map((p) => ({
+                      label: p.procedureName,
+                      value: p.procedureId,
+                    }))}
+                    disabledOptions={newService.packageProcedures
+                      .map((p, i) => (i === index ? null : p.procedureId))
+                      .filter(Boolean)}
+                  />
+
                   {errors[`procedureId_${index}`] && (
                     <p className="text-danger">{errors[`procedureId_${index}`]}</p>
                   )}
                 </CCol>
+
                 <CCol md={4} xs={3} className="sitting-col">
                   <CFormInput
                     type="number"
@@ -357,8 +364,6 @@ const PackageFormModal = ({
               {errors.packageProcedures}
             </p>
           )}
-
-        
         </CForm>
       </CModalBody>
 

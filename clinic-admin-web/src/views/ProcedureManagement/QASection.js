@@ -105,7 +105,7 @@ const QASection = ({ title, qaList = [], setQAList }) => {
     <CCol md={12} className="mt-3">
       <label className="mb-2">Instruction</label>
       <CFormInput
-        placeholder="Enter your question"
+        placeholder="Enter text"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
       />
@@ -113,7 +113,7 @@ const QASection = ({ title, qaList = [], setQAList }) => {
       <label className="mt-3">Guidelines</label>
       <CInputGroup className="mb-2">
         <CFormInput
-          placeholder="Enter answer"
+          placeholder="Enter text"
           value={answerInput}
           onChange={(e) => setAnswerInput(e.target.value)}
         />

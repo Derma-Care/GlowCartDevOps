@@ -33,7 +33,7 @@ import { useHospital } from '../views/Usecontext/HospitalContext'
 import { COLORS } from '../Constant/Themes'
 import { useGlobalSearch } from '../views/Usecontext/GlobalSearchContext'
 import BackButton from '../views/widgets/BackButton'
-
+// import DermaCareLogo from '../../../assets/images/logoP.png'
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')

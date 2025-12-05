@@ -1497,6 +1497,28 @@ const ServiceManagement = () => {
     if (!newService.sittings || newService.sittings.trim() === '') {
       newErrors.sittings = 'Number of sittings is required.'
     }
+    if (newService.discount && newService.discount.trim() !== '') {
+      // discount exists → validate dates
+      if (!newService.offerValidDate) {
+        newErrors.offerValidDate = 'Offer Start Date is required when discount is applied.'
+      }
+
+      // if (!newService.offerEndDate) {
+      //   newErrors.offerEndDate = 'Offer End Date is required when discount is applied.'
+      // }
+    }
+    if (newService.offerValidDate && newService.offerEndDate) {
+      const start = new Date(newService.offerValidDate)
+      const end = new Date(newService.offerEndDate)
+
+      if (start > end) {
+        newErrors.offerValidDate = 'Start date cannot be greater than End date.'
+        newErrors.offerEndDate = 'End date must be after Start date.'
+      }
+    }
+    if (newService.discount && Number(newService.discount) > 100) {
+      newErrors.discount = 'Discount cannot exceed 100%.'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -1716,6 +1738,8 @@ const ServiceManagement = () => {
         showCustomToast(response.data.message, 'success')
         handleCloseFormModal()
         fetchProcedurePricing()
+      } else {
+        showCustomToast(response.data.message, 'error')
       }
     } catch (error) {
       console.error('Error in handleAddService:', error?.response || error)
@@ -1774,10 +1798,12 @@ const ServiceManagement = () => {
       const response = await updateServiceData(newService.subServiceId, hospitalId, updatedService) // imported from ProcedureManagementAPI
 
       if (response.success) {
-        showCustomToast('Procedure updated successfully!', 'success')
+        showCustomToast(`${response.message}` || 'Procedure updated successfully!', 'success')
         handleCloseFormModal()
 
         fetchProcedurePricing()
+      } else {
+        showCustomToast(`${response.message}`, 'error')
       }
     } catch (error) {
       console.error('Update failed:', error)
@@ -1797,9 +1823,13 @@ const ServiceManagement = () => {
     try {
       setDelLoading(true)
       const result = await deleteServiceData(serviceIdToDelete, hospitalId)
-      console.log('Service deleted:', result)
-      showCustomToast('Procedure deleted successfully!', 'success')
-      fetchProcedurePricing()
+      if (result.success) {
+        console.log('Service deleted:', result)
+        showCustomToast(`${result.message}` || 'Procedure deleted successfully!', 'success')
+        fetchProcedurePricing()
+      } else {
+        showCustomToast(`${result.message}`, 'error')
+      }
     } catch (error) {
       console.error('Error deleting Procedure:', error)
     } finally {

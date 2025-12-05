@@ -7,6 +7,7 @@ import { processFile } from '../Utills/fileUtils'
 import { UploadedPreview } from '../Utills/FileUpload'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { NGK_COLORS } from '../../../Constant/Themes'
+import { Row } from 'react-bootstrap'
 
 export default function PrizePostDetails({ form, setForm, onSubmit, userData }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
@@ -190,7 +191,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                 letterSpacing: 0.5,
               }}
             >
-              🎁 Claim Your Prize
+              Claim Your Prize
             </h3>
 
             {/* STEP 1 */}
@@ -302,70 +303,68 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             </div>
 
             {/* FOLLOW US */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 16,
-                marginBottom: 22,
-              }}
-            >
+            <Row className="g-3 mb-5">
               {/* LEFT BOX */}
-              <div
-                style={{
-                  flex: 1,
-                  background: '#fff1f9',
-                  padding: 18,
-                  borderRadius: 14,
-                  border: '1px solid #ffd4ea',
-                }}
-              >
-                <p
+              <CCol md={6} className="d-flex">
+                <div
+                  className="w-100"
                   style={{
-                    margin: 0,
-                    fontSize: 16,
-                    color: NGK_COLORS.primary,
-                    fontWeight: 700,
+                    background: '#fff1f9',
+                    padding: 18,
+                    borderRadius: 14,
+                    border: '1px solid #ffd4ea',
+                    display: 'flex',
+                    alignItems: 'center', // vertically center text
+                    justifyContent: 'center',
                   }}
                 >
-                  ⭐ Follow Us on Instagram
-                </p>
-              </div>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 16,
+                      color: NGK_COLORS.primary,
+                      fontWeight: 700,
+                    }}
+                  >
+                    ⭐ Follow Us on Instagram
+                  </p>
+                </div>
+              </CCol>
 
               {/* RIGHT BUTTON */}
-              <CButton
-                style={{
-                  flexShrink: 0,
-                  background: NGK_COLORS.primary,
-                  color: 'white',
-                  padding: '12px 18px',
-                  borderRadius: 12,
-                  fontWeight: '700',
-                  fontSize: 16,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  border: 'none',
-                  height: 54,
-                }}
-                onClick={() =>
-                  window.open('https://www.instagram.com/ngkderma', '_blank')
-                }
-              >
-                <img
-                  src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
+              <CCol md={6} className="d-flex">
+                <CButton
+                  className="w-100"
                   style={{
-                    width: 22,
-                    height: 22,
-                    backgroundColor: 'white',
-                    padding: 4,
-                    borderRadius: 5,
+                    background: NGK_COLORS.primary,
+                    color: 'white',
+                    padding: '12px 18px',
+                    borderRadius: 12,
+                    fontWeight: '700',
+                    fontSize: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    border: 'none',
+                    height: 54,
                   }}
-                />
-                Visit Instagram Profile
-              </CButton>
-            </div>
+                  onClick={() => window.open('https://www.instagram.com/ngkderma', '_blank')}
+                >
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      backgroundColor: 'white',
+                      padding: 4,
+                      borderRadius: 5,
+                    }}
+                  />
+                  Visit Instagram Profile
+                </CButton>
+              </CCol>
+            </Row>
 
             {/* STEP 3 */}
             <div style={{ marginBottom: 30 }}>

@@ -508,17 +508,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
           }}
         >
           {/* HEADER */}
-          <div className="header-container">
-            {!spinWhell ? (
-              <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
-            ) : !instagram ? (
-              <h4 className="m-0 fw-bold text-center w-100 gradient-text">Spin and Win</h4>
-            ) : (
-              ''
-            )}
-            {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
-            {/* <small className="sub-gradient-text">Registration</small> */}
-          </div>
 
           {/* SUCCESS MESSAGE */}
           <div>
@@ -644,106 +633,115 @@ export default function NGlowKartPatientRegistration_CoreUI() {
             ) : (
               <CForm onSubmit={handleSubmit}>
                 {isRegistration ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      alignContent: 'center',
-                      width: '100%',
-                      minHeight: '70vh',
-                      padding: '20px 0',
-                    }}
-                  >
+                  <>
+                    {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text"></h4> */}
+                    <div className="header-container">
+                      <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
+
+                      {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
+                      {/* <small className="sub-gradient-text">Registration</small> */}
+                    </div>
                     <div
                       style={{
-                        width: 360,
-                        textAlign: 'left',
-                        background: '#ffffff',
-                        padding: '28px 26px',
-                        borderRadius: 18,
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                        border: '1px solid #f4e7f9',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        alignContent: 'center',
+                        width: '100%',
+                        minHeight: '70vh',
+                        padding: '20px 0',
                       }}
                     >
-                      <CFormInput
-                        name="registraionCode"
-                        value={form.registraionCode}
-                        onChange={handleRefChange}
-                        placeholder="Enter Registration Code"
+                      <div
                         style={{
-                          borderRadius: 12,
-                          height: 45,
-                          marginTop: '15px',
-                          marginBottom: '25px',
-                          // textTransform: 'uppercase',
-                          transition: '0.25s',
-                          fontWeight: '500',
+                          width: 360,
+                          textAlign: 'left',
+                          background: '#ffffff',
+                          padding: '28px 26px',
+                          borderRadius: 18,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                          border: '1px solid #f4e7f9',
                         }}
-                      />
+                      >
+                        <CFormInput
+                          name="registraionCode"
+                          value={form.registraionCode}
+                          onChange={handleRefChange}
+                          placeholder="Enter Registration Code"
+                          style={{
+                            borderRadius: 12,
+                            height: 45,
+                            marginTop: '15px',
+                            marginBottom: '25px',
+                            border: '1px solid #e3e3e3',
+                            // textTransform: 'uppercase',
+                            transition: '0.25s',
+                            fontWeight: '500',
+                          }}
+                        />
 
-                      {/* Error message */}
-                      {error && (
+                        {/* Error message */}
+                        {error && (
+                          <p
+                            style={{
+                              color: '#ff2e85',
+                              fontSize: 13,
+                              fontWeight: 600,
+                              marginTop: 6,
+                              marginBottom: 0,
+                              textAlign: 'center',
+                            }}
+                          >
+                            {error}
+                          </p>
+                        )}
+
+                        <CButton
+                          type="button"
+                          color="primary"
+                          style={{
+                            marginTop: 18,
+                            width: '60%',
+                            borderRadius: 12,
+                            fontWeight: '600',
+                            fontSize: 16,
+                            padding: '12px 0',
+
+                            background: isRegistration
+                              ? 'linear-gradient(90deg, #D2025B, #A82E4C)'
+                              : '#c8c6d9',
+                            border: 'none',
+                            cursor: isRegistration ? 'pointer' : 'not-allowed',
+                            boxShadow: isRegistration ? '0 4px 12px rgba(106,90,224,0.35)' : 'none',
+                            transition: '0.25s',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            margin: '0 auto', // <-- This centers the button
+                          }}
+                          onClick={handleSubmitReferralCode}
+                          disabled={!isRegistration || verifyLoading}
+                        >
+                          {verifyLoading ? 'Verifying...' : 'Verify'}
+                        </CButton>
+
+                        <div className="my-2">
+                          <OnboardingStepsModal />
+                        </div>
+
                         <p
                           style={{
-                            color: '#ff2e85',
+                            marginTop: 10,
                             fontSize: 13,
-                            fontWeight: 600,
-                            marginTop: 6,
-                            marginBottom: 0,
                             textAlign: 'center',
+                            color: '#999',
                           }}
                         >
-                          {error}
+                          Provide valid registration details and get a free spin for a chance to win
+                          amazing prizes.
                         </p>
-                      )}
-
-                      <CButton
-                        type="button"
-                        color="primary"
-                        style={{
-                          marginTop: 18,
-                          width: '60%',
-                          borderRadius: 12,
-                          fontWeight: '600',
-                          fontSize: 16,
-                          padding: '12px 0',
-
-                          background: isRegistration
-                            ? 'linear-gradient(90deg, #D2025B, #A82E4C)'
-                            : '#c8c6d9',
-                          border: 'none',
-                          cursor: isRegistration ? 'pointer' : 'not-allowed',
-                          boxShadow: isRegistration ? '0 4px 12px rgba(106,90,224,0.35)' : 'none',
-                          transition: '0.25s',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          margin: '0 auto', // <-- This centers the button
-                        }}
-                        onClick={handleSubmitReferralCode}
-                        disabled={!isRegistration || verifyLoading}
-                      >
-                        {verifyLoading ? 'Verifying...' : 'Verify'}
-                      </CButton>
-
-                      <div className="my-2">
-                        <OnboardingStepsModal />
                       </div>
 
-                      <p
-                        style={{
-                          marginTop: 10,
-                          fontSize: 13,
-                          textAlign: 'center',
-                          color: '#999',
-                        }}
-                      >
-                        Provide valid registration details and get a free spin for a chance to win
-                        amazing prizes.
-                      </p>
-                    </div>
-
-                    {/* <RegistrationCodeCard
+                      {/* <RegistrationCodeCard
                       form={form}
                       error={error}
                       isRegistration={isRegistration}
@@ -751,300 +749,208 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       handleRefChange={handleRefChange}
                       handleSubmitReferralCode={handleSubmitReferralCode}
                     /> */}
-                  </div>
-                ) : (
-                  <CRow className="g-4 mt-2">
-                    {/* Full Name + Mobile */}
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">
-                        Full Name (As Per Aadhaar Card) <span className="text-danger">*</span>
-                      </CFormLabel>
-                      <CFormInput
-                        name="fullName"
-                        value={form.fullName}
-                        onChange={handleChange}
-                        placeholder="Enter Full Name"
-                      />
-                      {errors.fullName && (
-                        <p
-                          style={{
-                            color: '#ff2e85',
-                          }}
-                        >
-                          {errors.fullName}
-                        </p>
-                      )}
-                    </CCol>
-
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">
-                        Mobile Number <span className="text-danger">*</span>
-                      </CFormLabel>
-                      <CFormInput
-                        name="mobile"
-                        placeholder="Enter Mobile Number"
-                        maxLength={10}
-                        inputMode="numeric"
-                        value={form.mobile}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '')
-                          handleChange({ target: { name: 'mobile', value } })
-                        }}
-                      />
-                      {errors.mobile && (
-                        <p
-                          style={{
-                            color: '#ff2e85',
-                          }}
-                        >
-                          {errors.mobile}
-                        </p>
-                      )}
-                    </CCol>
-
-                    {/* DOB + City */}
-
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">Gender</CFormLabel>
-                      <CFormSelect name="gender" value={form.gender} onChange={handleChange}>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Others">Others</option>
-                      </CFormSelect>
-
-                      {errors.gender && <p style={{ color: '#ff2e85' }}>{errors.gender}</p>}
-                    </CCol>
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">
-                        Date of birth <span className="text-danger">*</span>
-                      </CFormLabel>
-
-                      <CFormInput
-                        type="date"
-                        name="dob"
-                        max={eighteenYearsAgoISO} // 🚀 Max date = 18 years old
-                        value={form.dob}
-                        onFocus={(e) => {
-                          const input = e.target
-                          input.value = eighteenYearsAgoISO // 🚀 Calendar opens showing 18yr old
-                          input.showPicker?.()
-                          setTimeout(() => {
-                            if (!form.dob) input.value = ''
-                          }, 0)
-                        }}
-                        onChange={handleChange}
-                      />
-
-                      {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
-                    </CCol>
-
-                    {/* Email + Blood */}
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">Email (Optional)</CFormLabel>
-                      <CFormInput
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        placeholder="Enter Email"
-                      />
-                    </CCol>
-
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">Blood Group (Optional)</CFormLabel>
-                      <CFormSelect name="blood" value={form.blood} onChange={handleChange}>
-                        <option value="">Select Blood Group</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                      </CFormSelect>
-                    </CCol>
-
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">
-                        City <span className="text-danger">*</span>
-                      </CFormLabel>
-                      <CFormInput
-                        name="city"
-                        value={form.city}
-                        onChange={handleChange}
-                        placeholder="Enter City"
-                      />
-                      {errors.city && (
-                        <p
-                          style={{
-                            color: '#ff2e85',
-                          }}
-                        >
-                          {errors.city}
-                        </p>
-                      )}
-                    </CCol>
-                    <CCol md={6}>
-                      <CFormLabel className="label-gradient">
-                        Aadhaar Card Number <span className="text-danger">*</span>
-                      </CFormLabel>
-
-                      <div className="d-flex align-items-center" style={{ gap: '10px' }}>
-                        <CFormInput
-                          name="Aadhar"
-                          inputMode="numeric"
-                          maxLength={12}
-                          value={form.Aadhar}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '') // Only digits
-                            handleChange({ target: { name: 'Aadhar', value } })
-
-                            // If user typed all 12 digits
-                            if (value.length === 12) {
-                              setErrors((prev) => ({ ...prev, Aadhar: null }))
-                              setAadharVerified(true)
-                            } else {
-                              setAadharVerified(false)
-
-                              // Show error only when user enters something but not 12 digits
-                              if (value.length > 0 && value.length < 12) {
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  Aadhar: 'Aadhaar must be exactly 12 digits',
-                                }))
-                              } else {
-                                setErrors((prev) => ({ ...prev, Aadhar: null }))
-                              }
-                            }
-                          }}
-                          placeholder="Enter 12-digit Aadhaar number"
-                        />
-                      </div>
-                      {errors.Aadhar && (
-                        <p
-                          style={{
-                            color: '#ff2e85',
-                          }}
-                        >
-                          {errors.Aadhar}
-                        </p>
-                      )}
-
-                      {/* Error */}
-                    </CCol>
-                    <CCol md={12} style={{ marginTop: '20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        {/* Checkbox */}
-                        <input
-                          type="checkbox"
-                          checked={form.userConsent}
-                          disabled={form.userConsent}
-                          onChange={(e) => {
-                            setForm({ ...form, userConsent: e.target.checked })
-
-                            if (e.target.checked) {
-                              setErrors((prev) => ({ ...prev, userConsent: '' }))
-                              setServiceStatusError('')
-                            }
-                          }}
-                          style={{
-                            width: '15px',
-                            height: '15px',
-                            accentColor: NGK_COLORS.primary, // Checkbox color
-                            cursor: 'pointer',
-                            marginTop: '3px',
-                          }}
-                        />
-
-                        {/* Text with clickable link */}
-                        <div style={{ fontSize: '16px', color: '#555' }}>
-                          I agree to the{' '}
-                          <span
-                            style={{
-                              color: NGK_COLORS.primary,
-                              textDecoration: 'underline',
-                              cursor: 'pointer',
-                              fontWeight: 600,
-                            }}
-                            onClick={() => setShowConsentModal(true)}
-                          >
-                            User Consent Disclaimer
-                          </span>
-                          .
-                        </div>
-                      </div>
-
-                      {/* Error */}
-                      {errors.userConsent && (
-                        <p style={{ color: NGK_COLORS.primary, marginTop: '5px' }}>
-                          {errors.userConsent}
-                        </p>
-                      )}
-                    </CCol>
-
-                    <div
-                      className="d-flex align-items-start  "
-                      style={{ gap: '10px', marginTop: '10px' }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.privacyConsent}
-                        disabled={form.privacyConsent}
-                        onChange={(e) => {
-                          setForm({ ...form, privacyConsent: e.target.checked })
-                          if (e.target.checked) {
-                            setErrors((prev) => ({ ...prev, privacyConsent: '' }))
-                            setServiceStatusError('')
-                          }
-                        }}
-                        style={{
-                          width: '15px',
-                          height: '15px',
-                          accentColor: NGK_COLORS.primary, // Checkbox color
-                          cursor: 'pointer',
-                          marginTop: '3px',
-                        }}
-                      />
-
-                      <label style={{ fontSize: '16px', color: '#555', cursor: 'pointer' }}>
-                        I have read understood{' '}
-                        <a
-                          href="/pdf/privacy-policy.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: NGK_COLORS.primary,
-                            textDecoration: 'underline',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Privacy Policy
-                        </a>
-                      </label>
                     </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="header-container">
+                      <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
 
-                    {/* Error Message */}
-                    {errors.privacyConsent && (
-                      <p style={{ color: '#ff2e85', fontSize: '13px', marginLeft: '28px' }}>
-                        {errors.privacyConsent}
-                      </p>
-                    )}
+                      {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
+                      {/* <small className="sub-gradient-text">Registration</small> */}
+                    </div>
+                    <CRow className="g-4 mt-2">
+                      {/* Full Name + Mobile */}
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                          Full Name (As Per Aadhaar Card) <span className="text-danger">*</span>
+                        </CFormLabel>
+                        <CFormInput
+                          name="fullName"
+                          value={form.fullName}
+                          onChange={handleChange}
+                          placeholder="Enter Full Name"
+                        />
+                        {errors.fullName && (
+                          <p
+                            style={{
+                              color: '#ff2e85',
+                            }}
+                          >
+                            {errors.fullName}
+                          </p>
+                        )}
+                      </CCol>
 
-                    <CCol md={12}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                          Mobile Number <span className="text-danger">*</span>
+                        </CFormLabel>
+                        <CFormInput
+                          name="mobile"
+                          placeholder="Enter Mobile Number"
+                          maxLength={10}
+                          inputMode="numeric"
+                          value={form.mobile}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '')
+                            handleChange({ target: { name: 'mobile', value } })
+                          }}
+                        />
+                        {errors.mobile && (
+                          <p
+                            style={{
+                              color: '#ff2e85',
+                            }}
+                          >
+                            {errors.mobile}
+                          </p>
+                        )}
+                      </CCol>
+
+                      {/* DOB + City */}
+
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>Gender</CFormLabel>
+                        <CFormSelect name="gender" value={form.gender} onChange={handleChange}>
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Others">Others</option>
+                        </CFormSelect>
+
+                        {errors.gender && <p style={{ color: '#ff2e85' }}>{errors.gender}</p>}
+                      </CCol>
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                          Date of birth <span className="text-danger">*</span>
+                        </CFormLabel>
+
+                        <CFormInput
+                          type="date"
+                          name="dob"
+                          max={eighteenYearsAgoISO} // 🚀 Max date = 18 years old
+                          value={form.dob}
+                          onFocus={(e) => {
+                            const input = e.target
+                            input.value = eighteenYearsAgoISO // 🚀 Calendar opens showing 18yr old
+                            input.showPicker?.()
+                            setTimeout(() => {
+                              if (!form.dob) input.value = ''
+                            }, 0)
+                          }}
+                          onChange={handleChange}
+                        />
+
+                        {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
+                      </CCol>
+
+                      {/* Email + Blood */}
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>Email (Optional)</CFormLabel>
+                        <CFormInput
+                          name="email"
+                          value={form.email}
+                          onChange={handleChange}
+                          placeholder="Enter Email"
+                        />
+                      </CCol>
+
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>Blood Group (Optional)</CFormLabel>
+                        <CFormSelect name="blood" value={form.blood} onChange={handleChange}>
+                          <option value="">Select Blood Group</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                        </CFormSelect>
+                      </CCol>
+
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                          City <span className="text-danger">*</span>
+                        </CFormLabel>
+                        <CFormInput
+                          name="city"
+                          value={form.city}
+                          onChange={handleChange}
+                          placeholder="Enter City"
+                        />
+                        {errors.city && (
+                          <p
+                            style={{
+                              color: '#ff2e85',
+                            }}
+                          >
+                            {errors.city}
+                          </p>
+                        )}
+                      </CCol>
+                      <CCol md={6}>
+                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                          Aadhaar Card Number <span className="text-danger">*</span>
+                        </CFormLabel>
+
+                        <div className="d-flex align-items-center" style={{ gap: '10px' }}>
+                          <CFormInput
+                            name="Aadhar"
+                            inputMode="numeric"
+                            maxLength={12}
+                            value={form.Aadhar}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '') // Only digits
+                              handleChange({ target: { name: 'Aadhar', value } })
+
+                              // If user typed all 12 digits
+                              if (value.length === 12) {
+                                setErrors((prev) => ({ ...prev, Aadhar: null }))
+                                setAadharVerified(true)
+                              } else {
+                                setAadharVerified(false)
+
+                                // Show error only when user enters something but not 12 digits
+                                if (value.length > 0 && value.length < 12) {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    Aadhar: 'Aadhaar must be exactly 12 digits',
+                                  }))
+                                } else {
+                                  setErrors((prev) => ({ ...prev, Aadhar: null }))
+                                }
+                              }
+                            }}
+                            placeholder="Enter 12-digit Aadhaar number"
+                          />
+                        </div>
+                        {errors.Aadhar && (
+                          <p
+                            style={{
+                              color: '#ff2e85',
+                            }}
+                          >
+                            {errors.Aadhar}
+                          </p>
+                        )}
+
+                        {/* Error */}
+                      </CCol>
+                      <CCol md={12} style={{ marginTop: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                          {/* Checkbox */}
                           <input
                             type="checkbox"
-                            checked={form.aadhaarConsent}
-                            disabled={form.aadhaarConsent}
+                            checked={form.userConsent}
+                            disabled={form.userConsent}
                             onChange={(e) => {
-                              setForm({ ...form, aadhaarConsent: e.target.checked })
+                              setForm({ ...form, userConsent: e.target.checked })
 
-                              // remove error when checked
                               if (e.target.checked) {
-                                setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
+                                setErrors((prev) => ({ ...prev, userConsent: '' }))
                                 setServiceStatusError('')
                               }
                             }}
@@ -1057,85 +963,185 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             }}
                           />
 
-                          <div style={{ fontSize: '15px', color: '#555' }}>
-                            <strong>Aadhaar Consent:</strong>
-                            <p style={{ marginTop: '6px' }} className="text-muted">
-                              <strong>{form.fullName}</strong> I hereby give explicit and voluntary
-                              consent to <strong>Udit CosmeTech Private Limited</strong> to collect
-                              and securely process my Aadhaar number for identity verification and
-                              duplicate-account prevention purposes on Neeha’s Glow Kart. I have
-                              read and understood the{' '}
-                              <span
-                                className="aadhaar-link"
-                                onClick={() => setShowAadhaarModal(true)}
-                              >
-                                Aadhaar Consent Notice.
-                              </span>
-                            </p>
+                          {/* Text with clickable link */}
+                          <div style={{ fontSize: '16px', color: '#555' }}>
+                            I agree to the{' '}
+                            <span
+                              style={{
+                                color: NGK_COLORS.primary,
+                                textDecoration: 'underline',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                              }}
+                              onClick={() => setShowConsentModal(true)}
+                            >
+                              User Consent Disclaimer
+                            </span>
+                            .
                           </div>
                         </div>
 
-                        {/* ERROR MESSAGE */}
-                        {errors.aadhaarConsent && (
-                          <p style={{ color: '#ff2e85', fontSize: '12px', marginTop: '4px' }}>
-                            {errors.aadhaarConsent}
+                        {/* Error */}
+                        {errors.userConsent && (
+                          <p style={{ color: NGK_COLORS.primary, marginTop: '5px' }}>
+                            {errors.userConsent}
                           </p>
                         )}
-                      </div>
-                    </CCol>
-                    {serviceStatusError && (
-                      <p style={{ color: '#ff2e85', marginTop: '5px', fontSize: '14px' }}>
-                        {serviceStatusError}
-                      </p>
-                    )}
-
-                    {/* Consent */}
-                    <CCol md={12}>
-                      <div className="d-flex justify-content-between">
-                        <CFormLabel>
-                          Have you taken any dermatology related service [Botx, PRP, Laser, etc...]
-                          in the last 12 months?
-                        </CFormLabel>
-                      </div>
+                      </CCol>
 
                       <div
-                        style={{ display: 'flex', gap: '20px' }}
-                        className="d-flex justify-content-end"
+                        className="d-flex align-items-start  "
+                        style={{ gap: '10px', marginTop: '10px' }}
                       >
-                        <CButton
-                          style={{
-                            backgroundColor:
-                              form.serviceStatus === '1' ? NGK_COLORS.primary : '#e4e4e4',
-                            color: form.serviceStatus === '1' ? '#fff' : '#444',
-                            border: 'none',
-                            padding: '8px 18px',
-                            borderRadius: '10px',
-                            fontWeight: 600,
-                            transition: '0.25s',
+                        <input
+                          type="checkbox"
+                          checked={form.privacyConsent}
+                          disabled={form.privacyConsent}
+                          onChange={(e) => {
+                            setForm({ ...form, privacyConsent: e.target.checked })
+                            if (e.target.checked) {
+                              setErrors((prev) => ({ ...prev, privacyConsent: '' }))
+                              setServiceStatusError('')
+                            }
                           }}
-                          onClick={() => handleServiceStatusSelect('1')}
-                        >
-                          Yes
-                        </CButton>
+                          style={{
+                            width: '15px',
+                            height: '15px',
+                            accentColor: NGK_COLORS.primary, // Checkbox color
+                            cursor: 'pointer',
+                            marginTop: '3px',
+                          }}
+                        />
 
-                        <CButton
-                          style={{
-                            backgroundColor:
-                              form.serviceStatus === '2' ? NGK_COLORS.primary : '#e4e4e4',
-                            color: form.serviceStatus === '2' ? '#fff' : '#444',
-                            border: 'none',
-                            padding: '8px 18px',
-                            borderRadius: '10px',
-                            fontWeight: 600,
-                            transition: '0.25s',
-                          }}
-                          onClick={() => handleServiceStatusSelect('2')}
-                        >
-                          No, Interested
-                        </CButton>
+                        <label style={{ fontSize: '16px', color: '#555', cursor: 'pointer' }}>
+                          I have read understood{' '}
+                          <a
+                            href="/pdf/privacy-policy.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: NGK_COLORS.primary,
+                              textDecoration: 'underline',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Privacy Policy
+                          </a>
+                        </label>
                       </div>
 
-                      {/* <a
+                      {/* Error Message */}
+                      {errors.privacyConsent && (
+                        <p style={{ color: '#ff2e85', fontSize: '13px', marginLeft: '28px' }}>
+                          {errors.privacyConsent}
+                        </p>
+                      )}
+
+                      <CCol md={12}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                            <input
+                              type="checkbox"
+                              checked={form.aadhaarConsent}
+                              disabled={form.aadhaarConsent}
+                              onChange={(e) => {
+                                setForm({ ...form, aadhaarConsent: e.target.checked })
+
+                                // remove error when checked
+                                if (e.target.checked) {
+                                  setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
+                                  setServiceStatusError('')
+                                }
+                              }}
+                              style={{
+                                width: '15px',
+                                height: '15px',
+                                accentColor: NGK_COLORS.primary, // Checkbox color
+                                cursor: 'pointer',
+                                marginTop: '3px',
+                              }}
+                            />
+
+                            <div style={{ fontSize: '15px', color: '#555' }}>
+                              <strong>Aadhaar Consent:</strong>
+                              <p style={{ marginTop: '6px' }} className="text-muted">
+                                <strong>{form.fullName}</strong> I hereby give explicit and
+                                voluntary consent to <strong>Udit CosmeTech Private Limited</strong>{' '}
+                                to collect and securely process my Aadhaar number for identity
+                                verification and duplicate-account prevention purposes on Neeha’s
+                                Glow Kart. I have read and understood the{' '}
+                                <span
+                                  className="aadhaar-link"
+                                  onClick={() => setShowAadhaarModal(true)}
+                                >
+                                  Aadhaar Consent Notice.
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* ERROR MESSAGE */}
+                          {errors.aadhaarConsent && (
+                            <p style={{ color: '#ff2e85', fontSize: '12px', marginTop: '4px' }}>
+                              {errors.aadhaarConsent}
+                            </p>
+                          )}
+                        </div>
+                      </CCol>
+                      {serviceStatusError && (
+                        <p style={{ color: '#ff2e85', marginTop: '5px', fontSize: '14px' }}>
+                          {serviceStatusError}
+                        </p>
+                      )}
+
+                      {/* Consent */}
+                      <CCol md={12}>
+                        <div className="d-flex justify-content-between">
+                          <CFormLabel>
+                            Have you taken any dermatology related service [Botx, PRP, Laser,
+                            etc...] in the last 12 months?
+                          </CFormLabel>
+                        </div>
+
+                        <div
+                          style={{ display: 'flex', gap: '20px' }}
+                          className="d-flex justify-content-end"
+                        >
+                          <CButton
+                            style={{
+                              backgroundColor:
+                                form.serviceStatus === '1' ? NGK_COLORS.primary : '#e4e4e4',
+                              color: form.serviceStatus === '1' ? '#fff' : '#444',
+                              border: 'none',
+                              padding: '8px 18px',
+                              borderRadius: '10px',
+                              fontWeight: 600,
+                              transition: '0.25s',
+                            }}
+                            onClick={() => handleServiceStatusSelect('1')}
+                          >
+                            Yes
+                          </CButton>
+
+                          <CButton
+                            style={{
+                              backgroundColor:
+                                form.serviceStatus === '2' ? NGK_COLORS.primary : '#e4e4e4',
+                              color: form.serviceStatus === '2' ? '#fff' : '#444',
+                              border: 'none',
+                              padding: '8px 18px',
+                              borderRadius: '10px',
+                              fontWeight: 600,
+                              transition: '0.25s',
+                            }}
+                            onClick={() => handleServiceStatusSelect('2')}
+                          >
+                            No, Interested
+                          </CButton>
+                        </div>
+
+                        {/* <a
                         href="/pdf/privacy-policy.pdf"
                         download="Nehas_GlowKart_Privacy_Policy.pdf"
                         style={{
@@ -1157,303 +1163,306 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         />
                         Download Privacy Policy
                       </a> */}
-                    </CCol>
+                      </CCol>
 
-                    {/* Conditional fields */}
-                    {form.serviceStatus === '1' && (
-                      <>
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Clinic Name <span className="text-danger">*</span>
-                          </CFormLabel>
-                          <CFormInput
-                            name="clinicName"
-                            placeholder="Enter Clinic Name"
-                            value={form.clinicName}
-                            onChange={handleChange}
-                          />
-                          {errors.clinicName && (
-                            <p
-                              style={{
-                                color: '#ff2e85',
-                              }}
-                            >
-                              {errors.clinicName}
-                            </p>
-                          )}
-                        </CCol>
-
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Clinic Area Pincode <span className="text-danger">*</span>
-                          </CFormLabel>
-                          <CFormInput
-                            inputMode="numeric"
-                            maxLength={6}
-                            name="clinicCityArea"
-                            placeholder="Enter Clinic City/Area pincode"
-                            value={form.clinicCityArea}
-                            onChange={handleChange}
-                          />
-                          {errors.clinicCityArea && (
-                            <p
-                              style={{
-                                color: '#ff2e85',
-                              }}
-                            >
-                              {errors.clinicCityArea}
-                            </p>
-                          )}
-                        </CCol>
-
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Last Visit Date <span className="text-danger">*</span>
-                          </CFormLabel>
-
-                          <CFormInput
-                            type="date"
-                            name="dateOfLastVisit"
-                            max={maxToday} // today
-                            min={minDate12Months} // today - 1 year
-                            value={form.dateOfLastVisit}
-                            onFocus={(e) => {
-                              const input = e.target
-                              input.value = maxToday // show today's date on picker open
-                              input.showPicker?.()
-                              setTimeout(() => {
-                                if (!form.dateOfLastVisit) input.value = ''
-                              }, 0)
-                            }}
-                            onChange={handleChange}
-                          />
-
-                          {errors.dateOfLastVisit && (
-                            <p style={{ color: '#ff2e85' }}>{errors.dateOfLastVisit}</p>
-                          )}
-                        </CCol>
-
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Service Availed <span className="text-danger">*</span>
-                          </CFormLabel>
-                          <Select
-                            options={procedureOptions}
-                            isMulti
-                            placeholder="Select services received..."
-                            onChange={handleProcedureChange}
-                            styles={selectStyles}
-                            value={procedureOptions.filter(
-                              (opt) =>
-                                form.serviceType?.includes(opt.label) || // actual label
-                                (opt.value === 'other' && form.serviceType.includes('other')),
-                            )}
-                          />
-
-                          {errors.serviceType && (
-                            <p
-                              style={{
-                                color: '#ff2e85',
-                              }}
-                            >
-                              {errors.serviceType}
-                            </p>
-                          )}
-                          {/* Other input */}
-                          {showOtherInput && (
-                            <div style={{ marginTop: 10 }}>
-                              <CFormLabel className="label-gradient">
-                                Specify Other Service
-                              </CFormLabel>
-                              <CFormInput
-                                placeholder="Enter Service Name"
-                                value={form.otherServiceName || ''}
-                                onChange={(e) =>
-                                  setForm((prev) => ({ ...prev, otherServiceName: e.target.value }))
-                                }
-                              />
-                            </div>
-                          )}
-                        </CCol>
-                        <div>
-                          <CFormLabel className="label-gradient">
-                            Upload your last visit receipt <span className="text-danger">*</span>
-                          </CFormLabel>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              gap: '10px',
-                              alignContent: 'center',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <label
-                              style={{
-                                border: `2px dashed ${NGK_COLORS.primaryLight}`,
-                                borderRadius: 12,
-                                padding: '18px',
-                                width: '100%',
-                                textAlign: 'center',
-                                display: 'block',
-                                cursor: 'pointer',
-                                background: NGK_COLORS.primarySoft,
-                                color: NGK_COLORS.primary,
-                                fontWeight: '500',
-                                fontSize: 15,
-                              }}
-                            >
-                              📁 Tap to upload receipt
-                              <input
-                                type="file"
-                                accept="image/*, application/pdf"
-                                onChange={async (e) => {
-                                  const file = e.target.files[0]
-                                  if (!file) return
-
-                                  try {
-                                    const base64 = await processFile(file)
-                                    updateForm('prescription', base64)
-                                  } catch (err) {
-                                    alert(err.message)
-                                    e.target.value = ''
-                                  }
+                      {/* Conditional fields */}
+                      {form.serviceStatus === '1' && (
+                        <>
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Clinic Name <span className="text-danger">*</span>
+                            </CFormLabel>
+                            <CFormInput
+                              name="clinicName"
+                              placeholder="Enter Clinic Name"
+                              value={form.clinicName}
+                              onChange={handleChange}
+                            />
+                            {errors.clinicName && (
+                              <p
+                                style={{
+                                  color: '#ff2e85',
                                 }}
-                                style={{ display: 'none' }}
-                              />
-                            </label>
-                            <UploadedPreview src={form.prescription} />
-                          </div>
-                        </div>
-                        <small style={{ color: '#888', display: 'block' }}>
-                          Accepted formats: PDF, JPG, JPEG, PNG
-                        </small>
+                              >
+                                {errors.clinicName}
+                              </p>
+                            )}
+                          </CCol>
 
-                        {errors.prescription && (
-                          <div
-                            style={{
-                              color: '#ff2e85',
-                            }}
-                          >
-                            {errors.prescription}
-                          </div>
-                        )}
-                      </>
-                    )}
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Clinic Area Pincode <span className="text-danger">*</span>
+                            </CFormLabel>
+                            <CFormInput
+                              inputMode="numeric"
+                              maxLength={6}
+                              name="clinicCityArea"
+                              placeholder="Enter Clinic City/Area pincode"
+                              value={form.clinicCityArea}
+                              onChange={handleChange}
+                            />
+                            {errors.clinicCityArea && (
+                              <p
+                                style={{
+                                  color: '#ff2e85',
+                                }}
+                              >
+                                {errors.clinicCityArea}
+                              </p>
+                            )}
+                          </CCol>
 
-                    {form.serviceStatus === '2' && (
-                      <>
-                        {/* Category Dropdown */}
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Select Category <span className="text-danger">*</span>
-                          </CFormLabel>
-                          <CFormSelect
-                            name="interestCategory"
-                            value={form.interestCategory}
-                            onChange={handleChange}
-                          >
-                            <option value="">Select...</option>
-                            <option value="Skin">Skin</option>
-                            <option value="Hair">Hair</option>
-                            <option value="Laser">Laser</option>
-                            <option value="Body">Body</option>
-                            <option value="Other">Others</option>
-                          </CFormSelect>
-                          {errors.interestCategory && (
-                            <p
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Last Visit Date <span className="text-danger">*</span>
+                            </CFormLabel>
+
+                            <CFormInput
+                              type="date"
+                              name="dateOfLastVisit"
+                              max={maxToday} // today
+                              min={minDate12Months} // today - 1 year
+                              value={form.dateOfLastVisit}
+                              onFocus={(e) => {
+                                const input = e.target
+                                input.value = maxToday // show today's date on picker open
+                                input.showPicker?.()
+                                setTimeout(() => {
+                                  if (!form.dateOfLastVisit) input.value = ''
+                                }, 0)
+                              }}
+                              onChange={handleChange}
+                            />
+
+                            {errors.dateOfLastVisit && (
+                              <p style={{ color: '#ff2e85' }}>{errors.dateOfLastVisit}</p>
+                            )}
+                          </CCol>
+
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Service Availed <span className="text-danger">*</span>
+                            </CFormLabel>
+                            <Select
+                              options={procedureOptions}
+                              isMulti
+                              placeholder="Select services received..."
+                              onChange={handleProcedureChange}
+                              styles={selectStyles}
+                              value={procedureOptions.filter(
+                                (opt) =>
+                                  form.serviceType?.includes(opt.label) || // actual label
+                                  (opt.value === 'other' && form.serviceType.includes('other')),
+                              )}
+                            />
+
+                            {errors.serviceType && (
+                              <p
+                                style={{
+                                  color: '#ff2e85',
+                                }}
+                              >
+                                {errors.serviceType}
+                              </p>
+                            )}
+                            {/* Other input */}
+                            {showOtherInput && (
+                              <div style={{ marginTop: 10 }}>
+                                <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                                  Specify Other Service
+                                </CFormLabel>
+                                <CFormInput
+                                  placeholder="Enter Service Name"
+                                  value={form.otherServiceName || ''}
+                                  onChange={(e) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      otherServiceName: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+                            )}
+                          </CCol>
+                          <div>
+                            <CFormLabel className="label-gradient " style={{color:NGK_COLORS.primary}}>
+                              Upload your last visit receipt <span className="text-danger">*</span>
+                            </CFormLabel>
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                gap: '10px',
+                                alignContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <label
+                                style={{
+                                  border: `2px dashed ${NGK_COLORS.primaryLight}`,
+                                  borderRadius: 12,
+                                  padding: '18px',
+                                  width: '100%',
+                                  textAlign: 'center',
+                                  display: 'block',
+                                  cursor: 'pointer',
+                                  // background: NGK_COLORS.primarySoft,
+                                  color: NGK_COLORS.primary,
+                                  fontWeight: '500',
+                                  fontSize: 15,
+                                }}
+                              >
+                                📁 Tap to upload receipt
+                                <input
+                                  type="file"
+                                  accept="image/*, application/pdf"
+                                  onChange={async (e) => {
+                                    const file = e.target.files[0]
+                                    if (!file) return
+
+                                    try {
+                                      const base64 = await processFile(file)
+                                      updateForm('prescription', base64)
+                                    } catch (err) {
+                                      alert(err.message)
+                                      e.target.value = ''
+                                    }
+                                  }}
+                                  style={{ display: 'none' }}
+                                />
+                              </label>
+                              <UploadedPreview src={form.prescription} />
+                            </div>
+                          </div>
+                          <small style={{ color: '#888', display: 'block' }}>
+                            Accepted formats: PDF, JPG, JPEG, PNG
+                          </small>
+
+                          {errors.prescription && (
+                            <div
                               style={{
                                 color: '#ff2e85',
                               }}
                             >
-                              {errors.interestCategory}
-                            </p>
-                          )}
-                        </CCol>
-
-                        {/* Problem or Procedure */}
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Your Concern / Procedure <span className="text-danger">*</span>
-                          </CFormLabel>
-
-                          <Select
-                            options={[
-                              // remove any existing "Others" by checking label
-                              ...procedureOptions.filter(
-                                (op) => op.label.toLowerCase() !== 'others',
-                              ),
-                              { value: 'other', label: 'Others' }, // add one clean version
-                            ]}
-                            isMulti
-                            placeholder="your concerns/procedures..."
-                            value={[
-                              ...procedureOptions.filter((opt) =>
-                                form.problemDescription?.includes(opt.label),
-                              ),
-                              ...(form.problemDescription?.includes('other')
-                                ? [{ value: 'other', label: 'Others' }]
-                                : []),
-                            ]}
-                            onChange={(selected) => {
-                              const labels = selected.map((item) =>
-                                item.value === 'other' ? 'other' : item.label,
-                              )
-
-                              setForm((prev) => ({ ...prev, problemDescription: labels }))
-                              setErrors((prev) => ({ ...prev, problemDescription: '' }))
-                            }}
-                            styles={selectStyles}
-                          />
-
-                          {errors.problemDescription && (
-                            <p style={{ color: '#ff2e85' }}>{errors.problemDescription}</p>
-                          )}
-
-                          {/* Show Other input */}
-                          {form.problemDescription?.includes('other') && (
-                            <div style={{ marginTop: 10 }}>
-                              <CFormLabel className="label-gradient">
-                                Specify Other Concern
-                              </CFormLabel>
-                              <CFormInput
-                                placeholder="Enter your concern"
-                                value={form.otherServiceName}
-                                onChange={(e) =>
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    otherServiceName: e.target.value,
-                                  }))
-                                }
-                              />
+                              {errors.prescription}
                             </div>
                           )}
-                        </CCol>
+                        </>
+                      )}
 
-                        {/* Skin Tone */}
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Your Skin Tone <span className="text-danger">*</span>
-                          </CFormLabel>
-                          <CFormInput
-                            name="skinTone"
-                            placeholder="Eg: Medium, Dusky, Fair..."
-                            value={form.skinTone}
-                            onChange={handleChange}
-                          />
-                          {errors.skinTone && (
-                            <p
-                              style={{
-                                color: '#ff2e85',
-                              }}
+                      {form.serviceStatus === '2' && (
+                        <>
+                          {/* Category Dropdown */}
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Select Category <span className="text-danger">*</span>
+                            </CFormLabel>
+                            <CFormSelect
+                              name="interestCategory"
+                              value={form.interestCategory}
+                              onChange={handleChange}
                             >
-                              {errors.skinTone}
-                            </p>
-                          )}
-                        </CCol>
+                              <option value="">Select...</option>
+                              <option value="Skin">Skin</option>
+                              <option value="Hair">Hair</option>
+                              <option value="Laser">Laser</option>
+                              <option value="Body">Body</option>
+                              <option value="Other">Others</option>
+                            </CFormSelect>
+                            {errors.interestCategory && (
+                              <p
+                                style={{
+                                  color: '#ff2e85',
+                                }}
+                              >
+                                {errors.interestCategory}
+                              </p>
+                            )}
+                          </CCol>
 
-                        {/* Upload Optional Photo */}
-                        {/* <CCol md={6}>
+                          {/* Problem or Procedure */}
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Your Concern / Procedure <span className="text-danger">*</span>
+                            </CFormLabel>
+
+                            <Select
+                              options={[
+                                // remove any existing "Others" by checking label
+                                ...procedureOptions.filter(
+                                  (op) => op.label.toLowerCase() !== 'others',
+                                ),
+                                { value: 'other', label: 'Others' }, // add one clean version
+                              ]}
+                              isMulti
+                              placeholder="your concerns/procedures..."
+                              value={[
+                                ...procedureOptions.filter((opt) =>
+                                  form.problemDescription?.includes(opt.label),
+                                ),
+                                ...(form.problemDescription?.includes('other')
+                                  ? [{ value: 'other', label: 'Others' }]
+                                  : []),
+                              ]}
+                              onChange={(selected) => {
+                                const labels = selected.map((item) =>
+                                  item.value === 'other' ? 'other' : item.label,
+                                )
+
+                                setForm((prev) => ({ ...prev, problemDescription: labels }))
+                                setErrors((prev) => ({ ...prev, problemDescription: '' }))
+                              }}
+                              styles={selectStyles}
+                            />
+
+                            {errors.problemDescription && (
+                              <p style={{ color: '#ff2e85' }}>{errors.problemDescription}</p>
+                            )}
+
+                            {/* Show Other input */}
+                            {form.problemDescription?.includes('other') && (
+                              <div style={{ marginTop: 10 }}>
+                                <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                                  Specify Other Concern
+                                </CFormLabel>
+                                <CFormInput
+                                  placeholder="Enter your concern"
+                                  value={form.otherServiceName}
+                                  onChange={(e) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      otherServiceName: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+                            )}
+                          </CCol>
+
+                          {/* Skin Tone */}
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Your Skin Tone <span className="text-danger">*</span>
+                            </CFormLabel>
+                            <CFormInput
+                              name="skinTone"
+                              placeholder="Eg: Medium, Dusky, Fair..."
+                              value={form.skinTone}
+                              onChange={handleChange}
+                            />
+                            {errors.skinTone && (
+                              <p
+                                style={{
+                                  color: '#ff2e85',
+                                }}
+                              >
+                                {errors.skinTone}
+                              </p>
+                            )}
+                          </CCol>
+
+                          {/* Upload Optional Photo */}
+                          {/* <CCol md={6}>
                           <CFormLabel>Upload Photo (Optional)</CFormLabel>
                           <input
                             type="file"
@@ -1468,86 +1477,87 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           {form.samplePhoto && <UploadedPreview src={form.samplePhoto} />}
                         </CCol> */}
 
-                        <CCol md={6}>
-                          <CFormLabel className="label-gradient">
-                            Upload Photo (Optional)
-                          </CFormLabel>
-                          <div
-                            md={6}
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              gap: '10px',
-                              alignContent: 'center',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <label
-                              style={{
-                                border: '2px dashed #ff95c9',
-                                borderRadius: 12,
-                                padding: '18px',
-                                width: '100%',
-                                textAlign: 'center',
-                                display: 'block',
-                                cursor: 'pointer',
-                                background: '#fff8fc',
-                                color: '#ff2e85',
-                                fontWeight: '500',
-                                fontSize: 15,
-                              }}
-                            >
-                              📁 Upload Photo
-                              <input
-                                type="file"
-                                accept="image/*, application/pdf"
-                                onChange={async (e) => {
-                                  const file = e.target.files[0]
-                                  if (!file) return
-
-                                  try {
-                                    const base64 = await processFile(file)
-                                    updateForm('samplePhoto', base64)
-                                  } catch (err) {
-                                    alert(err.message)
-                                    e.target.value = ''
-                                  }
-                                }}
-                                style={{ display: 'none' }}
-                              />
-                            </label>
-                            {form.samplePhoto && <UploadedPreview src={form.samplePhoto} />}
-                          </div>
-                          <small style={{ color: '#888', display: 'block' }}>
-                            Accepted formats: PDF, JPG, JPEG, PNG
-                          </small>
-
-                          {errors.samplePhoto && (
+                          <CCol md={6}>
+                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                              Upload Photo (Optional)
+                            </CFormLabel>
                             <div
+                              md={6}
                               style={{
-                                color: '#ff2e85',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                gap: '10px',
+                                alignContent: 'center',
+                                alignItems: 'center',
                               }}
                             >
-                              {errors.samplePhoto}
-                            </div>
-                          )}
-                        </CCol>
-                      </>
-                    )}
+                              <label
+                                style={{
+                                  border: '2px dashed #ff95c9',
+                                  borderRadius: 12,
+                                  padding: '18px',
+                                  width: '100%',
+                                  textAlign: 'center',
+                                  display: 'block',
+                                  cursor: 'pointer',
+                                  background: '#fff8fc',
+                                  color: '#ff2e85',
+                                  fontWeight: '500',
+                                  fontSize: 15,
+                                }}
+                              >
+                                📁 Upload Photo
+                                <input
+                                  type="file"
+                                  accept="image/*, application/pdf"
+                                  onChange={async (e) => {
+                                    const file = e.target.files[0]
+                                    if (!file) return
 
-                    {/* Submit */}
-                    {form.serviceStatus && (
-                      <CCol md={12} className="mt-5 d-flex justify-content-end">
-                        <CButton
-                          style={{ background: NGK_COLORS.primary, color: '#fff' }}
-                          disabled={!form.serviceStatus || loading}
-                          type="submit"
-                        >
-                          {loading ? 'Submitting...' : 'Submit'}
-                        </CButton>
-                      </CCol>
-                    )}
-                  </CRow>
+                                    try {
+                                      const base64 = await processFile(file)
+                                      updateForm('samplePhoto', base64)
+                                    } catch (err) {
+                                      alert(err.message)
+                                      e.target.value = ''
+                                    }
+                                  }}
+                                  style={{ display: 'none' }}
+                                />
+                              </label>
+                              {form.samplePhoto && <UploadedPreview src={form.samplePhoto} />}
+                            </div>
+                            <small style={{ color: '#888', display: 'block' }}>
+                              Accepted formats: PDF, JPG, JPEG, PNG
+                            </small>
+
+                            {errors.samplePhoto && (
+                              <div
+                                style={{
+                                  color: '#ff2e85',
+                                }}
+                              >
+                                {errors.samplePhoto}
+                              </div>
+                            )}
+                          </CCol>
+                        </>
+                      )}
+
+                      {/* Submit */}
+                      {form.serviceStatus && (
+                        <CCol md={12} className="mt-5 d-flex justify-content-end">
+                          <CButton
+                            style={{ background: NGK_COLORS.primary, color: '#fff' }}
+                            disabled={!form.serviceStatus || loading}
+                            type="submit"
+                          >
+                            {loading ? 'Submitting...' : 'Submit'}
+                          </CButton>
+                        </CCol>
+                      )}
+                    </CRow>
+                  </>
                 )}
               </CForm>
             )}

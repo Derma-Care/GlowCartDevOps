@@ -29,7 +29,7 @@ import { BASE_URL, SBASE_URL } from '../../../baseUrl'
 import { useHospital } from '../../Usecontext/HospitalContext'
 import ResetPassword from '../../../views/Resetpassword'
 import { http, httpPublic } from '../../../Utils/Interceptors'
-import DermaLogo from 'src/assets/images/logoP.png' // adjust path if needed
+import DermaLogo from '../../../assets/images/logoP.png' // adjust path if needed
 import { COLORS, NGK_COLORS } from '../../../Constant/Themes'
 import { toast, ToastContainer } from 'react-toastify'
 import { showCustomToast } from '../../../Utils/Toaster'
@@ -167,10 +167,10 @@ const Login = () => {
                     style={{ width: 120, height: 'auto' }}
                   />
                   <h2 className="fw-bold mb-3" style={{ color: NGK_COLORS.primary }}>
-                    Welcome to Neha's GlowKart
+                    Welcome to Neeha's GlowKart
                   </h2>
                   <p className="lead mb-4" style={{ opacity: 0.95, color: NGK_COLORS.textDark }}>
-                    Manage dermatology operations seamlessly — appointments, procedures, slots &
+                    Manage dermatology operations seamlessly — appointments, procedures, dates, offers &
                     more.
                   </p>
                 </div>
@@ -280,7 +280,7 @@ const Login = () => {
                         type="submit"
                         disabled={isLoading}
                         className="w-100 mt-4 derma-btn"
-                        style={{ backgroundColor: NGK_COLORS.primary, color: 'white' }}
+                        style={{ backgroundColor: NGK_COLORS.primarySoft, color: 'white' }}
                       >
                         {isLoading ? <CSpinner size="sm" /> : 'Login'}
                       </CButton>
@@ -304,14 +304,14 @@ const Login = () => {
             <CIcon icon={cilShieldAlt} /> Secure by design
           </span>
           <span style={{ color: NGK_COLORS.primary }}>
-            © {new Date().getFullYear()} Chiselon Technologies
+            © {new Date().getFullYear()} Uditcosmetech Private Limited
           </span>
           <a
-            href="https://chiselontechnologies.com"
+            href="https://uditcosmetech.com/"
             target="_blank"
             style={{ color: NGK_COLORS.primary }}
           >
-            About Chiselon Technologies
+            About Uditcosmetech Private Limited
           </a>
         </footer>
 

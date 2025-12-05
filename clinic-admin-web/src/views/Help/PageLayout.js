@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { CContainer } from '@coreui/react'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
- 
 
 const PageLayout = ({ title, children, branch }) => {
   const { selectedHospital } = useHospital()
@@ -51,12 +50,12 @@ const PageLayout = ({ title, children, branch }) => {
       {/* 🔸 Hospital Information Card */}
       {branch && hospital && (
         <div
-          className="p-4 rounded shadow-sm mb-5 bg-white"
-          style={{ border: '1px solid #f1f1f1' }}
+          className="p-4     mb-5  "
+          
         >
           <div className="d-flex align-items-start" style={{ gap: '16px', flexWrap: 'wrap' }}>
             {/* Hospital Logo */}
-            {hospital.hospitalLogo ? (
+            {/* {hospital.hospitalLogo ? (
               <img
                 src={
                   hospital.hospitalLogo.startsWith('data:')
@@ -84,41 +83,155 @@ const PageLayout = ({ title, children, branch }) => {
               >
                 <span className="text-muted">No Logo</span>
               </div>
-            )}
+            )} */}
 
             {/* Hospital Details */}
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <h4
-                className="fw-bold mb-1"
-                style={{ fontSize: '1rem', color: 'var(--color-black)' }}
-              >
-                {hospital.name}
-              </h4>
-              <p
-                className="text-secondary mb-1 d-flex align-items-center gap-2"
-                style={{ fontSize: '0.85rem' }}
-              >
-                <MapPin size={14} /> {hospital.address}
-              </p>
+            {/* 🔸 Hospital Information Card */}
+            {hospital && (
               <div
-                className="d-flex flex-wrap gap-3"
-                style={{ fontSize: '0.8rem', marginTop: '4px' }}
+                className="p-4 rounded shadow-sm mb-5 bg-white"
+                style={{ border: '1px solid #f1f1f1' }}
               >
-                <span className="d-flex align-items-center gap-2 text-secondary">
-                  <Phone size={14} /> {hospital.contactNumber}
-                </span>
-                <span className="d-flex align-items-center gap-2 text-secondary">
-                  <Mail size={14} /> {hospital.emailAddress}
-                </span>
-                <span className="d-flex align-items-center gap-2 text-secondary">
-                  <Clock size={14} /> {hospital.openingTime} - {hospital.closingTime}
-                </span>
+                {/* TOP SECTION */}
+                <div
+                  className="p-3 rounded mb-4"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))',
+                    color: 'white',
+                  }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    {/* Logo */}
+                    {hospital.hospitalLogo ? (
+                      <img
+                        src={
+                          hospital.hospitalLogo.startsWith('data:')
+                            ? hospital.hospitalLogo
+                            : `data:image/jpeg;base64,${hospital.hospitalLogo}`
+                        }
+                        alt="Logo"
+                        style={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: 10,
+                          objectFit: 'cover',
+                          border: '2px solid white',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 80,
+                          height: 80,
+                          background: '#fff',
+                          borderRadius: 10,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--color-black)',
+                          fontWeight: 600,
+                          border: '1px solid #fff',
+                        }}
+                      >
+                        No Logo
+                      </div>
+                    )}
+
+                    <div className='text-white'>
+                      <h3 className="mb-1 fw-bold text-white">{hospital.name}</h3>
+                      <p className="mb-0 text-white">{hospital.clinicType}</p>
+                      <p className="mb-0 text-white" style={{ fontSize: '0.9rem' }}>
+                        {hospital.address}, {hospital.city}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DETAIL GRID */}
+                <div className="row g-3">
+                  {/* 🔹 Basic Info */}
+                  <DetailCard
+                    title="📌 Basic Details"
+                    fields={{
+                      'Clinic ID': hospital.clinicId,
+                      'Clinic Type': hospital.clinicType,
+                      Recommended: hospital.recommended ? 'Yes' : 'No',
+                      Subscription: hospital.subscription,
+                      Status: hospital.status,
+                    }}
+                  />
+
+                  {/* 🔹 Contact Info */}
+                  <DetailCard
+                    title="📞 Contact Information"
+                    fields={{
+                      Phone: hospital.contactNumber,
+                      WhatsApp: hospital.whatsappNumber,
+                      Email: hospital.email,
+                      Website: hospital.website,
+                      'Primary Contact Person': hospital.primaryContactPerson,
+                    }}
+                  />
+
+                  {/* 🔹 Timings */}
+                  <DetailCard
+                    title="⏰ Clinic Timings"
+                    fields={{
+                      'Opening Time': hospital.openingTime,
+                      'Closing Time': hospital.closingTime,
+                    }}
+                  />
+
+                  {/* 🔹 Bank Details */}
+                  <DetailCard
+                    title="🏦 Bank Information"
+                    fields={{
+                      'Account Name': hospital.bankAccountName,
+                      'Account Number': hospital.bankAccountNumber,
+                      'IFSC Code': hospital.ifscCode,
+                      Branch: hospital.branch,
+                      'UPI ID': hospital.upiId,
+                    }}
+                  />
+
+                  {/* 🔹 License & Compliance */}
+                  <DetailCard
+                    title="📄 License Information"
+                    fields={{
+                      'License Number': hospital.licenseNumber,
+                      'Issuing Authority': hospital.issuingAuthority,
+                      'Form Type': hospital.drugLicenseFormType,
+                      'Has Pharmacist': hospital.hasPharmacist,
+                      'Medicines Sold On-Site':
+                        hospital.medicinesSoldOnSite === 'true' ? 'Yes' : 'No',
+                    }}
+                  />
+
+                  {/* 🔹 Social Media */}
+                  <DetailCard
+                    title="🌐 Social Media Links"
+                    fields={{
+                      Instagram: hospital.instagramHandle,
+                      Facebook: hospital.facebookHandle,
+                      Twitter: hospital.twitterHandle,
+                    }}
+                  />
+
+                  {/* 🔹 Location */}
+                  <DetailCard
+                    title="📍 Location Coordinates"
+                    fields={{
+                      Latitude: hospital.latitude,
+                      Longitude: hospital.longitude,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* 🔹 Branch Section */}
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <h6 className="fw-bold mb-3 pb-2 border-bottom" style={{ color: 'var(--color-black)' }}>
               🏥 Our Branches
             </h6>
@@ -164,7 +277,7 @@ const PageLayout = ({ title, children, branch }) => {
             ) : (
               <p className="text-muted mb-0">No branches found.</p>
             )}
-          </div>
+          </div> */}
         </div>
       )}
 
@@ -175,3 +288,27 @@ const PageLayout = ({ title, children, branch }) => {
 }
 
 export default PageLayout
+const DetailCard = ({ title, fields }) => (
+  <div className="col-md-6 col-lg-4">
+    <div
+      className="p-3 rounded h-100 bg-white"
+      style={{
+        border: '1px solid #ebebeb',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+      }}
+    >
+      <h6 className="fw-bold mb-2" style={{ color: 'var(--color-black)' }}>
+        {title}
+      </h6>
+
+      <ul className="list-unstyled mb-0">
+        {Object.entries(fields).map(([label, value]) => (
+          <li key={label} className="mb-1 text-secondary">
+            <strong className="text-dark">{label}:</strong>{' '}
+            {value || <span className="text-muted">—</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+)

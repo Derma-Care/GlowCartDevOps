@@ -1,13 +1,58 @@
 package com.glowkart.procedure.mapper;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
+
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
 import com.glowkart.procedure.model.ProcedurePricing;
 
 @Component
 public class ProcedurePricingMapper {
 
+    // -----------------------------------------------------------
+    // SANITIZE KEYS (for MongoDB)
+    // "." → "_"
+    // -----------------------------------------------------------
+    private Map<String, List<String>> sanitizeMapKeys(Map<String, List<String>> map) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().replace(".", "_"),  // Mongo-safe
+                        Map.Entry::getValue
+                ));
+    }
+
+    private List<Map<String, List<String>>> sanitizeQAList(List<Map<String, List<String>>> list) {
+        return list.stream()
+                .map(this::sanitizeMapKeys)
+                .collect(Collectors.toList());
+    }
+
+
+    // -----------------------------------------------------------
+    // RESTORE KEYS (for API response)
+    // "_" → "."
+    // -----------------------------------------------------------
+    private Map<String, List<String>> restoreMapKeys(Map<String, List<String>> map) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().replace("_", "."), // restore original
+                        Map.Entry::getValue
+                ));
+    }
+
+    private List<Map<String, List<String>>> restoreQAList(List<Map<String, List<String>>> list) {
+        return list.stream()
+                .map(this::restoreMapKeys)
+                .collect(Collectors.toList());
+    }
+
+
+    // ===========================================================
+    //                  DTO → ENTITY (SAVE)
+    // ===========================================================
     public ProcedurePricing toEntity(ProcedurePricingDTO dto) {
         ProcedurePricing entity = new ProcedurePricing();
 
@@ -15,11 +60,13 @@ public class ProcedurePricingMapper {
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
         entity.setProcedureImage(dto.getProcedureImage());
-        entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? dto.getPreProcedureQA() : List.of());
-        entity.setProcedureQA(dto.getProcedureQA() != null ? dto.getProcedureQA() : List.of());
-        entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
-        entity.setSittings(dto.getSittings());
 
+        // SANITIZE BEFORE SAVING
+        entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? sanitizeQAList(dto.getPreProcedureQA()) : List.of());
+        entity.setProcedureQA(dto.getProcedureQA() != null ? sanitizeQAList(dto.getProcedureQA()) : List.of());
+        entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? sanitizeQAList(dto.getPostProcedureQA()) : List.of());
+
+        entity.setSittings(dto.getSittings());
         entity.setMinTime(dto.getMinTime());
         entity.setOfferStart(dto.getOfferStart());
         entity.setOfferValidDate(dto.getOfferValidDate());
@@ -33,6 +80,10 @@ public class ProcedurePricingMapper {
         return entity;
     }
 
+
+    // ===========================================================
+    //                  ENTITY → DTO (RESPONSE)
+    // ===========================================================
     public ProcedurePricingDTO toDto(ProcedurePricing entity) {
         ProcedurePricingDTO dto = new ProcedurePricingDTO();
 
@@ -41,11 +92,13 @@ public class ProcedurePricingMapper {
         dto.setClinicId(entity.getClinicId());
         dto.setDescription(entity.getDescription());
         dto.setProcedureImage(entity.getProcedureImage());
-        dto.setPreProcedureQA(entity.getPreProcedureQA() != null ? entity.getPreProcedureQA() : List.of());
-        dto.setProcedureQA(entity.getProcedureQA() != null ? entity.getProcedureQA() : List.of());
-        dto.setPostProcedureQA(entity.getPostProcedureQA() != null ? entity.getPostProcedureQA() : List.of());
-        dto.setSittings(entity.getSittings());
 
+        // RESTORE BEFORE SENDING TO CLIENT
+        dto.setPreProcedureQA(entity.getPreProcedureQA() != null ? restoreQAList(entity.getPreProcedureQA()) : List.of());
+        dto.setProcedureQA(entity.getProcedureQA() != null ? restoreQAList(entity.getProcedureQA()) : List.of());
+        dto.setPostProcedureQA(entity.getPostProcedureQA() != null ? restoreQAList(entity.getPostProcedureQA()) : List.of());
+
+        dto.setSittings(entity.getSittings());
         dto.setMinTime(entity.getMinTime());
         dto.setOfferStart(entity.getOfferStart());
         dto.setOfferValidDate(entity.getOfferValidDate());
@@ -66,15 +119,22 @@ public class ProcedurePricingMapper {
         return dto;
     }
 
+
+    // ===========================================================
+    //                  UPDATE ENTITY
+    // ===========================================================
     public void updateEntity(ProcedurePricing entity, ProcedurePricingDTO dto) {
+
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
         entity.setProcedureImage(dto.getProcedureImage());
-        entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? dto.getPreProcedureQA() : List.of());
-        entity.setProcedureQA(dto.getProcedureQA() != null ? dto.getProcedureQA() : List.of());
-        entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? dto.getPostProcedureQA() : List.of());
-        entity.setSittings(dto.getSittings());
 
+        // SANITIZE BEFORE SAVING
+        entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? sanitizeQAList(dto.getPreProcedureQA()) : List.of());
+        entity.setProcedureQA(dto.getProcedureQA() != null ? sanitizeQAList(dto.getProcedureQA()) : List.of());
+        entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? sanitizeQAList(dto.getPostProcedureQA()) : List.of());
+
+        entity.setSittings(dto.getSittings());
         entity.setMinTime(dto.getMinTime());
         entity.setOfferStart(dto.getOfferStart());
         entity.setOfferValidDate(dto.getOfferValidDate());

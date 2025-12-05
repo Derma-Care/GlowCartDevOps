@@ -25,6 +25,7 @@ import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
 import '../header/AppHear.css'
+import DermaCareLogo from '../../assets/images/logoP.png'
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
   const { selectedHospital } = useHospital()
@@ -34,14 +35,21 @@ const AppHeaderDropdown = () => {
     localStorage.removeItem('HospitalId')
     localStorage.removeItem('HospitalName')
     localStorage.clear()
+    sessionStorage.clear()
     navigate('/login')
   }
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0 " caret={false}>
+      <CDropdownToggle  caret={false}>
         <div to="/">
-          <div className="d-flex justify-content-center">
-            {selectedHospital?.data.hospitalLogo ? (
+          <div className="d-flex ">
+            <img
+             
+              src={DermaCareLogo}
+              alt={'NGK Logo'}
+              style={{ width: '50px' }}
+            />
+            {/* {selectedHospital?.data.hospitalLogo ? (
               <img
                 className="profile-image"
                 src={
@@ -54,7 +62,7 @@ const AppHeaderDropdown = () => {
               />
             ) : (
               <div className="spinner"></div>
-            )}
+            )} */}
           </div>
 
           <div

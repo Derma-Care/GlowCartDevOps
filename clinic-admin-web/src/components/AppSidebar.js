@@ -83,8 +83,10 @@ const AppSidebar = () => {
 
       <AppSidebarNav items={navItems} />
 
-      <CSidebarFooter className="border-top d-none d-lg-flex">
-        <CSidebarToggler onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })} />
+      <CSidebarFooter className="border-top d-lg-flex flex-column  ">
+        <div className="text-muted">Neeha's GlowKart</div>
+        <div className="text-muted">Uditcosmetech Private Limited</div>
+        {/* <CSidebarToggler onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })} /> */}
       </CSidebarFooter>
     </CSidebar>
   )

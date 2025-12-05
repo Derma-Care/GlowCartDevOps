@@ -42,16 +42,16 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={6}>
               <p className="mb-1 fw-semibold">Offer Start Date:</p>
               <span className="text-muted">
-                {data.offerValidDate
-                  ? new Date(data.offerValidDate).toLocaleDateString('en-GB')
+                {data.offerStart
+                  ? new Date(data.offerStart).toLocaleDateString('en-GB')
                   : 'N/A'}
               </span>
             </CCol>
             <CCol sm={6}>
               <p className="mb-1 fw-semibold">Offer End Date:</p>
               <span className="text-muted">
-                {data.offerEndDate
-                  ? new Date(data.offerEndDate).toLocaleDateString('en-GB')
+                {data.offerValidDate
+                  ? new Date(data.offerValidDate).toLocaleDateString('en-GB')
                   : 'N/A'}
               </span>
             </CCol>
@@ -64,7 +64,7 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
           <h6 className="fw-bold border-bottom pb-2 mb-3">Pricing Details</h6>
           <CRow className="gy-2">
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Offer End Date:</span>
+              <span className="mb-1 fw-semibold">Price</span>
               <span className="text-muted"> ₹ {Math.round(data.price || 0)}</span>
             </CCol>
             <CCol sm={4}>
@@ -112,13 +112,13 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
-            <CCol sm={4}>
+            {/* <CCol sm={4}>
               <span className="mb-1 fw-semibold">Service Time:</span>
               <span className="text-muted">
                 {data.minTime ? formatMinutes(data.minTime) : 'N/A'}
               </span>
-              {/* <strong>Service Time:</strong> {data.minTime ? formatMinutes(data.minTime) : 'N/A'} */}
-            </CCol>
+              
+            </CCol> */}
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">No. of Total Sittings:</span>
               <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
@@ -136,7 +136,7 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
                 <div key={index} className="col-12 col-md-3 mb-3">
                   <div className="p-2  bg-light rounded border" style={{ minHeight: '90px' }}>
                     <p className="fw-semibold mb-1" style={{ color: 'var(--color-black)' }}>
-                      {item.procedureName} 
+                      {item.procedureName}
                     </p>
                     <p className="text-muted mb-0">No. of Sittings: {item.noOfSittings}</p>
                   </div>
@@ -152,7 +152,7 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
         <div className="p-3 bg-white rounded shadow-sm">
           <h6 className="fw-bold border-bottom pb-2 mb-3">Additional Details</h6>
           <CRow>
-            <CCol sm={6}>
+            {/* <CCol sm={6}>
               <p className="fw-semibold">Service Image:</p>
               {data.procedureImage ? (
                 <img
@@ -168,7 +168,7 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               ) : (
                 <p className="text-muted">No image available</p>
               )}
-            </CCol>
+            </CCol> */}
             <CCol sm={6}>
               <p className="fw-semibold">Description:</p>
               <p className="text-muted">{data.description || 'N/A'}</p>

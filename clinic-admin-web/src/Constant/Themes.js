@@ -25,7 +25,7 @@ export const NGK_COLORS = {
   // #A82E4C
   primaryLight: '#A82E4C',
   // primaryLight: '#ff95c9',
-  primarySoft: '#ffeaf4',
+  primarySoft: '#ce4668ff',
   textDark: '#222222',
   borderSoft: '#ffd1e6',
 }

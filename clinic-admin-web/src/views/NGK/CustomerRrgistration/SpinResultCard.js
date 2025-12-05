@@ -118,6 +118,12 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
         margin: 'auto',
       }}
     >
+      <div className="header-container">
+        <h4 className="m-0 fw-bold text-center w-100 gradient-text">Here’s Your Reward!</h4>
+
+        {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
+        {/* <small className="sub-gradient-text">Registration</small> */}
+      </div>
       {/* CARD */}
       <CCard
         ref={cardRef}
@@ -132,6 +138,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           backgroundImage: `url(${bg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          marginTop: '20px',
         }}
       >
         <CCardBody style={{ padding: '20px 18px' }}>

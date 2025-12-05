@@ -57,17 +57,6 @@
   overflow-y: auto;
 }
 
-/* Mobile layout: full width & hide image */
-@media (max-width: 768px) {
-  .left-image {
-    display: none !important;
-  }
-  .form-panel {
-    width: 100% !important;
-    padding: 24px 18px !important;
-  }
-}
-
 /* PINK CHECKBOX (100% working for CoreUI) */
 .custom-checkbox .form-check-input {
   accent-color: var(--ngk-accent-pink) !important;
@@ -143,7 +132,7 @@ label:hover {
 }
 
 .derma-btn {
-  background-color: var(--ngk-primary, var(--ngk-accent-pink)) !important;
+  background-color: var(var(--ngk-accent-pink)) !important;
   color: white !important;
   border: none !important;
   transition: all 0.25s ease;
@@ -162,6 +151,7 @@ label:hover {
   box-shadow: 0 4px 10px rgba(255, 46, 133, 0.3);
 }
 .label-gradient {
+  width: 100%;
   display: inline-block;
   background: linear-gradient(to right, var(--ngk-accent-bg), #ffffff);
   padding: 1px 5px;
@@ -263,4 +253,21 @@ label:hover {
   font-weight: 600;
   display: block;
   text-align: center;
+}
+/* Mobile layout: full width & hide image */
+@media (max-width: 768px) {
+  .left-image {
+    display: none !important;
+  }
+  .form-panel {
+    width: 100% !important;
+    padding: 24px 18px !important;
+  }
+  .gradient-text {
+    background: linear-gradient(-270deg, var(--ngk-accent-pink), #a82e4c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 26px;
+    font-weight: 900;
+  }
 }

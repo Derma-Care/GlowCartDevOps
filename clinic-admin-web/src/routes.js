@@ -8,10 +8,12 @@ const PackageManagement = React.lazy(
 const ProcedureManagement = React.lazy(
   () => import('./views/ProcedureManagement/ProcedureManagement'),
 )
+
 const Payouts = React.lazy(() => import('./views/Payouts/Payoutmanagement'))
 const Help = React.lazy(() => import('./views/Help/Help'))
 const ClinicRatingsAdmin = React.lazy(() => import('./views/NGK/ClinicRating/ClinicRatingsAdmin'))
 const Resetpassword = React.lazy(() => import('./views/Resetpassword'))
+const ReferralDashboard = React.lazy(() => import('./views/NGK/MemberShip/ReferralDashboard'))
 
 const AppointmentManagement = React.lazy(
   () => import('./views/AppointmentManagement/appointmentManagement'),
@@ -26,17 +28,17 @@ const NGlowKartPatientRegistration = React.lazy(
 
 const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/package', name: 'Doctors', element: PackageManagement },
+  { path: '/package', name: 'Package', element: PackageManagement },
 
-  { path: '/procedure-management', name: 'Procedure Management', element: ProcedureManagement },
+  { path: '/procedure', name: 'Procedure', element: ProcedureManagement },
 
   { path: '/payouts', name: 'Payouts', element: Payouts },
+  { path: '/membership', name: 'Membership', element: ReferralDashboard },
 
-  // { path: '/help', name: 'Help', element: Help },
+  { path: '/help', name: 'Help', element: Help },
   // { path: '/help', name: 'Help', element: NGlowKartPatientRegistration },
-  { path: '/help', name: 'Help', element: ClinicRatingsAdmin },
-  // { path: '/reviews', name: 'Help', element: ClinicRatingsAdmin },
-
+  // { path: '/help', name: 'Help', element: ClinicRatingsAdmin },
+  { path: '/reviews', name: 'Reviews', element: ClinicRatingsAdmin },
 
   { path: '/reset-password', name: 'Reset Password', element: Resetpassword },
 
