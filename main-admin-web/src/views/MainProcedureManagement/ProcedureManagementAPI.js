@@ -15,7 +15,7 @@ import {
   getservice,
   getSubService,
   BASE_URL_API,
-  ClinicBase_urls,
+ 
 } from '../../baseUrl'
 
 
@@ -108,7 +108,7 @@ export const postServiceData = async (serviceData) => {
   try {
     console.log('Sending data to API:', serviceData)
 
-    const response = await axios.post(`${ClinicBase_urls}/${AddSubService}`, serviceData, {
+    const response = await axios.post(`${BASE_URL_API}/${AddSubService}`, serviceData, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -121,13 +121,13 @@ export const postServiceData = async (serviceData) => {
   }
 }
 
-export const updateServiceData = async (subServiceId, hospitalId, serviceData) => {
-  console.log('API Call Params:', subServiceId, hospitalId) //Check values
+export const updateServiceData = async (procedureId, clinicId, serviceData) => {
+  console.log('API Call Params:', procedureId, clinicId) //Check values
   console.log('Payload:', serviceData)
 
   try {
     const response = await axios.put(
-      `${ClinicBase_urls}/${updateService}/${subServiceId}/${hospitalId}`, //use 'id' here
+      `${BASE_URL_API}/pricing/update/${procedureId}/clinic/${clinicId}`, //use 'id' here
       serviceData,
       {
         headers: {
@@ -144,10 +144,10 @@ export const updateServiceData = async (subServiceId, hospitalId, serviceData) =
   }
 }
 
-export const deleteServiceData = async (serviceId, id) => {
+export const deleteServiceData = async (procedureId, clinicId) => {
   try {
-    console.log('Service name:', serviceId)
-    const response = await axios.delete(`${ClinicBase_urls}/${deleteService}/${serviceId}/${id}`)
+    console.log('Service name:', procedureId)
+    const response = await axios.delete(`${BASE_URL_API}/pricing/delete/${procedureId}/clinic/${clinicId}`)
 
     console.log('Service deleted successfully:', response.data)
     return response.data

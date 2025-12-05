@@ -10,17 +10,17 @@ import { useHospital } from '../Usecontext/HospitalContext'
 import { showCustomToast } from '../../Utils/Toaster'
 import LoadingIndicator from '../../Utils/loader'
 import Pagination from '../../Utils/Pagination'
-import ConfirmationModal from '../../components/ConfirmationModal'
+
 import { getAllProcedures, getProcedurePricingByClinicId } from './procedureService'
 
 import ServiceFormModal from './ServiceFormModal'
 import ServiceViewModal from './ServiceViewModal'
 import ServiceTable from './ServiceTable'
 import { useLocation, useParams } from 'react-router-dom'
+import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
 
 const ServiceManagement = () => {
-const { clinicId } = useParams();
-    const { state: clinic } = useLocation();
+  const { clinicId } = useParams();
   // ---------- MASTER DATA ----------
   const [isProcedure, setIsProcedure] = useState([]) // All procedures for dropdown
   const [procedurePricing, setProcedurePricing] = useState([]) // Clinic pricing list
@@ -76,7 +76,7 @@ const { clinicId } = useParams();
   })
 
   // ---------- GLOBAL SEARCH & PAGINATION ----------
-  const { searchQuery } = useGlobalSearch()
+  const { searchQuery, setSearchQuery } = useGlobalSearch()
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
@@ -90,7 +90,7 @@ const { clinicId } = useParams();
     const q = searchQuery.toLowerCase().trim()
     if (!q) return procedurePricing
     return procedurePricing.filter((item) =>
-      Object.values(item).some((val) => String(val).toLowerCase().includes(q)),
+      Object.values(item).some((val) => String(val).toLowerCase().startsWith(q)),
     )
   }, [searchQuery, procedurePricing])
 
@@ -134,8 +134,9 @@ const { clinicId } = useParams();
   // Get clinic pricing by clinicId
   const fetchProcedurePricing = async () => {
     try {
-     
-      const data = await getProcedurePricingByClinicId(clinic.clinicId)
+
+      const data = await getProcedurePricingByClinicId(clinicId);
+
       setProcedurePricing(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Failed to load pricing:', err)
@@ -386,7 +387,7 @@ const { clinicId } = useParams();
         : newService.serviceImage
 
       const payload = {
-        clinicId:clinic.clinicId,
+        clinicId: clinicId,
         procedureName: newService.subServiceName,
         procedureId: newService.subServiceId,
         sittings: Number(newService.sittings || 0),
@@ -433,7 +434,8 @@ const { clinicId } = useParams();
     try {
       setSaveLoading(true)
 
-      const hospitalId = clinic.clinicId
+      const hospitalId = clinicId;
+
 
       let base64ImageToSend = ''
       if (newService.serviceImageFile) {
@@ -489,7 +491,8 @@ const { clinicId } = useParams();
   }
 
   const handleConfirmDelete = async () => {
-    const hospitalId = clinic.clinicId
+    const hospitalId = clinicId;
+
     try {
       setDelLoading(true)
       const result = await deleteServiceData(serviceIdToDelete, hospitalId)
@@ -515,11 +518,23 @@ const { clinicId } = useParams();
       {/* Top Right "Add" Button (if needed) */}
       <div>
         <CForm className="d-flex justify-content-end mb-3">
-          
-            <div
-              className="w-100"
-              style={{ display: 'flex', justifyContent: 'end', alignItems: 'end' }}
-            >
+          <div className="w-100 mb-3">
+            <CForm className="d-flex justify-content-between align-items-center">
+
+              {/* 🔍 SEARCH FIELD */}
+              <input
+                type="text"
+                placeholder="Search by name, price, or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="form-control"
+                style={{
+                  width: "350px",
+                  border: "1px solid #7e3a93",
+                }}
+              />
+
+              {/* ➕ ADD BUTTON */}
               <CButton
                 style={{
                   color: 'var(--color-black)',
@@ -529,8 +544,10 @@ const { clinicId } = useParams();
               >
                 Add Procedure Details
               </CButton>
-            </div>
-         
+
+            </CForm>
+          </div>
+
         </CForm>
       </div>
 
@@ -562,23 +579,9 @@ const { clinicId } = useParams();
       {/* Delete Confirmation */}
       <ConfirmationModal
         isVisible={isModalVisible}
-        title="Delete Procedure"
         message="Are you sure you want to delete this procedure? This action cannot be undone."
-        confirmText={
-          delloading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
-              Deleting...
-            </>
-          ) : (
-            'Yes, Delete'
-          )
-        }
-        cancelText="Cancel"
-        confirmColor="danger"
-        cancelColor="secondary"
         onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
+        onCancel={() => setIsModalVisible(false)}
       />
 
       {/* List / Table */}

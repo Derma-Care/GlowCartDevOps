@@ -64,6 +64,19 @@ const ClinicManagement = ({ service }) => {
 
   const [isLink, setIsLink] = useState(false)
   const [loadingLink, setLoadingLink] = useState(false)
+  // NEW: Name field states
+  const [nameInput, setNameInput] = useState("")
+  const [nameError, setNameError] = useState("")
+
+  // Validation for Name field
+  const validateName = (value) => {
+    const regex = /^[A-Za-z\s]+$/; // only letters + spaces
+    if (!regex.test(value)) {
+      setNameError("Name should contain only alphabets and spaces");
+    } else {
+      setNameError("");
+    }
+  };
 
   useEffect(() => {
     fetchClinics()
@@ -176,18 +189,18 @@ const ClinicManagement = ({ service }) => {
       const response = await fetch(`${NGkRegistrationLink}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, name: nameInput })
       })
       const data = await response.json()
       if (!response.ok || data.success === false) {
         toast.error(data.message || "Failed to send link")
         return
       }
-      toast.success(data.message || "Registration link sent successfully!")
+      toast.success("Link sent successfully!")
       setIsLink(false)
-      setInputValue("")
-    } catch (error) {
-      console.error(error)
+      setLinkInputValue("")
+      setNameInput("")
+    } catch {
       toast.error("Something went wrong")
     } finally {
       setLoadingLink(false)
@@ -376,10 +389,40 @@ const ClinicManagement = ({ service }) => {
         {/* LINK MODAL */}
         <CModal visible={isLink} onClose={() => setIsLink(false)} alignment="center">
           <CModalHeader>
-            <CModalTitle>Registration Link</CModalTitle>
+            <CModalTitle>Send Registration Link</CModalTitle>
           </CModalHeader>
 
           <CModalBody>
+
+            {/* NEW NAME FIELD */}
+            <CFormInput
+              type="text"
+              label="Name"
+              value={nameInput}
+              placeholder="Enter Name"
+              onChange={(e) => {
+                const value = e.target.value;
+                const regex = /^[A-Za-z\s]*$/; // allow only letters & spaces
+
+                if (regex.test(value)) {
+                  setNameInput(value);
+                  setNameError("");
+                } else {
+                  setNameError("Only alphabets allowed");
+                }
+              }}
+            />
+
+            {nameError && (
+              <p style={{ color: "red", fontSize: "14px", marginTop: "5px" }}>
+                {nameError}
+              </p>
+            )}
+
+
+            <br />
+
+            {/* EMAIL / MOBILE FIELD */}
             <CFormInput
               type="text"
               autoComplete="email"
@@ -394,12 +437,22 @@ const ClinicManagement = ({ service }) => {
             <CButton color="secondary" onClick={() => setIsLink(false)}>
               Cancel
             </CButton>
-            <CButton color="primary" onClick={() => sendNGKRegistrationLink(linkInputValue)} disabled={loadingLink}>
+
+            <CButton
+              color="primary"
+              disabled={loadingLink}
+              onClick={() => {
+                if (nameError || nameInput.trim() === "") {
+                  toast.error("Enter a valid name (letters only)");
+                  return;
+                }
+                sendNGKRegistrationLink(linkInputValue)
+              }}
+            >
               {loadingLink ? "Sending..." : "Send"}
             </CButton>
           </CModalFooter>
         </CModal>
-
       </div>
     </div>
   )

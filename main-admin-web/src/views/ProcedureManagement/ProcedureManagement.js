@@ -277,14 +277,14 @@ const ProcedureManagement = () => {
         </CModalFooter>
       </CModal>
 
-      {showDeleteModal && (
+     
         <ConfirmationModal
           isVisible={showDeleteModal}
           message="Are you sure you want to delete this procedure?"
           onConfirm={handleConfirmDelete}
           onCancel={() => setShowDeleteModal(false)}
         />
-      )}
+   
     </>
   )
 }
