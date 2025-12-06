@@ -7,12 +7,6 @@ import lombok.Data;
 @Data
 public class CompleteRegistrationDTO {
 
-    @NotBlank
-    private String prizePostScreenshot;
-
-    @NotBlank
-    private String followScreenshot;
-
     @NotBlank(message = "Address is required")
     @Pattern(
         regexp = ".*\\b\\d{6}\\b.*",

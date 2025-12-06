@@ -23,9 +23,6 @@ public class CustomerDetailsDTO {
     @Pattern(regexp = "^[6-9][0-9]{9}$", message = "mobile must be a valid 10-digit Indian number")
     private String mobile;
 
-    @Email(message = "email must be valid")
-    private String email;
-
     private String city;
     private LocalDate dob;
 
@@ -48,7 +45,7 @@ public class CustomerDetailsDTO {
     private String skinTone;
     private String photo;
 
-    private String blood;
+   
     private String registrationCode;
     private String referBy;
 
@@ -58,4 +55,11 @@ public class CustomerDetailsDTO {
 
     @AssertTrue(message = "Aadhaar consent is required")
     private Boolean aadhaarConsent;
+    
+    @AssertTrue(message = "User consent is required")
+    private Boolean userConsent;
+
+    @AssertTrue(message = "Privacy consent is required")
+    private Boolean privacyConsent;
+    
 }

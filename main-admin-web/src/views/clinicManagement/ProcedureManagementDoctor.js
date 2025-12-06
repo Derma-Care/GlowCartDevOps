@@ -91,6 +91,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
     preProcedureQA: [],
     postProcedureQA: [],
     sittings: 0,
+    
   })
   const [modalMode, setModalMode] = useState('add') // or 'edit'
   // Open for adding

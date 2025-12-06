@@ -5,7 +5,7 @@ import {
   cilUser,
   cilHospital,
   cilList,
-  cilGift,
+  cilSpa,
   cilGroup,
   cilBullhorn,
   cilBell,
@@ -35,9 +35,9 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Packages & Procedures',
+    name: 'Procedures & Packages',
     to: '/packages-procedures',
-    icon: <CIcon icon={cilGift} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilSpa} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
@@ -47,15 +47,15 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Ads Management',
-    to: '/ads-management',
-    icon: <CIcon icon={cibGoogleAds} customClassName="nav-icon" />,
+    name: 'Registration Codes',
+    to: '/registration-codes',
+    icon: <CIcon icon={cilList} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
-    name: 'Push Notifications',
-    to: '/push-notifications',
-    icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+    name: 'Ads Management',
+    to: '/ads-management',
+    icon: <CIcon icon={cibGoogleAds} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
@@ -63,13 +63,11 @@ const _nav = [
     to: '/payouts',
     icon: <CIcon icon={cilWallet} customClassName="nav-icon" />,
   },
-
-  // ✅ Added Registration Codes
   {
     component: CNavItem,
-    name: 'Registration Codes',
-    to: '/registration-codes',
-    icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+    name: 'Push Notifications',
+    to: '/push-notifications',
+    icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
   },
 ]
 

@@ -31,69 +31,71 @@ const Login = () => {
   const location = useLocation()
 
   const from = location.state?.from?.pathname || '/clinic-management'
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!userName && !password) {
-    setErrorMessage("Mobile number and password are required.");
-    return;
-  }
-
-  if (!userName) {
-    setErrorMessage("Mobile number is required.");
-    return;
-  }
-
-  if (!password) {
-    setErrorMessage("Password is required.");
-    return;
-  }
-
-  setIsLoading(true);
-  setErrorMessage(null);
-
-  try {
-    const data = {
-      mobileNumber: userName, // Backend expects mobileNumber
-      password: password,
-    };
-
-    const response = await axios.post(`${BASE_URL_API}/login`, data, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log("API Response:", response.data);
-
-    if (response.data.success === true) {
-      const userData = response.data.data;
-
-      // Save backend data
-      localStorage.setItem("authentication", "true");
-      localStorage.setItem("userName", userData.userName);
-      localStorage.setItem("mobileNumber", userData.mobileNumber);
-      localStorage.setItem("userId", userData.id);
-
-      navigate("/clinic-management");
-    } else {
-      setErrorMessage(response.data.message || "Invalid login credentials.");
+    if (!userName && !password) {
+      setErrorMessage("Mobile number and password are required.");
+      return;
     }
-  } catch (error) {
-    const message =
-      error.response?.data?.message || "An unexpected error occurred.";
-    setErrorMessage(message);
-    console.error("Error details:", error.response || error.message);
-  } finally {
-    setIsLoading(false);
-  }
-};
 
+    if (!userName) {
+      setErrorMessage("Mobile number is required.");
+      return;
+    }
+
+    if (!password) {
+      setErrorMessage("Password is required.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const data = {
+        mobileNumber: userName, // Backend expects mobileNumber
+        password: password,
+      };
+
+      const response = await axios.post(`${BASE_URL_API}/login`, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("API Response:", response.data);
+
+      if (response.data.success === true) {
+        const userData = response.data.data;
+
+        // Save backend data
+        localStorage.setItem("authentication", "true");
+        localStorage.setItem("userName", userData.userName);
+        localStorage.setItem("mobileNumber", userData.mobileNumber);
+        localStorage.setItem("userId", userData.id);
+
+        navigate("/clinic-management");
+      } else {
+        setErrorMessage(response.data.message || "Invalid login credentials.");
+      }
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "An unexpected error occurred.";
+      setErrorMessage(message);
+      console.error("Error details:", error.response || error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+useEffect  (() => {
+    localStorage.clear('')
+  },[])
 
   return (
 
-    <div style={{ minHeight: '100vh',backgroundColor:"white" }}
+    <div style={{ minHeight: '100vh', backgroundColor: "white" }}
       className="d-flex flex-row align-items-center">
       <CContainer>
         <CRow className="justify-content-center">
@@ -117,11 +119,11 @@ const Login = () => {
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
                       <CFormInput
-  placeholder="Mobile Number"
-  value={userName}
-  onChange={(e) => setUserName(e.target.value)}
-  autoComplete="tel"
-/>
+                        placeholder="Mobile Number"
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        autoComplete="tel"
+                      />
 
                     </CInputGroup>
                     <CInputGroup className="mb-4">

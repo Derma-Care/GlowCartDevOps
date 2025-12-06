@@ -120,8 +120,6 @@ const CustomerViewDetails = () => {
       title: 'Images',
       visible: customerData && (
         customerData.photo ||
-        customerData.followScreenshot ||
-        customerData.prizePostScreenshot ||
         customerData.prescription
       )
     },
@@ -162,7 +160,7 @@ const CustomerViewDetails = () => {
       {/* HEADER */}
       <div
         className="text-white p-3 d-flex justify-content-between align-items-center rounded"
-        style={{ backgroundColor: NGK_COLORS.primary }}
+        style={{ background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))', color: 'white' }}
       >
         <h5 className="mb-1" style={{ color: 'white' }}>
           Customer Details: {customerData.fullName}
@@ -212,7 +210,7 @@ const CustomerViewDetails = () => {
               <CRow className="gy-3">
                 {renderField('Customer ID', customerData.customerId)}
                 {renderField('Full Name', customerData.fullName)}
-                {renderField('Email', customerData.email)}
+                {/* {renderField('Email', customerData.email)} */}
                 {renderField('Mobile Number', customerData.mobile)}
                 {renderField('Gender', customerData.gender)}
                 {renderField('DOB', customerData.dob)}
@@ -266,9 +264,28 @@ const CustomerViewDetails = () => {
                   customerData.aadhaarConsent === null
                     ? null
                     : customerData.aadhaarConsent
-                    ? 'Yes'
-                    : 'No'
+                      ? 'Yes'
+                      : 'No'
                 )}
+
+                {renderField(
+                  'User Consent',
+                  customerData.userConsent === null
+                    ? null
+                    : customerData.userConsent
+                      ? 'Yes'
+                      : 'No'
+                )}
+
+                {renderField(
+                  'Privacy Consent',
+                  customerData.privacyConsent === null
+                    ? null
+                    : customerData.privacyConsent
+                      ? 'Yes'
+                      : 'No'
+                )}
+
                 {renderField('Registration Code', customerData.registrationCode)}
                 {renderField('Registration Verified', customerData.registrationCodeVerified ? 'Yes' : 'No')}
                 {renderField('Registration Completed', customerData.registrationCompleted ? 'Yes' : 'No')}
@@ -285,9 +302,9 @@ const CustomerViewDetails = () => {
                   customerData.photo ? `data:image/png;base64,${customerData.photo}` : null,
                   true
                 )}
-                {renderField('Follow Screenshot', customerData.followScreenshot, true)}
-                {renderField('Prize Screenshot', customerData.prizePostScreenshot, true)}
-                {renderField('Prescription', customerData.prescription, true)}
+                {/* {renderField('Follow Screenshot', customerData.followScreenshot, true)}
+                {renderField('Prize Screenshot', customerData.prizePostScreenshot, true)} */}
+                {renderField('Receipt', customerData.prescription, true)}
               </CRow>
             </CCard>
           </CTabPane>

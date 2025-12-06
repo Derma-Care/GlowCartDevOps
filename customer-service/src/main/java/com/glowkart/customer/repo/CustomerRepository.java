@@ -10,7 +10,7 @@ import com.glowkart.customer.model.Customer;
 public interface CustomerRepository extends MongoRepository<Customer, String> {
 
     Optional<Customer> findByMobile(String mobile);
-    Optional<Customer> findByEmail(String email);
+  
 
     // Pre-hash query for duplicate Aadhaar
     List<Customer> findByAadharPreHash(String aadharPreHash);

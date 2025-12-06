@@ -19,7 +19,9 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 
 const App = () => {
-  const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const { isColorModeSet, setColorMode } = useColorModes(
+    'coreui-free-react-admin-template-theme'
+  )
   const storedTheme = useSelector((state) => state.theme)
 
   useEffect(() => injectTheme(), [])
@@ -36,7 +38,9 @@ const App = () => {
   }, [storedTheme, isColorModeSet, setColorMode])
 
   // Move variable outside JSX
-  const ClinicRegistration = routes.find(r => r.path === '/clinic-registration')?.element
+  const ClinicRegistration = routes.find(
+    (r) => r.path === '/clinic-registration'
+  )?.element
 
   return (
     <BrowserRouter>
@@ -52,16 +56,33 @@ const App = () => {
         pauseOnHover
         theme="light"
       />
+
       <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/clinic-registration" element={<ClinicRegistration />} />
-           <Route path="/clinic-onboarding-success" element={<ClinicOnboardingSuccess />} />
+
+          <Route
+            path="/clinic-registration"
+            element={<ClinicRegistration />}
+          />
+
+          <Route
+            path="/clinic-onboarding-success"
+            element={<ClinicOnboardingSuccess />}
+          />
+
           <Route path="/404" element={<Page404 />} />
           <Route path="/500" element={<Page500 />} />
 
+          {/* 🚫 BLOCK /dashboard → redirect to login */}
+          <Route
+            path="/dashboard"
+            element={<Navigate to="/login" replace />}
+          />
+
+          {/* All other routes → DefaultLayout */}
           <Route
             path="*"
             element={

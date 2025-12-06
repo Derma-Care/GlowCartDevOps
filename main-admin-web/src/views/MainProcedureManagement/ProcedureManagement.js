@@ -60,6 +60,7 @@ const ServiceManagement = () => {
     procedureQA: [],
     preProcedureQA: [],
     postProcedureQA: [],
+     ngkDiscount: '',
   })
 
   const [errors, setErrors] = useState({
@@ -330,7 +331,7 @@ const ServiceManagement = () => {
     setNewService({
       subServiceId: service.procedureId,
       subServiceName: service.procedureName,
-
+// ngkDiscount:newService.ngkDiscount,   //TODO:After backend provide enable the line
       price: String(service.price ?? ''),
       discount: String(service.discountPercentage ?? ''),
       gst: String(service.gst ?? ''),
@@ -456,6 +457,7 @@ const ServiceManagement = () => {
         procedureId: newService.subServiceId || '',
         description: newService.viewDescription || '',
         sittings: Number(newService.sittings || 0),
+        // ngkDiscount:newService.ngkDiscount,   //TODO:After backend provide enable the line
         minTime: newService.minTimeValue
           ? `${newService.minTimeValue} ${newService.minTimeUnit}`
           : '',

@@ -265,6 +265,22 @@ const ServiceFormModal = ({
                 <CFormText className="text-danger">{errors.viewDescription}</CFormText>
               )}
             </CCol>
+            {isEdit && (
+              <CCol md={4} className="mb-4">
+                <h6>
+                  NGK Discount
+                </h6>
+                <CFormInput
+                  type="number"
+                  placeholder="NGK Discount"
+                  name="ngkDiscount"
+                  value={newService.ngkDiscount || ''}
+                  onChange={onChange}
+                  min={0}
+                />
+
+              </CCol>
+            )}
           </CRow>
 
           {/* QA Section */}

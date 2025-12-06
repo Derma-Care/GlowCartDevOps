@@ -123,6 +123,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               </span>
 
             </CCol>
+            
           </CRow>
         </div>
 
@@ -220,6 +221,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <p className="fw-semibold">Description:</p>
               <p className="text-muted">{data.description || 'N/A'}</p>
             </CCol>
+            
           </CRow>
         </div>
       </CModalBody>

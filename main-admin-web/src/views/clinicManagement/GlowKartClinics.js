@@ -280,13 +280,19 @@ const ClinicManagement = ({ service }) => {
                             <CFormSelect
                               value={mapBackendStatusToUI(clinic?.status)}
                               onChange={(e) => handleStatusChange(e.target.value, clinic.clinicId)}
-                              style={{ color: "var(--color-black)" }}
+                              style={{
+                                ...statusStyles[mapBackendStatusToUI(clinic?.status)],
+                                borderRadius: "6px",
+                                padding: "6px",
+                                border: "1px solid #ccc",
+                              }}
                             >
                               <option value="pending">Pending</option>
                               <option value="start">Started</option>
                               <option value="verified">Verified</option>
                               <option value="rejected">Rejected</option>
                             </CFormSelect>
+
                           </CTableDataCell>
                         </CTableRow>
                       ))
@@ -321,36 +327,37 @@ const ClinicManagement = ({ service }) => {
                     <option value={50}>50</option>
                   </CFormSelect>
                 </div>
-
                 <div>
-                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length} entries
-                </div>
+                  <div>
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length} entries
+                  </div>
 
-                <CPagination align="end">
-                  <CPaginationItem
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                  >
-                    Previous
-                  </CPaginationItem>
-
-                  {[...Array(totalPages)].map((_, idx) => (
+                  <CPagination align="end">
                     <CPaginationItem
-                      key={idx + 1}
-                      active={currentPage === idx + 1}
-                      onClick={() => setCurrentPage(idx + 1)}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => prev - 1)}
                     >
-                      {idx + 1}
+                      Previous
                     </CPaginationItem>
-                  ))}
 
-                  <CPaginationItem
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                  >
-                    Next
-                  </CPaginationItem>
-                </CPagination>
+                    {[...Array(totalPages)].map((_, idx) => (
+                      <CPaginationItem
+                        key={idx + 1}
+                        active={currentPage === idx + 1}
+                        onClick={() => setCurrentPage(idx + 1)}
+                      >
+                        {idx + 1}
+                      </CPaginationItem>
+                    ))}
+
+                    <CPaginationItem
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                    >
+                      Next
+                    </CPaginationItem>
+                  </CPagination>
+                </div>
               </div>
             )}
           </CCardBody>
@@ -455,3 +462,27 @@ const ClinicManagement = ({ service }) => {
 }
 
 export default ClinicManagement
+// 🔥 STATUS BASED STYLES
+const statusStyles = {
+  pending: {
+    backgroundColor: "#FFE4B5",
+    color: "#8B4513",
+    fontWeight: "600",
+  },
+  start: {
+    backgroundColor: "#BEE3F8",
+    color: "#0C4A6E",
+    fontWeight: "600",
+  },
+  verified: {
+    backgroundColor: "#C6F6D5",
+    color: "#22543D",
+    fontWeight: "600",
+  },
+  rejected: {
+    backgroundColor: "#FED7D7",
+    color: "#822727",
+    fontWeight: "600",
+  },
+};
+

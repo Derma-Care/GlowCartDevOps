@@ -46,8 +46,8 @@ const routes = [
   // { path: '/clinicDetails', name: 'ClinicDetails', element: ClinicManagementDetails },
   // { path: '/branchManagement', name: 'BranchManagement', element: BranchManagement },
   { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
-  { path: '/packages-procedures', name: 'Clinic_getDetails', element: Clinic_getDetails },
-  { path: '/registration-codes', name: 'RegistrationCodeManagement', element: RegistrationCodeManagement },
+  { path: '/packages-procedures', name: 'Procedures & Package Management', element: Clinic_getDetails },
+  { path: '/registration-codes', name: 'Registration Codes ', element: RegistrationCodeManagement },
   { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
   { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs }
 

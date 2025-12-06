@@ -15,17 +15,18 @@ const AdsManagement = () => {
 
   return (
     <CCard className="shadow-sm border-0">
-      <CCardHeader className="bg-primary text-white fw-bold text-center">
+      <CCardHeader  className="text-white p-3 d-flex justify-content-between align-items-center rounded"
+        style={{  background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))',color: 'white'}}>
         Advertisement Management
       </CCardHeader>
       <CCardBody>
         {/* Navigation Tabs */}
-        <CNav variant="tabs" role="tablist" className="mb-3">
+        <CNav variant="tabs"  className="mb-3">
           <CNavItem>
             <CNavLink
               active={activeKey === 1}
               onClick={() => setActiveKey(1)}
-              className="cursor-pointer"
+              style={{ cursor: 'pointer' }}
             >
               Dashboard Ads
             </CNavLink>
@@ -34,7 +35,7 @@ const AdsManagement = () => {
             <CNavLink
               active={activeKey === 2}
               onClick={() => setActiveKey(2)}
-              className="cursor-pointer"
+               style={{ cursor: 'pointer' }}
             >
               Service Ads
             </CNavLink>
@@ -43,29 +44,13 @@ const AdsManagement = () => {
             <CNavLink
               active={activeKey === 3}
               onClick={() => setActiveKey(3)}
-              className="cursor-pointer"
+               style={{ cursor: 'pointer' }}
             >
               Clinic Ads
             </CNavLink>
           </CNavItem>
-          <CNavItem>
-            <CNavLink
-              active={activeKey === 4}
-              onClick={() => setActiveKey(4)}
-              className="cursor-pointer"
-            >
-              Doctor Web Ads
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink
-              active={activeKey === 5}
-              onClick={() => setActiveKey(5)}
-              className="cursor-pointer"
-            >
-              Doctor Web Vertical
-            </CNavLink>
-          </CNavItem>
+        
+         
         </CNav>
 
         {/* Tabs Content */}
@@ -104,28 +89,7 @@ const AdsManagement = () => {
               </CCardBody>
             </CCard>
           </CTabPane>
-
-          {/* Tab 4: Doctor Web Ads */}
-          <CTabPane visible={activeKey === 4}>
-            <CCard className="border-light shadow-sm">
-              <CCardBody>
-                <h5 className="fw-bold text-info mb-3">Doctor Web Ads</h5>
-                <p>Manage advertisements shown on the Doctor Web interface.</p>
-              </CCardBody>
-            </CCard>
-          </CTabPane>
-
-          {/* Tab 5: Doctor Web Vertical */}
-          <CTabPane visible={activeKey === 5}>
-            <CCard className="border-light shadow-sm">
-              <CCardBody>
-                <h5 className="fw-bold text-danger mb-3">Doctor Web Vertical</h5>
-                <p>
-                  Manage vertical ad banners displayed on Doctor Web pages.
-                </p>
-              </CCardBody>
-            </CCard>
-          </CTabPane>
+       
         </CTabContent>
       </CCardBody>
     </CCard>

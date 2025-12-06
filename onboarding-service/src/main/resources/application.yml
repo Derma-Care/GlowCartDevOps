@@ -4,7 +4,7 @@ spring:
 
   cloud:
     config:
-      uri: http://config-server:8888    # <-- Config Server URI added here
+      uri: http://config-server:8888     # <-- Config Server URI added here
 
   data:
     mongodb:

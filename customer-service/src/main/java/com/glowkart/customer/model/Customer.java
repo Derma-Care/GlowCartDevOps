@@ -26,12 +26,9 @@ public class Customer {
     @Indexed(unique = true)
     private String mobile;
 
-    private String email;
     private String city;
     private LocalDate dob;
     private Integer serviceStatus;
-
-    // New field
     private String gender;
 
     // YES fields
@@ -43,16 +40,18 @@ public class Customer {
 
     // INTERESTED fields
     private String category;
-    private List<String> concern;  // updated
+    private List<String> concern;
     private String skinTone;
     private String photo;
 
-    private Boolean aadhaarConsent;
-    private String blood;
+    // Consent fields
+    private Boolean aadhaarConsent = false;
+    private Boolean userConsent = false;
+    private Boolean privacyConsent = false;
+
     private String registrationCode;
     private String referBy;
-
-    private Integer registrationRank; // NEW — rank assigned after verify code
+    private Integer registrationRank;
 
     // Aadhaar
     @JsonIgnore
@@ -75,8 +74,6 @@ public class Customer {
     private String spinRewardImage;
 
     // Final registration
-    private String prizePostScreenshot;
-    private String followScreenshot;
     private String address;
 
     private boolean registrationCodeVerified = false;

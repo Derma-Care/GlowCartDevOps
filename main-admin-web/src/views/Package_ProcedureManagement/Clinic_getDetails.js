@@ -206,36 +206,37 @@ const Clinic_getDetails = ({ service }) => {
                     <option value={50}>50</option>
                   </CFormSelect>
                 </div>
-
                 <div>
-                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length}
-                </div>
+                  <div>
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length}
+                  </div>
 
-                <CPagination align="end">
-                  <CPaginationItem
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                  >
-                    Previous
-                  </CPaginationItem>
-
-                  {[...Array(totalPages)].map((_, idx) => (
+                  <CPagination align="end">
                     <CPaginationItem
-                      key={idx + 1}
-                      active={currentPage === idx + 1}
-                      onClick={() => setCurrentPage(idx + 1)}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => prev - 1)}
                     >
-                      {idx + 1}
+                      Previous
                     </CPaginationItem>
-                  ))}
 
-                  <CPaginationItem
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                  >
-                    Next
-                  </CPaginationItem>
-                </CPagination>
+                    {[...Array(totalPages)].map((_, idx) => (
+                      <CPaginationItem
+                        key={idx + 1}
+                        active={currentPage === idx + 1}
+                        onClick={() => setCurrentPage(idx + 1)}
+                      >
+                        {idx + 1}
+                      </CPaginationItem>
+                    ))}
+
+                    <CPaginationItem
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                    >
+                      Next
+                    </CPaginationItem>
+                  </CPagination>
+                </div>
               </div>
             )}
           </CCardBody>

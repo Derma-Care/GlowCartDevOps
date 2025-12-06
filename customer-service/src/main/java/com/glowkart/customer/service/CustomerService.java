@@ -128,7 +128,7 @@ public class CustomerService {
     }
 
 
-    // ==================== STEP 3: Complete Registration ====================
+ // ==================== STEP 3: Complete Registration ====================
     @Transactional
     public ApiResponse<Customer> completeRegistrationByMobile(String mobile, CompleteRegistrationDTO dto) {
         Customer customer = customerRepository.findByMobile(mobile)
@@ -137,8 +137,7 @@ public class CustomerService {
         if (!customer.isSpinWheelCompleted())
             return new ApiResponse<>(false, "Complete Spin Wheel first!", customer);
 
-        customer.setPrizePostScreenshot(dto.getPrizePostScreenshot());
-        customer.setFollowScreenshot(dto.getFollowScreenshot());
+        // Only address is relevant now
         customer.setAddress(dto.getAddress());
         customer.setRegistrationCompleted(true);
 
@@ -154,6 +153,7 @@ public class CustomerService {
         log.info("Registration completed for mobile: {}", mobile);
         return new ApiResponse<>(true, "Registration completed successfully!", customer);
     }
+
 
  // ==================== GET WHEEL SLICES ====================
     public ApiResponse<Map<String, Object>> getWheelSlices(String mobile) {
@@ -259,8 +259,10 @@ public class CustomerService {
     private List<String> validateStep1Fields(CustomerDetailsDTO dto) {
         List<String> missingFields = new ArrayList<>();
 
+        // Common field
         if (isEmpty(dto.getGender())) missingFields.add("gender");
 
+        // Service-specific fields
         if (dto.getServiceStatus() == 1) {
             if (isEmpty(dto.getClinicName())) missingFields.add("clinicName");
             if (isEmpty(dto.getClinicCityArea())) missingFields.add("clinicCityArea");
@@ -275,8 +277,14 @@ public class CustomerService {
             throw new InvalidInputException("Invalid serviceStatus value");
         }
 
+        // ✅ Consent checks
+        if (dto.getAadhaarConsent() == null || !dto.getAadhaarConsent()) missingFields.add("aadhaarConsent");
+        if (dto.getUserConsent() == null || !dto.getUserConsent()) missingFields.add("userConsent");
+        if (dto.getPrivacyConsent() == null || !dto.getPrivacyConsent()) missingFields.add("privacyConsent");
+
         return missingFields;
     }
+
 
     private boolean isEmpty(Object value) {
         if (value == null) return true;
@@ -294,15 +302,17 @@ public class CustomerService {
     private void copyStep1Fields(CustomerDetailsDTO dto, Customer customer) {
         customer.setFullName(dto.getFullName());
         customer.setMobile(dto.getMobile());
-        customer.setEmail(dto.getEmail());
         customer.setCity(dto.getCity());
         customer.setDob(dto.getDob());
-        customer.setBlood(dto.getBlood());
         customer.setRegistrationCode(dto.getRegistrationCode());
         customer.setReferBy(dto.getReferBy());
         customer.setServiceStatus(dto.getServiceStatus());
-        customer.setAadhaarConsent(dto.getAadhaarConsent());
         customer.setGender(dto.getGender());
+
+        // New consents
+        customer.setAadhaarConsent(dto.getAadhaarConsent());
+        customer.setUserConsent(dto.getUserConsent());
+        customer.setPrivacyConsent(dto.getPrivacyConsent());
 
         if (dto.getServiceStatus() == 1) {
             customer.setClinicName(dto.getClinicName());
@@ -332,6 +342,7 @@ public class CustomerService {
             customer.setAadharPreHash(AadhaarUtils.randomPreHash());
         }
     }
+
 
 
     // ==================== DUPLICATE CHECKS ====================
