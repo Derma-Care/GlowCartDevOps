@@ -87,14 +87,7 @@ function Help() {
         </p>
       ),
     },
-    {
-      title: 'How to Upload Consent Forms?',
-      content: (
-        <p>
-          In <b>Appointment Details</b> → Click <b>Upload Consent Form</b> → Select file → Submit.
-        </p>
-      ),
-    },
+
     {
       title: 'How to Contact Technical Support?',
       content: (

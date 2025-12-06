@@ -23,11 +23,10 @@ import { toast } from 'react-toastify'
 import { AppointmentData, deleteBookingData, GetBookingByClinicIdData } from './appointmentAPI' // adjust this path as per your project
 import { GetdoctorsByClinicIdData } from './appointmentAPI'
 import { FaEye, FaDownload } from 'react-icons/fa'
- 
+
 import { Download, Eye } from 'lucide-react'
 import { useHospital } from '../Usecontext/HospitalContext'
- 
- 
+
 import { showCustomToast } from '../../Utils/Toaster'
 
 const AppointmentDetails = () => {
@@ -38,8 +37,8 @@ const AppointmentDetails = () => {
   const [doctor, setDoctor] = useState(null)
   const [vitals, setVitals] = useState(null)
   const [showModal, setShowModal] = useState(false)
-    const [loading, setLoading] = useState(false)
-  
+  const [loading, setLoading] = useState(false)
+
   const [formData, setFormData] = useState({
     height: '',
     weight: '',
@@ -121,7 +120,6 @@ const AppointmentDetails = () => {
     } catch (error) {
       console.error('Error fetching vitals:', error)
     }
-    
   }
 
   // Handle vitals form input
@@ -168,7 +166,7 @@ const AppointmentDetails = () => {
 
   const handleSubmitVitals = async () => {
     if (!validateVitals()) {
-      showCustomToast('Please fix validation errors before submitting.','error')
+      showCustomToast('Please fix validation errors before submitting.', 'error')
       return
     }
     console.log('Submitting vitals data:', formData)
@@ -182,9 +180,8 @@ const AppointmentDetails = () => {
       setFormData({ height: '', weight: '', bloodPressure: '', temperature: '', bmi: '' })
       fetchVitals()
     } catch (error) {
-      showCustomToast('Failed to add vitals','error')
-    }
-    finally{
+      showCustomToast('Failed to add vitals', 'error')
+    } finally {
       setLoading(false)
     }
   }
@@ -196,7 +193,7 @@ const AppointmentDetails = () => {
       setShowModal(false)
       fetchVitals()
     } catch (error) {
-      showCustomToast('Failed to update vitals','error')
+      showCustomToast('Failed to update vitals', 'error')
     }
   }
   const handleDeleteVitals = async () => {
@@ -206,7 +203,7 @@ const AppointmentDetails = () => {
 
       setVitals(null)
     } catch (error) {
-      showCustomToast('Failed to delete vitals','error')
+      showCustomToast('Failed to delete vitals', 'error')
     }
   }
   const regexRules = {
@@ -463,48 +460,47 @@ const AppointmentDetails = () => {
             <CButton color="secondary" onClick={() => setShowModal(false)}>
               Close
             </CButton>
-          <CButton
-  style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-  onClick={handleSubmitVitals}
-  disabled={loading} // disable while loading
->
-  {loading ? (
-    <>
-      <span
-        className="spinner-border spinner-border-sm me-2 text-white"
-        role="status"
-      />
-      Saving...
-    </>
-  ) : (
-    'Save'
-  )}
-</CButton>
-
+            <CButton
+              style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+              onClick={handleSubmitVitals}
+              disabled={loading} // disable while loading
+            >
+              {loading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2 text-white"
+                    role="status"
+                  />
+                  Saving...
+                </>
+              ) : (
+                'Save'
+              )}
+            </CButton>
           </CModalFooter>
         </CModal>
 
         {/* Patient Info */}
         <div className="row mb-3">
           <div className="col-md-4">
-            <strong>Patient Name:</strong> {appointment?.name}
+            <strong>Patient Name:</strong> {appointment?.patientName}
           </div>
           <div className="col-md-4">
-            <strong>Mobile Number:</strong> {appointment?.mobileNumber}
+            <strong>Mobile Number:</strong> {appointment?.customermobileNumber}
           </div>
           <div className="col-md-4">
-            <strong>Booking For:</strong> {appointment?.bookingFor}
+            <strong>Booking Type:</strong> {appointment?.service.type}
           </div>
           <div className="col-md-4">
-            <strong>Age:</strong> {appointment?.age} Yrs
+            <strong>Age:</strong> {appointment?.patientAge} Yrs
           </div>
           <div className="col-md-4">
             <strong>Gender:</strong> {appointment?.gender}
           </div>
-          <div className="col-12">
+          {/* <div className="col-12">
             <strong>Problem:</strong>{' '}
             <p style={{ color: 'var(--color-black)' }}>{appointment?.problem}</p>
-          </div>
+          </div> */}
         </div>
 
         <hr />
@@ -517,83 +513,21 @@ const AppointmentDetails = () => {
           <div className="col-md-4">
             <strong>Date:</strong> {appointment?.serviceDate}
           </div>
-          <div className="col-md-4">
+          {/* <div className="col-md-4">
             <strong>Time:</strong> {appointment?.servicetime}
-          </div>
+          </div> */}
           <div className="col-md-4">
-            <strong>Paid Amount:</strong> ₹{appointment?.totalFee}
+            <strong>Paid Amount:</strong> ₹{appointment?.paidAmount}
           </div>
           <div className="col-md-4">
             <strong>Consultation Fee:</strong> ₹{appointment?.consultationFee}
           </div>
+          <div className="col-md-4">
+            <strong>Service Name:</strong> {appointment?.service.serviceName}
+          </div>
         </div>
 
         <hr />
-
-        {/* Doctor & Service Details */}
-        <h6 className="fw-bold mb-3" style={{ color: 'var(--color-black)' }}>
-          Doctor & Service Details
-        </h6>
-        <div className="row">
-          <div className="col-md-4">
-            <strong>Doctor ID:</strong> {appointment?.doctorId}
-          </div>
-          <div className="col-md-4">
-            <strong>Consultation Type:</strong> {appointment?.consultationType}
-          </div>
-          <div className="col-md-4">
-            <strong>Service Name:</strong> {appointment?.subServiceName}
-          </div>
-          <div className="col-md-4">
-            <strong>Service ID:</strong> {appointment?.subServiceId}
-          </div>
-        </div>
-
-        {/* vitals */}
-        {/* Vitals Card */}
-        {/* Vitals Card */}
-        {showVitalsCard && (
-          <div className="card shadow-sm p-3 mb-3 mt-4" style={{ color: 'var(--color-black)' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <h5>Vitals Card</h5>
-              {showConfirmed && !vitals && (
-                <CButton
-                  style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-                  onClick={() => setShowModal(true)}
-                >
-                  Add Vitals
-                </CButton>
-              )}
-            </div>
-            {vitals ? (
-              <div className="row mt-3">
-                <div className="col-md-4">
-                  <strong>Height:</strong> {vitals.height} cm
-                </div>
-                <div className="col-md-4">
-                  <strong>Weight:</strong> {vitals.weight} kg
-                </div>
-                <div className="col-md-4">
-                  <strong>Blood Pressure:</strong> {vitals.bloodPressure}
-                </div>
-                <div className="col-md-4">
-                  <strong>Temperature:</strong> {vitals.temperature} °C
-                </div>
-                <div className="col-md-4">
-                  <strong>BMI:</strong> {vitals.bmi}
-                </div>
-              </div>
-            ) : (
-              !showConfirmed && (
-                <div className="row mt-3">
-                  <div className="col-12">No vitals data available.</div>
-                </div>
-              )
-            )}
-          </div>
-        )}
-
-    
       </div>
     </div>
   )

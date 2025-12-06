@@ -75,7 +75,7 @@ const ServiceTable = ({ data, canRead, canUpdate, canDelete, onView, onEdit, onD
         ) : (
           <CTableRow>
             <CTableDataCell colSpan={6} className="text-center text-muted">
-              🔍 No procedure found
+              🔍 No Procedure Found
             </CTableDataCell>
           </CTableRow>
         )}

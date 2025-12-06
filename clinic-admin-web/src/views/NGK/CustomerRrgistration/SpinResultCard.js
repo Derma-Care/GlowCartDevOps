@@ -202,113 +202,64 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           </p>
 
           {/* PRIZE DISPLAY */}
-          {finalPrize.spinRewardImage ? (
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{ gap: '60px' }}
-            >
-              {/* Left Section: Text */}
-              <div>
-                <h4
-                  style={{
-                    margin: 0,
-                    color: NGK_COLORS.primary,
-                    fontSize: 'clamp(20px, 5vw, 24px)',
-                    textAlign: 'center',
-                  }}
-                >
-                  {finalPrize.spinRewardValue}
-                </h4>
-                <p
-                  style={{
-                    fontSize: '16px',
-                    color: '#555',
-                    marginTop: '5px',
-                    marginLeft: '5%',
-                    textAlign: 'center',
-                  }}
-                >
-                  a premium {finalPrize.spinRewardValue} as a prize!
-                </p>
-              </div>
-              <div
-                className="prize-circle"
-                style={{
-                  width: 120, // Increased container size (optional)
-                  height: 120,
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  padding: 10, // Adds inner space so image isn't cropped
 
-                  border: '3px solid #ff2e85',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
-                }}
-              >
-                <img
-                  src={
-                    finalPrize.spinRewardImage?.startsWith('data:')
-                      ? finalPrize.spinRewardImage
-                      : `data:image/png;base64,${finalPrize.spinRewardImage}`
-                  }
-                  alt="Prize"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                  }}
-                />
-                )
-              </div>
-            </div>
-          ) : (
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{ gap: '40px' }}
-            >
-              <div className="w-50">
-                <p
-                  style={{
-                    fontSize: '16px',
-                    color: '#555',
-                    marginTop: '5px',
-                    marginLeft: '5%',
-                    textAlign: 'center',
-                  }}
-                >
-                  <span style={{ fontWeight: 'bold', color: '#ff2e85' }}>
-                    {finalPrize.spinRewardValue}
-                  </span>{' '}
-                  discount on all dermatology products. Just show this coupon and you will get{' '}
-                  {finalPrize.spinRewardValue} off on dermatology products.
-                </p>
-              </div>
-              <div
+          <div className="d-flex align-items-center justify-content-center" style={{ gap: '60px' }}>
+            {/* Left Section: Text */}
+            <div>
+              <h4
                 style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  padding: 10,
-                  border: '3px solid #ff2e85',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column', // <<< Stack text vertically
-                  boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
-                  color: '#ff2e85',
+                  margin: 0,
+                  color: NGK_COLORS.primary,
+                  fontSize: 'clamp(20px, 5vw, 24px)',
                   textAlign: 'center',
                 }}
               >
-                <div style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1 }}>
-                  {finalPrize.spinRewardValue}
-                </div>
-                <span style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1 }}>OFF</span>
-              </div>
+                {finalPrize.spinRewardValue}
+              </h4>
+              <p
+                style={{
+                  fontSize: '16px',
+                  color: '#555',
+                  marginTop: '5px',
+                  marginLeft: '5%',
+                  textAlign: 'center',
+                }}
+              >
+                a premium {finalPrize.spinRewardValue} as a prize!
+              </p>
             </div>
-          )}
+            <div
+              className="prize-circle"
+              style={{
+                width: 120, // Increased container size (optional)
+                height: 120,
+                borderRadius: '50%',
+                overflow: 'hidden',
+                padding: 10, // Adds inner space so image isn't cropped
+
+                border: '3px solid #ff2e85',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
+              }}
+            >
+              <img
+                src={
+                  finalPrize.spinRewardImage?.startsWith('data:')
+                    ? finalPrize.spinRewardImage
+                    : `data:image/png;base64,${finalPrize.spinRewardImage}`
+                }
+                alt="Prize"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                }}
+              />
+              )
+            </div>
+          </div>
         </CCardBody>
       </CCard>
 
@@ -326,11 +277,10 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
         }}
       >
         <p style={{ margin: 0 }}>
-          Share your winning moment on Instagram to continue to the next step.
+          Share your winning moment on Instagram to proceed to the next step and provide your
+          delivery address.
         </p>
-        <p style={{ marginTop: 6, fontSize: 13 }}>
-          <strong>Note:</strong> After posting, take a screenshot — you'll upload it next.
-        </p>
+
         <p style={loaderStyles.desc}>[optional]</p>
       </div>
 
@@ -370,25 +320,25 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
               <br />
               Please upload it on Instagram and paste the caption.
               <br />
-              After posting, take a screenshot and upload it on the next screen.
+              Also, please tag our Instagram page @ngkderma while posting.
             </p>
           </div>
 
           <style>
             {`
-        .spin-loader {
-          width: 65px;
-          height: 65px;
-          border: 6px solid #ffd4ec;
-          border-top-color: #D2025B;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}
+      .spin-loader {
+        width: 65px;
+        height: 65px;
+        border: 6px solid #ffd4ec;
+        border-top-color: #D2025B;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}
           </style>
         </div>
       )}

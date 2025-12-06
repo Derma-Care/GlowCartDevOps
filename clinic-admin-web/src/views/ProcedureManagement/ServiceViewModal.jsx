@@ -110,7 +110,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Service Time:</span>
+              <span className="mb-1 fw-semibold">Service Time: </span>
               <span className="text-muted">
                 {data.minTime ? formatMinutes(data.minTime) : 'N/A'}
               </span>
@@ -120,7 +120,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="mb-1 fw-semibold">No. of Sittings:</span>
               <span className="text-muted">
                 {' '}
-                {data.minTime ? formatMinutes(data.sittings) : 'N/A'}
+                {data.sittings ?  data.sittings : 'N/A'}
               </span>
               {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
             </CCol>

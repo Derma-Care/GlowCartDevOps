@@ -73,7 +73,7 @@ const PackageTableData = ({ data, canRead, canUpdate, canDelete, onView, onEdit,
         ) : (
           <CTableRow>
             <CTableDataCell colSpan={6} className="text-center text-muted">
-              🔍 No procedure found
+              🔍 No Packages Found
             </CTableDataCell>
           </CTableRow>
         )}
