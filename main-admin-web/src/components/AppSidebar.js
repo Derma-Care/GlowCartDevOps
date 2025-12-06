@@ -44,7 +44,7 @@ const AppSidebar = () => {
             <img
               src={Logo}
               alt="Glowkart Logo"
-              style={{ width: '140px', height: '120px', marginBottom: '0px', marginLeft: '30px' }}
+              style={{ height: '120px', marginBottom: '0px' }}
             />
           </div>
           <div

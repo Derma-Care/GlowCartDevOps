@@ -1,6 +1,9 @@
 spring:
   application:
     name: customer-service
+  cloud:
+    config:
+      uri: http://config-server:8888 # Config Server URI
 
   data:
     mongodb:

@@ -47,7 +47,7 @@ const CustomerManagement = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [isAdding, setIsAdding] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [currentMobile, setCurrentMobile] = useState(null)
@@ -548,15 +548,24 @@ const CustomerManagement = () => {
                       Previous
                     </CPaginationItem>
 
-                    {[...Array(totalPages)].map((_, idx) => (
-                      <CPaginationItem
-                        key={idx + 1}
-                        active={currentPage === idx + 1}
-                        onClick={() => handlePageChange(idx + 1)}
-                      >
-                        {idx + 1}
-                      </CPaginationItem>
-                    ))}
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((page) => {
+                        if (totalPages <= 5) return true;
+                        if (currentPage <= 3) return page <= 5;
+                        if (currentPage >= totalPages - 2)
+                          return page >= totalPages - 4;
+                        return page >= currentPage - 2 && page <= currentPage + 2;
+                      })
+                      .map((page) => (
+                        <CPaginationItem
+                          key={page}
+                          active={page === currentPage}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </CPaginationItem>
+                      ))}
 
                     <CPaginationItem
                       disabled={currentPage === totalPages}

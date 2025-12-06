@@ -11,6 +11,7 @@ import {
 } from "@coreui/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NGK_COLORS } from "../../Constant/Themes";
+import PackageManagement from "../PackageManagement/PackageManagement";
 
 // Lazy-load Service Management component
 const ServiceManagement = React.lazy(() =>
@@ -18,8 +19,7 @@ const ServiceManagement = React.lazy(() =>
 );
 
 
-
-const PackageDetails = () => {
+const Package_ProcedureManagement_Tabs = () => {
   const [activeTab, setActiveTab] = useState(1);
 
   const location = useLocation();
@@ -34,9 +34,9 @@ const PackageDetails = () => {
       {/* ---------- HEADER ---------- */}
       <div
         className="text-white p-3 d-flex justify-content-between align-items-center rounded"
-        style={{ backgroundColor: NGK_COLORS.primary }}
+        style={{  background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))',color: 'white'}}
       >
-        <h5 className="mb-1" style={{ color: 'white' }}>
+        <h5 className="mb-1" style={{color: 'white'}}>
           {clinic?.name || "Clinic"} — Procedures & Packages
         </h5>
 
@@ -97,12 +97,10 @@ const PackageDetails = () => {
 
           {/* ===================== PACKAGES TAB ========================= */}
           <CTabPane visible={activeTab === 2}>
-            <h5>All Packages</h5>
-
-            <div className="border rounded p-3">
-              <strong>Package List Section</strong>
-              <p>This is where you will display packages data.</p>
-            </div>
+            <Suspense fallback={<p>Loading Procedures...</p>}>
+              <PackageManagement clinic={clinic} />
+            </Suspense>
+            
           </CTabPane>
 
         </CTabContent>
@@ -113,4 +111,4 @@ const PackageDetails = () => {
   );
 };
 
-export default PackageDetails;
+export default Package_ProcedureManagement_Tabs;

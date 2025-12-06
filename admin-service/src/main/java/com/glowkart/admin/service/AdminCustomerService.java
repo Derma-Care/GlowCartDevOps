@@ -1,5 +1,6 @@
 package com.glowkart.admin.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,9 @@ public class AdminCustomerService {
 
     public List<CustomerResponseDTO> getAllCustomers() {
         ApiResponse<List<CustomerResponseDTO>> response = customerServiceClient.getAllCustomers();
-        if (!response.isSuccess() || response.getData() == null || response.getData().isEmpty()) {
-            throw new ResourceNotFoundException("No customers found");
-        }
-        return response.getData();
+        return (response.getData() != null) ? response.getData() : new ArrayList<>();
     }
+
 
     public CustomerResponseDTO getCustomerByMobile(String mobile) {
         ApiResponse<CustomerResponseDTO> response = customerServiceClient.getCustomer(mobile);

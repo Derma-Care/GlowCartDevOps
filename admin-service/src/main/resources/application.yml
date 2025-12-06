@@ -2,6 +2,10 @@ spring:
   application:
     name: admin-service
 
+  cloud:
+    config:
+      uri: http://config-server:8888    # <-- Config Server URI added here
+
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/glowkart_admin}

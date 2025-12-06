@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {  useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
     CCard,
     CCardBody,
@@ -30,7 +30,7 @@ const ClinicDetails = () => {
     const { clinicId } = useParams();
     const { state: clinic } = useLocation();
     const [activeTab, setActiveTab] = useState(1);
-  const navigate = useNavigate()
+    const navigate = useNavigate()
     // Define tabs with visibility conditions
     const tabs = [
         {
@@ -162,8 +162,8 @@ const ClinicDetails = () => {
     return (
         <CCard>
             <div className="text-white p-3 d-flex justify-content-between align-items-center rounded"
-                style={{ backgroundColor: NGK_COLORS.primary }}>
-                <h5 className="mb-1" style={{ color: 'white' }}>{clinic?.name} — Clinic Details</h5>
+                style={{ background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))' }}>
+                <h5 className="mb-1" style={{ color: 'white' }} >{clinic?.name} — Clinic Details</h5>
 
                 <CButton
                     size="sm"

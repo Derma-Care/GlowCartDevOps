@@ -219,12 +219,21 @@ public class CustomerService {
 
 
 
-    // ==================== CRUD ====================
+ // ==================== CRUD ====================
     public ApiResponse<List<Customer>> getAllCustomers() {
         List<Customer> customers = customerRepository.findAll();
-        if (customers.isEmpty()) return new ApiResponse<>(false, "No customers found", null);
-        return new ApiResponse<>(true, "Customers retrieved successfully", customers);
+
+        // Filter only those customers where userProfileCompleted is true
+        List<Customer> completedUsers = customers.stream()
+                .filter(Customer::isUserProfileCompleted)
+                .toList(); // or collect(Collectors.toList()) in older Java
+
+        if (completedUsers.isEmpty()) 
+            return new ApiResponse<>(false, "No completed customers found", null);
+
+        return new ApiResponse<>(true, "Completed customers retrieved successfully", completedUsers);
     }
+
 
     public ApiResponse<Customer> getCustomer(String mobile) {
         Customer customer = customerRepository.findByMobile(mobile)

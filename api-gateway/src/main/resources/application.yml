@@ -3,49 +3,55 @@ spring:
     name: api-gateway
   main:
     web-application-type: reactive
-
   cloud:
+    config:
+      uri: http://config-server:8888  # Config Server URI
     gateway:
-      server:
-        webflux:
-          routes:
-            # 0: Admin Service
-            - id: admin-service
-              uri: lb://admin-service
-              predicates:
-                - Path=/admin/**
+      routes:
+        # 0: Admin Service
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/admin/**
 
-            # 1: Clinic Admin Service
-            - id: clinic-admin-service
-              uri: lb://clinicadmin-service
-              predicates:
-                - Path=/clinic-admin/**
+        # 1: Clinic Admin Service
+        - id: clinic-admin-service
+          uri: lb://clinicadmin-service
+          predicates:
+            - Path=/clinic-admin/**
 
-            # 2: Customer Service
-            - id: customer-service
-              uri: lb://customer-service
-              predicates:
-                - Path=/api/**
+        # 2: Customer Service
+        - id: customer-service
+          uri: lb://customer-service
+          predicates:
+            - Path=/api/**
 
-            # 3: Onboarding Service
-            - id: onboarding-service
-              uri: lb://onboarding-service
-              predicates:
-                - Path=/onboard/**
+        # 3: Onboarding Service
+        - id: onboarding-service
+          uri: lb://onboarding-service
+          predicates:
+            - Path=/onboard/**
 
-            # 4: Procedure Service
-            - id: procedure-service
-              uri: lb://procedure-service
-              predicates:
-                - Path=/procedures/**
+        # 4: Procedure Service
+        - id: procedure-service
+          uri: lb://procedure-service
+          predicates:
+            - Path=/procedures/**
 
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                allowedOrigins: "http://localhost:3000,https://glowkartclinic.ashokfruit.shop,https://glowkartmain.ashokfruit.shop"
-                allowedMethods: "GET,POST,PUT,DELETE"
-                allowedHeaders: "*"
-                allowCredentials: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "https://glowkartclinic.ashokfruit.shop"
+              - "https://glowkartmain.ashokfruit.shop"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders: "*"
+            allowCredentials: true
 
 server:
   port: 8080

@@ -26,9 +26,20 @@ public class AdminCustomerController {
 
     @GetMapping("/customers/all")
     public ResponseEntity<ApiResponse<List<CustomerResponseDTO>>> getAllCustomers() {
+        // Get the list directly from the service
         List<CustomerResponseDTO> customers = adminCustomerService.getAllCustomers();
-        return ResponseEntity.ok(new ApiResponse<>(true, "Customers retrieved successfully", customers));
+
+        // Wrap in ApiResponse dynamically
+        ApiResponse<List<CustomerResponseDTO>> response = new ApiResponse<>(
+                !customers.isEmpty(),                               // success = true if list not empty
+                customers.isEmpty() ? "No customers found" : "Customers retrieved successfully",
+                customers
+        );
+
+        // Return HTTP 200 OK regardless, or 404 if you prefer
+        return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/customers/{mobile}")
     public ResponseEntity<ApiResponse<CustomerResponseDTO>> getCustomer(@PathVariable String mobile) {

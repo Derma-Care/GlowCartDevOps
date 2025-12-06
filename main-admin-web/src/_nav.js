@@ -36,7 +36,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Packages & Procedures',
-    to: '/package-management',
+    to: '/packages-procedures',
     icon: <CIcon icon={cilGift} customClassName="nav-icon" />,
   },
   {

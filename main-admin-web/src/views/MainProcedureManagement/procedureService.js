@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { ClinicBase_urls, PROCEDURE_GET_ALL_URL } from '../../baseUrl'
+import { BASE_URL_API, PROCEDURE_GET_ALL_URL } from '../../baseUrl'
 
 export const getAllProcedures = async () => {
   try {
@@ -19,7 +19,7 @@ export const getAllProcedures = async () => {
 
 export const getProcedurePricingByClinicId = async (clinicId) => {
   try {
-    const res = await axios.get(`${ClinicBase_urls}/procedure-pricing/all/${clinicId}`)
+    const res = await axios.get(`${BASE_URL_API}/pricing/clinic/${clinicId}`)
     return res.data
   } catch (err) {
     console.error('API Error:', err)

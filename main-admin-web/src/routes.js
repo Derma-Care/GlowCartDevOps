@@ -1,6 +1,6 @@
 import { element } from 'prop-types'
 import React from 'react'
-import PackageDetails from './views/PackageManagement/PackageDetails'
+import Package_ProcedureManagement_Tabs from './views/Package_ProcedureManagement/Package_ProcedureManagement_Tabs'
 
 
 // Lazy-loaded components
@@ -20,7 +20,7 @@ const PatientViewDetails = React.lazy(() => import('./views/providerManagement/P
 const AdsManagement = React.lazy(() => import('./views/AdsManagement/AdsManagement'))
 
 const MembershipManagement = React.lazy(() => import('./views/MembershipManagement/MembershipManagement'))
-const PackageManagement = React.lazy(() => import('./views/PackageManagement/PackageManagement'))
+const Clinic_getDetails = React.lazy(() => import('./views/Package_ProcedureManagement/Clinic_getDetails'))
 const Payouts = React.lazy(() => import('./views/Payouts/Payout'))
 // const BranchDetails = React.lazy(() => import('./views/clinicManagement/BranchDetails'))
 const RegistrationCodeManagement = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodes'))
@@ -46,10 +46,10 @@ const routes = [
   // { path: '/clinicDetails', name: 'ClinicDetails', element: ClinicManagementDetails },
   // { path: '/branchManagement', name: 'BranchManagement', element: BranchManagement },
   { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
-  { path: '/package-management', name: 'PackageManagement', element: PackageManagement },
+  { path: '/packages-procedures', name: 'Clinic_getDetails', element: Clinic_getDetails },
   { path: '/registration-codes', name: 'RegistrationCodeManagement', element: RegistrationCodeManagement },
   { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
-  { path: "/PackageDetails/:clinicId", name: 'PackageDetails', element: PackageDetails }
+  { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs }
 
 ]
 

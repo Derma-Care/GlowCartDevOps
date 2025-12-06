@@ -22,6 +22,19 @@ services:
     networks:
       - app-network
 
+  # Config Server
+  config-server:
+    build: ./config-server
+    container_name: config_server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+    networks:
+      - app-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
   # Admin Service
   admin-service:
     build: ./admin-service
