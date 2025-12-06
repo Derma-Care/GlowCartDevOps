@@ -9,7 +9,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/ChSaimanikanta/glowkart-config-repo.git
+          uri: https://github.com/ChSaimanikanta/glowkart-config-repo-pro.git
           clone-on-start: true
           default-label: main  # branch to use
 
