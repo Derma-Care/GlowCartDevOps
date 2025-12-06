@@ -258,20 +258,9 @@ Best regards,
 
               {filteredCodes.length > 0 && (
                 <div
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    width: "100%",
-                    background: "#fff",
-                    borderTop: "1px solid #dee2e6",
-                    padding: "15px 20px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                  }}
+                  className="d-flex justify-content-between px-3 pb-3 mt-3"
                 >
-                  <div className="d-flex align-items-center mb-2 mb-md-0">
+                  <div >
                     <label className="me-2">Rows per page:</label>
                     <CFormSelect
                       value={itemsPerPage}
@@ -279,7 +268,7 @@ Best regards,
                         setItemsPerPage(Number(e.target.value));
                         setCurrentPage(1);
                       }}
-                      style={{ width: "80px" }}
+                      style={{ width: "80px", display: 'inline-block' }}
                     >
                       <option value={50}>50</option>
                       <option value={100}>100</option>
@@ -288,13 +277,13 @@ Best regards,
                     </CFormSelect>
                   </div>
 
-                  <div className="text-end">
-                    <div className="mb-2">
+                  <div >
+                    <div >
                       Showing {indexOfFirst + 1} to{" "}
                       {Math.min(indexOfLast, filteredCodes.length)} of{" "}
                       {filteredCodes.length} entries
                     </div>
-                    <CPagination>
+                    <CPagination align="end">
                       <CPaginationItem
                         disabled={currentPage === 1}
                         onClick={() => handlePageChange(currentPage - 1)}

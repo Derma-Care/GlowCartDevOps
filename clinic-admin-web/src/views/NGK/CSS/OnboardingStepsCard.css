@@ -465,7 +465,78 @@
 }
 
 @keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: .4; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* MOBILE FIX */
+@media (max-width: 480px) {
+  .steps-wrapper {
+    padding: 12px !important;
+  }
+
+  .step-box {
+    width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: 14px !important;
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+
+  .step-number-box {
+    min-width: 55px !important;
+    padding: 8px !important;
+  }
+
+  .step-title {
+    font-size: 15px !important;
+  }
+
+  .step-subtitle {
+    font-size: 13px !important;
+  }
+
+  .step-icon {
+    font-size: 26px !important;
+  }
+}
+/* Close Button – Works on Mobile & Desktop */
+.onboard-close-btn {
+  width: 100%; /* full width row */
+  display: flex;
+  justify-content: flex-end; /* move button to right */
+  margin-top: 10px;
+}
+
+.close-button {
+  background: #ff4fa1;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.close-button:hover {
+  background: #e23487;
+}
+
+/* Mobile Optimization */
+@media (max-width: 480px) {
+  .onboard-close-btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+  }
 }

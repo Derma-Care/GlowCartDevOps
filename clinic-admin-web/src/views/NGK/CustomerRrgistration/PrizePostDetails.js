@@ -8,7 +8,7 @@ import { UploadedPreview } from '../Utills/FileUpload'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { NGK_COLORS } from '../../../Constant/Themes'
 import { Row } from 'react-bootstrap'
-
+import DermaCareLogo from '../../../assets/images/logoP.png'
 export default function PrizePostDetails({ form, setForm, onSubmit, userData }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -170,18 +170,16 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
 
   return (
     <>
-      <>
-        <div
-          style={{
-            width: '100%',
-            borderRadius: 20,
-            padding: 24,
-          }}
-          className="form-panel"
-        >
-          <div>
-            {/* TITLE */}
-            <h3
+      <div
+        style={{
+          width: '100%',
+          borderRadius: 20,
+        }}
+        className="form-panel"
+      >
+        <div>
+          {/* TITLE */}
+          {/* <h3
               className="fw-bold"
               style={{
                 color: NGK_COLORS.primary,
@@ -192,265 +190,280 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
               }}
             >
               Claim Your Prize
-            </h3>
+            </h3> */}
+          <div className="mobileSpin justify-content-center align-items-center d-flex flex-column mb-5">
+            <img
+              src={DermaCareLogo}
+              alt="logo"
+              style={{
+                height: 100,
+                borderRadius: 12,
+                objectFit: 'fill',
+                // border: '1px solid #eee',
+              }}
+            />
 
-            {/* STEP 1 */}
-            <div style={{ marginBottom: 30 }}>
-              <p
+            <h4
+              className="m-0 fw-bold text-center w-100 gradient-text"
+              style={{ letterSpacing: 0.5 }}
+            >
+              Claim Your Prize
+            </h4>
+          </div>
+
+          {/* STEP 1 */}
+          <div style={{ marginBottom: 30 }}>
+            <p
+              style={{
+                fontWeight: 700,
+                marginBottom: 10,
+                fontSize: 17,
+                color: NGK_COLORS.primary,
+              }}
+            >
+              Upload Prize Post Screenshot
+            </p>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+              }}
+            >
+              <label
                 style={{
-                  fontWeight: 700,
-                  marginBottom: 10,
-                  fontSize: 17,
-                  // color: '#333',
+                  border: '2px dashed #ffb3d4',
+                  borderRadius: 14,
+                  padding: '20px 14px',
+                  width: '100%',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: '#fff6fb',
+                  color: NGK_COLORS.primary,
+                  fontWeight: '600',
+                  fontSize: 15,
+                  transition: '0.3s',
                 }}
               >
-                1️⃣ Upload Prize Post Screenshot
-              </p>
+                📷 Upload Screenshot
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg,.png,application/pdf"
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
 
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  alignItems: 'center',
-                }}
-              >
-                <label
-                  style={{
-                    border: '2px dashed #ffb3d4',
-                    borderRadius: 14,
-                    padding: '20px 14px',
-                    width: '100%',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: '#fff6fb',
-                    color: NGK_COLORS.primary,
-                    fontWeight: '600',
-                    fontSize: 15,
-                    transition: '0.3s',
+                    try {
+                      const base64 = await processFile(file)
+                      updateForm('prizePostScreenshot', base64)
+                    } catch (err) {
+                      showCustomToast('err.message', 'error')
+                      // alert(err.message)
+                      e.target.value = ''
+                    }
                   }}
-                >
-                  📷 Upload Screenshot
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,application/pdf"
-                    onChange={async (e) => {
-                      const file = e.target.files[0]
-                      if (!file) return
+                  style={{ display: 'none' }}
+                />
+              </label>
 
-                      try {
-                        const base64 = await processFile(file)
-                        updateForm('prizePostScreenshot', base64)
-                      } catch (err) {
-                        showCustomToast('err.message', 'error')
-                        // alert(err.message)
-                        e.target.value = ''
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                  />
-                </label>
-
-                <UploadedPreview src={form.prizePostScreenshot} />
-              </div>
+              <UploadedPreview src={form.prizePostScreenshot} />
             </div>
+          </div>
 
-            {/* STEP 2 */}
-            <div style={{ marginBottom: 30 }}>
-              <p
-                style={{
-                  fontWeight: 700,
-                  marginBottom: 10,
-                  fontSize: 17,
-                  // color: '#333',
-                }}
-              >
-                2️⃣ Enter Your Address
-              </p>
+          {/* STEP 2 */}
+          <div style={{ marginBottom: 30 }}>
+            <p
+              style={{
+                fontWeight: 700,
+                marginBottom: 10,
+                fontSize: 17,
+                color: NGK_COLORS.primary,
+              }}
+            >
+              Enter Your Address
+            </p>
 
-              <CRow>
-                <CCol md={8} className="mt-2">
-                  <CFormInput
-                    placeholder="Enter your full address"
-                    value={form.address}
-                    onChange={(e) => updateForm('address', e.target.value)}
-                    style={{
-                      borderRadius: 12,
-                      padding: 14,
-                      border: '1px solid #e3e3e3',
-                      // background: '#fafafa',
-                    }}
-                  />
-                </CCol>
-
-                <CCol md={4} className="mt-2">
-                  <CButton
-                    color="secondary"
-                    variant="outline"
-                    style={{
-                      width: '100%',
-                      borderRadius: 12,
-                      padding: '14px 0',
-                      fontWeight: '600',
-                      borderColor: '#bbb',
-                    }}
-                    onClick={handleGetLocation}
-                    disabled={loadingLocation}
-                  >
-                    {loadingLocation ? 'Fetching...' : '📌 Use Location'}
-                  </CButton>
-                </CCol>
-              </CRow>
-            </div>
-
-            {/* FOLLOW US */}
-            <Row className="g-3 mb-5">
-              {/* LEFT BOX */}
-              <CCol md={6} className="d-flex">
-                <div
-                  className="w-100"
+            <CRow>
+              <CCol md={8} className="mt-2">
+                <CFormInput
+                  placeholder="Enter your full address"
+                  value={form.address}
+                  onChange={(e) => updateForm('address', e.target.value)}
                   style={{
-                    background: '#fff1f9',
-                    padding: 18,
-                    borderRadius: 14,
-                    border: '1px solid #ffd4ea',
-                    display: 'flex',
-                    alignItems: 'center', // vertically center text
-                    justifyContent: 'center',
+                    borderRadius: 12,
+                    padding: 14,
+                    border: `1px solid ${NGK_COLORS.primarySoft}`,
+                    // background: '#fafafa',
                   }}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 16,
-                      color: NGK_COLORS.primary,
-                      fontWeight: 700,
-                    }}
-                  >
-                    ⭐ Follow Us on Instagram
-                  </p>
-                </div>
+                />
               </CCol>
 
-              {/* RIGHT BUTTON */}
-              <CCol md={6} className="d-flex">
+              <CCol md={4} className="mt-2">
                 <CButton
-                  className="w-100"
+                  // color="secondary"
+                  variant="outline"
                   style={{
-                    background: NGK_COLORS.primary,
-                    color: 'white',
-                    padding: '12px 18px',
+                    width: '100%',
                     borderRadius: 12,
-                    fontWeight: '700',
-                    fontSize: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 10,
-                    border: 'none',
-                    height: 54,
+                    padding: '14px 0',
+                    fontWeight: '600',
+                    border: `1px solid ${NGK_COLORS.primarySoft}`,
+                    color: NGK_COLORS.primary,
                   }}
-                  onClick={() => window.open('https://www.instagram.com/ngkderma', '_blank')}
+                  onClick={handleGetLocation}
+                  disabled={loadingLocation}
                 >
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
-                    style={{
-                      width: 22,
-                      height: 22,
-                      backgroundColor: 'white',
-                      padding: 4,
-                      borderRadius: 5,
-                    }}
-                  />
-                  Visit Instagram Profile
+                  {loadingLocation ? 'Fetching...' : '📌 Use Location'}
                 </CButton>
               </CCol>
-            </Row>
+            </CRow>
+          </div>
 
-            {/* STEP 3 */}
-            <div style={{ marginBottom: 30 }}>
-              <p
-                style={{
-                  fontWeight: 700,
-                  marginBottom: 10,
-                  fontSize: 17,
-                  // color: '#333',
-                }}
-              >
-                3️⃣ Upload Follow Screenshot
-              </p>
-
+          {/* FOLLOW US */}
+          <Row className="g-3 mb-5">
+            {/* LEFT BOX */}
+            <CCol md={6} className="d-flex">
               <div
+                className="w-100"
                 style={{
+                  background: '#fff1f9',
+                  padding: 18,
+                  borderRadius: 14,
+                  border: '1px solid #ffd4ea',
                   display: 'flex',
-                  gap: 12,
-                  alignItems: 'center',
+                  alignItems: 'center', // vertically center text
+                  justifyContent: 'center',
                 }}
               >
-                <label
+                <p
                   style={{
-                    border: '2px dashed #ffb3d4',
-                    borderRadius: 14,
-                    padding: '20px 14px',
-                    width: '100%',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: '#fff6fb',
+                    margin: 0,
+                    fontSize: 16,
                     color: NGK_COLORS.primary,
-                    fontWeight: '600',
-                    fontSize: 15,
+                    fontWeight: 700,
                   }}
                 >
-                  📁 Upload Screenshot
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,application/pdf"
-                    onChange={async (e) => {
-                      const file = e.target.files[0]
-                      if (!file) return
-
-                      try {
-                        const base64 = await processFile(file)
-                        updateForm('followScreenshot', base64)
-                      } catch (err) {
-                        showCustomToast('err.message', 'error')
-                        // alert(err.message)
-                        e.target.value = ''
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                  />
-                </label>
-
-                <UploadedPreview src={form.followScreenshot} />
+                  ⭐ Follow Us on Instagram
+                </p>
               </div>
-            </div>
+            </CCol>
 
-            {/* SUBMIT BUTTON */}
-            {canSubmit && (
+            {/* RIGHT BUTTON */}
+            <CCol md={6} className="d-flex">
               <CButton
+                className="w-100"
                 style={{
-                  backgroundColor: NGK_COLORS.primary,
-                  width: '100%',
-                  padding: '14px 0',
+                  background: NGK_COLORS.primary,
+                  color: 'white',
+                  padding: '12px 18px',
                   borderRadius: 12,
                   fontWeight: '700',
-                  fontSize: 17,
-                  color: 'white',
+                  fontSize: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
                   border: 'none',
+                  height: 54,
                 }}
-                disabled={loading}
-                onClick={handleSubmit}
+                onClick={() => window.open('https://www.instagram.com/ngkderma', '_blank')}
               >
-                {loading ? 'Please wait...' : 'Complete Registration'}
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/174/174855.png"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    backgroundColor: 'white',
+                    padding: 4,
+                    borderRadius: 5,
+                  }}
+                />
+                Visit Instagram Profile
               </CButton>
-            )}
-          </div>
-        </div>
-      </>
+            </CCol>
+          </Row>
 
-      {/* {showSuccess && (
-        <OnboardSuccess visible={true} onClose={() => setShowSuccess(false)} name={form.fullName} />
-      )} */}
+          {/* STEP 3 */}
+          <div style={{ marginBottom: 30 }}>
+            <p
+              style={{
+                fontWeight: 700,
+                marginBottom: 10,
+                fontSize: 17,
+                color: NGK_COLORS.primary,
+              }}
+            >
+              Upload Follow Screenshot
+            </p>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+              }}
+            >
+              <label
+                style={{
+                  border: '2px dashed #ffb3d4',
+                  borderRadius: 14,
+                  padding: '20px 14px',
+                  width: '100%',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: '#fff6fb',
+                  color: NGK_COLORS.primary,
+                  fontWeight: '600',
+                  fontSize: 15,
+                }}
+              >
+                📁 Upload Screenshot
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg,.png,application/pdf"
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
+
+                    try {
+                      const base64 = await processFile(file)
+                      updateForm('followScreenshot', base64)
+                    } catch (err) {
+                      showCustomToast('err.message', 'error')
+                      // alert(err.message)
+                      e.target.value = ''
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                />
+              </label>
+
+              <UploadedPreview src={form.followScreenshot} />
+            </div>
+          </div>
+
+          {/* SUBMIT BUTTON */}
+          {canSubmit && (
+            <CButton
+              style={{
+                backgroundColor: NGK_COLORS.primary,
+                width: '100%',
+                padding: '14px 0',
+                borderRadius: 12,
+                fontWeight: '700',
+                fontSize: 17,
+                color: 'white',
+                border: 'none',
+              }}
+              disabled={loading}
+              onClick={handleSubmit}
+            >
+              {loading ? 'Please wait...' : 'Complete Registration'}
+            </CButton>
+          )}
+        </div>
+      </div>
     </>
   )
 }

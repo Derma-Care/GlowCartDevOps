@@ -140,6 +140,9 @@ const ServiceFormModal = ({
                 value={newService.offerValidDate || ''}
                 onChange={onChange}
               />
+                {errors.offerValidDate && (
+                              <CFormText className="text-danger">{errors.offerValidDate}</CFormText>
+                            )}
             </CCol>
 
             <CCol md={3} className="mb-4">

@@ -5,7 +5,7 @@ import { getWheelSlices } from '../APIs/getWheelSlices'
 import { sendSpinReward } from '../APIs/SendSpinReward'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { NGK_COLORS } from '../../../Constant/Themes'
-
+import DermaCareLogo from '../../../assets/images/logoP.png'
 export default function SpinWheel({ onResult, userData, setUserData }) {
   const [mustSpin, setMustSpin] = useState(false)
   const [prizeNumber, setPrizeNumber] = useState(0)
@@ -113,14 +113,23 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
 
   return (
     <>
-      <div className="header-container">
-        <h4 className="m-0 fw-bold text-center w-100 gradient-text">Spin And Win</h4>
+      <div className="header-container"></div>
+      <div className="spin-container  d-flex flex-column align-items-center ">
+        <div className="mobileSpin justify-content-center align-items-center d-flex flex-column">
+          <img
+            src={DermaCareLogo}
+            alt="logo"
+            style={{
+              height: 100,
+              borderRadius: 12,
+              objectFit: 'fill',
+              // border: '1px solid #eee',
+            }}
+          />
 
-        {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
-        {/* <small className="sub-gradient-text">Registration</small> */}
-      </div>
-      <div className="spin-container">
-        <div className="wheel-wrapper">
+          <h4 className="m-0 fw-bold text-center w-100 gradient-text">Spin And Win</h4>
+        </div>
+        <div className="wheel-wrapper mt-4">
           <Wheel
             wheelSize={wheelSize}
             mustStartSpinning={mustSpin}
@@ -138,7 +147,7 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
             fontSize={16}
             pointerProps={{
               style: {
-                transform: window.innerWidth < 480 ? 'scale(0.50)' : 'scale(0.75)',
+                transform: window.innerWidth < 480 ? 'scale(0.55)' : 'scale(0.76)',
                 transformOrigin: 'top',
               },
             }}

@@ -209,7 +209,7 @@ const ProcedureManagement = () => {
               <CFormSelect
                 value={itemsPerPage}
                 onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                style={{ width: '80px' }}
+                style={{ width: '80px',display: 'inline-block' }}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>

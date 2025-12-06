@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { CContainer } from '@coreui/react'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import HospitalDetailsTabs from './HospitalDetailsTabs'
 
 const PageLayout = ({ title, children, branch }) => {
   const { selectedHospital } = useHospital()
@@ -31,7 +32,7 @@ const PageLayout = ({ title, children, branch }) => {
   // }, [hospital?.hospitalId, branch])
 
   return (
-    <CContainer fluid className="p-2">
+    <CContainer fluid>
       {/* 🔸 Page Title */}
       {title && (
         <h2
@@ -49,10 +50,7 @@ const PageLayout = ({ title, children, branch }) => {
 
       {/* 🔸 Hospital Information Card */}
       {branch && hospital && (
-        <div
-          className="p-4     mb-5  "
-          
-        >
+        <div>
           <div className="d-flex align-items-start" style={{ gap: '16px', flexWrap: 'wrap' }}>
             {/* Hospital Logo */}
             {/* {hospital.hospitalLogo ? (
@@ -88,10 +86,7 @@ const PageLayout = ({ title, children, branch }) => {
             {/* Hospital Details */}
             {/* 🔸 Hospital Information Card */}
             {hospital && (
-              <div
-                className="p-4 rounded shadow-sm mb-5 bg-white"
-                style={{ border: '1px solid #f1f1f1' }}
-              >
+              <div style={{ border: '1px solid #f1f1f1', padding: '16px 0' }}>
                 {/* TOP SECTION */}
                 <div
                   className="p-3 rounded mb-4"
@@ -137,7 +132,7 @@ const PageLayout = ({ title, children, branch }) => {
                       </div>
                     )}
 
-                    <div className='text-white'>
+                    <div className="text-white">
                       <h3 className="mb-1 fw-bold text-white">{hospital.name}</h3>
                       <p className="mb-0 text-white">{hospital.clinicType}</p>
                       <p className="mb-0 text-white" style={{ fontSize: '0.9rem' }}>
@@ -148,84 +143,7 @@ const PageLayout = ({ title, children, branch }) => {
                 </div>
 
                 {/* DETAIL GRID */}
-                <div className="row g-3">
-                  {/* 🔹 Basic Info */}
-                  <DetailCard
-                    title="📌 Basic Details"
-                    fields={{
-                      'Clinic ID': hospital.clinicId,
-                      'Clinic Type': hospital.clinicType,
-                      Recommended: hospital.recommended ? 'Yes' : 'No',
-                      Subscription: hospital.subscription,
-                      Status: hospital.status,
-                    }}
-                  />
-
-                  {/* 🔹 Contact Info */}
-                  <DetailCard
-                    title="📞 Contact Information"
-                    fields={{
-                      Phone: hospital.contactNumber,
-                      WhatsApp: hospital.whatsappNumber,
-                      Email: hospital.email,
-                      Website: hospital.website,
-                      'Primary Contact Person': hospital.primaryContactPerson,
-                    }}
-                  />
-
-                  {/* 🔹 Timings */}
-                  <DetailCard
-                    title="⏰ Clinic Timings"
-                    fields={{
-                      'Opening Time': hospital.openingTime,
-                      'Closing Time': hospital.closingTime,
-                    }}
-                  />
-
-                  {/* 🔹 Bank Details */}
-                  <DetailCard
-                    title="🏦 Bank Information"
-                    fields={{
-                      'Account Name': hospital.bankAccountName,
-                      'Account Number': hospital.bankAccountNumber,
-                      'IFSC Code': hospital.ifscCode,
-                      Branch: hospital.branch,
-                      'UPI ID': hospital.upiId,
-                    }}
-                  />
-
-                  {/* 🔹 License & Compliance */}
-                  <DetailCard
-                    title="📄 License Information"
-                    fields={{
-                      'License Number': hospital.licenseNumber,
-                      'Issuing Authority': hospital.issuingAuthority,
-                      'Form Type': hospital.drugLicenseFormType,
-                      'Has Pharmacist': hospital.hasPharmacist,
-                      'Medicines Sold On-Site':
-                        hospital.medicinesSoldOnSite === 'true' ? 'Yes' : 'No',
-                    }}
-                  />
-
-                  {/* 🔹 Social Media */}
-                  <DetailCard
-                    title="🌐 Social Media Links"
-                    fields={{
-                      Instagram: hospital.instagramHandle,
-                      Facebook: hospital.facebookHandle,
-                      Twitter: hospital.twitterHandle,
-                    }}
-                  />
-
-                  {/* 🔹 Location */}
-                  <DetailCard
-                    title="📍 Location Coordinates"
-                    fields={{
-                      Latitude: hospital.latitude,
-                      Longitude: hospital.longitude,
-                    }}
-                  />
-                </div>
+                <HospitalDetailsTabs hospital={hospital} />
               </div>
             )}
           </div>
@@ -288,27 +206,4 @@ const PageLayout = ({ title, children, branch }) => {
 }
 
 export default PageLayout
-const DetailCard = ({ title, fields }) => (
-  <div className="col-md-6 col-lg-4">
-    <div
-      className="p-3 rounded h-100 bg-white"
-      style={{
-        border: '1px solid #ebebeb',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-      }}
-    >
-      <h6 className="fw-bold mb-2" style={{ color: 'var(--color-black)' }}>
-        {title}
-      </h6>
 
-      <ul className="list-unstyled mb-0">
-        {Object.entries(fields).map(([label, value]) => (
-          <li key={label} className="mb-1 text-secondary">
-            <strong className="text-dark">{label}:</strong>{' '}
-            {value || <span className="text-muted">—</span>}
-          </li>
-        ))}
-      </ul>
-    </div>
-  </div>
-)

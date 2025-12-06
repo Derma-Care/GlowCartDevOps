@@ -40,7 +40,7 @@ export default function OnboardingStepsCard({ setVisible }) {
           <h2>How Neeha’s GlowKart Onboarding Works</h2>
         </div>
 
-        <button onClick={() => setVisible(false)} className="close-btn">
+        <button onClick={() => setVisible(false)} className="close-btn  ">
           ✖
         </button>
       </div>
@@ -52,16 +52,16 @@ export default function OnboardingStepsCard({ setVisible }) {
             className="step-box"
             style={{
               background: colors[index],
-              marginLeft: `${index * 50}px`, // Creates staircase effect
+              marginLeft: window.innerWidth < 480 ? '0px' : `${index * 50}px`,
             }}
           >
             <div className="step-number-box">
-              <span className="step-label">Step-</span>
+              <span className="step-label">{window.innerWidth < 480 ? 'S' : 'Step-'}</span>
               <span className="step-count">{step.number}</span>
             </div>
 
             <div className="step-info">
-              <div className="step-icon">{step.icon}</div>
+              <div className="step-icon">{window.innerWidth < 480 ? '' : step.icon}</div>
 
               <div>
                 <h4 className="step-title text-dark">{step.title}</h4>
@@ -79,6 +79,11 @@ export default function OnboardingStepsCard({ setVisible }) {
         <span className="blink-text">
           Your gift will be delivered within 7 days after completion of registration.
         </span>
+      </div>
+      <div className="onboard-close-btn">
+        <button onClick={() => setVisible(false)} className="close-button">
+          Close
+        </button>
       </div>
     </div>
   )

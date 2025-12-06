@@ -11,6 +11,7 @@ import {
   CFormSelect,
 } from '@coreui/react'
 import DermaCareLogo from '../../../assets/images/logoP.png'
+import bgLogo from '../../../assets/images/bgLogo.png'
 import '../CustomerRrgistration/Register.css'
 import SpinWheel from './SpinWheel'
 import SpinResultCard from './SpinResultCard'
@@ -244,7 +245,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       const result = await verifyRegistrationCode(code)
 
       if (!result.success) {
-        setError(result.message || '❌ Invalid registration code.')
+        setError(result.data.message || '❌ Invalid registration code.')
         return
       }
 
@@ -463,7 +464,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center   w-100"
+      className="d-flex justify-content-center align-items-center w-100 bg"
       style={{
         height: '100vh',
 
@@ -477,10 +478,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
           className="d-none d-md-block left-image"
           style={{
             width: '45%',
-            backgroundImage:
-              "url('https://cdn.vectorstock.com/i/500p/14/58/lip-contouring-procedure-at-beautician-flat-vector-42551458.jpg')",
+            backgroundImage: `url(${bgLogo})`,
             backgroundSize: 'fill',
-            backgroundPosition: 'center',
+            backgroundPosition: 'bottom',
             backgroundRepeat: 'no-repeat',
           }}
         >
@@ -527,6 +527,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       <div
                         style={{
                           display: 'flex',
+                          flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'center',
                           minHeight: '80vh', // Vertically centers
@@ -534,6 +535,20 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           padding: '20px',
                         }}
                       >
+                        <div className="header-container mb-5 justify-content-start align-items-center d-flex flex-column">
+                          <img
+                            src={DermaCareLogo}
+                            alt="logo"
+                            style={{
+                              height: 100,
+                              borderRadius: 12,
+                              objectFit: 'fill',
+                              // border: '1px solid #eee',
+                            }}
+                          />
+
+                       
+                        </div>
                         <div>
                           <h3 className="fw-bold" style={{ color: NGK_COLORS.primary }}>
                             🎉 Verification Pending
@@ -541,9 +556,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                           <p
                             className="mt-2"
-                            style={{ maxWidth: 380, color: NGK_COLORS.textDark, margin: '0 auto' }}
+                            style={{
+                              maxWidth: 380,
+                              color: NGK_COLORS.primaryLight,
+                              margin: '0 auto',
+                            }}
                           >
-                            Thanks for joining N Glow Kart!! Verification is underway. You can spin
+                            Thanks for joining Neeha's Glow Kart!! Verification is underway. You can spin
                             now, and rewards will be dispatched after successful verification.
                           </p>
 
@@ -635,7 +654,18 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                 {isRegistration ? (
                   <>
                     {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text"></h4> */}
-                    <div className="header-container">
+                    <div className="header-container justify-content-center align-items-center d-flex flex-column">
+                      <img
+                        src={DermaCareLogo}
+                        alt="logo"
+                        style={{
+                          height: 100,
+                          borderRadius: 12,
+                          objectFit: 'fill',
+                          // border: '1px solid #eee',
+                        }}
+                      />
+
                       <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
 
                       {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
@@ -652,32 +682,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         padding: '20px 0',
                       }}
                     >
-                      <div
-                        style={{
-                          width: 360,
-                          textAlign: 'left',
-                          background: '#ffffff',
-                          padding: '28px 26px',
-                          borderRadius: 18,
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                          border: '1px solid #f4e7f9',
-                        }}
-                      >
+                      <div className="registraionCodeClass">
                         <CFormInput
                           name="registraionCode"
                           value={form.registraionCode}
                           onChange={handleRefChange}
                           placeholder="Enter Registration Code"
-                          style={{
-                            borderRadius: 12,
-                            height: 45,
-                            marginTop: '15px',
-                            marginBottom: '25px',
-                            border: '1px solid #e3e3e3',
-                            // textTransform: 'uppercase',
-                            transition: '0.25s',
-                            fontWeight: '500',
-                          }}
+                          className="registraionCodeInput"
                         />
 
                         {/* Error message */}
@@ -733,7 +744,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             marginTop: 10,
                             fontSize: 13,
                             textAlign: 'center',
-                            color: '#999',
+                            color: NGK_COLORS.primary,
                           }}
                         >
                           Provide valid registration details and get a free spin for a chance to win
@@ -754,15 +765,36 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                 ) : (
                   <>
                     <div className="header-container">
-                      <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
+                      <div className=" justify-content-start align-items-center d-flex flex-column">
+                        <img
+                          src={DermaCareLogo}
+                          alt="logo"
+                          style={{
+                            height: 100,
+                            borderRadius: 12,
+                            objectFit: 'fill',
+                            // border: '1px solid #eee',
+                          }}
+                        />
+
+                        <h4 className="m-0 fw-bold text-center w-100 gradient-text">
+                          Registration
+                        </h4>
+
+                        {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
+                        {/* <small className="sub-gradient-text">Registration</small> */}
+                      </div>
 
                       {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
                       {/* <small className="sub-gradient-text">Registration</small> */}
                     </div>
-                    <CRow className="g-4 mt-2">
+                    <CRow className="g-4 mt-4">
                       {/* Full Name + Mobile */}
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
                           Full Name (As Per Aadhaar Card) <span className="text-danger">*</span>
                         </CFormLabel>
                         <CFormInput
@@ -783,7 +815,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       </CCol>
 
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
                           Mobile Number <span className="text-danger">*</span>
                         </CFormLabel>
                         <CFormInput
@@ -811,7 +846,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       {/* DOB + City */}
 
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>Gender</CFormLabel>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
+                          Gender
+                        </CFormLabel>
                         <CFormSelect name="gender" value={form.gender} onChange={handleChange}>
                           <option value="">Select Gender</option>
                           <option value="Male">Male</option>
@@ -822,7 +862,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         {errors.gender && <p style={{ color: '#ff2e85' }}>{errors.gender}</p>}
                       </CCol>
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
                           Date of birth <span className="text-danger">*</span>
                         </CFormLabel>
 
@@ -847,7 +890,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                       {/* Email + Blood */}
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>Email (Optional)</CFormLabel>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
+                          Email (Optional)
+                        </CFormLabel>
                         <CFormInput
                           name="email"
                           value={form.email}
@@ -857,7 +905,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       </CCol>
 
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>Blood Group (Optional)</CFormLabel>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
+                          Blood Group (Optional)
+                        </CFormLabel>
                         <CFormSelect name="blood" value={form.blood} onChange={handleChange}>
                           <option value="">Select Blood Group</option>
                           <option value="A+">A+</option>
@@ -872,7 +925,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       </CCol>
 
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
                           City <span className="text-danger">*</span>
                         </CFormLabel>
                         <CFormInput
@@ -892,7 +948,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         )}
                       </CCol>
                       <CCol md={6}>
-                        <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                        <CFormLabel
+                          className="label-gradient"
+                          style={{ color: NGK_COLORS.primarySoft }}
+                        >
                           Aadhaar Card Number <span className="text-danger">*</span>
                         </CFormLabel>
 
@@ -1014,7 +1073,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         />
 
                         <label style={{ fontSize: '16px', color: '#555', cursor: 'pointer' }}>
-                          I have read understood{' '}
+                          I have read and understood{' '}
                           <a
                             href="/pdf/privacy-policy.pdf"
                             target="_blank"
@@ -1066,7 +1125,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             <div style={{ fontSize: '15px', color: '#555' }}>
                               <strong>Aadhaar Consent:</strong>
                               <p style={{ marginTop: '6px' }} className="text-muted">
-                                <strong>{form.fullName}</strong> I hereby give explicit and
+                                <strong>{form.fullName}</strong>, I hereby give explicit and
                                 voluntary consent to <strong>Udit CosmeTech Private Limited</strong>{' '}
                                 to collect and securely process my Aadhaar number for identity
                                 verification and duplicate-account prevention purposes on Neeha’s
@@ -1169,7 +1228,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       {form.serviceStatus === '1' && (
                         <>
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Clinic Name <span className="text-danger">*</span>
                             </CFormLabel>
                             <CFormInput
@@ -1190,7 +1252,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           </CCol>
 
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Clinic Area Pincode <span className="text-danger">*</span>
                             </CFormLabel>
                             <CFormInput
@@ -1213,7 +1278,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           </CCol>
 
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Last Visit Date <span className="text-danger">*</span>
                             </CFormLabel>
 
@@ -1240,7 +1308,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           </CCol>
 
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Service Availed <span className="text-danger">*</span>
                             </CFormLabel>
                             <Select
@@ -1268,7 +1339,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {/* Other input */}
                             {showOtherInput && (
                               <div style={{ marginTop: 10 }}>
-                                <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                                <CFormLabel
+                                  className="label-gradient"
+                                  style={{ color: NGK_COLORS.primarySoft }}
+                                >
                                   Specify Other Service
                                 </CFormLabel>
                                 <CFormInput
@@ -1285,7 +1359,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             )}
                           </CCol>
                           <div>
-                            <CFormLabel className="label-gradient " style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient "
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Upload your last visit receipt <span className="text-danger">*</span>
                             </CFormLabel>
                             <div
@@ -1354,7 +1431,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         <>
                           {/* Category Dropdown */}
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Select Category <span className="text-danger">*</span>
                             </CFormLabel>
                             <CFormSelect
@@ -1382,7 +1462,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                           {/* Problem or Procedure */}
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Your Concern / Procedure <span className="text-danger">*</span>
                             </CFormLabel>
 
@@ -1422,7 +1505,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {/* Show Other input */}
                             {form.problemDescription?.includes('other') && (
                               <div style={{ marginTop: 10 }}>
-                                <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                                <CFormLabel
+                                  className="label-gradient"
+                                  style={{ color: NGK_COLORS.primarySoft }}
+                                >
                                   Specify Other Concern
                                 </CFormLabel>
                                 <CFormInput
@@ -1441,7 +1527,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                           {/* Skin Tone */}
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Your Skin Tone <span className="text-danger">*</span>
                             </CFormLabel>
                             <CFormInput
@@ -1478,7 +1567,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CCol> */}
 
                           <CCol md={6}>
-                            <CFormLabel className="label-gradient" style={{color:NGK_COLORS.primary}}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
                               Upload Photo (Optional)
                             </CFormLabel>
                             <div
