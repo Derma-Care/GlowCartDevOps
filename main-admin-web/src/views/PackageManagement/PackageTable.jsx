@@ -1,4 +1,3 @@
-// PackageTableData.jsx
 import React from 'react'
 import {
   CTable,
@@ -58,22 +57,15 @@ const PackageTableData = ({ data, onView, onEdit, onDelete }) => {
 
               <CTableDataCell className="text-center">
                 <div className="d-flex justify-content-center gap-2">
-
-           
-                    <button className="actionBtn" onClick={() => onView(item)} title="View">
-                      <Eye size={18} />
-                    </button>
-          
-                    <button className="actionBtn" onClick={() => onEdit(item)} title="Edit">
-                      <Edit2 size={18} />
-                    </button>
-        
-            
-                    <button className="actionBtn" onClick={() => onDelete(item)} title="Delete">
-                      <Trash2 size={18} />
-                    </button>
-               
-
+                  <button className="actionBtn" onClick={() => onView(item)} title="View">
+                    <Eye size={18} />
+                  </button>
+                  <button className="actionBtn" onClick={() => onEdit(item)} title="Edit">
+                    <Edit2 size={18} />
+                  </button>
+                  <button className="actionBtn" onClick={() => onDelete(item)} title="Delete">
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </CTableDataCell>
             </CTableRow>

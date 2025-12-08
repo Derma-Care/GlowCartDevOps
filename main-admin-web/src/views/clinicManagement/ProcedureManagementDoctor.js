@@ -91,6 +91,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
     preProcedureQA: [],
     postProcedureQA: [],
     sittings: 0,
+    procedureLink: '', 
     
   })
   const [modalMode, setModalMode] = useState('add') // or 'edit'
@@ -119,6 +120,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       platformFeePercentage: 0,
       descriptionQA: [],
       sittings: 0,
+      procedureLink: '', 
     })
     setModalVisible(true)
   }
@@ -187,6 +189,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       consultationFee: service.consultationFee || 0,
       taxPercentage: service.taxPercentage || 0,
       minTime: service.minTime || '',
+      procedureLink: service.procedureLink||'', 
       subServiceImage: rawImage,
       subServiceImageFile: null,
       viewDescription: service.viewDescription || '',
@@ -213,6 +216,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
     viewDescription: '',
     subServiceImage: '',
     bannerImage: '',
+    procedureLink: '', 
     sittings: '', // ✅ added for validation
   })
   const fetchData = async () => {
@@ -449,6 +453,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       postProcedureQA: newService.postProcedureQA,
       viewDescription: newService.viewDescription,
       sittings: newService.sittings || 0, // ✅ Default to 0 if not set
+     procedureLink: newService.procedureLink,
     }
 
     console.log('Payload ready to submit:', payload)
@@ -472,6 +477,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       hospitalId: '',
       subServiceId: '',
       subServiceName: '',
+      procedureLink:'',
       price: 0,
       discount: 0,
       gst: 0,
@@ -535,6 +541,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
         gst: newService.gst || 0,
         consultationFee: newService.consultationFee || 0,
         sittings: newService.sittings || 0, // ✅ Default to 0 if not set
+        procedureLink: newService.procedureLink || '', // ✅ added
       }
 
       console.log('Payload for updateSubServiceData:', updatedService)
@@ -721,6 +728,8 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
                   <CCol sm={4}><strong>Final Cost:</strong> ₹ {viewService.finalCost ? Math.round(viewService.finalCost) : '—'}</CCol>
                   <CCol sm={4}><strong>Service Time:</strong> {viewService.minTime ? formatMinutes(viewService.minTime) : '—'}</CCol>
                   <CCol sm={4}><strong>Sittings:</strong> {viewService.sittings ?? 0}</CCol>
+                  <CCol sm={4}><strong>Procedure Link:</strong> {viewService.procedureLink || 'N/A'}</CCol>
+
                 </CRow>
               </CCardBody>
             </CCard>
@@ -784,6 +793,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
                     <strong>View Description:</strong>
                     <div className="mt-2">{viewService.viewDescription || "N/A"}</div>
                   </CCol>
+                  
                 </CRow>
               </CCardBody>
             </CCard>

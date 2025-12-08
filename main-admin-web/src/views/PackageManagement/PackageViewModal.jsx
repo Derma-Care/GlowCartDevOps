@@ -64,51 +64,52 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
           <h6 className="fw-bold border-bottom pb-2 mb-3">Pricing Details</h6>
           <CRow className="gy-2">
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Price</span>
-              <span className="text-muted"> ₹ {Math.round(data.price || 0)}</span>
+              <span className="mb-1 fw-semibold">Price: </span>
+              <span className="text-muted"> ₹{Math.round(data.price || 0)}</span>
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discount:</span>
+              <span className="mb-1 fw-semibold">Discount: </span>
               <span className="text-muted"> {Math.round(data.discountPercentage || 0)}%</span>
               {/* <strong>Discount:</strong> {Math.round(data.discountPercentage || 0)}% */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discount Amount:</span>
-              <span className="text-muted"> ₹ {Math.round(data.discountAmount || 0)}</span>
+              <span className="mb-1 fw-semibold">Discount Amount: </span>
+              <span className="text-muted"> ₹{Math.round(data.discountAmount || 0)}</span>
               {/* <strong>Discount Amount:</strong> ₹ {Math.round(data.discountAmount || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discounted Cost:</span>
-              <span className="text-muted"> ₹ {Math.round(data.discountedCost || 0)}</span>
+              <span className="mb-1 fw-semibold">Discounted Cost: </span>
+              <span className="text-muted"> ₹{Math.round(data.discountedCost || 0)}</span>
               {/* <strong>Discounted Cost:</strong> ₹ {Math.round(data.discountedCost || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Tax:</span>
+              <span className="mb-1 fw-semibold">Tax: </span>
               <span className="text-muted"> {Math.round(data.taxPercentage || 0)}%</span>
               {/* <strong>Tax:</strong> {Math.round(data.taxPercentage || 0)}% */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Tax Amount:</span>
-              <span className="text-muted"> ₹ {Math.round(data.taxAmount || 0)}</span>
+              <span className="mb-1 fw-semibold">Tax Amount: </span>
+              <span className="text-muted"> ₹{Math.round(data.taxAmount || 0)}</span>
               {/* <strong>Tax Amount:</strong> ₹ {Math.round(data.taxAmount || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Clinic Pay:</span>
-              <span className="text-muted"> ₹ {Math.round(data.clinicPay || 0)}</span>
+              <span className="mb-1 fw-semibold">Clinic Pay: </span>
+              <span className="text-muted"> ₹{Math.round(data.clinicPay || 0)}</span>
               {/* <strong>Clinic Pay:</strong> ₹ {Math.round(data.clinicPay || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">GST %:</span>
-              <span className="text-muted"> {Math.round(data.gst || 0)}</span>
-              {/* <strong>GST %:</strong> {Math.round(data.gst || 0)} */}
+              <span className="mb-1 fw-semibold">GST: </span>
+              <span className="text-muted">
+                {data.gst ? Math.round(data.gst) + '%' : 'N/A'}
+              </span>
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Consultation Fee:</span>
+              <span className="mb-1 fw-semibold">Consultation Fee: </span>
               <span className="text-muted"> ₹ {data.consultationFee || 0}</span>
               {/* <strong>Consultation Fee:</strong> ₹ {data.consultationFee || 0} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Final Cost:</span>
+              <span className="mb-1 fw-semibold">Final Cost: </span>
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
@@ -120,9 +121,17 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               
             </CCol> */}
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">No. of Total Sittings:</span>
+              <span className="mb-1 fw-semibold">No. of Total Sittings: </span>
               <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
               {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
+            </CCol>
+            <CCol sm={4}>
+              <span className="mb-1 fw-semibold">NGK Discount Percentage: </span>
+              <span className="text-muted">
+                {data.ngkDiscountPercentage
+                  ? `${data.ngkDiscountPercentage}%`
+                  : 'N/A'}
+              </span>
             </CCol>
           </CRow>
         </div>

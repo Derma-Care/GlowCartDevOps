@@ -5,20 +5,11 @@ import {
   service,
   Category,
   AddSubService,
-  updateService,
-  deleteService,
-  MainAdmin_URL,
-  // subService_URL,
-  subservice,
   getadminSubServicesbyserviceId,
-  getService_ByClinicId,
   getservice,
   getSubService,
   BASE_URL_API,
- 
 } from '../../baseUrl'
-
-
 import { showCustomToast } from '../../Utils/Toaster'
 
 export const subServiceData = async (serviceId) => {
@@ -28,7 +19,6 @@ export const subServiceData = async (serviceId) => {
     const response = await axios.get(
       `${BASE_URL}/${getadminSubServicesbyserviceId}/${serviceId}`, 
     )
-
     console.log('Service response:', response.data)
     return response.data
   } catch (error) {
@@ -45,7 +35,6 @@ export const serviceDataH = async () => {
   console.log('Serviceid response:')
   try {
     const response = await axios.get(`${BASE_URL}/${service}`)
-
     console.log('Service response:', response.data)
     return response.data
   } catch (error) {
@@ -90,16 +79,13 @@ export const getSubServiceById = async (hospitalId, subServiceId) => {
 export const CategoryData = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/${Category}`)
-
     return response.data
   } catch (error) {
     console.error('Error fetching service data:', error.message)
-
     if (error.response) {
       console.error('Error Response Data:', error.response.data)
       console.error('Error Response Status:', error.response.status)
     }
-
     throw error
   }
 }
@@ -107,13 +93,11 @@ export const CategoryData = async () => {
 export const postServiceData = async (serviceData) => {
   try {
     console.log('Sending data to API:', serviceData)
-
     const response = await axios.post(`${BASE_URL_API}/${AddSubService}`, serviceData, {
       headers: {
         'Content-Type': 'application/json',
       },
     })
-
     return response
   } catch (error) {
     console.error('Error response:', error.response)
@@ -124,7 +108,6 @@ export const postServiceData = async (serviceData) => {
 export const updateServiceData = async (procedureId, clinicId, serviceData) => {
   console.log('API Call Params:', procedureId, clinicId) //Check values
   console.log('Payload:', serviceData)
-
   try {
     const response = await axios.put(
       `${BASE_URL_API}/pricing/update/${procedureId}/clinic/${clinicId}`, //use 'id' here
@@ -135,7 +118,6 @@ export const updateServiceData = async (procedureId, clinicId, serviceData) => {
         },
       },
     )
-
     console.log('Service updated successfully:', response.data)
     return response.data
   } catch (error) {
@@ -148,7 +130,6 @@ export const deleteServiceData = async (procedureId, clinicId) => {
   try {
     console.log('Service name:', procedureId)
     const response = await axios.delete(`${BASE_URL_API}/pricing/delete/${procedureId}/clinic/${clinicId}`)
-
     console.log('Service deleted successfully:', response.data)
     return response.data
   } catch (error) {

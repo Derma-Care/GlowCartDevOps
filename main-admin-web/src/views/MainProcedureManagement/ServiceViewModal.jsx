@@ -61,69 +61,95 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
           <h6 className="fw-bold border-bottom pb-2 mb-3">Pricing Details</h6>
           <CRow className="gy-2">
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Offer End Date:</span>
+              <span className="mb-1 fw-semibold">Offer End Date: </span>
               <span className="text-muted"> ₹ {Math.round(data.price || 0)}</span>
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discount:</span>
+              <span className="mb-1 fw-semibold">Discount: </span>
               <span className="text-muted"> {Math.round(data.discountPercentage || 0)}%</span>
               {/* <strong>Discount:</strong> {Math.round(data.discountPercentage || 0)}% */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discount Amount:</span>
+              <span className="mb-1 fw-semibold">Discount Amount: </span>
               <span className="text-muted"> ₹ {Math.round(data.discountAmount || 0)}</span>
               {/* <strong>Discount Amount:</strong> ₹ {Math.round(data.discountAmount || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discounted Cost:</span>
+              <span className="mb-1 fw-semibold">Discounted Cost: </span>
               <span className="text-muted"> ₹ {Math.round(data.discountedCost || 0)}</span>
               {/* <strong>Discounted Cost:</strong> ₹ {Math.round(data.discountedCost || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Tax:</span>
+              <span className="mb-1 fw-semibold">Tax: </span>
               <span className="text-muted"> {Math.round(data.taxPercentage || 0)}%</span>
               {/* <strong>Tax:</strong> {Math.round(data.taxPercentage || 0)}% */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Tax Amount:</span>
+              <span className="mb-1 fw-semibold">Tax Amount: </span>
               <span className="text-muted"> ₹ {Math.round(data.taxAmount || 0)}</span>
               {/* <strong>Tax Amount:</strong> ₹ {Math.round(data.taxAmount || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Clinic Pay:</span>
+              <span className="mb-1 fw-semibold">Clinic Pay: </span>
               <span className="text-muted"> ₹ {Math.round(data.clinicPay || 0)}</span>
               {/* <strong>Clinic Pay:</strong> ₹ {Math.round(data.clinicPay || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">GST %:</span>
-              <span className="text-muted"> {Math.round(data.gst || 0)}</span>
+              <span className="mb-1 fw-semibold">GST: </span>
+              <span className="text-muted"> {data.gst ? Math.round(data.gst) + '%' : 'N/A'}</span>
               {/* <strong>GST %:</strong> {Math.round(data.gst || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Consultation Fee:</span>
+              <span className="mb-1 fw-semibold">Consultation Fee: </span>
               <span className="text-muted"> ₹ {data.consultationFee || 0}</span>
               {/* <strong>Consultation Fee:</strong> ₹ {data.consultationFee || 0} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Final Cost:</span>
+              <span className="mb-1 fw-semibold">Final Cost: </span>
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Service Time:</span>
+              <span className="mb-1 fw-semibold">Service Time: </span>
               <span className="text-muted">
                 {data.minTime ? formatMinutes(data.minTime) : 'N/A'}
               </span>
               {/* <strong>Service Time:</strong> {data.minTime ? formatMinutes(data.minTime) : 'N/A'} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">No. of Sittings:</span>
+              <span className="mb-1 fw-semibold">No. of Sittings: </span>
               <span className="text-muted">
                 {data.sittings || 'N/A'}
               </span>
 
             </CCol>
-            
+            {data.ngkDiscountPercentage && (
+              <CCol sm={4}>
+                <span className="mb-1 fw-semibold">NGK Discount Percentage: </span>
+                <span className="text-muted">
+                  {data.ngkDiscountPercentage}%
+                </span>
+              </CCol>
+            )}
+
+            <CCol sm={6}>
+              <span className="mb-1 fw-semibold">Procedure Link:</span>
+
+              {data.procedureLink ? (
+                <a
+                  href={data.procedureLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ marginLeft: '5px' }}
+                >
+                  {data.procedureLink}
+                </a>
+              ) : (
+                <span className="text-muted" style={{ marginLeft: '5px' }}>N/A</span>
+              )}
+            </CCol>
+
+
           </CRow>
         </div>
 
@@ -221,7 +247,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <p className="fw-semibold">Description:</p>
               <p className="text-muted">{data.description || 'N/A'}</p>
             </CCol>
-            
+
           </CRow>
         </div>
       </CModalBody>

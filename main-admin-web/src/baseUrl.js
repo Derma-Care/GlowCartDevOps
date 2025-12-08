@@ -247,3 +247,7 @@ export const CustomerAllData = 'customers/all'
 export const deleteService = 'procedure-pricing/delete'
 export const updateService = 'pricing/update'
 export const AddSubService = 'pricing/create'
+
+
+
+export const PushNotificationBaseUrl=""

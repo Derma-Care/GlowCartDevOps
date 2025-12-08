@@ -13,7 +13,7 @@ import {
   CFormText,
   CFormSelect,
   CFormTextarea,
-  CButton,
+  CButton,CInputGroup ,CInputGroupText 
 } from '@coreui/react'
 import ProcedureQA from './QASection'
 import SearchableSelect from '../widgets/SearchableSelect'
@@ -186,19 +186,21 @@ const PackageFormModal = ({
             </CCol>
             {isEdit && (
               <CCol md={6} className="mb-4">
-                <h6>
-                  NGK Discount
-                </h6>
-                <CFormInput
-                  type="number"
-                  placeholder="NGK Discount"
-                  name="ngkDiscount"
-                  value={newService.ngkDiscount || ''}
-                  onChange={onChange}
-                   min={0}
-                />
+                <h6>NGK Discount Percentage</h6>
 
+                <CInputGroup>
+                  <CFormInput
+                    type="number"
+                    placeholder="NGK Discount"
+                    name="ngkDiscountAmount"
+                    value={newService.ngkDiscountAmount || 'N/A'}
+                    onChange={onChange}
+                    min={0}
+                  />
+                  <CInputGroupText>%</CInputGroupText>
+                </CInputGroup>
               </CCol>
+
             )}
           </CRow>
 
@@ -250,7 +252,7 @@ const PackageFormModal = ({
                         },
                       })
                     }
-                     min={0}
+                    min={0}
                   />
                   {errors[`sittings_${index}`] && (
                     <p className="text-danger">{errors[`sittings_${index}`]}</p>

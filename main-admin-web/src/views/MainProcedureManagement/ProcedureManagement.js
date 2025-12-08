@@ -60,7 +60,8 @@ const ServiceManagement = () => {
     procedureQA: [],
     preProcedureQA: [],
     postProcedureQA: [],
-     ngkDiscount: '',
+    ngkDiscountAmount: '',
+    procedureLink:'',
   })
 
   const [errors, setErrors] = useState({
@@ -289,6 +290,7 @@ const ServiceManagement = () => {
       offerValidDate: '',
       offerEndDate: '',
       serviceImage: '',
+      procedureLink:'',
       serviceImageFile: null,
       viewDescription: '',
       procedureQA: [],
@@ -331,7 +333,7 @@ const ServiceManagement = () => {
     setNewService({
       subServiceId: service.procedureId,
       subServiceName: service.procedureName,
-// ngkDiscount:newService.ngkDiscount,   //TODO:After backend provide enable the line
+      ngkDiscountAmount:service.ngkDiscountPercentage,
       price: String(service.price ?? ''),
       discount: String(service.discountPercentage ?? ''),
       gst: String(service.gst ?? ''),
@@ -341,7 +343,7 @@ const ServiceManagement = () => {
       minTimeValue: timeValue,
       minTimeUnit: timeUnit || '',
       sittings: String(service.sittings ?? ''),
-
+      procedureLink: service.procedureLink,
       // offerValidDate: service.offerStart || '',
       // offerEndDate: service.offerValidDate || '',
       offerValidDate: toDateInput(service.offerStart),
@@ -410,6 +412,8 @@ const ServiceManagement = () => {
         preProcedureQA: newService.preProcedureQA,
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
+        procedureLink: newService.procedureLink || '',
+        ngkDiscountPercentage:newService.ngkDiscountAmount
       }
 
       const response = await postServiceData(payload) // imported from ProcedureManagementAPI
@@ -457,7 +461,8 @@ const ServiceManagement = () => {
         procedureId: newService.subServiceId || '',
         description: newService.viewDescription || '',
         sittings: Number(newService.sittings || 0),
-        // ngkDiscount:newService.ngkDiscount,   //TODO:After backend provide enable the line
+        ngkDiscountPercentage:newService.ngkDiscountPercentage, 
+          ngkDiscountPercentage:newService.ngkDiscountAmount,
         minTime: newService.minTimeValue
           ? `${newService.minTimeValue} ${newService.minTimeUnit}`
           : '',
@@ -471,6 +476,7 @@ const ServiceManagement = () => {
         taxPercentage: Number(newService.taxPercentage || 0),
         procedureImage: base64ImageToSend,
         gst: Number(newService.gst || 0),
+        procedureLink: newService.procedureLink || '',
         consultationFee: Number(newService.consultationFee || 0),
       }
 

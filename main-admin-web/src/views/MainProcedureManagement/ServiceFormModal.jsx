@@ -13,7 +13,7 @@ import {
   CFormText,
   CFormSelect,
   CFormTextarea,
-  CButton,
+  CButton,CInputGroup ,CInputGroupText 
 } from '@coreui/react'
 import ProcedureQA from './QASection'
 
@@ -265,20 +265,43 @@ const ServiceFormModal = ({
                 <CFormText className="text-danger">{errors.viewDescription}</CFormText>
               )}
             </CCol>
-            {isEdit && (
-              <CCol md={4} className="mb-4">
-                <h6>
-                  NGK Discount
-                </h6>
-                <CFormInput
-                  type="number"
-                  placeholder="NGK Discount"
-                  name="ngkDiscount"
-                  value={newService.ngkDiscount || ''}
-                  onChange={onChange}
-                  min={0}
-                />
+            <CCol md={6} className="mb-4">
+              <h6>Procedure Video Link</h6>
+              <CFormInput
+                type="url"
+                placeholder="Enter procedure video URL (YouTube, Vimeo, Drive, etc.)"
+                value={newService.procedureLink || ''}
+                name="procedureLink"
+                onChange={onChange}
+              />
+              {newService.procedureLink && (
+                <CButton
+                  color="primary"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => window.open(newService.procedureLink, '_blank')}
+                >
+                  Watch Procedure Video
+                </CButton>
+              )}
+            </CCol>
 
+
+            {isEdit && (
+              <CCol md={6} className="mb-4">
+                <h6>NGK Discount Percentage</h6>
+
+                <CInputGroup>
+                  <CFormInput
+                    type="number"
+                    placeholder="NGK Discount"
+                    name="ngkDiscountAmount"
+                    value={newService.ngkDiscountAmount || 'N/A'}
+                    onChange={onChange}
+                    min={0}
+                  />
+                  <CInputGroupText>%</CInputGroupText>
+                </CInputGroup>
               </CCol>
             )}
           </CRow>

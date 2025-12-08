@@ -3,6 +3,7 @@ import React from 'react'
 import Package_ProcedureManagement_Tabs from './views/Package_ProcedureManagement/Package_ProcedureManagement_Tabs'
 
 
+
 // Lazy-loaded components
 const Login = React.lazy(() => import('./views/pages/login/Login'))
 const serviceManagement = React.lazy(() => import('./views/servicesManagement/serviceManagement'))
@@ -19,10 +20,10 @@ const PatientViewDetails = React.lazy(() => import('./views/providerManagement/P
 // const BranchManagement = React.lazy(() => import('./views/clinicManagement/AddBranchForm'))
 const AdsManagement = React.lazy(() => import('./views/AdsManagement/AdsManagement'))
 
-const MembershipManagement = React.lazy(() => import('./views/MembershipManagement/MembershipManagement'))
+const MembershipTable = React.lazy(() => import('./views/MembershipManagement/ReferralDashboard'))
 const Clinic_getDetails = React.lazy(() => import('./views/Package_ProcedureManagement/Clinic_getDetails'))
-const Payouts = React.lazy(() => import('./views/Payouts/Payout'))
-// const BranchDetails = React.lazy(() => import('./views/clinicManagement/BranchDetails'))
+const PayoutManagement = React.lazy(() => import('./views/Payouts/Payoutmanagement'))
+const FCMNotification = React.lazy(() => import('./views/PushNotification/PushNotificationScreen'))
 const RegistrationCodeManagement = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodes'))
 const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/GlowKartClinicDetails'))
 
@@ -41,15 +42,16 @@ const routes = [
   // { path: '/clinic-management/:hospitalId', name: 'Clinic Details', element: ClinicManagementDetails },
   // { path: '/branch-details/:branchId', name: 'Branch Details', element: BranchDetails },
   { path: '/ads-management', name: 'Ads Management', element: AdsManagement },
-  { path: '/payouts', name: 'Payouts', element: Payouts },
+  { path: '/payouts', name: 'Payouts', element: PayoutManagement },
   { path: '/provider-management/:id', name: 'Patient View Details', element: PatientViewDetails },
   // { path: '/clinicDetails', name: 'ClinicDetails', element: ClinicManagementDetails },
-  // { path: '/branchManagement', name: 'BranchManagement', element: BranchManagement },
-  { path: '/membership-management', name: 'MembershipManagement', element: MembershipManagement },
+  { path: '/push-notifications', name: 'FCMNotification', element: FCMNotification },
+  { path: '/membership-management', name: 'Membership Management', element: MembershipTable },
   { path: '/packages-procedures', name: 'Procedures & Package Management', element: Clinic_getDetails },
   { path: '/registration-codes', name: 'Registration Codes ', element: RegistrationCodeManagement },
   { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
   { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs }
+
 
 ]
 
