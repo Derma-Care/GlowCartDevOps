@@ -12,7 +12,7 @@ public class CustomerResponseDTO {
     private String customerId;
     private String fullName;
     private String mobile;
-    private String email;
+  
     private String city;
     private LocalDate dob;
     private String gender;
@@ -32,7 +32,11 @@ public class CustomerResponseDTO {
     private String photo;
 
     private String aadharNumber; // Masked only
-    private Boolean aadhaarConsent;
+    private Boolean aadhaarConsent = false;
+    private Boolean userConsent = false;
+    private Boolean privacyConsent = false;
+    
+    
     private String blood;
     private String registrationCode;
     private String referBy;
@@ -43,8 +47,6 @@ public class CustomerResponseDTO {
     private String spinRewardImage;
 
     // Final registration
-    private String prizePostScreenshot;
-    private String followScreenshot;
     private String address;
 
     // Status flags

@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+
+
 @Data
 public class ClinicInfoDTO {
 
@@ -62,4 +64,6 @@ public class ClinicInfoDTO {
     private String ifscCode;
     private String upiId;
     private String panNumber;
+    
+    private List<DoctorDTO> doctorsList;
 }

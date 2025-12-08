@@ -32,8 +32,10 @@ public class RegistrationService {
  // STEP-1: Verify Registration Code
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> verifyCode(String code) {
 
+        // 1️⃣ Find customer by registration code
         Customer customer = customerRepository.findByRegistrationCode(code);
 
+        // 2️⃣ Verify code via admin-service using Feign client
         ApiResponse<RegistrationResponseDTO> adminResponse = adminServiceClient.verifyCode(new RegistrationRequestDTO(code));
         RegistrationResponseDTO adminData = adminResponse.getData();
 
@@ -43,21 +45,37 @@ public class RegistrationService {
             );
         }
 
-        // Create customer if first time
+        // 3️⃣ Create customer if first time
         if (customer == null) {
             customer = new Customer();
             customer.setRegistrationCode(code);
         }
 
+        // 4️⃣ Mark code as verified locally
         customer.setRegistrationCodeVerified(true);
 
-        // 🔥 FIX: Use REAL rank from admin
+        // 5️⃣ Set registration rank from admin if first time
         if (customer.getRegistrationRank() == null) {
             customer.setRegistrationRank(adminData.getRank());
         }
 
+        // 6️⃣ Mark code as used on first verification via Feign client
+        if (!adminData.isUsed()) {
+            try {
+                ApiResponse<RegistrationResponseDTO> markUsedResponse =
+                        adminServiceClient.markCodeUsed(new RegistrationRequestDTO(code)); // ✅ Feign client
+                if (markUsedResponse.getData() != null) {
+                    adminData.setUsed(markUsedResponse.getData().isUsed()); // update used status
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to mark code as used for {}: {}", code, e.getMessage());
+            }
+        }
+
+        // 7️⃣ Save customer locally
         customerRepository.save(customer);
 
+        // 8️⃣ Return response with updated code status
         return ResponseEntity.ok(
                 new ApiResponse<>(true, adminResponse.getMessage(),
                         buildStepResponse(customer, code, adminData.isUsed()))
