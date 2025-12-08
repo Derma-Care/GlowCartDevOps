@@ -14,7 +14,7 @@ public class ProcedurePricingDTO {
 
     private String description;
     private String procedureImage;
-
+    private String procedureLink;
     private List<Map<String, List<String>>> preProcedureQA;
     private List<Map<String, List<String>>> procedureQA;
     private List<Map<String, List<String>>> postProcedureQA;
@@ -38,4 +38,11 @@ public class ProcedurePricingDTO {
     private String offerStart;      // <-- frontend sends ISO string
     private String offerValidDate;  // <-- frontend sends ISO string
     private boolean offerActive;    // NEW
+
+    // NEW — NGK admin only
+    private double ngkDiscountPercentage;
+    private double ngkDiscountAmount;
+    
+    private double totalDiscountPercentage;
+    private double totalDiscountAmount;
 }

@@ -1,8 +1,11 @@
 package com.glowkart.procedure.exception;
 
 import com.glowkart.procedure.dto.ApiResponse;
+
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,4 +43,16 @@ public class GlobalExceptionHandler {
         ApiResponse<Void> response = new ApiResponse<>(false, "Internal server error", null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult()
+                                .getAllErrors()
+                                .stream()
+                                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                                .findFirst()
+                                .orElse("Validation failed");
+        ApiResponse<Void> response = new ApiResponse<>(false, errorMessage, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
 }

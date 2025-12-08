@@ -34,4 +34,12 @@ public class ProcedurePackageDTO {
     private String offerStart;
     private String offerValidDate;
     private boolean offerActive;
+    
+    // NEW — NGK Only Fields
+    private double ngkDiscountPercentage;
+    private double ngkDiscountAmount;
+    
+    private double totalDiscountPercentage; // clinic + NGK
+    private double totalDiscountAmount;     // clinic + NGK
+
 }

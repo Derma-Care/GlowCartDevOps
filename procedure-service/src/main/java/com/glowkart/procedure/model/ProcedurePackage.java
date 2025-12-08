@@ -44,6 +44,14 @@ public class ProcedurePackage {
     private String offerValidDate;  // ISO date string
     private boolean offerActive;
 
+    // NEW — NGK Only Fields
+    private double ngkDiscountPercentage;
+    private double ngkDiscountAmount;
+    
+    private double totalDiscountPercentage; // clinic + NGK
+    private double totalDiscountAmount;     // clinic + NGK
+
+    
     private Instant createdAt;
     private Instant updatedAt;
 }

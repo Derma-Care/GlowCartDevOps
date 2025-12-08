@@ -47,6 +47,12 @@ public class ProcedurePackageMapper {
         entity.setOfferValidDate(dto.getOfferValidDate());
         entity.setOfferActive(dto.isOfferActive());
 
+        // ⭐ NGK & Total Discount FIELDS ⭐
+        entity.setNgkDiscountPercentage(dto.getNgkDiscountPercentage());
+        entity.setNgkDiscountAmount(dto.getNgkDiscountAmount());
+        entity.setTotalDiscountPercentage(dto.getTotalDiscountPercentage());
+        entity.setTotalDiscountAmount(dto.getTotalDiscountAmount());
+
         return entity;
     }
 
@@ -91,6 +97,12 @@ public class ProcedurePackageMapper {
         dto.setOfferStart(entity.getOfferStart());
         dto.setOfferValidDate(entity.getOfferValidDate());
         dto.setOfferActive(entity.isOfferActive());
+
+        // ⭐ NGK & Total Discount FIELDS ⭐
+        dto.setNgkDiscountPercentage(entity.getNgkDiscountPercentage());
+        dto.setNgkDiscountAmount(entity.getNgkDiscountAmount());
+        dto.setTotalDiscountPercentage(entity.getTotalDiscountPercentage());
+        dto.setTotalDiscountAmount(entity.getTotalDiscountAmount());
 
         return dto;
     }

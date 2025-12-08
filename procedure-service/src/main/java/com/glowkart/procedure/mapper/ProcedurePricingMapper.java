@@ -14,12 +14,11 @@ public class ProcedurePricingMapper {
 
     // -----------------------------------------------------------
     // SANITIZE KEYS (for MongoDB)
-    // "." → "_"
     // -----------------------------------------------------------
     private Map<String, List<String>> sanitizeMapKeys(Map<String, List<String>> map) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(
-                        e -> e.getKey().replace(".", "_"),  // Mongo-safe
+                        e -> e.getKey().replace(".", "_"),
                         Map.Entry::getValue
                 ));
     }
@@ -30,15 +29,13 @@ public class ProcedurePricingMapper {
                 .collect(Collectors.toList());
     }
 
-
     // -----------------------------------------------------------
     // RESTORE KEYS (for API response)
-    // "_" → "."
     // -----------------------------------------------------------
     private Map<String, List<String>> restoreMapKeys(Map<String, List<String>> map) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(
-                        e -> e.getKey().replace("_", "."), // restore original
+                        e -> e.getKey().replace("_", "."),
                         Map.Entry::getValue
                 ));
     }
@@ -48,7 +45,6 @@ public class ProcedurePricingMapper {
                 .map(this::restoreMapKeys)
                 .collect(Collectors.toList());
     }
-
 
     // ===========================================================
     //                  DTO → ENTITY (SAVE)
@@ -60,8 +56,9 @@ public class ProcedurePricingMapper {
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
         entity.setProcedureImage(dto.getProcedureImage());
+        entity.setProcedureLink(dto.getProcedureLink()); // NEW
 
-        // SANITIZE BEFORE SAVING
+        // SANITIZE QA
         entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? sanitizeQAList(dto.getPreProcedureQA()) : List.of());
         entity.setProcedureQA(dto.getProcedureQA() != null ? sanitizeQAList(dto.getProcedureQA()) : List.of());
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? sanitizeQAList(dto.getPostProcedureQA()) : List.of());
@@ -77,9 +74,12 @@ public class ProcedurePricingMapper {
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
 
+        // NGK fields
+        entity.setNgkDiscountPercentage(dto.getNgkDiscountPercentage());
+        entity.setNgkDiscountAmount(dto.getNgkDiscountAmount());
+
         return entity;
     }
-
 
     // ===========================================================
     //                  ENTITY → DTO (RESPONSE)
@@ -92,8 +92,8 @@ public class ProcedurePricingMapper {
         dto.setClinicId(entity.getClinicId());
         dto.setDescription(entity.getDescription());
         dto.setProcedureImage(entity.getProcedureImage());
+        dto.setProcedureLink(entity.getProcedureLink()); // NEW
 
-        // RESTORE BEFORE SENDING TO CLIENT
         dto.setPreProcedureQA(entity.getPreProcedureQA() != null ? restoreQAList(entity.getPreProcedureQA()) : List.of());
         dto.setProcedureQA(entity.getProcedureQA() != null ? restoreQAList(entity.getProcedureQA()) : List.of());
         dto.setPostProcedureQA(entity.getPostProcedureQA() != null ? restoreQAList(entity.getPostProcedureQA()) : List.of());
@@ -106,6 +106,13 @@ public class ProcedurePricingMapper {
         dto.setPrice(entity.getPrice());
         dto.setDiscountPercentage(entity.getDiscountPercentage());
         dto.setDiscountAmount(entity.getDiscountAmount());
+
+        dto.setNgkDiscountPercentage(entity.getNgkDiscountPercentage());
+        dto.setNgkDiscountAmount(entity.getNgkDiscountAmount());
+
+        dto.setTotalDiscountPercentage(entity.getTotalDiscountPercentage());
+        dto.setTotalDiscountAmount(entity.getTotalDiscountAmount());
+
         dto.setTaxPercentage(entity.getTaxPercentage());
         dto.setTaxAmount(entity.getTaxAmount());
         dto.setGst(entity.getGst());
@@ -119,7 +126,6 @@ public class ProcedurePricingMapper {
         return dto;
     }
 
-
     // ===========================================================
     //                  UPDATE ENTITY
     // ===========================================================
@@ -128,8 +134,8 @@ public class ProcedurePricingMapper {
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
         entity.setProcedureImage(dto.getProcedureImage());
+        entity.setProcedureLink(dto.getProcedureLink()); // NEW
 
-        // SANITIZE BEFORE SAVING
         entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? sanitizeQAList(dto.getPreProcedureQA()) : List.of());
         entity.setProcedureQA(dto.getProcedureQA() != null ? sanitizeQAList(dto.getProcedureQA()) : List.of());
         entity.setPostProcedureQA(dto.getPostProcedureQA() != null ? sanitizeQAList(dto.getPostProcedureQA()) : List.of());
@@ -144,5 +150,14 @@ public class ProcedurePricingMapper {
         entity.setTaxPercentage(dto.getTaxPercentage());
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
+
+        // NGK only
+        if (dto.getNgkDiscountPercentage() > 0) {
+            entity.setNgkDiscountPercentage(dto.getNgkDiscountPercentage());
+        }
+
+        if (dto.getNgkDiscountAmount() > 0) {
+            entity.setNgkDiscountAmount(dto.getNgkDiscountAmount());
+        }
     }
 }

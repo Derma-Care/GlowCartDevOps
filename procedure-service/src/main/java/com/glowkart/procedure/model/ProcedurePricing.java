@@ -20,6 +20,7 @@ public class ProcedurePricing {
 
     private String description;
     private String procedureImage;
+    private String procedureLink; // NEW field
 
     private List<Map<String, List<String>>> preProcedureQA;
     private List<Map<String, List<String>>> procedureQA;
@@ -43,6 +44,15 @@ public class ProcedurePricing {
     private String offerStart;
     private String offerValidDate;
     private boolean offerActive;
+    
+
+    // NEW — NGK Only Fields
+    private double ngkDiscountPercentage;
+    private double ngkDiscountAmount;
+    
+    private double totalDiscountPercentage; // clinic + NGK
+    private double totalDiscountAmount;     // clinic + NGK
+
 
     private Instant createdAt;
     private Instant updatedAt;

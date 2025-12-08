@@ -31,33 +31,55 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     private final ProcedurePricingMapper mapper;
     private final ClinicFeignClient clinicFeignClient;
 
+    // ======================================================
+    //                     CREATE
+    // ======================================================
     @Override
     @Transactional
     public ProcedurePricingDTO create(ProcedurePricingDTO dto) {
 
+        // Validate discounts and clinic
         validateDiscountAndOffer(dto);
         validateClinic(dto.getClinicId());
 
+        // Fetch procedure
         Procedure procedure = procedureRepository.findById(dto.getProcedureId())
                 .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                         "Procedure not found with ID: " + dto.getProcedureId()));
 
+        // Check for duplicate pricing
         if (pricingRepository.existsByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())) {
             throw new DuplicateResourceException("DUPLICATE_PRICING",
                     "Pricing already exists for this procedure and clinic.");
         }
 
+        // Map DTO to entity
         ProcedurePricing entity = mapper.toEntity(dto);
         entity.setProcedureName(procedure.getProcedureName());
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
 
+        // Set offer status
         setOfferActive(entity);
+
+        // Calculate all pricing fields including total discount
         calculatePricing(entity);
 
-        return mapper.toDto(pricingRepository.save(entity));
+        // Map entity to DTO BEFORE saving to include calculated fields in response
+        ProcedurePricingDTO responseDto = mapper.toDto(entity);
+
+        // Save entity
+        pricingRepository.save(entity);
+
+        // Return DTO with all fields
+        return responseDto;
     }
 
+
+
+    // ======================================================
+    //                     GET BY CLINIC
+    // ======================================================
     @Override
     public List<ProcedurePricingDTO> getByClinic(String clinicId) {
         validateClinic(clinicId);
@@ -69,6 +91,9 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 .collect(Collectors.toList());
     }
 
+    // ======================================================
+    //           GET BY PROCEDURE + CLINIC
+    // ======================================================
     @Override
     public ProcedurePricingDTO getByProcedureAndClinic(String procedureId, String clinicId) {
         validateClinic(clinicId);
@@ -92,36 +117,47 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         return mapper.toDto(best);
     }
 
-    @Override
-    @Transactional
-    public ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto) {
+    // ======================================================
+    //                     UPDATE (PUT)
+    // ======================================================
+ // ======================================================
+//  UPDATE (PUT)
+//======================================================
+@Override
+@Transactional
+public ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto) {
 
-        validateDiscountAndOffer(dto);
-        validateClinic(clinicId);
+validateClinic(clinicId);
 
-        ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
-                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
-                        "Procedure pricing not found for procedure ID " + procedureId));
+ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
+.orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
+ "Procedure pricing not found for procedure ID " + procedureId));
 
-        if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
+// Change procedure only if different
+if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
+Procedure procedure = procedureRepository.findById(dto.getProcedureId())
+.orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
+     "Procedure not found with ID: " + dto.getProcedureId()));
 
-            Procedure procedure = procedureRepository.findById(dto.getProcedureId())
-                    .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
-                            "Procedure not found with ID: " + dto.getProcedureId()));
+existing.setProcedureId(procedure.getId());
+existing.setProcedureName(procedure.getProcedureName());
+}
 
-            existing.setProcedureId(procedure.getId());
-            existing.setProcedureName(procedure.getProcedureName());
-        }
+// Update all other fields using mapper (INCLUDING NGK)
+mapper.updateEntity(existing, dto);
 
-        mapper.updateEntity(existing, dto);
-        existing.setUpdatedAt(Instant.now());
+existing.setUpdatedAt(Instant.now());
 
-        setOfferActive(existing);
-        calculatePricing(existing);
+setOfferActive(existing);
+calculatePricing(existing);
 
-        return mapper.toDto(pricingRepository.save(existing));
-    }
+return mapper.toDto(pricingRepository.save(existing));
+}
 
+
+    // ======================================================
+    //                     DELETE
+    // ======================================================
     @Override
     @Transactional
     public void delete(String procedureId, String clinicId) {
@@ -134,6 +170,9 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         pricingRepository.delete(existing);
     }
 
+    // ======================================================
+    //                     GET ALL
+    // ======================================================
     @Override
     public List<ProcedurePricingDTO> getAll() {
         return pricingRepository.findAll().stream()
@@ -143,8 +182,9 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 .collect(Collectors.toList());
     }
 
-    // ------------------ VALIDATIONS ------------------
-
+    // ======================================================
+    //                     VALIDATIONS
+    // ======================================================
     private void validateClinic(String clinicId) {
         try {
             clinicFeignClient.getClinicById(clinicId);
@@ -154,7 +194,6 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         }
     }
 
-    /** NEW LOGIC */
     private void validateDiscountAndOffer(ProcedurePricingDTO dto) {
 
         Double discount = dto.getDiscountPercentage();
@@ -163,23 +202,20 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         boolean hasDiscount = discount != null && discount > 0;
         boolean hasOfferStart = offerStart != null && !offerStart.isBlank();
 
-        // CASE 1: offerStart exists but discount is missing or 0
         if (hasOfferStart && !hasDiscount) {
             throw new IllegalArgumentException("discountPercentage is required when offerStart is provided");
         }
 
-        // CASE 2: discount exists but offerStart missing
         if (hasDiscount && !hasOfferStart) {
             throw new IllegalArgumentException("offerStart is required when discountPercentage > 0");
         }
 
-        // CASE 3: both missing → OK
-        // CASE 4: both present → OK
+        // NGK discount has no validation requirement
     }
 
-
-    // ------------------ OFFER LOGIC ------------------
-
+    // ======================================================
+    //                     OFFER LOGIC
+    // ======================================================
     private ProcedurePricing setOfferActive(ProcedurePricing p) {
 
         Instant now = Instant.now();
@@ -207,44 +243,68 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         return p;
     }
 
-    // ------------------ PRICING CALCULATION ------------------
-
+    // ======================================================
+    //                  PRICING CALCULATION
+    // ======================================================
     private ProcedurePricing calculatePricing(ProcedurePricing procedure) {
 
-        double price = procedure.getPrice();
-        double discountPercent = procedure.isOfferActive() ? procedure.getDiscountPercentage() : 0;
+        double price = procedure.getPrice(); // primitive, always has a value
 
-        double discountAmount = price * discountPercent / 100.0;
-        double discountedPrice = price - discountAmount;
+        // Clinic discount
+        double discountPercent = procedure.isOfferActive() ? procedure.getDiscountPercentage() : 0.0;
+        double discountAmount = round(price * discountPercent / 100.0);
+        double discountedPrice = round(price - discountAmount);
 
-        double taxAmount = discountedPrice * procedure.getTaxPercentage() / 100.0;
-        double gstAmount = discountedPrice * procedure.getGst() / 100.0;
+        // Taxes
+        double taxAmount = round(discountedPrice * procedure.getTaxPercentage() / 100.0);
+        double gstAmount = round(discountedPrice * procedure.getGst() / 100.0);
 
-        double clinicPay = discountedPrice + taxAmount + gstAmount;
-        double finalCost = discountedPrice +
-                procedure.getConsultationFee() +
-                taxAmount +
-                gstAmount;
+        // Clinic pay before NGK
+        double clinicPay = round(discountedPrice + taxAmount + gstAmount + procedure.getConsultationFee());
 
+        // NGK discount
+        double ngkPercent = procedure.getNgkDiscountPercentage(); // primitive
+        double ngkAmount = round(clinicPay * ngkPercent / 100.0);
+
+        // Final cost after NGK discount
+        double finalCost = round(clinicPay - ngkAmount);
+
+        // Total discount for reporting (clinic + NGK)
+        double totalDiscountAmount = round(discountAmount + ngkAmount);
+        double totalDiscountPercent = discountPercent + ngkPercent;
+
+        // Set values
         procedure.setDiscountAmount(discountAmount);
         procedure.setDiscountedCost(discountedPrice);
         procedure.setTaxAmount(taxAmount);
         procedure.setGstAmount(gstAmount);
         procedure.setClinicPay(clinicPay);
+
+        procedure.setNgkDiscountAmount(ngkAmount);
         procedure.setFinalCost(finalCost);
+
+        procedure.setTotalDiscountPercentage(totalDiscountPercent);
+        procedure.setTotalDiscountAmount(totalDiscountAmount);
 
         return procedure;
     }
 
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+
+
+    // ======================================================
+    //               BEST PRICE BY PROCEDURE
+    // ======================================================
     @Override
     public ProcedurePricingDTO getByProcedureId(String procedureId) {
 
-        // Fetch procedure entity to ensure it exists
         Procedure procedure = procedureRepository.findById(procedureId)
                 .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                         "Procedure not found with ID: " + procedureId));
 
-        // Fetch all pricing entries for this procedure across clinics
         List<ProcedurePricing> pricings = pricingRepository.findByProcedureId(procedureId);
 
         if (pricings.isEmpty()) {
@@ -252,7 +312,6 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                     "No pricing found for procedure ID " + procedureId);
         }
 
-        // Choose the best offer if multiple entries exist
         ProcedurePricing best = pricings.stream()
                 .map(this::setOfferActive)
                 .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
@@ -262,5 +321,4 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         return mapper.toDto(best);
     }
-
 }

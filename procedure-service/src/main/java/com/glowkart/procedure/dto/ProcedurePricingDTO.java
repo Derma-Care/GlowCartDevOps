@@ -1,10 +1,11 @@
 package com.glowkart.procedure.dto;
 
-import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
-
 import java.util.List;
 import java.util.Map;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 
 @Data
 public class ProcedurePricingDTO {
@@ -15,6 +16,7 @@ public class ProcedurePricingDTO {
 
     private String description;
     private String procedureImage;
+    private String procedureLink;
 
     private List<Map<String, List<String>>> preProcedureQA;
     private List<Map<String, List<String>>> procedureQA;
@@ -38,4 +40,12 @@ public class ProcedurePricingDTO {
     private String offerStart;
     private String offerValidDate;
     private boolean offerActive;
+    
+    // NEW — NGK admin only
+    private double ngkDiscountPercentage;
+    private double ngkDiscountAmount;
+    
+    private double totalDiscountPercentage;
+    private double totalDiscountAmount;
+
 }

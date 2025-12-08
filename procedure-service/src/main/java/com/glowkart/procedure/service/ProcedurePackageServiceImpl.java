@@ -291,27 +291,51 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
     private void calculatePricing(ProcedurePackageDTO dto) {
 
-        double discountPercent = dto.isOfferActive()
-                ? dto.getDiscountPercentage()
-                : 0;
+        double price = dto.getPrice(); // always has a value
 
-        double discountAmount = dto.getPrice() * discountPercent / 100.0;
-        double discountedPrice = dto.getPrice() - discountAmount;
+        // Clinic discount
+        double clinicDiscountPercent = dto.isOfferActive() ? dto.getDiscountPercentage() : 0.0;
+        double clinicDiscountAmount = round(price * clinicDiscountPercent / 100.0);
+        double discountedPrice = round(price - clinicDiscountAmount);
 
-        double taxAmount = discountedPrice * dto.getTaxPercentage() / 100.0;
-        double gstAmount = discountedPrice * dto.getGst() / 100.0;
+        // Taxes
+        double taxAmount = round(discountedPrice * dto.getTaxPercentage() / 100.0);
+        double gstAmount = round(discountedPrice * dto.getGst() / 100.0);
 
-        double consultationFee = dto.getConsultationFee() != null
-                ? dto.getConsultationFee()
-                : 0.0;
+        // Clinic pay before NGK
+        double consultationFee = dto.getConsultationFee() != null ? dto.getConsultationFee() : 0.0;
+        double clinicPay = round(discountedPrice + taxAmount + gstAmount + consultationFee);
 
-        dto.setDiscountAmount(discountAmount);
+        // NGK discount applied on clinic pay
+        double ngkDiscountPercent = dto.getNgkDiscountPercentage(); // primitive
+        double ngkDiscountAmount = round(clinicPay * ngkDiscountPercent / 100.0);
+
+        // Final cost after NGK discount
+        double finalCost = round(clinicPay - ngkDiscountAmount);
+
+        // Total discount for reporting (clinic + NGK)
+        double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
+        double totalDiscountPercent = clinicDiscountPercent + ngkDiscountPercent;
+
+        // Set values in DTO
+        dto.setDiscountAmount(clinicDiscountAmount);       // clinic discount only
+        dto.setNgkDiscountAmount(ngkDiscountAmount);
+        dto.setTotalDiscountAmount(totalDiscountAmount);
+
         dto.setDiscountedCost(discountedPrice);
+        dto.setTotalDiscountPercentage(totalDiscountPercent);
 
         dto.setTaxAmount(taxAmount);
         dto.setGstAmount(gstAmount);
 
-        dto.setClinicPay(discountedPrice + taxAmount + gstAmount);
-        dto.setFinalCost(discountedPrice + taxAmount + gstAmount + consultationFee);
+        dto.setClinicPay(clinicPay);
+        dto.setFinalCost(finalCost);
     }
+
+    // Utility method to round to 2 decimals
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+
 }
