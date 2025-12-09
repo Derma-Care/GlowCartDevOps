@@ -217,7 +217,7 @@ export const getSubService = 'admin/getSubService'
 
 // GlowKart API's
 export const BASE_URL_API = "https://glowkartapi.ashokfruit.shop/admin";
-
+export const NGkRegistrationBaseUrl='https://glowkartapi.ashokfruit.shop'
 // Clinic
 export const CLINIC_REGISTRATION_URL = `${BASE_URL_API}/clinics/register`;
 
@@ -238,7 +238,8 @@ export const statusapi = {
     rejectClinic: (id, reason) =>
         axios.put(`${AllClinicData}/${id}/reject`, { reason }),
 };
-export const NGkRegistrationLink = `https://glowkartapi.ashokfruit.shop/onboard/request-link`
+
+export const NGkRegistrationLink = `${NGkRegistrationBaseUrl}/onboard/request-link`
 export const getAllQuestions = '/clinicQuestions/getAll'
 export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'
 export const REGISTRATION_CODE_GET_ALL_URL=`${BASE_URL_API}/api/registration/all`

@@ -38,9 +38,16 @@ const RegistrationCodeManagement = () => {
     "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
   );
 
-  useEffect(() => {
-    fetchCodes();
-  }, []);
+useEffect(() => {
+  fetchCodes(); // initial load
+
+  const interval = setInterval(() => {
+    fetchCodes(); 
+  }, 10000); 
+
+  return () => clearInterval(interval); // cleanup
+}, []);
+
 
   // Scroll page to top whenever page changes
   useEffect(() => {
