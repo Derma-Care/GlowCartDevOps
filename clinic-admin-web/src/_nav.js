@@ -56,13 +56,13 @@ export const getNavigation = (permissions = {}) => {
       as: NavLink,
       icon: <CIcon icon={cilGift} customClassName="nav-icon" />,
     },
-    {
-      component: CNavItem,
-      to: '/membership',
-      name: 'Membership',
-      as: NavLink,
-      icon: <CIcon icon={cilCreditCard} customClassName="nav-icon" />,
-    },
+    // {
+    //   component: CNavItem,
+    //   to: '/membership',
+    //   name: 'Membership',
+    //   as: NavLink,
+    //   icon: <CIcon icon={cilCreditCard} customClassName="nav-icon" />,
+    // },
 
     {
       component: CNavItem,
@@ -74,10 +74,17 @@ export const getNavigation = (permissions = {}) => {
 
     {
       component: CNavItem,
-      to: '/payouts',
       name: 'Payouts',
+      to: '/payouts',
       as: NavLink,
+
+      // fake route, only for active highlighting to work correctly
       icon: <CIcon icon={cilWallet} customClassName="nav-icon" />,
+
+      onClick: (e) => {
+        e.preventDefault() // prevent navigation
+        window.dispatchEvent(new Event('openPayoutAuth'))
+      },
     },
 
     {
@@ -93,7 +100,8 @@ export const getNavigation = (permissions = {}) => {
   if (!permissions || typeof permissions !== 'object') return []
 
   // return allNav.filter((item) => permissions[item.name])
-  return allNav.filter((item) => permissions[item.name] )
+  // return allNav.filter((item) => permissions[item.name])
+  return allNav.filter((item) => (!permissions || !permissions[item.name] ? false : true))
 }
 
 // ✅ Optional: filter based on permissions if needed

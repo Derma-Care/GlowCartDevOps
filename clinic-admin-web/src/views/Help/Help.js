@@ -78,15 +78,15 @@ function Help() {
         </p>
       ),
     },
-    {
-      title: 'How to Generate Bills or Invoices?',
-      content: (
-        <p>
-          Open <b>Billing</b> → Choose the completed appointment → Click <b>Generate Invoice</b> →
-          Download as PDF.
-        </p>
-      ),
-    },
+    // {
+    //   title: 'How to Generate Bills or Invoices?',
+    //   content: (
+    //     <p>
+    //       Open <b>Billing</b> → Choose the completed appointment → Click <b>Generate Invoice</b> →
+    //       Download as PDF.
+    //     </p>
+    //   ),
+    // },
 
     {
       title: 'How to Contact Technical Support?',
@@ -119,7 +119,7 @@ function Help() {
 
   return (
     <>
-      <PageLayout branch={mainBranch} />
+      {/* <PageLayout branch={mainBranch} /> */}
       <div className="help-container">
         {/* 🔍 Search Bar */}
         <div className="mb-4 text-center ">

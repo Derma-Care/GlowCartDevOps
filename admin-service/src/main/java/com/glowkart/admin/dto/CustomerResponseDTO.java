@@ -40,6 +40,7 @@ public class CustomerResponseDTO {
     private String blood;
     private String registrationCode;
     private String referBy;
+    private Integer registrationRank;
 
     // Wheel fields
     private String spinRewardId;

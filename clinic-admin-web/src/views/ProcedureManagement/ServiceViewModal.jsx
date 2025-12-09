@@ -118,10 +118,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">No. of Sittings:</span>
-              <span className="text-muted">
-                {' '}
-                {data.sittings ?  data.sittings : 'N/A'}
-              </span>
+              <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
               {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
             </CCol>
           </CRow>
@@ -218,10 +215,30 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               )}
             </CCol>
             <CCol sm={6}>
-              <p className="fw-semibold">Description:</p>
-              <p className="text-muted">{data.description || 'N/A'}</p>
+              <p className="fw-semibold">Procedure Url / Link:</p>
+
+              {data.procedureLink ? (
+                <a
+                  href={data.procedureLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: 'var(--color-black)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {data.procedureLink}
+                </a>
+              ) : (
+                <p className="text-muted">N/A</p>
+              )}
             </CCol>
           </CRow>
+          <CCol sm={12}>
+            <p className="fw-semibold">Description:</p>
+            <p className="text-muted">{data.description || 'N/A'}</p>
+          </CCol>
         </div>
       </CModalBody>
 

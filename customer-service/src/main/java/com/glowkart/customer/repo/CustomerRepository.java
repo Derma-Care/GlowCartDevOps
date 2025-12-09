@@ -19,4 +19,9 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
 
     // ✅ New method: find all customers with preHash in the given list
     List<Customer> findByAadharPreHashIn(List<String> preHashes);
+
+ // Add this method to your existing CustomerRepository interface
+
+    List<Customer> findAll();
+
 }

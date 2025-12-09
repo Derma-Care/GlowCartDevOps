@@ -91,25 +91,44 @@ const ProcedureManagement = () => {
   /* ===========================
       SUBMIT ALL TEMP PROCEDURES
      =========================== */
-  const handleSubmitAll = async () => {
-    for (const name of tempProcedures) {
-      try {
-        const res = await createProcedure({ procedureName: name })
-        // If API returns 200 with success: true
-        if (res && res.success !== false) {
-          toast.success(`Procedure "${name}" added successfully`)
-        }
-      } catch (err) {
-        // Axios error object
-        const apiMessage = err.response?.data?.message || 'Failed to save procedure'
-        toast.error(`Failed to add "${name}": ${apiMessage}`)
-      }
-    }
+const handleSubmitAll = async () => {
+  let successCount = 0;
+  let failCount = 0;
+  let failedItems = [];
 
-    fetchProcedures()
-    setTempProcedures([])
-    setShowModal(false)
+  for (const name of tempProcedures) {
+    try {
+      const res = await createProcedure({ procedureName: name });
+
+      if (res && res.success !== false) {
+        successCount++;
+      } else {
+        failCount++;
+        failedItems.push(name);
+      }
+    } catch (err) {
+      failCount++;
+      failedItems.push(name);
+    }
   }
+
+  // Show ONLY ONE toast message
+  if (successCount > 0 && failCount === 0) {
+    toast.success(`${successCount} procedures added successfully`);
+  } 
+  else if (successCount > 0 && failCount > 0) {
+    toast.warn(
+      `${successCount} added successfully, ${failCount} failed: ${failedItems.join(", ")}`
+    );
+  } 
+  else {
+    toast.error(`Failed to add procedures: ${failedItems.join(", ")}`);
+  }
+
+  fetchProcedures();
+  setTempProcedures([]);
+  setShowModal(false);
+};
 
   const handleView = (procedure) => {
     setSelectedProcedure(procedure)

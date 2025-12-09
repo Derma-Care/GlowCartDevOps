@@ -18,18 +18,22 @@ import {
   CModalHeader,
   CModalTitle,
   CModalBody,
-  CModalFooter, CForm
+  CModalFooter,
+  CForm,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch } from '@coreui/icons'
-import { ToastContainer } from 'react-toastify'
+import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { useNavigate } from 'react-router-dom'
 import LoadingIndicator from '../../Utils/loader'
 import Pagination from '../../Utils/Pagination'
 import { BASE_URL_API } from '../../baseUrl'
 import { Eye } from 'lucide-react'
 
 const PayoutManagement = () => {
+  const navigate = useNavigate()
+
   // ===== Login state =====
   const [showLogin, setShowLogin] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -37,6 +41,7 @@ const PayoutManagement = () => {
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
 
   // ===== Payout state =====
   const [payouts, setPayouts] = useState([])
@@ -122,6 +127,7 @@ const PayoutManagement = () => {
         { mobileNumber: userName, password: password },
         { headers: { 'Content-Type': 'application/json' } }
       )
+
       if (response.data.success) {
         const userData = response.data.data
         localStorage.setItem('authentication', 'true')
@@ -130,8 +136,19 @@ const PayoutManagement = () => {
         localStorage.setItem('userId', userData.id)
         setIsAuthenticated(true)
         setShowLogin(false)
+        setFailedAttempts(0)
       } else {
+        const attempts = failedAttempts + 1
+        setFailedAttempts(attempts)
         setLoginError(response.data.message || 'Invalid login credentials.')
+
+        if (attempts >= 3) {
+          await axios.post(`${BASE_URL_API}/send-alert-email`, {
+            userName,
+            message: 'Failed login attempts exceeded 3',
+          })
+          toast.error('Too many failed login attempts! Admin notified via email.')
+        }
       }
     } catch (err) {
       setLoginError(err.response?.data?.message || 'An unexpected error occurred.')
@@ -160,7 +177,15 @@ const PayoutManagement = () => {
       <ToastContainer />
 
       {/* Login Modal */}
-      <CModal visible={showLogin} alignment="center" backdrop="static">
+      <CModal
+        visible={showLogin}
+        alignment="center"
+        backdrop="static"
+        onClose={() => {
+          if (!isAuthenticated) navigate(-1) // Navigate back only if not logged in
+          setShowLogin(false)
+        }}
+      >
         <CModalHeader>
           <CModalTitle>Payout Login</CModalTitle>
         </CModalHeader>
@@ -183,6 +208,15 @@ const PayoutManagement = () => {
           </CForm>
         </CModalBody>
         <CModalFooter>
+          <CButton
+            color="secondary"
+            onClick={() => {
+              if (!isAuthenticated) navigate(-1)
+              setShowLogin(false)
+            }}
+          >
+            Cancel
+          </CButton>
           <CButton color="primary" onClick={handleLogin} disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Submit'}
           </CButton>
@@ -206,11 +240,13 @@ const PayoutManagement = () => {
               </CInputGroup>
             </CCol>
             <CCol md={8} className="text-end">
-              <CButton style={{ backgroundColor: 'var(--color-black)', color: 'white' }} shape="rounded-pill">
+              <CButton
+                style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+                shape="rounded-pill"
+              >
                 No. of Payouts: {filteredData.length}
               </CButton>
             </CCol>
-
           </CRow>
 
           {loading ? (
@@ -242,13 +278,15 @@ const PayoutManagement = () => {
                       <CTableDataCell className="text-center">{p.amount}</CTableDataCell>
                       <CTableDataCell className="text-center">{p.paymentMethod}</CTableDataCell>
                       <CTableDataCell className="text-center">
-
                         <div className="d-flex justify-content-center align-items-center gap-2">
-                          <button className="actionBtn view" title="View" onClick={() => setViewData(p)}>
+                          <button
+                            className="actionBtn view"
+                            title="View"
+                            onClick={() => setViewData(p)}
+                          >
                             <Eye size={18} />
                           </button>
                         </div>
-
                       </CTableDataCell>
                     </CTableRow>
                   ))

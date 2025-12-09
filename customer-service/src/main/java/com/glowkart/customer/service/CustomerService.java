@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,14 @@ public class CustomerService {
                     "Missing required fields: " + String.join(", ", missingFields), null);
         }
 
+        // Check if city exists, log or handle if new
+        if (!cityExists(dto.getCity())) {
+            log.info("New city '{}' detected, will be stored with this customer.", dto.getCity());
+            // No special action needed since city is stored per customer
+        } else {
+            log.info("City '{}' already exists.", dto.getCity());
+        }
+        
         // Step 2: Copy fields to Customer entity
         copyStep1Fields(dto, customer);
         customer.setUserProfileCompleted(true);
@@ -75,6 +84,27 @@ public class CustomerService {
         return new ApiResponse<>(true, "Step-1 completed. Please proceed to the next step.", customer);
     }
 
+    // New method to get distinct cities (case-insensitive, trimmed, sorted)
+    public List<String> getDistinctCities() {
+        return customerRepository.findAll().stream()
+            .map(Customer::getCity)
+            .filter(city -> city != null && !city.trim().isEmpty())
+            .map(String::trim)
+            .map(String::toLowerCase)
+            .distinct()
+            .sorted()
+            .map(city -> Character.toUpperCase(city.charAt(0)) + city.substring(1)) // Capitalize first letter
+            .collect(Collectors.toList());
+    }
+
+    // Check if city exists (case-insensitive)
+    public boolean cityExists(String city) {
+        if (city == null || city.isBlank()) return false;
+        String normalized = city.trim().toLowerCase();
+        return getDistinctCities().stream()
+                .map(String::toLowerCase)
+                .anyMatch(c -> c.equals(normalized));
+    }
  // ==================== STEP 2: Spin Wheel ====================
 
     @Transactional

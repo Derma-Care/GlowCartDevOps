@@ -45,7 +45,6 @@ const AppHeader = () => {
     ? localStorage.getItem('staffName')
     : localStorage.getItem('HospitalName')?.split(' ')[0] || 'Hospital'
 
-
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current &&
@@ -69,7 +68,10 @@ const AppHeader = () => {
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
         {/* Search Bar */}
-        <div className="d-none d-md-block me-4" style={{ color: 'var(--color-black)' }}>
+        <div
+          className="position-relative d-none d-md-block me-4"
+          style={{ color: 'var(--color-black)' }}
+        >
           <input
             type="text"
             placeholder="Search..."
@@ -78,18 +80,37 @@ const AppHeader = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               color: 'var(--color-black)',
-              borderRadius: '10px', // Rounded corners
-              padding: '10px 15px', // Inner spacing
-              border: `1px solid ${'var(--color-black)'}`, // Light gray border
-              outline: 'none', // Removes focus border
-              width: '350px', // Adjust width as needed
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Subtle shadow
+              borderRadius: '10px',
+              padding: '10px 40px 10px 15px', // extra right padding for icon
+              border: `1px solid var(--color-black)`,
+              outline: 'none',
+              width: '350px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
               height: '40px',
               backgroundColor: 'transparent',
             }}
           />
+
+          {/* CLEAR ICON (shown only when input has value) */}
+          {searchQuery && (
+            <span
+              onClick={() => setSearchQuery('')}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                cursor: 'pointer',
+                color: 'var(--color-black)',
+                fontSize: '14px',
+                fontWeight: 'bold',
+              }}
+            >
+              ✖
+            </span>
+          )}
         </div>
-      
+
         {/* Notification Icons */}
         <div className="d-flex align-items-center ms-auto">
           {/* Bell icon with badge */}

@@ -65,3 +65,8 @@ $breakpoints: (
     max-width: 10% !important;
   }
 }
+.blur-background {
+  filter: blur(4px);
+  pointer-events: none; /* prevents clicking background */
+  user-select: none;
+}

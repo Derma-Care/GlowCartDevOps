@@ -50,31 +50,66 @@ const CustomerViewDetails = () => {
     fetchCustomer()
   }, [mobileNumber])
 
-  const renderField = (label, value, isImage = false) => {
+  // -------------------------
+  // RENDER FIELD FUNCTION
+  // -------------------------
+  const renderField = (label, value) => {
     if (!value) return null
 
-    return (
-      <CCol sm="6">
-        <strong>{label}:</strong>
-        <div>
-          {isImage ? (
+    // Image (jpg/png)
+    if (typeof value === 'string' && value.startsWith('data:image')) {
+      return (
+        <CCol sm="6">
+          <strong>{label}:</strong>
+          <div>
             <img
               src={value}
               alt={label}
               style={{ width: '80px', height: '80px', borderRadius: '8px' }}
             />
-          ) : (
-            value
-          )}
-        </div>
+          </div>
+        </CCol>
+      )
+    }
+
+    // PDF
+    if (typeof value === 'string' && value.startsWith('data:application/pdf')) {
+      // Convert Base64 to Blob URL
+      const base64Data = value.split(',')[1]
+      const byteCharacters = atob(base64Data)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/pdf' })
+      const blobUrl = URL.createObjectURL(blob)
+
+      return (
+        <CCol sm="6">
+          <strong>{label}:</strong>
+          <div>
+            <a href={blobUrl} target="_blank" rel="noopener noreferrer">
+              View PDF
+            </a>
+          </div>
+        </CCol>
+      )
+    }
+
+    // Normal text
+    return (
+      <CCol sm="6">
+        <strong>{label}:</strong>
+        <div>{value}</div>
       </CCol>
     )
   }
 
+
   // -------------------------
   // TAB VISIBILITY CONDITIONS
   // -------------------------
-
   const tabs = [
     {
       id: 0,
@@ -112,9 +147,11 @@ const CustomerViewDetails = () => {
       visible: customerData && (
         customerData.aadharNumber ||
         customerData.registrationCode ||
-        customerData.registrationCompleted
+        customerData.registrationCompleted ||
+        customerData.registrationRank
       )
     },
+
     {
       id: 4,
       title: 'Images',
@@ -184,9 +221,8 @@ const CustomerViewDetails = () => {
 
       <CCardBody>
 
-        {/* TABS WITH SPACE BELOW */}
+        {/* TABS */}
         <CNav variant="tabs" className="mb-3">
-
           {visibleTabs.map(tab => (
             <CNavItem key={tab.id}>
               <CNavLink
@@ -198,7 +234,6 @@ const CustomerViewDetails = () => {
               </CNavLink>
             </CNavItem>
           ))}
-
         </CNav>
 
         {/* TAB CONTENT */}
@@ -210,7 +245,6 @@ const CustomerViewDetails = () => {
               <CRow className="gy-3">
                 {renderField('Customer ID', customerData.customerId)}
                 {renderField('Full Name', customerData.fullName)}
-                {/* {renderField('Email', customerData.email)} */}
                 {renderField('Mobile Number', customerData.mobile)}
                 {renderField('Gender', customerData.gender)}
                 {renderField('DOB', customerData.dob)}
@@ -247,8 +281,9 @@ const CustomerViewDetails = () => {
                 {renderField('Spin Wheel Completed', customerData.spinWheelCompleted ? 'Yes' : 'No')}
                 {renderField(
                   'Spin Reward Image',
-                  customerData.spinRewardImage ? `data:image/png;base64,${customerData.spinRewardImage}` : null,
-                  true
+                  customerData.spinRewardImage
+                    ? `data:image/png;base64,${customerData.spinRewardImage}`
+                    : null
                 )}
               </CRow>
             </CCard>
@@ -267,7 +302,6 @@ const CustomerViewDetails = () => {
                       ? 'Yes'
                       : 'No'
                 )}
-
                 {renderField(
                   'User Consent',
                   customerData.userConsent === null
@@ -276,7 +310,6 @@ const CustomerViewDetails = () => {
                       ? 'Yes'
                       : 'No'
                 )}
-
                 {renderField(
                   'Privacy Consent',
                   customerData.privacyConsent === null
@@ -285,26 +318,23 @@ const CustomerViewDetails = () => {
                       ? 'Yes'
                       : 'No'
                 )}
-
                 {renderField('Registration Code', customerData.registrationCode)}
+                {renderField('Registration Rank', customerData.registrationRank)}
                 {renderField('Registration Verified', customerData.registrationCodeVerified ? 'Yes' : 'No')}
                 {renderField('Registration Completed', customerData.registrationCompleted ? 'Yes' : 'No')}
               </CRow>
             </CCard>
           </CTabPane>
 
-          {/* IMAGES */}
+          {/* IMAGES / PDFs */}
           <CTabPane visible={activeTab === 4}>
             <CCard className="p-3 shadow-sm">
               <CRow className="gy-3">
                 {renderField(
                   'Photo',
-                  customerData.photo ? `data:image/png;base64,${customerData.photo}` : null,
-                  true
+                  customerData.photo ? `data:image/png;base64,${customerData.photo}` : null
                 )}
-                {/* {renderField('Follow Screenshot', customerData.followScreenshot, true)}
-                {renderField('Prize Screenshot', customerData.prizePostScreenshot, true)} */}
-                {renderField('Receipt', customerData.prescription, true)}
+                {renderField('Receipt', customerData.prescription)}
               </CRow>
             </CCard>
           </CTabPane>

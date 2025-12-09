@@ -94,6 +94,13 @@ public class CustomerController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    // New endpoint to get all distinct cities
+    @GetMapping("/customer/cities")
+    public ResponseEntity<ApiResponse<List<String>>> getCities() {
+        List<String> cities = customerService.getDistinctCities();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cities fetched successfully", cities));
+    }
+    
     @DeleteMapping("/customer/{mobile}")
     public ResponseEntity<ApiResponse<String>> deleteCustomer(@PathVariable String mobile) {
         ApiResponse<String> response = customerService.deleteCustomer(mobile);

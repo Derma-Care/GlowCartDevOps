@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect } from 'react'
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
+import React, { Suspense, useEffect, useState } from 'react'
+import { BrowserRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
@@ -18,6 +18,8 @@ import OnboardSuccess from './views/NGK/CustomerRrgistration/OnboardSuccess'
 import NGlowKartPatientRegistration_CoreUI from './views/NGK/CustomerRrgistration/CustomerRegistration'
 import SpinResultCard from './views/NGK/CustomerRrgistration/SpinResultCard'
 import RegistrationSoon from './views/NGK/CustomerRrgistration/RegistrationSoon'
+import PayoutAuthModal from './views/Payouts/PayoutAuthModal'
+import ResetPasswordForm from './views/Payouts/ResetPasswordForm'
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -38,6 +40,15 @@ const App = () => {
     }
   }, [storedTheme, isColorModeSet, setColorMode])
 
+  const navigate = useNavigate()
+  const [showPayoutAuth, setShowPayoutAuth] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setShowPayoutAuth(true)
+    window.addEventListener('openPayoutAuth', handler)
+    return () => window.removeEventListener('openPayoutAuth', handler)
+  }, [])
+
   return (
     <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
       <Routes>
@@ -50,21 +61,32 @@ const App = () => {
         <Route path="/404" element={<Page404 />} />
         <Route path="/500" element={<Page500 />} />
         <Route path="/NGK-Registration-Form" element={<NGlowKartPatientRegistration_CoreUI />} />
-        <Route path="/launch" element={<RegistrationSoon/>} />
+        <Route path="/launch" element={<RegistrationSoon />} />
 
         {/* <Route path="/" element={<SpinResultCard />} /> */}
         <Route path="/onboard-success" element={<OnboardSuccess />} />
+        <Route path="/resetPassword" element={<ResetPasswordForm />} />
 
         {/* Protected routes - catch all */}
         <Route
           path="*"
           element={
             <ProtectedRoute>
-              <DefaultLayout />
+              <div className={showPayoutAuth ? 'blur-background' : ''}>
+                <DefaultLayout />
+              </div>
             </ProtectedRoute>
           }
         />
       </Routes>
+      <PayoutAuthModal
+        visible={showPayoutAuth}
+        onClose={() => setShowPayoutAuth(false)}
+        onSuccess={() => {
+          setShowPayoutAuth(false)
+          navigate('/payouts')
+        }}
+      />
     </Suspense>
   )
 }

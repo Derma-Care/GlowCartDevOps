@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -48,6 +48,7 @@ const Login = () => {
   const { selectedHospital, setUser, setHospitalId, setSelectedHospital, fetchAllData } =
     useHospital()
   const navigate = useNavigate()
+  const resetRef = useRef()
 
   const validateForm = () => {
     const errors = {}
@@ -143,6 +144,36 @@ const Login = () => {
     }
   }
 
+  const handleUpdatePassword = async () => {
+    // 1️⃣ Validate child form
+    const isValid = resetRef.current?.validateForm()
+    if (!isValid) return
+
+    // 2️⃣ Get form data
+    const form = resetRef.current?.getFormData()
+
+    setLoading(true)
+
+    try {
+      const response = await http.put(`/updatePassword/${form.username}`, {
+        password: form.currentPassword,
+        newPassword: form.newPassword,
+        confirmPassword: form.confirmPassword,
+      })
+
+      if (response.data.success) {
+        showCustomToast('Password updated successfully!', 'success')
+        setShowResetModal(false)
+      } else {
+        showCustomToast(response.data.message, 'error')
+      }
+    } catch (err) {
+      showCustomToast('Error updating password.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     // Outer container uses flex column and full viewport height to allow sticky footer without overflow
     <>
@@ -170,8 +201,8 @@ const Login = () => {
                     Welcome to Neeha's GlowKart
                   </h2>
                   <p className="lead mb-4" style={{ opacity: 0.95, color: NGK_COLORS.textDark }}>
-                    Manage dermatology operations seamlessly — appointments, procedures, dates, offers &
-                    more.
+                    Manage dermatology operations seamlessly — appointments, procedures, dates,
+                    offers & more.
                   </p>
                 </div>
               </CCol>
@@ -259,7 +290,7 @@ const Login = () => {
                         <small className="text-danger">{fieldErrors.password}</small>
                       )}
 
-                      <div
+                      {/* <div
                         className="d-flex justify-content-between mt-2"
                         style={{ color: NGK_COLORS.primary }}
                       >
@@ -274,6 +305,41 @@ const Login = () => {
                         >
                           Forgot password?
                         </a>
+                      </div> */}
+                      <div className="mt-3">
+                        <div className="d-flex justify-content-between align-items-center ">
+                          {/* Left: Forgot Password */}
+                          <Link
+                            to="/resetPassword"
+                            style={{
+                              cursor: 'pointer',
+                              color: NGK_COLORS.primary,
+                              textDecoration: 'underline',
+                              fontSize: '14px',
+                            }}
+                            onClick={(e) => {
+                              onClose()
+                            }}
+                          >
+                            Forgot Password?
+                          </Link>
+
+                          {/* Right: Change Password */}
+                          <a
+                            href="#"
+                            className="text-decoration-none mb-0"
+                            style={{
+                              color: NGK_COLORS.primary,
+                              fontSize: '14px',
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setShowResetModal(true)
+                            }}
+                          >
+                            Change Password?
+                          </a>
+                        </div>
                       </div>
 
                       <CButton
@@ -327,7 +393,11 @@ const Login = () => {
             <CModalTitle style={{ color: NGK_COLORS.primary }}>Reset Password</CModalTitle>
           </CModalHeader>
           <CModalBody>
-            <ResetPassword onClose={() => setShowResetModal(false)} setLoading={setLoading} />
+            <ResetPassword
+              onClose={() => setShowResetModal(false)}
+              setLoading={setLoading}
+              ref={resetRef}
+            />
           </CModalBody>
           <CModalFooter>
             <CButton color="secondary" onClick={() => setShowResetModal(false)}>
@@ -338,6 +408,7 @@ const Login = () => {
               color="primary"
               disabled={loading}
               style={{ backgroundColor: NGK_COLORS.primary, border: 'none' }}
+              onClick={handleUpdatePassword}
             >
               {loading ? 'Updating...' : 'Update Password'}
             </CButton>

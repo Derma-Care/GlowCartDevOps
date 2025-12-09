@@ -26,6 +26,7 @@ const RegistrationCodeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("NGK-");
 
+  const [filterType, setFilterType] = useState("all"); // <- add this
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
 
@@ -37,16 +38,10 @@ const RegistrationCodeManagement = () => {
   const [customLink, setCustomLink] = useState(
     "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
   );
-
 useEffect(() => {
-  fetchCodes(); // initial load
-
-  const interval = setInterval(() => {
-    fetchCodes(); 
-  }, 10000); 
-
-  return () => clearInterval(interval); // cleanup
+  fetchCodes();
 }, []);
+
 
 
   // Scroll page to top whenever page changes
@@ -65,12 +60,20 @@ useEffect(() => {
     setLoading(false);
   };
 
-  const filteredCodes = codes.filter((code) =>
-    code.code.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredCodes = codes
+    .filter((code) =>
+      code.code.toLowerCase().includes(searchText.toLowerCase())
+    )
+    .filter((code) => {
+      if (filterType === "used") return code.used;
+      if (filterType === "unused") return !code.used;
+      return true;
+    });
 
-  const usedCount = filteredCodes.filter((code) => code.used).length;
-  const unusedCount = filteredCodes.filter((code) => !code.used).length;
+
+  const usedCount = codes.filter((code) => code.used).length;
+  const unusedCount = codes.filter((code) => !code.used).length;
+
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -145,13 +148,32 @@ Best regards,
                   color: "#198754",
                   fontWeight: 500,
                   marginRight: "15px",
+                  cursor: "pointer",
+                  textDecoration: filterType === "unused" ? "underline" : "none",
+                }}
+                onClick={() => {
+                  setFilterType("unused");
+                  setCurrentPage(1);
                 }}
               >
                 Unused: {unusedCount}
               </span>
-              <span style={{ color: "#dc3545", fontWeight: 500 }}>
+
+              <span
+                style={{
+                  color: "#dc3545",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  textDecoration: filterType === "used" ? "underline" : "none",
+                }}
+                onClick={() => {
+                  setFilterType("used");
+                  setCurrentPage(1);
+                }}
+              >
                 Used: {usedCount}
               </span>
+
             </div>
           </div>
 

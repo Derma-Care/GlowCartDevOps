@@ -35,7 +35,7 @@ public class RegistrationCodeController {
         }
 
         return new ApiResponse<>(true,
-                "500 registration codes generated & emailed!",
+                "500 registration codes generated & emailId!",
                 null);
     }
 

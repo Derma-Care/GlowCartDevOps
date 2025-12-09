@@ -316,7 +316,7 @@ const PackageFormModal = ({
                 <CCol md={4} xs={3} className="sitting-col">
                   <CFormInput
                     type="number"
-                    placeholder="Sit"
+                    placeholder="Sittings"
                     value={item.sittings}
                     onChange={(e) =>
                       onChange({

@@ -1364,6 +1364,7 @@ const ServiceManagement = () => {
     procedureQA: [],
     preProcedureQA: [],
     postProcedureQA: [],
+    procedureLink: '',
   })
 
   const [errors, setErrors] = useState({
@@ -1615,6 +1616,7 @@ const ServiceManagement = () => {
       procedureQA: [],
       preProcedureQA: [],
       postProcedureQA: [],
+      procedureLink: '',
     })
     setErrors({})
   }
@@ -1667,7 +1669,7 @@ const ServiceManagement = () => {
       // offerEndDate: service.offerValidDate || '',
       offerValidDate: toDateInput(service.offerStart),
       offerEndDate: toDateInput(service.offerValidDate),
-
+      procedureLink: service.procedureLink || '',
       serviceImage: fullImage,
       serviceImageFile: null,
 
@@ -1731,6 +1733,7 @@ const ServiceManagement = () => {
         preProcedureQA: newService.preProcedureQA,
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
+        procedureLink: newService.procedureLink,
       }
 
       const response = await postServiceData(payload) // imported from ProcedureManagementAPI
@@ -1793,6 +1796,7 @@ const ServiceManagement = () => {
         procedureImage: base64ImageToSend,
         gst: Number(newService.gst || 0),
         consultationFee: Number(newService.consultationFee || 0),
+        procedureLink: newService.procedureLink,
       }
 
       const response = await updateServiceData(newService.subServiceId, hospitalId, updatedService) // imported from ProcedureManagementAPI

@@ -1,190 +1,153 @@
-import React, { useState } from 'react'
-import axios from 'axios'
+import React, { useImperativeHandle, useState, forwardRef } from 'react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import {
-  CCard,
-  CCardBody,
-  CForm,
-  CFormInput,
-  CButton,
-  CFormLabel,
-  CInputGroup,
-  CInputGroupText,
-} from '@coreui/react'
-import { BASE_URL } from '../baseUrl'
+import { CForm, CFormInput, CFormLabel, CInputGroup, CInputGroupText } from '@coreui/react'
 import { http } from '../Utils/Interceptors'
-import { NGK_COLORS } from '../Constant/Themes'
 
-const ResetPassword = ({ onClose, setLoading }) => {
+const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
   const [form, setForm] = useState({
+    username: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-    username: '',
   })
 
-  const [message, setMessage] = useState('')
+  // ⭐ Individual errors
+  const [errors, setErrors] = useState({
+    username: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
 
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+
+  // Input change handler
   const handleChange = (e) => {
     const { name, value } = e.target
+
     setForm((prev) => ({ ...prev, [name]: value }))
+
+    // Clear error while typing
+    setErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
   const validatePassword = (password) => {
     return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/.test(password)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    const { currentPassword, newPassword, confirmPassword } = form
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setMessage('All fields are required.')
-      return
+  // ------------------------------------------------------
+  //    VALIDATION + API SUBMIT
+  // ------------------------------------------------------
+  const handleValidation = () => {
+    let newErrors = {
+      username: '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
     }
 
-    if (newPassword !== confirmPassword) {
-      setMessage('New and confirm password do not match.')
-      return
+    if (!form.username) newErrors.username = 'Username is required.'
+    if (!form.currentPassword) newErrors.currentPassword = 'Current password is required.'
+    if (!form.newPassword) newErrors.newPassword = 'New password is required.'
+    if (!form.confirmPassword) newErrors.confirmPassword = 'Confirm password is required.'
+
+    if (form.newPassword !== form.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match.'
     }
 
-    if (!validatePassword(newPassword)) {
-      setMessage(
-        'Password must be 8–20 characters, with at least one uppercase letter, one number, and one special character.',
-      )
-      return
+    if (form.newPassword && !validatePassword(form.newPassword)) {
+      newErrors.newPassword =
+        'Password must be 8–20 chars, include uppercase, number, and special character.'
     }
 
-    setLoading(true)
-    setMessage('')
+    setErrors(newErrors)
 
-    try {
-      const response = await http.put(`/updatePassword/${form.username}`, {
-        password: currentPassword,
-        newPassword: newPassword,
-        confirmPassword: confirmPassword,
-      })
-
-      if (response.data.success) {
-        setMessage('✅ Password updated successfully!')
-        setForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        })
-        setTimeout(() => {
-          onClose?.() // ✅ Close modal if onClose is passed
-        }, 1000)
-      } else {
-        setMessage(response.data.message || '❌ Failed to update password.')
-      }
-    } catch (err) {
-      console.error('Password update error:', err)
-      setMessage('❌ Error updating password.')
-    } finally {
-      setLoading(false)
-    }
+    // Return TRUE if valid
+    return Object.values(newErrors).every((msg) => msg === '')
   }
+
+  // Expose handleSubmit to modal button
+  useImperativeHandle(ref, () => ({
+    validateForm: handleValidation,
+    getFormData: () => form,
+  }))
 
   return (
     <div className="container mt-2">
-      <div>
-        <div>
-          {/* <h4 className="mb-3">🔐 Change Password</h4> */}
-          <CForm onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <CFormLabel>User Name</CFormLabel>
-              <CInputGroup>
-                <CFormInput
-                  type="text"
-                  name="username"
-                  placeholder="Enter User Name"
-                  // style={{
-                  //   cursor: 'pointer',
-                  //   borderColor: NGK_COLORS.borderSoft,
-
-                  // }}
-                  value={form.username}
-                  onChange={handleChange}
-                />
-                <CInputGroupText
-                  onClick={() => setShowCurrent(!showCurrent)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {showCurrent ? <FaEyeSlash /> : <FaEye />}
-                </CInputGroupText>
-              </CInputGroup>
-            </div>
-            {/* Current Password */}
-            <div className="mb-3">
-              <CFormLabel>Current Password</CFormLabel>
-              <CInputGroup>
-                <CFormInput
-                  placeholder="ENter Current Password"
-                  type={showCurrent ? 'text' : 'password'}
-                  name="currentPassword"
-                  value={form.currentPassword}
-                  onChange={handleChange}
-                />
-                <CInputGroupText
-                  onClick={() => setShowCurrent(!showCurrent)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {showCurrent ? <FaEyeSlash /> : <FaEye />}
-                </CInputGroupText>
-              </CInputGroup>
-            </div>
-
-            {/* New Password */}
-            <div className="mb-3">
-              <CFormLabel>New Password</CFormLabel>
-              <CInputGroup>
-                <CFormInput
-                  type={showNew ? 'text' : 'password'}
-                  name="newPassword"
-                  value={form.newPassword}
-                  onChange={handleChange}
-                  placeholder="8–20 chars, 1 capital, 1 special, 1 number"
-                />
-                <CInputGroupText onClick={() => setShowNew(!showNew)} style={{ cursor: 'pointer' }}>
-                  {showNew ? <FaEyeSlash /> : <FaEye />}
-                </CInputGroupText>
-              </CInputGroup>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="mb-3">
-              <CFormLabel>Confirm New Password</CFormLabel>
-              <CInputGroup>
-                <CFormInput
-                  placeholder="ENter Confirm Password"
-                  type={showConfirm ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                />
-                <CInputGroupText
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {showConfirm ? <FaEyeSlash /> : <FaEye />}
-                </CInputGroupText>
-              </CInputGroup>
-            </div>
-
-            {/* Message */}
-            {message && <div className="mb-3 text-danger fw-bold">{message}</div>}
-
-            {/* Submit */}
-          </CForm>
+      <CForm>
+        {/* Username */}
+        <div className="mb-3">
+          <CFormLabel>User Name</CFormLabel>
+          <CInputGroup>
+            <CFormInput
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              placeholder="Enter username"
+            />
+          </CInputGroup>
+          {errors.username && <p className="text-danger">{errors.username}</p>}
         </div>
-      </div>
+
+        {/* Current Password */}
+        <div className="mb-3">
+          <CFormLabel>Current Password</CFormLabel>
+          <CInputGroup>
+            <CFormInput
+              type={showCurrent ? 'text' : 'password'}
+              name="currentPassword"
+              value={form.currentPassword}
+              onChange={handleChange}
+              placeholder="Enter current password"
+            />
+            <CInputGroupText onClick={() => setShowCurrent(!showCurrent)}>
+              {showCurrent ? <FaEyeSlash /> : <FaEye />}
+            </CInputGroupText>
+          </CInputGroup>
+          {errors.currentPassword && <p className="text-danger">{errors.currentPassword}</p>}
+        </div>
+
+        {/* New Password */}
+        <div className="mb-3">
+          <CFormLabel>New Password</CFormLabel>
+          <CInputGroup>
+            <CFormInput
+              type={showNew ? 'text' : 'password'}
+              name="newPassword"
+              value={form.newPassword}
+              onChange={handleChange}
+              placeholder="Enter new password"
+            />
+            <CInputGroupText onClick={() => setShowNew(!showNew)}>
+              {showNew ? <FaEyeSlash /> : <FaEye />}
+            </CInputGroupText>
+          </CInputGroup>
+          {errors.newPassword && <p className="text-danger">{errors.newPassword}</p>}
+        </div>
+
+        {/* Confirm Password */}
+        <div className="mb-3">
+          <CFormLabel>Confirm Password</CFormLabel>
+          <CInputGroup>
+            <CFormInput
+              type={showConfirm ? 'text' : 'password'}
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter password"
+            />
+            <CInputGroupText onClick={() => setShowConfirm(!showConfirm)}>
+              {showConfirm ? <FaEyeSlash /> : <FaEye />}
+            </CInputGroupText>
+          </CInputGroup>
+          {errors.confirmPassword && <p className="text-danger">{errors.confirmPassword}</p>}
+        </div>
+      </CForm>
     </div>
   )
-}
+})
 
 export default ResetPassword

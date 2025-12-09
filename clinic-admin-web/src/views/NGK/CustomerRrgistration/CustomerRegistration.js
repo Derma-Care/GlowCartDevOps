@@ -889,21 +889,36 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           Date of birth <span className="text-danger">*</span>
                         </CFormLabel>
 
-                        <CFormInput
-                          type="date"
-                          name="dob"
-                          max={eighteenYearsAgoISO} // 🚀 Max date = 18 years old
-                          value={form.dob}
-                          onFocus={(e) => {
-                            const input = e.target
-                            input.value = eighteenYearsAgoISO // 🚀 Calendar opens showing 18yr old
-                            input.showPicker?.()
-                            setTimeout(() => {
-                              if (!form.dob) input.value = ''
-                            }, 0)
-                          }}
-                          onChange={handleChange}
-                        />
+                        <div style={{ position: 'relative' }}>
+                          <CFormInput
+                            type="date"
+                            name="dob"
+                            value={form.dob}
+                            max={eighteenYearsAgoISO}
+                            onChange={handleChange}
+                            onFocus={(e) => {
+                              // ❌ Do NOT open calendar on focus
+                              e.target.blur() // Prevents auto picker opening on some browsers
+                            }}
+                            // Space for icon
+                          />
+
+                          {/* 📌 Calendar icon */}
+                          {/* <span
+                            onClick={() => document.getElementById('dobInput')?.showPicker()}
+                            style={{
+                              position: 'absolute',
+                              right: '10px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              cursor: 'pointer',
+                              fontSize: '20px',
+                              color: NGK_COLORS.primarySoft,
+                            }}
+                          >
+                            📅
+                          </span> */}
+                        </div>
 
                         {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
                       </CCol>

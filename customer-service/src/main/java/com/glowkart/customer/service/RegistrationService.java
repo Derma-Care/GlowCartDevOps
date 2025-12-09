@@ -63,9 +63,9 @@ public class RegistrationService {
         if (!adminData.isUsed()) {
             try {
                 ApiResponse<RegistrationResponseDTO> markUsedResponse =
-                        adminServiceClient.markCodeUsed(new RegistrationRequestDTO(code)); // ✅ Feign client
+                        adminServiceClient.markCodeUsed(new RegistrationRequestDTO(code));
                 if (markUsedResponse.getData() != null) {
-                    adminData.setUsed(markUsedResponse.getData().isUsed()); // update used status
+                    adminData.setUsed(markUsedResponse.getData().isUsed());
                 }
             } catch (Exception e) {
                 logger.warn("Failed to mark code as used for {}: {}", code, e.getMessage());
@@ -75,12 +75,27 @@ public class RegistrationService {
         // 7️⃣ Save customer locally
         customerRepository.save(customer);
 
-        // 8️⃣ Return response with updated code status
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, adminResponse.getMessage(),
-                        buildStepResponse(customer, code, adminData.isUsed()))
-        );
+        // 8️⃣ Build step flags
+        RegistrationResponseDTO stepResponse = buildStepResponse(customer, code, adminData.isUsed());
+
+        // 9️⃣ Determine success and message
+        boolean successFlag = true;
+        String message = "Code verified successfully!";
+
+        // If registration is fully complete and code is already used, override message & flag
+        if (stepResponse.isUsed() &&
+            stepResponse.isRegistrationCompleted() &&
+            stepResponse.isRegistrationCodeVerified() &&
+            stepResponse.isUserProfileCompleted() &&
+            stepResponse.isSpinWheelCompleted()) {
+            successFlag = false;
+            message = "Code already used!";
+        }
+
+        // 10️⃣ Return final response
+        return ResponseEntity.ok(new ApiResponse<>(successFlag, message, stepResponse));
     }
+
 
 
     // Helper: Build registration step response
