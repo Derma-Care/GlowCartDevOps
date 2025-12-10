@@ -2,8 +2,10 @@ package com.glowkart.admin.service;
 
 import java.util.List;
 
-
+import com.glowkart.admin.dto.ChangePasswordDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
+import com.glowkart.admin.dto.ForgotPasswordRequest;
+import com.glowkart.admin.dto.ResetPasswordRequest;
 import com.glowkart.admin.model.Clinic;
 
 public interface ClinicService {
@@ -28,4 +30,13 @@ public interface ClinicService {
 
  // NEW: Get Verified Clinics
 	List<Clinic> getVerifiedClinics();
+	
+	void changePassword(ChangePasswordDTO dto);
+	
+	void forgotPassword(ForgotPasswordRequest request);
+	void resetPassword(ResetPasswordRequest request);
+
+	void resendOtp(ForgotPasswordRequest request);
+
+	
 }

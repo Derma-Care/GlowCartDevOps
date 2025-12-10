@@ -86,6 +86,13 @@ public class Clinic {
     private String upiId; // Optional
     private String panNumber;
     
+    private String otpCode;          // Hashed OTP
+    private Instant otpExpiry;       // OTP expiry time
+    private Instant otpSentTime;     // Last OTP sent time
+    private int otpAttempts;         // Count of OTP verification attempts
+
+    
+
  // Add THIS:
     private List<Doctor> doctorsList;
 }

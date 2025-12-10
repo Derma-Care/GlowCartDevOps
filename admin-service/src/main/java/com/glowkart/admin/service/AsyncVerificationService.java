@@ -83,4 +83,19 @@ public class AsyncVerificationService {
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }
+    
+    
+    @Async
+    public void sendOtpAsync(Clinic clinic, String otp) {
+        Map<String, String> data = new HashMap<>();
+
+        data.put("subject", "GlowKart Password Reset OTP");
+        data.put("message",
+                "Your OTP for resetting your GlowKart password is: " + otp +
+                "\nThis OTP is valid for 10 minutes.");
+
+        emailService.sendEmail(clinic.getEmail(), data);
+        whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
+    }
+
 }

@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.glowkart.admin.dto.ApiResponse;
+import com.glowkart.admin.dto.ChangePasswordDTO;
 import com.glowkart.admin.dto.ClinicLoginRequest;
 import com.glowkart.admin.dto.ClinicPublicDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.ClinicRejectionRequest;
+import com.glowkart.admin.dto.ForgotPasswordRequest;
+import com.glowkart.admin.dto.ResetPasswordRequest;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.service.ClinicService;
 import com.glowkart.admin.util.ClinicMapper;
@@ -210,4 +213,64 @@ public class ClinicController {
         );
     }
 
+    
+    @PutMapping("/updatePassword/{username}")
+    public ResponseEntity<ApiResponse<?>> updatePassword(
+            @PathVariable String username,
+            @RequestBody ChangePasswordDTO dto) {
+
+        dto.setUsername(username); // inject username into DTO
+
+        clinicService.changePassword(dto);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Password updated successfully", null)
+        );
+    }
+
+    
+    @PostMapping("/clinics/forgot-password")
+    public ResponseEntity<ApiResponse<?>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+
+        clinicService.forgotPassword(request);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "OTP sent successfully to registered email and WhatsApp",
+                        null
+                )
+        );
+    }
+
+    @PostMapping("/clinics/reset-password")
+    public ResponseEntity<ApiResponse<?>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+
+        clinicService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Password reset successfully",
+                        null
+                )
+        );
+    }
+
+    /**
+     * Resend OTP explicitly
+     */
+    @PostMapping("/clinics/resend-otp")
+    public ResponseEntity<ApiResponse<?>> resendOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+
+        clinicService.resendOtp(request);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "OTP resent successfully to registered email and WhatsApp",
+                        null
+                )
+        );
+    }
 }

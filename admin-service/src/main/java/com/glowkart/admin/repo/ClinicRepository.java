@@ -11,4 +11,9 @@ public interface ClinicRepository extends MongoRepository<Clinic, String> {
     Clinic findByUsername(String username);
  // NEW: fetch clinics by status (case-insensitive)
     List<Clinic> findByStatusIgnoreCase(String string);
+
+    Clinic findByEmail(String email);
+    Clinic findByWhatsappNumber(String whatsappNumber);
+
+
 }

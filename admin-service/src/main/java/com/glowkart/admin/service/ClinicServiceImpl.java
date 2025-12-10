@@ -1,5 +1,6 @@
 package com.glowkart.admin.service;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
@@ -8,12 +9,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.glowkart.admin.client.OnboardingClient;
+import com.glowkart.admin.dto.ChangePasswordDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.DoctorDTO;
+import com.glowkart.admin.dto.ForgotPasswordRequest;
+import com.glowkart.admin.dto.ResetPasswordRequest;
 import com.glowkart.admin.exception.ProcedureServiceException;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.model.Doctor;
@@ -401,4 +406,164 @@ public class ClinicServiceImpl implements ClinicService {
             throw new IllegalArgumentException("Invalid Base64 document format: " + ex.getMessage());
         }
     }
+    
+    @Override
+    public void changePassword(ChangePasswordDTO dto) {
+
+        Clinic clinic = repo.findByUsername(dto.getUsername());
+
+        if (clinic == null) {
+            throw new ProcedureServiceException("Invalid username", 404, null);
+        }
+
+        if (!clinic.getPassword().equals(dto.getCurrentPassword())) {
+            throw new ProcedureServiceException("Current password is incorrect", 400, null);
+        }
+
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new ProcedureServiceException("New password and confirm password do not match", 400, null);
+        }
+
+        if (dto.getNewPassword().equals(dto.getCurrentPassword())) {
+            throw new ProcedureServiceException("New password cannot be same as current password", 400, null);
+        }
+
+        clinic.setPassword(dto.getNewPassword());
+        repo.save(clinic);
+    }
+
+
+@Override
+public void forgotPassword(ForgotPasswordRequest request) {
+
+    String id = request.getIdentifier();
+
+    Clinic clinic = repo.findByEmail(id);
+    if (clinic == null) clinic = repo.findByWhatsappNumber(id);
+
+    if (clinic == null) {
+        throw new ProcedureServiceException("No clinic found with this email/WhatsApp", 404, null);
+    }
+
+    // --- OTP Resend Cooldown (30 seconds) ---
+    if (clinic.getOtpSentTime() != null && Instant.now().isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
+        throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
+    }
+
+    String otp;
+
+    // Reuse OTP if still valid
+    if (clinic.getOtpCode() != null && Instant.now().isBefore(clinic.getOtpExpiry())) {
+        otp = "****"; // we don't need to store it again, just resend the same
+    } else {
+        // Generate new OTP using SecureRandom
+        SecureRandom random = new SecureRandom();
+        otp = String.valueOf(100000 + random.nextInt(900000));
+
+        // Hash OTP before storing
+        String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
+        clinic.setOtpCode(hashedOtp);
+
+        // Set expiry (e.g., 5 minutes)
+        clinic.setOtpExpiry(Instant.now().plusSeconds(5 * 60));
+    }
+
+    clinic.setOtpSentTime(Instant.now());
+    clinic.setOtpAttempts(0); // reset attempts on new OTP
+    repo.save(clinic);
+
+    // Send OTP asynchronously
+    asyncVerificationService.sendOtpAsync(clinic, otp);
+}
+
+    
+@Override
+public void resetPassword(ResetPasswordRequest request) {
+
+    String id = request.getIdentifier();
+
+    Clinic clinic = repo.findByEmail(id);
+    if (clinic == null) clinic = repo.findByWhatsappNumber(id);
+
+    if (clinic == null) {
+        throw new ProcedureServiceException("Invalid identifier", 404, null);
+    }
+
+    if (clinic.getOtpCode() == null || clinic.getOtpExpiry() == null) {
+        throw new ProcedureServiceException("OTP not requested", 400, null);
+    }
+
+    // Check OTP expiry
+    if (Instant.now().isAfter(clinic.getOtpExpiry())) {
+        throw new ProcedureServiceException("OTP expired", 400, null);
+    }
+
+    // Check OTP attempts
+    if (clinic.getOtpAttempts() >= 5) {
+        throw new ProcedureServiceException("Maximum OTP attempts exceeded. Request a new OTP.", 429, null);
+    }
+
+    // Validate OTP
+    if (!BCrypt.checkpw(request.getOtp(), clinic.getOtpCode())) {
+        clinic.setOtpAttempts(clinic.getOtpAttempts() + 1);
+        repo.save(clinic);
+        throw new ProcedureServiceException("Invalid OTP", 400, null);
+    }
+
+    // Update password
+    clinic.setPassword(request.getNewPassword());
+
+    // Clear OTP data
+    clinic.setOtpCode(null);
+    clinic.setOtpExpiry(null);
+    clinic.setOtpSentTime(null);
+    clinic.setOtpAttempts(0);
+
+    repo.save(clinic);
+}
+
+
+@Override
+public void resendOtp(ForgotPasswordRequest request) {
+
+    String id = request.getIdentifier();
+
+    Clinic clinic = repo.findByEmail(id);
+    if (clinic == null) clinic = repo.findByWhatsappNumber(id);
+
+    if (clinic == null) {
+        throw new ProcedureServiceException("No clinic found with this email/WhatsApp", 404, null);
+    }
+
+    // --- OTP Resend Cooldown (30 seconds) ---
+    if (clinic.getOtpSentTime() != null && Instant.now().isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
+        throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
+    }
+
+    String otp;
+
+    // Reuse OTP if still valid
+    if (clinic.getOtpCode() != null && Instant.now().isBefore(clinic.getOtpExpiry())) {
+        otp = "****"; // reuse current OTP
+    } else {
+        // Generate new OTP
+        SecureRandom random = new SecureRandom();
+        otp = String.valueOf(100000 + random.nextInt(900000));
+
+        // Hash OTP before storing
+        String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
+        clinic.setOtpCode(hashedOtp);
+
+        // Set expiry (5 minutes)
+        clinic.setOtpExpiry(Instant.now().plusSeconds(5 * 60));
+    }
+
+    clinic.setOtpSentTime(Instant.now());
+    clinic.setOtpAttempts(0); // reset attempts on new OTP
+    repo.save(clinic);
+
+    // Send OTP asynchronously
+    asyncVerificationService.sendOtpAsync(clinic, otp);
+}
+
 }
