@@ -391,98 +391,11 @@ const AppointmentDetails = () => {
           </div>
         </div>
 
-        {/* Patient Vitals handled only in Modal now */}
-
-        <CModal visible={showModal} onClose={() => setShowModal(false)} backdrop="static">
-          <CModalHeader>
-            <CModalTitle>Add Vitals</CModalTitle>
-          </CModalHeader>
-          <CModalBody>
-            <CForm style={{ color: 'var(--color-black)' }}>
-              <CFormInput
-                label="Height"
-                name="height"
-                value={formData.height}
-                onChange={handleChange}
-                className="mb-2"
-                invalid={!!validationErrors.height}
-              />
-              {validationErrors.height && (
-                <small className="text-danger">{validationErrors.height}</small>
-              )}
-              <CFormInput
-                label="Weight"
-                name="weight"
-                value={formData.weight}
-                onChange={handleChange}
-                className="mb-2"
-                invalid={!!validationErrors.weight}
-              />
-              {validationErrors.weight && (
-                <small className="text-danger">{validationErrors.weight}</small>
-              )}
-              <CFormInput
-                label="Blood Pressure"
-                name="bloodPressure"
-                value={formData.bloodPressure}
-                onChange={handleChange}
-                className="mb-2"
-                invalid={!!validationErrors.bloodPressure}
-              />
-              {validationErrors.bloodPressure && (
-                <small className="text-danger">{validationErrors.bloodPressure}</small>
-              )}
-              <CFormInput
-                label="Temperature"
-                name="temperature"
-                value={formData.temperature}
-                onChange={handleChange}
-                className="mb-2"
-                invalid={!!validationErrors.temperature}
-              />
-              {validationErrors.temperature && (
-                <small className="text-danger">{validationErrors.temperature}</small>
-              )}
-              <CFormInput
-                label="BMI"
-                name="bmi"
-                value={formData.bmi}
-                onChange={handleChange}
-                className="mb-2"
-                invalid={!!validationErrors.bmi}
-              />
-              {validationErrors.bmi && (
-                <small className="text-danger">{validationErrors.bmi}</small>
-              )}
-            </CForm>
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="secondary" onClick={() => setShowModal(false)}>
-              Close
-            </CButton>
-            <CButton
-              style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-              onClick={handleSubmitVitals}
-              disabled={loading} // disable while loading
-            >
-              {loading ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2 text-white"
-                    role="status"
-                  />
-                  Saving...
-                </>
-              ) : (
-                'Save'
-              )}
-            </CButton>
-          </CModalFooter>
-        </CModal>
+ 
 
         {/* Patient Info */}
         <div className="row mb-3">
-          <div className="col-md-4">
+          <div className="col-md-4 mb-2">
             <strong>Patient Name:</strong> {appointment?.patientName}
           </div>
           <div className="col-md-4">
@@ -492,6 +405,9 @@ const AppointmentDetails = () => {
             <strong>Booking Type:</strong> {appointment?.service.type}
           </div>
           <div className="col-md-4">
+            <strong>Date Of Birth:</strong> {appointment?.dob}
+          </div>
+           <div className="col-md-4">
             <strong>Age:</strong> {appointment?.patientAge} Yrs
           </div>
           <div className="col-md-4">
@@ -506,11 +422,11 @@ const AppointmentDetails = () => {
         <hr />
 
         {/* Slot & Payment */}
-        <h6 className="fw-bold mb-3" style={{ color: 'var(--color-black)' }}>
+        {/* <h6 className="fw-bold mb-3" style={{ color: 'var(--color-black)' }}>
           Slot & Payment Details
-        </h6>
+        </h6> */}
         <div className="row">
-          <div className="col-md-4">
+          <div className="col-md-4 mb-2">
             <strong>Date:</strong> {appointment?.serviceDate}
           </div>
           {/* <div className="col-md-4">
@@ -522,7 +438,7 @@ const AppointmentDetails = () => {
           <div className="col-md-4">
             <strong>Consultation Fee:</strong> ₹{appointment?.consultationFee}
           </div>
-          <div className="col-md-4">
+          <div className="col-md-12">
             <strong>Service Name:</strong> {appointment?.service.serviceName}
           </div>
         </div>

@@ -194,7 +194,7 @@ const WidgetsDropdown = () => {
           </div>
         </div>
 
-        <CModal visible={showDoctorsModal} onClose={() => setShowDoctorsModal(false)} size="lg" backdrop="static">
+        <CModal visible={showDoctorsModal} onClose={() => setShowDoctorsModal(false)} size="lg" backdrop="static" className='custom-modal'>
           <CModalHeader>
             <CModalTitle>Doctors List</CModalTitle>
           </CModalHeader>

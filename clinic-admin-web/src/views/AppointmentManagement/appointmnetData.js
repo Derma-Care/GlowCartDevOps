@@ -4,6 +4,8 @@ export const aptData = [
     bookingId: 'BKG-5010',
     patientId: 'PAT-9010',
     patientName: 'Lavanya Iyer',
+    gender: 'Female',
+    dob: '12-08-1996',
     patientAge: 33,
     patientAddress: 'Whitefield, Bangalore',
     clinicId: 'CLN-110',
@@ -24,6 +26,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1001',
     bookingId: 'BKG-5001',
+    dob: '21-12-2000',
+    gender: 'Male',
     patientId: 'PAT-9001',
     patientName: 'Rahul Sharma',
     patientAge: 29,
@@ -46,6 +50,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1002',
     bookingId: 'BKG-5002',
+    dob: '11-07-1998',
+    gender: 'Female',
     patientId: 'PAT-9002',
     patientName: 'Sneha Reddy',
     patientAge: 34,
@@ -68,6 +74,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1003',
     bookingId: 'BKG-5003',
+    dob: '12-12-1998',
+    gender: 'Male',
     patientId: 'PAT-9003',
     patientName: 'Arjun Patel',
     patientAge: 41,
@@ -90,6 +98,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1004',
     bookingId: 'BKG-5004',
+    dob: '12-12-1998',
+    gender: 'Female',
     patientId: 'PAT-9004',
     patientName: 'Meera Nair',
     patientAge: 27,
@@ -112,6 +122,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1005',
     bookingId: 'BKG-5005',
+    dob: '10-09-1998',
+    gender: 'Male',
     patientId: 'PAT-9005',
     patientName: 'Vikram Singh',
     patientAge: 36,
@@ -134,6 +146,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1006',
     bookingId: 'BKG-5006',
+    dob: '12-10-1998',
+    gender: 'Female',
     patientId: 'PAT-9006',
     patientName: 'Priya Verma',
     patientAge: 31,
@@ -156,6 +170,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1007',
     bookingId: 'BKG-5007',
+    dob: '11-10-1998',
+    gender: 'Male',
     patientId: 'PAT-9007',
     patientName: 'Karan Johar',
     patientAge: 38,
@@ -178,6 +194,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1008',
     bookingId: 'BKG-5008',
+    dob: '12-12-2000',
+    gender: 'Female',
     patientId: 'PAT-9008',
     patientName: 'Aditi Rao',
     patientAge: 25,
@@ -200,6 +218,8 @@ export const aptData = [
   {
     appointmentId: 'APT-1009',
     bookingId: 'BKG-5009',
+    dob: '13-12-1999',
+    gender: 'Male',
     patientId: 'PAT-9009',
     patientName: 'Suresh Kumar',
     patientAge: 45,

@@ -1,18 +1,18 @@
 package com.glowkart.admin.service;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.core.sync.RequestBody;
-
 import org.springframework.web.server.ResponseStatusException;
 
 import com.glowkart.admin.config.S3PresignedUrlUtil;
@@ -23,6 +23,7 @@ import com.glowkart.admin.repo.DashboardAdsRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -40,7 +41,6 @@ public class DashboardAdsService {
     private String bucketName;
 
     private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
-
     private static final Set<String> IMAGE_EXT = Set.of(".jpg", ".jpeg", ".png", ".gif");
     private static final Set<String> VIDEO_EXT = Set.of(".mp4", ".mov", ".avi");
     private static final Duration URL_DURATION = Duration.ofMinutes(15);
@@ -52,13 +52,14 @@ public class DashboardAdsService {
 
         byte[] fileBytes = decodeBase64(dto.getData());
         String extension = getFileExtension(dto.getFilename(), dto.getType());
-        String key = generateS3Key(extension);
+        String key = generateS3Key(dto.getFilename(), fileBytes);
 
         uploadToS3(key, fileBytes, dto.getType(), extension);
 
         DashboardAds ad = new DashboardAds();
         ad.setType(dto.getType().toLowerCase());
         ad.setS3Key(key);
+        ad.setTitle(dto.getTitle());
         dashboardAdsRepository.save(ad);
 
         return createResponse(ad);
@@ -89,12 +90,13 @@ public class DashboardAdsService {
         validateRequest(dto);
         byte[] fileBytes = decodeBase64(dto.getData());
         String extension = getFileExtension(dto.getFilename(), dto.getType());
-        String key = generateS3Key(extension);
+        String key = generateS3Key(dto.getFilename(), fileBytes);
 
         uploadToS3(key, fileBytes, dto.getType(), extension);
 
         existingAd.setType(dto.getType().toLowerCase());
         existingAd.setS3Key(key);
+        existingAd.setTitle(dto.getTitle());
         dashboardAdsRepository.save(existingAd);
 
         return createResponse(existingAd);
@@ -111,8 +113,19 @@ public class DashboardAdsService {
 
     // ----------------- Helpers -----------------
     private DashboardAdsResponseDto createResponse(DashboardAds ad) {
+        // Generate presigned URL
         String url = presignedUrlUtil.generatePresignedUrl(bucketName, ad.getS3Key(), URL_DURATION);
-        return new DashboardAdsResponseDto(ad.getId(), ad.getType(), url);
+
+        // Extract the original filename from S3 key
+        String filename = ad.getS3Key().substring(ad.getS3Key().indexOf('-') + 1);
+
+        return new DashboardAdsResponseDto(
+                ad.getId(),
+                ad.getType(),
+                url,
+                ad.getTitle(),
+                filename
+        );
     }
 
     private void uploadToS3(String key, byte[] fileBytes, String type, String extension) {
@@ -134,13 +147,30 @@ public class DashboardAdsService {
         }
     }
 
-    private String generateS3Key(String extension) {
-        return "dashboard-ads/" + UUID.randomUUID() + extension;
+    private String generateS3Key(String filename, byte[] fileBytes) {
+        String sanitized = filename.replaceAll("\\s+", "_");
+        String hash = getFileHash(fileBytes).substring(0, 8);
+        return "dashboard-ads/" + hash + "-" + sanitized;
+    }
+
+    private String getFileHash(byte[] fileBytes) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(fileBytes);
+            BigInteger bi = new BigInteger(1, digest);
+            String hash = bi.toString(16);
+            while (hash.length() < 32) {
+                hash = "0" + hash;
+            }
+            return hash;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5 algorithm not found", e);
+        }
     }
 
     private void validateRequest(DashboardAdsFileRequestDto dto) {
-        if (dto.getType() == null || dto.getFilename() == null || dto.getData() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type, filename, and data are required");
+        if (dto.getType() == null || dto.getFilename() == null || dto.getData() == null || dto.getTitle() == null || dto.getTitle().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type, filename, data, and title are required");
         }
 
         String type = dto.getType().toLowerCase();
@@ -163,7 +193,7 @@ public class DashboardAdsService {
         try {
             byte[] bytes = Base64.getDecoder().decode(base64);
             if (bytes.length > MAX_FILE_SIZE) {
-            	throw new ResponseStatusException(HttpStatusCode.valueOf(413), "File exceeds 50 MB");
+                throw new ResponseStatusException(HttpStatusCode.valueOf(413), "File exceeds 50 MB");
             }
             return bytes;
         } catch (IllegalArgumentException e) {

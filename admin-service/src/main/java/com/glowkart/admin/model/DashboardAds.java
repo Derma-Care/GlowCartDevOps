@@ -19,6 +19,7 @@ public class DashboardAds {
 
     private String type;    // image / video
     private String s3Key;   // S3 object key
+    private String title;   // new title field
 }
 
 

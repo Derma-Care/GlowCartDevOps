@@ -31,6 +31,7 @@ import OnboardingStepsCard from '../Widget/onboarding_steps_card'
 import OnboardingStepsModal from '../Widget/OnboardingStepsModal'
 import RegistrationCodeCard from '../Widget/RegistrationCodeCard'
 import { NGK_COLORS } from '../../../Constant/Themes'
+import { BASE_URL, wifiUrl } from '../../../baseUrl'
 export default function NGlowKartPatientRegistration_CoreUI() {
   //   const today = new Date()
   const today = new Date()
@@ -59,6 +60,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const [showAadhaarModal, setShowAadhaarModal] = useState(false)
   const [showConsentModal, setShowConsentModal] = useState(false)
   const [serviceStatusError, setServiceStatusError] = useState('')
+  const [cityList, setCityList] = useState([])
 
   const indianSkinTones = [
     { value: 'Very Fair', label: 'Very Fair' },
@@ -105,6 +107,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     mobile: '',
     email: '',
     city: '',
+    otherCity: '',
     dob: '',
 
     clinicName: '',
@@ -241,6 +244,23 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     setForm((prev) => ({ ...prev, registraionCode: value }))
   }
 
+  useEffect(() => {
+    async function fetchCities() {
+      try {
+        const res = await fetch(`${wifiUrl}/api/customer/cities`)
+        const json = await res.json()
+
+        if (json.success) {
+          setCityList(json.data) // array of city names
+        }
+      } catch (err) {
+        console.error('City fetch error:', err)
+      }
+    }
+
+    fetchCities()
+  }, [])
+
   const handleSubmitReferralCode = async () => {
     const code = form.registraionCode.trim()
     sessionStorage.setItem('registraionCode', code)
@@ -259,6 +279,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       if (!result.success) {
         setError(result.data.message || '❌ Invalid registration code.')
         return
+      } else {
+        showCustomToast(`${result.message}` || '🎉 Registration code verified!', 'success')
       }
 
       // 2️⃣ Apply backend-driven screen navigation
@@ -278,7 +300,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       }
 
       // 4️⃣ Show success toast
-      showCustomToast('🎉 Registration code verified!', 'success')
+      // showCustomToast(`${customerRes.message}`||'🎉 Registration code verified!', 'success')
     } catch (err) {
       console.error('Verify Code Error:', err)
       setError('⚠️ Something went wrong. Try again.')
@@ -337,21 +359,47 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
 
     if (!form.userConsent) e.userConsent = 'You must agree to the User Consent Disclaimer.'
+    if (!/^\d{6}$/.test(form.clinicCityArea)) {
+      e.clinicCityArea = 'Pincode must be exactly 6 digits.'
+    }
 
     setErrors(e)
-    return Object.keys(e).length === 0
+    // scrollToFirstError(e)
+    return { valid: Object.keys(e).length === 0, errorObj: e }
+  }
+
+  const inputRefs = {
+    fullName: React.useRef(null),
+    mobile: React.useRef(null),
+    Aadhar: React.useRef(null),
+    dob: React.useRef(null),
+    city: React.useRef(null),
+    clinicName: React.useRef(null),
+    clinicCityArea: React.useRef(null),
+    dateOfLastVisit: React.useRef(null),
+    serviceType: React.useRef(null),
+    interestCategory: React.useRef(null),
+    problemDescription: React.useRef(null),
+    skinTone: React.useRef(null),
+    gender: React.useRef(null),
+    skinToneOther: React.useRef(null),
+    prescription: React.useRef(null),
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
 
-    if (!validate()) return
+    const validated = validate()
+    if (!validated.valid) {
+      scrollToFirstError(validated.errorObj)
+      return
+    }
 
     const payload = {
       fullName: form.fullName,
       mobile: form.mobile,
       email: form.email,
-      city: form.city,
+      city: form.city === 'other' ? form.otherCity : form.city,
       dob: form.dob,
       clinicName: form.clinicName,
       clinicCityArea: form.clinicCityArea,
@@ -385,9 +433,17 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       setLoading(true)
 
       const result = await registerCustomer(payload)
-
+      const newErrors = { ...errors }
       if (!result.success) {
-        showCustomToast(`${result.message}` || '❌ Registration failed!', 'error')
+        const backendMessage = result.message || 'Something went wrong'
+        if (backendMessage.toLowerCase().includes('mobile')) {
+          newErrors.mobile = backendMessage
+        } else if (backendMessage.toLowerCase().includes('aadhaar')) {
+          newErrors.Aadhar = backendMessage
+        }
+        setErrors(newErrors)
+        scrollToFirstError(newErrors)
+        // showCustomToast(`${result.message}` || '❌ Registration failed!', 'error')
         return
       }
 
@@ -483,6 +539,20 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   // useEffect(() => {
   //   localStorage.setItem('step_instagram', instagram)
   // }, [instagram])
+
+  const scrollToFirstError = (errorsObject) => {
+    const firstErrorField = Object.keys(errorsObject).find((key) => errorsObject[key])
+
+    if (firstErrorField && inputRefs[firstErrorField]?.current) {
+      inputRefs[firstErrorField].current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+
+      // Also focus the field (optional)
+      inputRefs[firstErrorField].current.focus()
+    }
+  }
 
   return (
     <div
@@ -818,6 +888,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           Full Name (As Per Aadhaar Card) <span className="text-danger">*</span>
                         </CFormLabel>
                         <CFormInput
+                          ref={inputRefs.fullName}
                           name="fullName"
                           value={form.fullName}
                           onChange={handleChange}
@@ -842,6 +913,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           Mobile Number <span className="text-danger">*</span>
                         </CFormLabel>
                         <CFormInput
+                          ref={inputRefs.mobile}
                           name="mobile"
                           placeholder="Enter Mobile Number"
                           maxLength={10}
@@ -872,7 +944,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         >
                           Gender
                         </CFormLabel>
-                        <CFormSelect name="gender" value={form.gender} onChange={handleChange}>
+                        <CFormSelect
+                          name="gender"
+                          value={form.gender}
+                          onChange={handleChange}
+                          ref={inputRefs.gender}
+                        >
                           <option value="">Select Gender</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
@@ -891,6 +968,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                         <div style={{ position: 'relative' }}>
                           <CFormInput
+                            ref={inputRefs.dob}
                             type="date"
                             name="dob"
                             value={form.dob}
@@ -959,6 +1037,21 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CFormSelect>
                       </CCol> */}
 
+                      {/* <CFormSelect
+                        ref={inputRefs.city}
+                        name="city"
+                        value={form.city}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select City</option>
+
+                        {cityList.map((city, index) => (
+                          <option key={index} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </CFormSelect> */}
+
                       <CCol md={6}>
                         <CFormLabel
                           className="label-gradient"
@@ -966,22 +1059,45 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         >
                           City <span className="text-danger">*</span>
                         </CFormLabel>
-                        <CFormInput
+
+                        <Select
+                          ref={inputRefs.city}
                           name="city"
-                          value={form.city}
-                          onChange={handleChange}
-                          placeholder="Enter City"
+                          value={form.city ? { label: form.city, value: form.city } : null}
+                          onChange={(selected) => {
+                            handleChange({
+                              target: { name: 'city', value: selected?.value || '' },
+                            })
+                          }}
+                          options={[
+                            ...cityList.map((city) => ({ label: city, value: city })),
+                            { label: 'Other', value: 'other' },
+                          ]}
+                          placeholder="Select or Search City"
+                          isSearchable
                         />
-                        {errors.city && (
-                          <p
-                            style={{
-                              color: '#ff2e85',
+
+                        {/* Show input if user selects OTHER */}
+                        {form.city === 'other' && (
+                          <CFormInput
+                            className="mt-2"
+                            placeholder="Enter City"
+                            value={form.otherCity || ''}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setForm((prev) => ({
+                                ...prev,
+                                otherCity: val,
+                              }))
                             }}
-                          >
-                            {errors.city}
-                          </p>
+                          />
                         )}
+
+                        {errors.city && <p style={{ color: '#ff2e85' }}>{errors.city}</p>}
                       </CCol>
+
+                      {/* {errors.city && <p style={{ color: '#ff2e85' }}>{errors.city}</p>} */}
+
                       <CCol md={6}>
                         <CFormLabel
                           className="label-gradient"
@@ -992,6 +1108,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                         <div className="d-flex align-items-center" style={{ gap: '10px' }}>
                           <CFormInput
+                            ref={inputRefs.Aadhar}
                             name="Aadhar"
                             inputMode="numeric"
                             maxLength={12}
@@ -1270,6 +1387,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               Clinic Name <span className="text-danger">*</span>
                             </CFormLabel>
                             <CFormInput
+                              ref={inputRefs.clinicName}
                               name="clinicName"
                               placeholder="Enter Clinic Name"
                               value={form.clinicName}
@@ -1293,22 +1411,23 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             >
                               Clinic Area Pincode <span className="text-danger">*</span>
                             </CFormLabel>
+
                             <CFormInput
-                              inputMode="numeric"
-                              maxLength={6}
+                              ref={inputRefs.clinicCityArea}
                               name="clinicCityArea"
-                              placeholder="Enter Clinic City/Area pincode"
+                              placeholder="Enter 6-digit pincode"
                               value={form.clinicCityArea}
-                              onChange={handleChange}
+                              maxLength={6}
+                              inputMode="numeric"
+                              onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '') // allow only digits
+                                if (value.length > 6) value = value.slice(0, 6) // max 6 digits
+                                handleChange({ target: { name: 'clinicCityArea', value } })
+                              }}
                             />
+
                             {errors.clinicCityArea && (
-                              <p
-                                style={{
-                                  color: '#ff2e85',
-                                }}
-                              >
-                                {errors.clinicCityArea}
-                              </p>
+                              <p style={{ color: '#ff2e85' }}>{errors.clinicCityArea}</p>
                             )}
                           </CCol>
 
@@ -1321,6 +1440,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             </CFormLabel>
 
                             <CFormInput
+                              ref={inputRefs.dateOfLastVisit}
                               type="date"
                               name="dateOfLastVisit"
                               max={maxToday} // today
@@ -1381,6 +1501,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   Specify Other Service
                                 </CFormLabel>
                                 <CFormInput
+                                  ref={inputRefs.otherServiceName}
                                   placeholder="Enter Service Name"
                                   value={form.otherServiceName || ''}
                                   onChange={(e) =>
@@ -1547,6 +1668,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   Specify Other Concern
                                 </CFormLabel>
                                 <CFormInput
+                                  ref={inputRefs.otherServiceName}
                                   placeholder="Enter your concern"
                                   value={form.otherServiceName}
                                   onChange={(e) =>
@@ -1629,6 +1751,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                 </CFormLabel>
 
                                 <CFormInput
+                                  ref={inputRefs.skinToneOther}
                                   placeholder="Enter your skin tone"
                                   value={form.skinToneOther || ''}
                                   onChange={(e) =>
