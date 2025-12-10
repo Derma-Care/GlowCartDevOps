@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.DashboardAdsFileRequestDto;
 import com.glowkart.admin.dto.DashboardAdsResponseDto;
 import com.glowkart.admin.service.DashboardAdsService;
@@ -19,33 +20,38 @@ public class DashboardAdsController {
     private final DashboardAdsService dashboardAdsService;
 
     @PostMapping("/dashboard-ads/upload-file-json")
-    public ResponseEntity<DashboardAdsResponseDto> upload(@RequestBody DashboardAdsFileRequestDto dto) {
+    public ResponseEntity<ApiResponse<DashboardAdsResponseDto>> upload(@RequestBody DashboardAdsFileRequestDto dto) {
         DashboardAdsResponseDto response = dashboardAdsService.uploadFile(dto);
-        return ResponseEntity.ok(response);
+        ApiResponse<DashboardAdsResponseDto> apiResponse = new ApiResponse<>(true, "File uploaded successfully", response);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/dashboard-ads")
-    public ResponseEntity<List<DashboardAdsResponseDto>> getAll() {
+    public ResponseEntity<ApiResponse<List<DashboardAdsResponseDto>>> getAll() {
         List<DashboardAdsResponseDto> ads = dashboardAdsService.getAllAds();
-        return ResponseEntity.ok(ads);
+        ApiResponse<List<DashboardAdsResponseDto>> apiResponse = new ApiResponse<>(true, "All ads fetched successfully", ads);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/dashboard-ads/{id}")
-    public ResponseEntity<DashboardAdsResponseDto> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<DashboardAdsResponseDto>> getById(@PathVariable String id) {
         DashboardAdsResponseDto ad = dashboardAdsService.getAdById(id);
-        return ResponseEntity.ok(ad);
+        ApiResponse<DashboardAdsResponseDto> apiResponse = new ApiResponse<>(true, "Ad fetched successfully", ad);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PutMapping("/dashboard-ads/{id}")
-    public ResponseEntity<DashboardAdsResponseDto> update(@PathVariable String id,
-                                                          @RequestBody DashboardAdsFileRequestDto dto) {
+    public ResponseEntity<ApiResponse<DashboardAdsResponseDto>> update(@PathVariable String id,
+                                                                       @RequestBody DashboardAdsFileRequestDto dto) {
         DashboardAdsResponseDto updatedAd = dashboardAdsService.updateAd(id, dto);
-        return ResponseEntity.ok(updatedAd);
+        ApiResponse<DashboardAdsResponseDto> apiResponse = new ApiResponse<>(true, "Ad updated successfully", updatedAd);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @DeleteMapping("/dashboard-ads/{id}")
-    public ResponseEntity<String> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         dashboardAdsService.deleteAd(id);
-        return ResponseEntity.ok("Ad deleted successfully");
+        ApiResponse<Void> apiResponse = new ApiResponse<>(true, "Ad deleted successfully", null);
+        return ResponseEntity.ok(apiResponse);
     }
 }
