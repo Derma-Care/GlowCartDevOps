@@ -22,6 +22,7 @@
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <aws.sdk.version>2.20.39</aws.sdk.version>
     </properties>
 
     <!-- Spring Cloud BOM -->
@@ -47,6 +48,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+		 <!-- AWS SDK v2 (includes presigner) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk.version}</version>
         </dependency>
 
         <dependency>

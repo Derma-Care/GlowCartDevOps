@@ -5,7 +5,6 @@ import com.glowkart.admin.dto.RegistrationRequestDTO;
 import com.glowkart.admin.dto.RegistrationResponseDTO;
 import com.glowkart.admin.model.RegistrationCode;
 import com.glowkart.admin.service.RegistrationCodeService;
-import com.glowkart.admin.service.RegistrationCodeService.RegistrationResponseDTOWithCode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +86,7 @@ public class RegistrationCodeController {
 
     // List all codes
     @GetMapping("/api/registration/all")
-    public ApiResponse<List<RegistrationResponseDTOWithCode>> getAllCodes() {
+    public ApiResponse<List<RegistrationResponseDTO>> getAllCodes() {
         return new ApiResponse<>(
                 true,
                 "All registration codes retrieved!",

@@ -4,7 +4,10 @@ spring:
 
   cloud:
     config:
-      uri: http://config-server:8888     # <-- Config Server URI added here
+      uri: http://config-server:8888
+
+  jackson:
+    parser: {}   # removed "max-string-length"
 
   data:
     mongodb:
@@ -30,7 +33,6 @@ spring:
 server:
   port: 8082
 
-# Feign configuration
 feign:
   client:
     config:
@@ -44,19 +46,12 @@ async:
   max-pool-size: 20
   queue-capacity: 50
 
-# Twilio credentials removed
-# twilio:
-#   account-sid: ${TWILIO_ACCOUNT_SID}
-#   auth-token: ${TWILIO_AUTH_TOKEN}
-#   whatsapp-from: ${TWILIO_WHATSAPP_FROM}
-
 app:
   token-expiry-minutes: ${APP_TOKEN_EXPIRY_MINUTES:60}
 
 notification:
   default-from-email: ${NOTIFICATION_FROM_EMAIL:no-reply@glowkart.com}
 
-# Eureka configuration
 eureka:
   client:
     service-url:
@@ -67,3 +62,9 @@ eureka:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
+
+aws:
+  accessKeyId: ${AWS_ACCESS_KEY_ID}
+  secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION:ap-south-1}
+  bucketName: ${AWS_BUCKET_NAME:glowkart-media}

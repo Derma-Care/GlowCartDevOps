@@ -110,18 +110,31 @@ public class RegistrationCodeService {
         return new RegistrationResponseDTO(codeStr, true, true, rank);
     }
 
-    // -------------------------
-    // Get all codes
-    // -------------------------
-    public List<RegistrationResponseDTOWithCode> getAllCodes() {
+ // -------------------------
+ // Get all codes in ascending order (rank order)
+ // -------------------------
+    public List<RegistrationResponseDTO> getAllCodes() {
+
+        // Sort: UNUSED → USED, and then by ID (insertion order)
         List<RegistrationCode> sortedCodes = repo.findAll(
-            Sort.by(Sort.Order.asc("used"))
+            Sort.by(
+                Sort.Order.asc("used"),
+                Sort.Order.asc("id")
+            )
         );
 
         return sortedCodes.stream()
-                .map(c -> new RegistrationResponseDTOWithCode(c.getCode(), c.isUsed()))
+                .map(c -> new RegistrationResponseDTO(
+                        c.getCode(),
+                        c.isUsed(),
+                        true,                          // valid = code exists
+                        getCodeRank(c.getCode())       // original DB rank
+                ))
                 .collect(Collectors.toList());
     }
+
+
+
 
     // Helper function
     private String generateRandomNumberString(int length) {
@@ -167,16 +180,16 @@ public class RegistrationCodeService {
     }
 
     // DTO for listing codes
-    public static class RegistrationResponseDTOWithCode {
-        private String code;
-        private boolean used;
-
-        public RegistrationResponseDTOWithCode(String code, boolean used) {
-            this.code = code;
-            this.used = used;
-        }
-
-        public String getCode() { return code; }
-        public boolean isUsed() { return used; }
-    }
+//    public static class RegistrationResponseDTOWithCode {
+//        private String code;
+//        private boolean used;
+//        
+//        public RegistrationResponseDTOWithCode(String code, boolean used) {
+//            this.code = code;
+//            this.used = used;
+//        }
+//
+//        public String getCode() { return code; }
+//        public boolean isUsed() { return used; }
+//    }
 }
