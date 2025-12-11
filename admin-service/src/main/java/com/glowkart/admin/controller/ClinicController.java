@@ -5,23 +5,9 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.glowkart.admin.dto.ApiResponse;
-import com.glowkart.admin.dto.ChangePasswordDTO;
-import com.glowkart.admin.dto.ClinicLoginRequest;
-import com.glowkart.admin.dto.ClinicPublicDTO;
-import com.glowkart.admin.dto.ClinicRegistrationDTO;
-import com.glowkart.admin.dto.ClinicRejectionRequest;
-import com.glowkart.admin.dto.ForgotPasswordRequest;
-import com.glowkart.admin.dto.ResetPasswordRequest;
+import com.glowkart.admin.dto.*;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.service.ClinicService;
 import com.glowkart.admin.util.ClinicMapper;
@@ -38,61 +24,67 @@ public class ClinicController {
         this.clinicService = clinicService;
     }
 
-    // ---------------------------------------------------
-    // 1. REGISTER CLINIC (Status = PENDING)
-    // ---------------------------------------------------
+    // -------------------------------------------
+    // 1. REGISTER CLINIC
+    // -------------------------------------------
     @PostMapping("/clinics/register")
     public ResponseEntity<ApiResponse<?>> register(@Valid @RequestBody ClinicRegistrationDTO dto) {
 
         Clinic saved = clinicService.registerClinic(dto);
 
-        return ResponseEntity.status(201).body(
-                new ApiResponse<>(
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
                         true,
                         "Clinic registered successfully",
                         Map.of(
                                 "clinicId", saved.getClinicId(),
                                 "status", saved.getStatus()
-                        )
-                )
-        );
+                        ),
+                        HttpStatus.CREATED.value()
+                ));
     }
 
     // ---------------------------------------------------
-    // 2. START VERIFICATION (Admin)
+    // 2. START VERIFICATION
     // ---------------------------------------------------
     @PutMapping("/clinics/{clinicId}/start-verification")
     public ResponseEntity<ApiResponse<?>> startVerification(@PathVariable String clinicId) {
+
         Clinic clinic = clinicService.startVerificationProcess(clinicId);
 
         return ResponseEntity.ok(
-            new ApiResponse<>(true, "Verification process started successfully",
-                Map.of(
-                    "clinicId", clinic.getClinicId(),
-                    "status", clinic.getStatus()
+                new ApiResponse<>(
+                        true,
+                        "Verification process started successfully",
+                        Map.of(
+                                "clinicId", clinic.getClinicId(),
+                                "status", clinic.getStatus()
+                        ),
+                        HttpStatus.OK.value()
                 )
-            )
         );
     }
 
-
     // ---------------------------------------------------
-    // 3. MARK CLINIC VERIFIED
+    // 3. VERIFY CLINIC
     // ---------------------------------------------------
     @PutMapping("/clinics/{clinicId}/verify")
     public ResponseEntity<ApiResponse<?>> verifyClinic(@PathVariable String clinicId) {
+
         Clinic clinic = clinicService.verifyClinic(clinicId);
 
         return ResponseEntity.ok(
-            new ApiResponse<>(true, "Clinic verified successfully",
-                Map.of(
-                    "clinicId", clinic.getClinicId(),
-                    "status", clinic.getStatus()
+                new ApiResponse<>(
+                        true,
+                        "Clinic verified successfully",
+                        Map.of(
+                                "clinicId", clinic.getClinicId(),
+                                "status", clinic.getStatus()
+                        ),
+                        HttpStatus.OK.value()
                 )
-            )
         );
     }
-
 
     // ---------------------------------------------------
     // 4. REJECT CLINIC
@@ -112,12 +104,11 @@ public class ClinicController {
                                 "clinicId", clinic.getClinicId(),
                                 "status", clinic.getStatus(),
                                 "reason", request.getReason()
-                        )
+                        ),
+                        HttpStatus.OK.value()
                 )
         );
     }
-
-
 
     // ---------------------------------------------------
     // 5. GET ALL CLINICS
@@ -125,11 +116,14 @@ public class ClinicController {
     @GetMapping("/clinics")
     public ResponseEntity<ApiResponse<?>> getAll() {
 
+        List<Clinic> clinics = clinicService.getAll();
+
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         true,
                         "Fetched clinics successfully",
-                        clinicService.getAll()
+                        clinics,
+                        HttpStatus.OK.value()
                 )
         );
     }
@@ -143,12 +137,17 @@ public class ClinicController {
         Clinic clinic = clinicService.getById(clinicId);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Clinic fetched successfully", clinic)
+                new ApiResponse<>(
+                        true,
+                        "Clinic fetched successfully",
+                        clinic,
+                        HttpStatus.OK.value()
+                )
         );
     }
 
     // ---------------------------------------------------
-    // 7. UPDATE CLINIC (Partial Update)
+    // 7. UPDATE CLINIC
     // ---------------------------------------------------
     @PutMapping("/clinics/{clinicId}")
     public ResponseEntity<ApiResponse<?>> updateClinic(
@@ -161,7 +160,8 @@ public class ClinicController {
                 new ApiResponse<>(
                         true,
                         "Clinic updated successfully",
-                        updated
+                        updated,
+                        HttpStatus.OK.value()
                 )
         );
     }
@@ -175,89 +175,123 @@ public class ClinicController {
         clinicService.deleteClinic(clinicId);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Clinic deleted successfully", null)
+                new ApiResponse<>(
+                        true,
+                        "Clinic deleted successfully",
+                        null,
+                        HttpStatus.OK.value()
+                )
         );
     }
 
+    // ---------------------------------------------------
+    // 9. GET VERIFIED CLINICS
+    // ---------------------------------------------------
     @GetMapping("/clinics/verified")
     public ResponseEntity<ApiResponse<?>> getVerifiedClinics() {
-        List<Clinic> verifiedClinics = clinicService.getVerifiedClinics();
 
-        String message = verifiedClinics.isEmpty() ? "No verified clinics found" : "Fetched verified clinics successfully";
+        List<Clinic> verified = clinicService.getVerifiedClinics();
+
+        String message = verified.isEmpty()
+                ? "No verified clinics found"
+                : "Fetched verified clinics successfully";
 
         return ResponseEntity.ok(
-            new ApiResponse<>(
-                true,
-                message,
-                verifiedClinics
-            )
+                new ApiResponse<>(
+                        true,
+                        message,
+                        verified,
+                        HttpStatus.OK.value()
+                )
         );
     }
 
     // ---------------------------------------------------
-    // 9. CLINIC LOGIN
+    // 10. LOGIN
     // ---------------------------------------------------
     @PostMapping("/clinics/login")
-    public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(@RequestBody @Valid ClinicLoginRequest request) {
+    public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(
+            @Valid @RequestBody ClinicLoginRequest request) {
+
         Clinic clinic = clinicService.login(request.getUsername(), request.getPassword());
 
         if (clinic == null) {
-            // Return JSON-friendly 401 response
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>(false, "Invalid username or password", null));
+                    .body(new ApiResponse<>(
+                            false,
+                            "Invalid username or password",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
         }
 
         ClinicPublicDTO dto = ClinicMapper.toPublicDTO(clinic);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", dto));
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Login successful",
+                        dto,
+                        HttpStatus.OK.value()
+                )
+        );
     }
 
-    
+    // ---------------------------------------------------
+    // 11. UPDATE PASSWORD
+    // ---------------------------------------------------
     @PutMapping("/clinics/updatePassword/{username}")
     public ResponseEntity<ApiResponse<?>> updatePassword(
             @PathVariable String username,
             @RequestBody ChangePasswordDTO dto) {
 
-        dto.setUsername(username); // inject username into DTO
+        dto.setUsername(username);
 
         clinicService.changePassword(dto);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Password updated successfully", null)
+                new ApiResponse<>(
+                        true,
+                        "Password updated successfully",
+                        null,
+                        HttpStatus.OK.value()
+                )
         );
     }
 
-    
+    // ---------------------------------------------------
+    // 12. FORGOT PASSWORD
+    // ---------------------------------------------------
     @PostMapping("/clinics/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
 
-        // Call service and get ApiResponse
-        ApiResponse<Void> response = clinicService.forgotPassword(request);
-
-        // Return the service response directly
-        return ResponseEntity.ok(response);
+        ApiResponse<Void> resp = clinicService.forgotPassword(request);
+        resp.setStatusCode(HttpStatus.OK.value());
+        return ResponseEntity.ok(resp);
     }
 
+    // ---------------------------------------------------
+    // 13. RESET PASSWORD
+    // ---------------------------------------------------
     @PostMapping("/clinics/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
 
-        // Call service and get ApiResponse
-        ApiResponse<Void> response = clinicService.resetPassword(request);
-
-        // Return the service response directly
-        return ResponseEntity.ok(response);
+        ApiResponse<Void> resp = clinicService.resetPassword(request);
+        resp.setStatusCode(HttpStatus.OK.value());
+        return ResponseEntity.ok(resp);
     }
 
+    // ---------------------------------------------------
+    // 14. RESEND OTP
+    // ---------------------------------------------------
     @PostMapping("/clinics/resend-otp")
     public ResponseEntity<ApiResponse<Void>> resendOtp(
             @Valid @RequestBody ForgotPasswordRequest request) {
 
-        // Call service and get ApiResponse
-        ApiResponse<Void> response = clinicService.resendOtp(request);
-
-        // Return the service response directly
-        return ResponseEntity.ok(response);
+        ApiResponse<Void> resp = clinicService.resendOtp(request);
+        resp.setStatusCode(HttpStatus.OK.value());
+        return ResponseEntity.ok(resp);
     }
-
 }

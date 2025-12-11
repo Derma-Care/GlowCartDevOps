@@ -21,7 +21,6 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private final ObjectMapper mapper = new ObjectMapper();
 
-    // Handle Feign exceptions
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<ApiResponse<Object>> handleFeignException(FeignException ex) {
         logger.error("FeignException occurred: {}", ex.getMessage(), ex);
@@ -29,31 +28,31 @@ public class GlobalExceptionHandler {
             String json = ex.contentUTF8();
             ApiResponse<?> remoteResponse = mapper.readValue(json, ApiResponse.class);
             return ResponseEntity.status(ex.status())
-                    .body(new ApiResponse<>(remoteResponse.isSuccess(), remoteResponse.getMessage(), remoteResponse.getData()));
+                    .body(new ApiResponse<>(remoteResponse.isSuccess(),
+                            remoteResponse.getMessage(),
+                            remoteResponse.getData(),
+                            remoteResponse.getStatusCode() != null ? remoteResponse.getStatusCode() : ex.status()));
         } catch (Exception parseEx) {
             logger.error("Failed to parse FeignException response", parseEx);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body(new ApiResponse<>(false, "Failed to parse remote service error", null));
+                    .body(new ApiResponse<>(false, "Failed to parse remote service error", null, 502));
         }
     }
 
-    // Handle ProcedureServiceException
     @ExceptionHandler(ProcedureServiceException.class)
     public ResponseEntity<ApiResponse<Object>> handleProcedureServiceException(ProcedureServiceException ex) {
         logger.error("ProcedureServiceException occurred: {}", ex.getMessage(), ex);
         return ResponseEntity.status(ex.getStatus())
-                .body(new ApiResponse<>(false, ex.getMessage(), ex.getData()));
+                .body(new ApiResponse<>(false, ex.getMessage(), ex.getData(), ex.getStatus()));
     }
 
-    // Handle ResourceNotFoundException
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleResourceNotFound(ResourceNotFoundException ex) {
         logger.warn("ResourceNotFoundException: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>(false, ex.getMessage(), null));
+                .body(new ApiResponse<>(false, ex.getMessage(), null, 404));
     }
 
-    // Handle validation exceptions
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException ex) {
         logger.warn("Validation failed: {}", ex.getMessage());
@@ -62,7 +61,7 @@ public class GlobalExceptionHandler {
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, message, null));
+                .body(new ApiResponse<>(false, message, null, 400));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -73,30 +72,27 @@ public class GlobalExceptionHandler {
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                 .collect(Collectors.joining(", "));
         return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, message, null));
+                .body(new ApiResponse<>(false, message, null, 400));
     }
 
-    // Handle IllegalArgumentException
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         logger.warn("Illegal argument: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(false, ex.getMessage(), null));
+                .body(new ApiResponse<>(false, ex.getMessage(), null, 400));
     }
 
-    // Handle ResponseStatusException
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiResponse<Object>> handleResponseStatusException(ResponseStatusException ex) {
         logger.error("ResponseStatusException: {}", ex.getMessage(), ex);
         return ResponseEntity.status(ex.getStatusCode())
-                .body(new ApiResponse<>(false, ex.getReason(), null));
+                .body(new ApiResponse<>(false, ex.getReason(), null, ex.getStatusCode().value()));
     }
 
-    // Handle all other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGeneralException(Exception ex) {
         logger.error("Unhandled exception: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, "An unexpected error occurred", null));
+                .body(new ApiResponse<>(false, "An unexpected error occurred", null, 500));
     }
 }

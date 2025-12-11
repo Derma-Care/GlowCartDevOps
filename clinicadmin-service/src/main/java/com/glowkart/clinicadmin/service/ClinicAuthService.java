@@ -31,31 +31,38 @@ public class ClinicAuthService {
      */
     private <T> ResponseEntity<ApiResponse<T>> handleFeignCall(FeignCall<T> call, String fallbackMessage) {
         try {
-            // Success: return normal response
+            // Success: get the response from Feign
             ResponseEntity<ApiResponse<T>> response = call.execute();
-            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+
+            // If body contains a statusCode, use it as the HTTP status
+            Integer statusCode = null;
+            if (response.getBody() != null && response.getBody().getStatusCode() != null) {
+                statusCode = response.getBody().getStatusCode();
+            }
+
+            return ResponseEntity
+                    .status(statusCode != null ? statusCode : response.getStatusCodeValue())
+                    .body(response.getBody());
 
         } catch (FeignException ex) {
             try {
                 String json = ex.contentUTF8();
 
                 if (json != null && !json.isEmpty()) {
-                    // Deserialize JSON into ApiResponse<T>
                     ApiResponse<T> apiResponse = mapper.readValue(json, new TypeReference<ApiResponse<T>>() {});
                     return ResponseEntity.status(ex.status()).body(apiResponse);
                 } else {
-                    // Empty body — return fallback message
                     return ResponseEntity.status(ex.status())
-                            .body(new ApiResponse<>(false, fallbackMessage, null));
+                            .body(new ApiResponse<>(false, fallbackMessage, null, ex.status()));
                 }
 
             } catch (Exception parseErr) {
-                // Parsing failed — return fallback message
                 return ResponseEntity.status(ex.status())
-                        .body(new ApiResponse<>(false, fallbackMessage, null));
+                        .body(new ApiResponse<>(false, fallbackMessage, null, ex.status()));
             }
         }
     }
+
 
     // ------------------- API METHODS -------------------
 

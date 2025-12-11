@@ -8,18 +8,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.glowkart.admin.client.OnboardingClient;
-import com.glowkart.admin.dto.ApiResponse;
-import com.glowkart.admin.dto.ChangePasswordDTO;
-import com.glowkart.admin.dto.ClinicRegistrationDTO;
-import com.glowkart.admin.dto.DoctorDTO;
-import com.glowkart.admin.dto.ForgotPasswordRequest;
-import com.glowkart.admin.dto.ResetPasswordRequest;
+import com.glowkart.admin.dto.*;
 import com.glowkart.admin.exception.ProcedureServiceException;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.model.Doctor;
@@ -34,23 +26,22 @@ public class ClinicServiceImpl implements ClinicService {
     private final OnboardingClient onboardingClient;
     private final AsyncVerificationService asyncVerificationService;
 
-    public ClinicServiceImpl(ClinicRepository repo,
-                             OnboardingClient onboardingClient,
-                             AsyncVerificationService asyncVerificationService) {
+    public ClinicServiceImpl(
+            ClinicRepository repo,
+            OnboardingClient onboardingClient,
+            AsyncVerificationService asyncVerificationService) {
+
         this.repo = repo;
         this.onboardingClient = onboardingClient;
         this.asyncVerificationService = asyncVerificationService;
     }
 
-    // =====================================================================
+    // ==========================================================================================
     // REGISTER CLINIC
-    // =====================================================================
+    // ==========================================================================================
     @Override
     public Clinic registerClinic(ClinicRegistrationDTO dto) {
 
-        // ---------------------
-        // VERIFY TOKEN
-        // ---------------------
         Map<String, Object> tokenInfo = onboardingClient.verifyToken(dto.getToken());
         if (tokenInfo == null) {
             throw new ProcedureServiceException("Invalid or expired onboarding token", 400, null);
@@ -59,36 +50,23 @@ public class ClinicServiceImpl implements ClinicService {
         String tokenWhatsapp = (String) tokenInfo.get("whatsappNumber");
         String tokenEmail = (String) tokenInfo.get("email");
 
-        // ---------------------
-        // CREATE MODEL
-        // ---------------------
         Clinic clinic = new Clinic();
         copyBasicFields(dto, clinic);
 
         clinic.setWhatsappNumber(dto.getWhatsappNumber() != null ? dto.getWhatsappNumber() : tokenWhatsapp);
         clinic.setEmail(dto.getEmail() != null ? dto.getEmail() : tokenEmail);
-
         clinic.setRole(dto.getRole() != null ? dto.getRole() : "ADMIN");
         clinic.setPermissions(dto.getPermissions() != null ? dto.getPermissions() : PermissionsUtil.getAdminPermissions());
 
-        // ---------------------
-        // DECODE DOCUMENTS
-        // ---------------------
         decodeDocuments(dto, clinic);
 
-        // ---------------------
-        // GENERATE CREDENTIALS
-        // ---------------------
         Map<String, String> credentials = CredentialGenerator.generate();
         clinic.setUsername(credentials.get("username"));
-        clinic.setPassword(credentials.get("password"));
+        clinic.setPassword(credentials.get("password")); // PLAIN TEXT PASSWORD
 
         clinic.setStatus("PENDING");
         clinic.setCreatedAt(Instant.now());
 
-        // ---------------------
-        // SAVE
-        // ---------------------
         Clinic saved = repo.save(clinic);
 
         onboardingClient.markUsed(Map.of("token", dto.getToken()));
@@ -97,9 +75,9 @@ public class ClinicServiceImpl implements ClinicService {
         return saved;
     }
 
-    // =====================================================================
-    // VERIFICATION
-    // =====================================================================
+    // ==========================================================================================
+    // VERIFICATION WORKFLOW
+    // ==========================================================================================
     @Override
     public Clinic startVerificationProcess(String clinicId) {
         Clinic clinic = findClinic(clinicId);
@@ -134,9 +112,9 @@ public class ClinicServiceImpl implements ClinicService {
         return clinic;
     }
 
-    // =====================================================================
+    // ==========================================================================================
     // CRUD
-    // =====================================================================
+    // ==========================================================================================
     @Override
     public List<Clinic> getAll() {
         return repo.findAll();
@@ -149,36 +127,38 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     public void deleteClinic(String clinicId) {
-        if (!repo.existsById(clinicId))
+        if (!repo.existsById(clinicId)) {
             throw new ProcedureServiceException("Clinic not found", 404, null);
-
+        }
         repo.deleteById(clinicId);
     }
-    
+
     @Override
     public List<Clinic> getVerifiedClinics() {
-        // Use repository query to avoid case sensitivity issues
         return repo.findByStatusIgnoreCase("VERIFIED");
     }
 
-
+    // ==========================================================================================
+    // LOGIN (PLAIN TEXT)
+    // ==========================================================================================
     @Override
     public Clinic login(String username, String password) {
         Clinic clinic = repo.findByUsername(username);
 
-        // Instead of throwing ResponseStatusException, return null to indicate failure
-        if (clinic == null || !"VERIFIED".equals(clinic.getStatus()) || !clinic.getPassword().equals(password)) {
-            return null; // failed login
+        if (clinic == null || !"VERIFIED".equalsIgnoreCase(clinic.getStatus())) {
+            return null;
+        }
+
+        if (!clinic.getPassword().equals(password)) {
+            return null;
         }
 
         return clinic;
     }
 
-    
-    
-    // =====================================================================
-    // UPDATE CLINIC
-    // =====================================================================
+    // ==========================================================================================
+    // UPDATE CLINIC (FULL LOGIC)
+    // ==========================================================================================
     @Override
     public Clinic updateClinic(String clinicId, ClinicRegistrationDTO dto) {
 
@@ -228,6 +208,7 @@ public class ClinicServiceImpl implements ClinicService {
 
         updateIfNotNull(dto.getStatus(), clinic::setStatus);
 
+
         // -------------------------
         // DOCUMENT UPDATES
         // -------------------------
@@ -242,13 +223,21 @@ public class ClinicServiceImpl implements ClinicService {
         updateIfNotNull(decode(dto.getProfessionalIndemnityInsurance()), clinic::setProfessionalIndemnityInsurance);
         updateIfNotNull(decode(dto.getGstRegistrationCertificate()), clinic::setGstRegistrationCertificate);
 
+        if ("Yes".equalsIgnoreCase(dto.getMedicinesSoldOnSite())) {
+            updateIfNotNull(decode(dto.getDrugLicenseCertificate()), clinic::setDrugLicenseCertificate);
+        }
+
+        if ("Yes".equalsIgnoreCase(dto.getHasPharmacist())) {
+            updateIfNotNull(decode(dto.getPharmacistCertificate()), clinic::setPharmacistCertificate);
+        }
+
         if (dto.getOthers() != null) {
             clinic.setOthers(dto.getOthers().stream().map(this::decode).toList());
         }
 
-        // =====================================================================
-        // DOCTOR UPDATE WITH DUPLICATE PROTECTION
-        // =====================================================================
+        // -------------------------
+        // DOCTOR LIST UPDATE
+        // -------------------------
         if (dto.getDoctorsList() != null) {
 
             validateDuplicateDoctors(dto.getDoctorsList());
@@ -269,35 +258,190 @@ public class ClinicServiceImpl implements ClinicService {
         return repo.save(clinic);
     }
 
-    // =====================================================================
-    // DOCTOR DUPLICATE VALIDATION
-    // =====================================================================
-    private void validateDuplicateDoctors(List<DoctorDTO> doctorsList) {
+    // ==========================================================================================
+    // CHANGE PASSWORD — PLAIN TEXT
+    // ==========================================================================================
+    @Override
+    public void changePassword(ChangePasswordDTO dto) {
 
-        // Check duplicate Registration Numbers
-        Set<String> regNos = doctorsList.stream()
-                .map(DoctorDTO::getRegistrationNumber)
-                .collect(Collectors.toSet());
-
-        if (regNos.size() != doctorsList.size()) {
-            throw new ProcedureServiceException("Duplicate doctor registrationNumber detected", 400, null);
+        // 1. Find the clinic by username
+        Clinic clinic = repo.findByUsername(dto.getUsername());
+        if (clinic == null) {
+            throw new ProcedureServiceException("Invalid username", 404, null);
         }
 
-        // Check duplicate Association Numbers
-        Set<String> assocNos = doctorsList.stream()
-                .map(DoctorDTO::getAssociationNumber)
-                .collect(Collectors.toSet());
-
-        if (assocNos.size() != doctorsList.size()) {
-            throw new ProcedureServiceException("Duplicate doctor associationNumber detected", 400, null);
+        // 2. Verify current password
+        if (!clinic.getPassword().equals(dto.getCurrentPassword())) {
+            throw new ProcedureServiceException("Current password is incorrect", 400, null);
         }
 
-        // ✅ Removed doctorName duplicate check
+        // 3. Ensure new password is different from current password
+        if (dto.getCurrentPassword().equals(dto.getNewPassword())) {
+            throw new ProcedureServiceException("New password must be different from current password", 400, null);
+        }
+
+        // 4. Confirm new password matches confirm password
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new ProcedureServiceException("New password and confirm password do not match", 400, null);
+        }
+
+        // 5. Update the password
+        clinic.setPassword(dto.getNewPassword());
+        repo.save(clinic);
     }
 
-    // =====================================================================
-    // HELPER
-    // =====================================================================
+    // ==========================================================================================
+    // FORGOT PASSWORD (OTP)
+    // ==========================================================================================
+    @Override
+    public ApiResponse<Void> forgotPassword(ForgotPasswordRequest request) {
+
+        String id = request.getIdentifier();
+
+        Clinic clinic = repo.findByEmail(id);
+        boolean isEmail = true;
+
+        if (clinic == null) {
+            clinic = repo.findByWhatsappNumber(id);
+            isEmail = false;
+        }
+
+        if (clinic == null) {
+            throw new ProcedureServiceException(id.contains("@") ?
+                    "No clinic found with this email" :
+                    "No clinic found with this WhatsApp", 404, null);
+        }
+
+        Instant now = Instant.now();
+
+        if (clinic.getOtpSentTime() != null &&
+                now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
+            throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
+        }
+
+        SecureRandom random = new SecureRandom();
+        String otp = String.valueOf(100000 + random.nextInt(900000));
+
+        clinic.setOtpCode(otp);
+        clinic.setOtpExpiry(now.plusSeconds(300));
+        clinic.setOtpSentTime(now);
+        clinic.setOtpAttempts(0);
+
+        repo.save(clinic);
+
+        asyncVerificationService.sendOtpAsync(clinic, otp);
+
+        return new ApiResponse<>(true,
+                isEmail ? "OTP sent to email" : "OTP sent to WhatsApp",
+                null);
+    }
+
+    // ==========================================================================================
+    // RESEND OTP
+    // ==========================================================================================
+    @Override
+    public ApiResponse<Void> resendOtp(ForgotPasswordRequest request) {
+
+        String id = request.getIdentifier();
+
+        Clinic clinic = repo.findByEmail(id);
+        boolean isEmail = true;
+
+        if (clinic == null) {
+            clinic = repo.findByWhatsappNumber(id);
+            isEmail = false;
+        }
+
+        if (clinic == null) {
+            throw new ProcedureServiceException(id.contains("@") ?
+                    "No clinic found with this email" :
+                    "No clinic found with this WhatsApp", 404, null);
+        }
+
+        Instant now = Instant.now();
+
+        if (clinic.getOtpSentTime() != null &&
+                now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
+            throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
+        }
+
+        SecureRandom random = new SecureRandom();
+        String otp = String.valueOf(100000 + random.nextInt(900000));
+
+        clinic.setOtpCode(otp);
+        clinic.setOtpExpiry(now.plusSeconds(300));
+        clinic.setOtpSentTime(now);
+        clinic.setOtpAttempts(0);
+
+        repo.save(clinic);
+
+        asyncVerificationService.sendOtpAsync(clinic, otp);
+
+        return new ApiResponse<>(true,
+                isEmail ? "OTP resent to email" : "OTP resent to WhatsApp", null);
+    }
+
+    // ==========================================================================================
+    // RESET PASSWORD
+    // ==========================================================================================
+    @Override
+    public ApiResponse<Void> resetPassword(ResetPasswordRequest request) {
+
+        String id = request.getIdentifier();
+        Clinic clinic;
+        boolean isEmail = id.contains("@");
+
+        if (isEmail) {
+            clinic = repo.findByEmail(id);
+            if (clinic == null) {
+                throw new ProcedureServiceException("No clinic found with this email", 404, null);
+            }
+        } else {
+            clinic = repo.findByWhatsappNumber(id);
+            if (clinic == null) {
+                throw new ProcedureServiceException("No clinic found with this WhatsApp number", 404, null);
+            }
+        }
+
+        // Check OTP
+        if (clinic.getOtpCode() == null || clinic.getOtpExpiry() == null) {
+            throw new ProcedureServiceException("OTP was not requested", 400, null);
+        }
+
+        if (Instant.now().isAfter(clinic.getOtpExpiry())) {
+            throw new ProcedureServiceException("OTP expired", 400, null);
+        }
+
+        if (clinic.getOtpAttempts() >= 5) {
+            throw new ProcedureServiceException("Max OTP attempts exceeded", 429, null);
+        }
+
+        if (!request.getOtp().equals(clinic.getOtpCode())) {
+            clinic.setOtpAttempts(clinic.getOtpAttempts() + 1);
+            repo.save(clinic);
+            throw new ProcedureServiceException("Invalid OTP", 400, null);
+        }
+
+        // Reset password
+        clinic.setPassword(request.getNewPassword());
+        clinic.setOtpCode(null);
+        clinic.setOtpExpiry(null);
+        clinic.setOtpSentTime(null);
+        clinic.setOtpAttempts(0);
+
+        repo.save(clinic);
+
+        return new ApiResponse<>(true,
+                isEmail ?
+                        "Password reset successful for email" :
+                        "Password reset successful for WhatsApp",
+                null);
+    }
+
+
+    // ==========================================================================================
+    // HELPER METHODS
+    // ==========================================================================================
     private <T> void updateIfNotNull(T value, java.util.function.Consumer<T> setter) {
         if (value != null) setter.accept(value);
     }
@@ -318,9 +462,47 @@ public class ClinicServiceImpl implements ClinicService {
         return Base64.getDecoder().decode(base64);
     }
 
-    // =====================================================================
-    // COPY BASIC FIELDS + DOCTOR VALIDATION
-    // =====================================================================
+    private void decodeDocuments(ClinicRegistrationDTO dto, Clinic clinic) {
+        try {
+            clinic.setHospitalLogo(decodeImage(dto.getHospitalLogo()));
+            clinic.setContractorDocuments(decode(dto.getContractorDocuments()));
+            clinic.setHospitalDocuments(decode(dto.getHospitalDocuments()));
+            clinic.setClinicalEstablishmentCertificate(decode(dto.getClinicalEstablishmentCertificate()));
+            clinic.setBusinessRegistrationCertificate(decode(dto.getBusinessRegistrationCertificate()));
+            clinic.setBiomedicalWasteManagementAuth(decode(dto.getBiomedicalWasteManagementAuth()));
+            clinic.setTradeLicense(decode(dto.getTradeLicense()));
+            clinic.setFireSafetyCertificate(decode(dto.getFireSafetyCertificate()));
+            clinic.setProfessionalIndemnityInsurance(decode(dto.getProfessionalIndemnityInsurance()));
+            clinic.setGstRegistrationCertificate(decode(dto.getGstRegistrationCertificate()));
+
+            if (dto.getOthers() != null) {
+                clinic.setOthers(dto.getOthers().stream().map(this::decode).toList());
+            }
+
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Invalid Base64 document format: " + ex.getMessage());
+        }
+    }
+
+    private void validateDuplicateDoctors(List<DoctorDTO> doctorsList) {
+
+        Set<String> regNos = doctorsList.stream()
+                .map(DoctorDTO::getRegistrationNumber)
+                .collect(Collectors.toSet());
+
+        if (regNos.size() != doctorsList.size()) {
+            throw new ProcedureServiceException("Duplicate doctor registrationNumber detected", 400, null);
+        }
+
+        Set<String> assocNos = doctorsList.stream()
+                .map(DoctorDTO::getAssociationNumber)
+                .collect(Collectors.toSet());
+
+        if (assocNos.size() != doctorsList.size()) {
+            throw new ProcedureServiceException("Duplicate doctor associationNumber detected", 400, null);
+        }
+    }
+
     private void copyBasicFields(ClinicRegistrationDTO dto, Clinic clinic) {
 
         clinic.setName(dto.getName());
@@ -355,11 +537,7 @@ public class ClinicServiceImpl implements ClinicService {
         clinic.setHasPharmacist(dto.getHasPharmacist());
         clinic.setDrugLicenseFormType(dto.getDrugLicenseFormType());
 
-        // =============================
-        // DOCTOR DUPLICATE VALIDATION
-        // =============================
         if (dto.getDoctorsList() != null) {
-
             validateDuplicateDoctors(dto.getDoctorsList());
 
             List<Doctor> doctorList = dto.getDoctorsList().stream().map(d -> {
@@ -375,227 +553,4 @@ public class ClinicServiceImpl implements ClinicService {
             clinic.setDoctorsList(doctorList);
         }
     }
-
-    // =====================================================================
-    // DOCUMENT DECODING
-    // =====================================================================
-    private void decodeDocuments(ClinicRegistrationDTO dto, Clinic clinic) {
-
-        try {
-            clinic.setHospitalLogo(decodeImage(dto.getHospitalLogo()));
-            clinic.setContractorDocuments(decode(dto.getContractorDocuments()));
-            clinic.setHospitalDocuments(decode(dto.getHospitalDocuments()));
-            clinic.setClinicalEstablishmentCertificate(decode(dto.getClinicalEstablishmentCertificate()));
-            clinic.setBusinessRegistrationCertificate(decode(dto.getBusinessRegistrationCertificate()));
-
-            if ("Yes".equalsIgnoreCase(dto.getMedicinesSoldOnSite())) {
-                clinic.setDrugLicenseCertificate(decode(dto.getDrugLicenseCertificate()));
-            }
-
-            if ("Yes".equalsIgnoreCase(dto.getHasPharmacist())) {
-                clinic.setPharmacistCertificate(decode(dto.getPharmacistCertificate()));
-            }
-
-            clinic.setBiomedicalWasteManagementAuth(decode(dto.getBiomedicalWasteManagementAuth()));
-            clinic.setTradeLicense(decode(dto.getTradeLicense()));
-            clinic.setFireSafetyCertificate(decode(dto.getFireSafetyCertificate()));
-            clinic.setProfessionalIndemnityInsurance(decode(dto.getProfessionalIndemnityInsurance()));
-            clinic.setGstRegistrationCertificate(decode(dto.getGstRegistrationCertificate()));
-
-            if (dto.getOthers() != null) {
-                clinic.setOthers(dto.getOthers().stream().map(this::decode).toList());
-            }
-
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Invalid Base64 document format: " + ex.getMessage());
-        }
-    }
-    
-    @Override
-    public void changePassword(ChangePasswordDTO dto) {
-
-        Clinic clinic = repo.findByUsername(dto.getUsername());
-
-        if (clinic == null) {
-            throw new ProcedureServiceException("Invalid username", 404, null);
-        }
-
-        if (!clinic.getPassword().equals(dto.getCurrentPassword())) {
-            throw new ProcedureServiceException("Current password is incorrect", 400, null);
-        }
-
-        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
-            throw new ProcedureServiceException("New password and confirm password do not match", 400, null);
-        }
-
-        if (dto.getNewPassword().equals(dto.getCurrentPassword())) {
-            throw new ProcedureServiceException("New password cannot be same as current password", 400, null);
-        }
-
-        clinic.setPassword(dto.getNewPassword());
-        repo.save(clinic);
-    }
-    
-    @Override
-    public ApiResponse<Void> forgotPassword(ForgotPasswordRequest request) {
-
-        String id = request.getIdentifier();
-
-        Clinic clinic = repo.findByEmail(id);
-        boolean isEmail = true;
-
-        if (clinic == null) {
-            clinic = repo.findByWhatsappNumber(id);
-            isEmail = false;
-        }
-
-        if (clinic == null) {
-            String msg = id.contains("@")
-                    ? "No clinic found with this email"
-                    : "No clinic found with this WhatsApp";
-            throw new ProcedureServiceException(msg, 404, null);
-        }
-
-        Instant now = Instant.now();
-
-        // --- OTP Cooldown (30 seconds) ---
-        if (clinic.getOtpSentTime() != null &&
-                now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
-            throw new ProcedureServiceException(
-                    "OTP already sent. Please wait before requesting again", 429, null);
-        }
-
-        // --- Generate new OTP ---
-        SecureRandom random = new SecureRandom();
-        String otp = String.valueOf(100_000 + random.nextInt(900_000));
-
-        String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
-        clinic.setOtpCode(hashedOtp);
-        clinic.setOtpExpiry(now.plusSeconds(300));
-        clinic.setOtpSentTime(now);
-        clinic.setOtpAttempts(0);
-
-        repo.save(clinic);
-
-        asyncVerificationService.sendOtpAsync(clinic, otp);
-
-        String msg = isEmail
-                ? "OTP sent successfully to registered email"
-                : "OTP sent successfully to registered WhatsApp";
-
-        return new ApiResponse<>(true, msg, null);
-    }
-
-    @Override
-    public ApiResponse<Void> resendOtp(ForgotPasswordRequest request) {
-
-        String id = request.getIdentifier();
-
-        Clinic clinic = repo.findByEmail(id);
-        boolean isEmail = true;
-
-        if (clinic == null) {
-            clinic = repo.findByWhatsappNumber(id);
-            isEmail = false;
-        }
-
-        if (clinic == null) {
-            String msg = id.contains("@")
-                    ? "No clinic found with this email"
-                    : "No clinic found with this WhatsApp";
-            throw new ProcedureServiceException(msg, 404, null);
-        }
-
-        Instant now = Instant.now();
-
-        // Cooldown: prevent spamming resend
-        if (clinic.getOtpSentTime() != null &&
-            now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
-            throw new ProcedureServiceException(
-                    "OTP already sent. Please wait before requesting again", 429, null);
-        }
-
-        // --- Generate new OTP ---
-        SecureRandom random = new SecureRandom();
-        String otp = String.valueOf(100_000 + random.nextInt(900_000));
-
-        // Store hashed OTP
-        String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
-        clinic.setOtpCode(hashedOtp);
-        clinic.setOtpExpiry(now.plusSeconds(300));
-        clinic.setOtpSentTime(now);
-        clinic.setOtpAttempts(0);
-
-        repo.save(clinic);
-
-        asyncVerificationService.sendOtpAsync(clinic, otp);
-
-        String msg = isEmail
-                ? "OTP resent successfully to registered email"
-                : "OTP resent successfully to registered WhatsApp";
-
-        return new ApiResponse<>(true, msg, null);
-    }
-
-    @Override
-    public ApiResponse<Void> resetPassword(ResetPasswordRequest request) {
-
-        String id = request.getIdentifier();
-
-        Clinic clinic = repo.findByEmail(id);
-        boolean isEmail = true;
-
-        if (clinic == null) {
-            clinic = repo.findByWhatsappNumber(id);
-            isEmail = false;
-        }
-
-        if (clinic == null) {
-            String msg = id.contains("@")
-                    ? "No clinic found with this email"
-                    : "No clinic found with this WhatsApp";
-            throw new ProcedureServiceException(msg, 404, null);
-        }
-
-        // OTP must exist
-        if (clinic.getOtpCode() == null || clinic.getOtpExpiry() == null) {
-            throw new ProcedureServiceException("OTP has not been requested", 400, null);
-        }
-
-        // Check expiry
-        if (Instant.now().isAfter(clinic.getOtpExpiry())) {
-            throw new ProcedureServiceException("OTP expired", 400, null);
-        }
-
-        // Too many attempts
-        if (clinic.getOtpAttempts() >= 5) {
-            throw new ProcedureServiceException(
-                "Maximum OTP attempts exceeded. Request a new OTP.", 429, null);
-        }
-
-        // Validate OTP hash
-        if (!BCrypt.checkpw(request.getOtp(), clinic.getOtpCode())) {
-            clinic.setOtpAttempts(clinic.getOtpAttempts() + 1);
-            repo.save(clinic);
-            throw new ProcedureServiceException("Invalid OTP", 400, null);
-        }
-
-        // OTP is valid → update password
-        clinic.setPassword(request.getNewPassword()); // TODO: hash password here
-
-        // Clear OTP data
-        clinic.setOtpCode(null);
-        clinic.setOtpExpiry(null);
-        clinic.setOtpSentTime(null);
-        clinic.setOtpAttempts(0);
-
-        repo.save(clinic);
-
-        String msg = isEmail
-                ? "Password reset successfully for email"
-                : "Password reset successfully for WhatsApp";
-
-        return new ApiResponse<>(true, msg, null);
-    }
-
 }
