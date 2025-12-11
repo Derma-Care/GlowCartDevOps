@@ -228,47 +228,36 @@ public class ClinicController {
 
     
     @PostMapping("/clinics/forgot-password")
-    public ResponseEntity<ApiResponse<?>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
 
-        clinicService.forgotPassword(request);
+        // Call service and get ApiResponse
+        ApiResponse<Void> response = clinicService.forgotPassword(request);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "OTP sent successfully to registered email and WhatsApp",
-                        null
-                )
-        );
+        // Return the service response directly
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/clinics/reset-password")
-    public ResponseEntity<ApiResponse<?>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
 
-        clinicService.resetPassword(request);
+        // Call service and get ApiResponse
+        ApiResponse<Void> response = clinicService.resetPassword(request);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Password reset successfully",
-                        null
-                )
-        );
+        // Return the service response directly
+        return ResponseEntity.ok(response);
     }
 
-    /**
-     * Resend OTP explicitly
-     */
     @PostMapping("/clinics/resend-otp")
-    public ResponseEntity<ApiResponse<?>> resendOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> resendOtp(
+            @Valid @RequestBody ForgotPasswordRequest request) {
 
-        clinicService.resendOtp(request);
+        // Call service and get ApiResponse
+        ApiResponse<Void> response = clinicService.resendOtp(request);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "OTP resent successfully to registered email and WhatsApp",
-                        null
-                )
-        );
+        // Return the service response directly
+        return ResponseEntity.ok(response);
     }
+
 }

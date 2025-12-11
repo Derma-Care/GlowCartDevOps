@@ -2,6 +2,7 @@ package com.glowkart.admin.service;
 
 import java.util.List;
 
+import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ChangePasswordDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.ForgotPasswordRequest;
@@ -33,11 +34,9 @@ public interface ClinicService {
 	
 	void changePassword(ChangePasswordDTO dto);
 	
-	void forgotPassword(ForgotPasswordRequest request);
-	void resetPassword(ResetPasswordRequest request);
-
-	void resendOtp(ForgotPasswordRequest request);
-
+	 ApiResponse<Void> forgotPassword(ForgotPasswordRequest request);  // UPDATED
+	    ApiResponse<Void> resetPassword(ResetPasswordRequest request);    // UPDATED
+	    ApiResponse<Void> resendOtp(ForgotPasswordRequest request);       // UPDATED
 	
 
 	

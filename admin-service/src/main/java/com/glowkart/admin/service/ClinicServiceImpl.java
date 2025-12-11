@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.glowkart.admin.client.OnboardingClient;
+import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ChangePasswordDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.DoctorDTO;
@@ -434,139 +435,167 @@ public class ClinicServiceImpl implements ClinicService {
         clinic.setPassword(dto.getNewPassword());
         repo.save(clinic);
     }
-
-
-@Override
-public void forgotPassword(ForgotPasswordRequest request) {
-
-    String id = request.getIdentifier();
-
-    Clinic clinic = repo.findByEmail(id);
-    if (clinic == null) clinic = repo.findByWhatsappNumber(id);
-
-    if (clinic == null) {
-        throw new ProcedureServiceException("No clinic found with this email/WhatsApp", 404, null);
-    }
-
-    // --- OTP Resend Cooldown (30 seconds) ---
-    if (clinic.getOtpSentTime() != null && Instant.now().isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
-        throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
-    }
-
-    String otp;
-
-    // Reuse OTP if still valid
-    if (clinic.getOtpCode() != null && Instant.now().isBefore(clinic.getOtpExpiry())) {
-        otp = "****"; // we don't need to store it again, just resend the same
-    } else {
-        // Generate new OTP using SecureRandom
-        SecureRandom random = new SecureRandom();
-        otp = String.valueOf(100000 + random.nextInt(900000));
-
-        // Hash OTP before storing
-        String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
-        clinic.setOtpCode(hashedOtp);
-
-        // Set expiry (e.g., 5 minutes)
-        clinic.setOtpExpiry(Instant.now().plusSeconds(5 * 60));
-    }
-
-    clinic.setOtpSentTime(Instant.now());
-    clinic.setOtpAttempts(0); // reset attempts on new OTP
-    repo.save(clinic);
-
-    // Send OTP asynchronously
-    asyncVerificationService.sendOtpAsync(clinic, otp);
-}
-
     
-@Override
-public void resetPassword(ResetPasswordRequest request) {
+    @Override
+    public ApiResponse<Void> forgotPassword(ForgotPasswordRequest request) {
 
-    String id = request.getIdentifier();
+        String id = request.getIdentifier();
 
-    Clinic clinic = repo.findByEmail(id);
-    if (clinic == null) clinic = repo.findByWhatsappNumber(id);
+        Clinic clinic = repo.findByEmail(id);
+        boolean isEmail = true;
 
-    if (clinic == null) {
-        throw new ProcedureServiceException("Invalid identifier", 404, null);
-    }
+        if (clinic == null) {
+            clinic = repo.findByWhatsappNumber(id);
+            isEmail = false;
+        }
 
-    if (clinic.getOtpCode() == null || clinic.getOtpExpiry() == null) {
-        throw new ProcedureServiceException("OTP not requested", 400, null);
-    }
+        if (clinic == null) {
+            String msg = id.contains("@")
+                    ? "No clinic found with this email"
+                    : "No clinic found with this WhatsApp";
+            throw new ProcedureServiceException(msg, 404, null);
+        }
 
-    // Check OTP expiry
-    if (Instant.now().isAfter(clinic.getOtpExpiry())) {
-        throw new ProcedureServiceException("OTP expired", 400, null);
-    }
+        Instant now = Instant.now();
 
-    // Check OTP attempts
-    if (clinic.getOtpAttempts() >= 5) {
-        throw new ProcedureServiceException("Maximum OTP attempts exceeded. Request a new OTP.", 429, null);
-    }
+        // --- OTP Cooldown (30 seconds) ---
+        if (clinic.getOtpSentTime() != null &&
+                now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
+            throw new ProcedureServiceException(
+                    "OTP already sent. Please wait before requesting again", 429, null);
+        }
 
-    // Validate OTP
-    if (!BCrypt.checkpw(request.getOtp(), clinic.getOtpCode())) {
-        clinic.setOtpAttempts(clinic.getOtpAttempts() + 1);
-        repo.save(clinic);
-        throw new ProcedureServiceException("Invalid OTP", 400, null);
-    }
-
-    // Update password
-    clinic.setPassword(request.getNewPassword());
-
-    // Clear OTP data
-    clinic.setOtpCode(null);
-    clinic.setOtpExpiry(null);
-    clinic.setOtpSentTime(null);
-    clinic.setOtpAttempts(0);
-
-    repo.save(clinic);
-}
-
-
-@Override
-public void resendOtp(ForgotPasswordRequest request) {
-
-    String id = request.getIdentifier();
-
-    Clinic clinic = repo.findByEmail(id);
-    if (clinic == null) clinic = repo.findByWhatsappNumber(id);
-
-    if (clinic == null) {
-        throw new ProcedureServiceException("No clinic found with this email/WhatsApp", 404, null);
-    }
-
-    // --- OTP Resend Cooldown (30 seconds) ---
-    if (clinic.getOtpSentTime() != null && Instant.now().isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
-        throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
-    }
-
-    String otp;
-
-    // Reuse OTP if still valid
-    if (clinic.getOtpCode() != null && Instant.now().isBefore(clinic.getOtpExpiry())) {
-        otp = "****"; // reuse current OTP
-    } else {
-        // Generate new OTP
+        // --- Generate new OTP ---
         SecureRandom random = new SecureRandom();
-        otp = String.valueOf(100000 + random.nextInt(900000));
+        String otp = String.valueOf(100_000 + random.nextInt(900_000));
 
-        // Hash OTP before storing
         String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
         clinic.setOtpCode(hashedOtp);
+        clinic.setOtpExpiry(now.plusSeconds(300));
+        clinic.setOtpSentTime(now);
+        clinic.setOtpAttempts(0);
 
-        // Set expiry (5 minutes)
-        clinic.setOtpExpiry(Instant.now().plusSeconds(5 * 60));
+        repo.save(clinic);
+
+        asyncVerificationService.sendOtpAsync(clinic, otp);
+
+        String msg = isEmail
+                ? "OTP sent successfully to registered email"
+                : "OTP sent successfully to registered WhatsApp";
+
+        return new ApiResponse<>(true, msg, null);
     }
 
-    clinic.setOtpSentTime(Instant.now());
-    clinic.setOtpAttempts(0); // reset attempts on new OTP
-    repo.save(clinic);
+    @Override
+    public ApiResponse<Void> resendOtp(ForgotPasswordRequest request) {
 
-    // Send OTP asynchronously
-    asyncVerificationService.sendOtpAsync(clinic, otp);
-}
+        String id = request.getIdentifier();
+
+        Clinic clinic = repo.findByEmail(id);
+        boolean isEmail = true;
+
+        if (clinic == null) {
+            clinic = repo.findByWhatsappNumber(id);
+            isEmail = false;
+        }
+
+        if (clinic == null) {
+            String msg = id.contains("@")
+                    ? "No clinic found with this email"
+                    : "No clinic found with this WhatsApp";
+            throw new ProcedureServiceException(msg, 404, null);
+        }
+
+        Instant now = Instant.now();
+
+        // Cooldown: prevent spamming resend
+        if (clinic.getOtpSentTime() != null &&
+            now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
+            throw new ProcedureServiceException(
+                    "OTP already sent. Please wait before requesting again", 429, null);
+        }
+
+        // --- Generate new OTP ---
+        SecureRandom random = new SecureRandom();
+        String otp = String.valueOf(100_000 + random.nextInt(900_000));
+
+        // Store hashed OTP
+        String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
+        clinic.setOtpCode(hashedOtp);
+        clinic.setOtpExpiry(now.plusSeconds(300));
+        clinic.setOtpSentTime(now);
+        clinic.setOtpAttempts(0);
+
+        repo.save(clinic);
+
+        asyncVerificationService.sendOtpAsync(clinic, otp);
+
+        String msg = isEmail
+                ? "OTP resent successfully to registered email"
+                : "OTP resent successfully to registered WhatsApp";
+
+        return new ApiResponse<>(true, msg, null);
+    }
+
+    @Override
+    public ApiResponse<Void> resetPassword(ResetPasswordRequest request) {
+
+        String id = request.getIdentifier();
+
+        Clinic clinic = repo.findByEmail(id);
+        boolean isEmail = true;
+
+        if (clinic == null) {
+            clinic = repo.findByWhatsappNumber(id);
+            isEmail = false;
+        }
+
+        if (clinic == null) {
+            String msg = id.contains("@")
+                    ? "No clinic found with this email"
+                    : "No clinic found with this WhatsApp";
+            throw new ProcedureServiceException(msg, 404, null);
+        }
+
+        // OTP must exist
+        if (clinic.getOtpCode() == null || clinic.getOtpExpiry() == null) {
+            throw new ProcedureServiceException("OTP has not been requested", 400, null);
+        }
+
+        // Check expiry
+        if (Instant.now().isAfter(clinic.getOtpExpiry())) {
+            throw new ProcedureServiceException("OTP expired", 400, null);
+        }
+
+        // Too many attempts
+        if (clinic.getOtpAttempts() >= 5) {
+            throw new ProcedureServiceException(
+                "Maximum OTP attempts exceeded. Request a new OTP.", 429, null);
+        }
+
+        // Validate OTP hash
+        if (!BCrypt.checkpw(request.getOtp(), clinic.getOtpCode())) {
+            clinic.setOtpAttempts(clinic.getOtpAttempts() + 1);
+            repo.save(clinic);
+            throw new ProcedureServiceException("Invalid OTP", 400, null);
+        }
+
+        // OTP is valid → update password
+        clinic.setPassword(request.getNewPassword()); // TODO: hash password here
+
+        // Clear OTP data
+        clinic.setOtpCode(null);
+        clinic.setOtpExpiry(null);
+        clinic.setOtpSentTime(null);
+        clinic.setOtpAttempts(0);
+
+        repo.save(clinic);
+
+        String msg = isEmail
+                ? "Password reset successfully for email"
+                : "Password reset successfully for WhatsApp";
+
+        return new ApiResponse<>(true, msg, null);
+    }
 
 }
