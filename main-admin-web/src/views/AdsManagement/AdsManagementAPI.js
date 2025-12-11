@@ -1,65 +1,88 @@
-// import axios from 'axios'
-// import {
-//   BASE_URL,
-//   AddCategoryAdvertisement,
-//   getAllCategoryAdvertisement,
-//   deleteCategoryAdvertisement,
-// } from '../../baseUrl'
+// src/api/adsApi.js
+import axios from "axios";
+import { BASE_URL_API } from "../../baseUrl";
 
-// export const Get_AllAdvData = async () => {
-//   console.log('service data:, response.data')
 
-//   try {
-//     const response = await axios.get(`${BASE_URL}/${getAllCategoryAdvertisement}`)
-//     console.log('service data:', response.data)
+// -------- Dashboard Ads --------
+export const getDashboardAds = async () => {
+  const res = await axios.get(`${BASE_URL_API}/dashboard-ads`);
+  const adsArray = res.data.data || []; // <--- Use the correct property
+  return adsArray.map(ad => ({
+    _id: ad.id || ad._id,
+    title: ad.title || "Ad",
+    data: ad.url || ad.data,
+    type: ad.type || "image",
+    filename: ad.url?.split("/").pop() || ad.filename,
+    category: ad.category || "dashboard",
+  }));
+};
 
-//     return response.data
-//   } catch (error) {
-//     console.error('Error fetching service data:', error.message)
 
-//     if (error.response) {
-//       console.error('Error Response Data:', error.response.data)
-//       console.error('Error Response Status:', error.response.status)
-//     }
-//     throw error
-//   }
-// }
+export const createDashboardAd = async (payload) => {
+  const { data } = await axios.post(`${BASE_URL_API}/dashboard-ads/upload-file-json`, payload);
+  return data.data;
+};
 
-// export const Add_AdvData = async (advData) => {
-//   try {
-//     const requestData = {
-//       carouselId: advData.carouselId || '',
-//       mediaUrlOrImage: advData.mediaUrlOrImage || '',
-//     }
+export const updateDashboardAd = async (_id, payload) => {
+  await axios.put(`${BASE_URL_API}/dashboard-ads/${_id}`, payload);
+};
 
-//     const response = await axios.post(`${BASE_URL}/${AddCategoryAdvertisement}`, requestData, {
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//     })
+export const deleteDashboardAd = async (_id) => {
+  await axios.delete(`${BASE_URL_API}/dashboard-ads/${_id}`);
+};
 
-//     return response.data
-//   } catch (error) {
-//     console.error('Error response:', error.response)
-//     alert(
-//       `Error: ${error.response?.status} - ${error.response?.data?.message || error.response?.statusText}`,
-//     )
-//     throw error
-//   }
-// }
+// -------- Service Ads --------
+export const getServiceAds = async () => {
+  const res = await axios.get(`${BASE_URL_API}/service-ads`);
+  const adsArray = res.data.data || []; // Make sure it’s always an array
+  return adsArray.map(ad => ({
+    _id: ad.id || ad._id,
+    title: ad.title || "Ad",
+    data: ad.url || ad.data,
+    type: ad.type || "image",
+    filename: ad.url?.split("/").pop() || ad.filename,
+    category: ad.category || "service",
+  }));
+};
 
-// export const delete_AdvData = async (carouselId) => {
-//   try {
-//     const response = await axios.delete(`${BASE_URL}/${deleteCategoryAdvertisement}/${carouselId}`, {
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//     })
 
-//     console.log('advertisement deleted successfully:', response.data)
-//     return response.data
-//   } catch (error) {
-//     console.error('Error deleting advertisement:', error.response ? error.response.data : error)
-//     throw error
-//   }
-// }
+export const createServiceAd = async (payload) => {
+  const { data } = await axios.post(`${BASE_URL_API}/service-ads/upload-file-json`, payload);
+  return data.data;
+};
+
+export const updateServiceAd = async (_id, payload) => {
+  await axios.put(`${BASE_URL_API}/service-ads/${_id}`, payload);
+};
+
+export const deleteServiceAd = async (_id) => {
+  await axios.delete(`${BASE_URL_API}/service-ads/${_id}`);
+};
+
+// -------- Clinic Ads --------
+export const getClinicAds = async () => {
+  const res = await axios.get(`${BASE_URL_API}/clinic-ads`);
+  const adsArray = res.data.data || []; // ensures it’s always an array
+  return adsArray.map(ad => ({
+    _id: ad.id || ad._id,
+    title: ad.title || "Ad",
+    data: ad.url || ad.data,
+    type: ad.type || "image",
+    filename: ad.url?.split("/").pop() || ad.filename,
+    category: ad.category || "clinic",
+  }));
+};
+
+
+export const createClinicAd = async (payload) => {
+  const { data } = await axios.post(`${BASE_URL_API}/clinic-ads/upload-file-json`, payload);
+  return data.data;
+};
+
+export const updateClinicAd = async (_id, payload) => {
+  await axios.put(`${BASE_URL_API}/clinic-ads/${_id}`, payload);
+};
+
+export const deleteClinicAd = async (_id) => {
+  await axios.delete(`${BASE_URL_API}/clinic-ads/${_id}`);
+};

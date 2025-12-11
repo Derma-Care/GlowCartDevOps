@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   CNav,
   CNavItem,
   CNavLink,
-  CTabContent,
-  CTabPane,
   CCard,
   CCardBody,
   CButton,
@@ -16,16 +14,11 @@ import {
   CModalFooter,
   CFormInput,
   CFormLabel,
-  CTable,
-  CTableHead,
-  CTableRow,
-  CTableHeaderCell,
-  CTableBody,
-  CTableDataCell,
   CImage,
 } from "@coreui/react";
-import { Eye, Trash2, Edit2 } from "lucide-react";
 import { BASE_URL_API } from "../../baseUrl";
+import { Edit2, Eye, Trash2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const AdsManagement = () => {
   const [activeKey, setActiveKey] = useState(1);
@@ -33,27 +26,74 @@ const AdsManagement = () => {
 
   // Add Modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [formData, setFormData] = useState({ title: "", media: "", mediaType: "" });
-  const [formErrors, setFormErrors] = useState({ title: "", media: "" });
+  const [formData, setFormData] = useState({ title: "", data: "", type: "", fileName: "" });
+  const [formErrors, setFormErrors] = useState({ title: "", data: "" });
+  const addFileInputRef = useRef(null);
+
+  // Edit Modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState({ _id: "", title: "", data: "", type: "", fileName: "" });
+  const [editErrors, setEditErrors] = useState({ title: "", data: "" });
+  const editFileInputRef = useRef(null);
 
   // View Modal
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
 
-  // Edit Modal
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editData, setEditData] = useState({ _id: "", title: "", media: "", mediaType: "" });
-  const [editErrors, setEditErrors] = useState({ title: "", media: "" });
+  // Delete Modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  // API Endpoints
+  const API = {
+    dashboard: {
+      get: `${BASE_URL_API}/dashboard-ads`,
+      post: `${BASE_URL_API}/dashboard-ads/upload-file-json`,
+      update: (id) => `${BASE_URL_API}/dashboard-ads/${id}`,
+      delete: (id) => `${BASE_URL_API}/dashboard-ads/${id}`,
+    },
+    service: {
+      get: `${BASE_URL_API}/service-ads`,
+      post: `${BASE_URL_API}/service-ads/upload-file-json`,
+      update: (id) => `${BASE_URL_API}/service-ads/${id}`,
+      delete: (id) => `${BASE_URL_API}/service-ads/${id}`,
+    },
+    clinic: {
+      get: `${BASE_URL_API}/clinic-ads`,
+      post: `${BASE_URL_API}/clinic-ads/upload-file-json`,
+      update: (id) => `${BASE_URL_API}/clinic-ads/${id}`,
+      delete: (id) => `${BASE_URL_API}/clinic-ads/${id}`,
+    },
+  };
+
+  // Determine current category
+  const getCategory = () =>
+    activeKey === 1 ? "dashboard" : activeKey === 2 ? "service" : "clinic";
 
   // Fetch Ads
   const fetchAds = async () => {
+    const category = getCategory();
     try {
-      const { data } = await axios.get(`${BASE_URL_API}/ads`);
-      setAdsData({
-        dashboard: data.filter((ad) => ad.type === "dashboard"),
-        service: data.filter((ad) => ad.type === "service"),
-        clinic: data.filter((ad) => ad.type === "clinic"),
-      });
+      const response = await axios.get(API[category].get);
+      const adsArray = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
+
+      const mappedData = adsArray.map((ad) => ({
+        _id: ad.id,
+        data: ad.url,
+        type: ad.type,
+        title: ad.title || "Ad",
+        fileName: ad.url.split("/").pop().split("?")[0],
+        category: ad.category || category,
+      }));
+
+      setAdsData((prev) => ({
+        ...prev,
+        [category]: mappedData,
+      }));
     } catch (err) {
       console.log(err);
     }
@@ -61,43 +101,102 @@ const AdsManagement = () => {
 
   useEffect(() => {
     fetchAds();
-  }, []);
+  }, [activeKey]);
 
   // Open Add Modal
   const openAddModal = () => {
-    setFormData({ title: "", media: "", mediaType: "" });
-    setFormErrors({ title: "", media: "" });
+    setFormData({ title: "", data: "", type: "", fileName: "" });
+    setFormErrors({ title: "", data: "" });
+    if (addFileInputRef.current) addFileInputRef.current.value = null;
     setShowAddModal(true);
   };
 
-  // Handle Media Upload
-  const handleMediaUpload = (e, isEdit = false) => {
+  // File Upload Handler
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  // When uploading file
+  const handleFileUpload = (e, isEdit = false) => {
     const file = e.target.files[0];
-    if (file) {
-      const type = file.type.startsWith("image") ? "image" : "video";
-      if (isEdit) {
-        setEditData({ ...editData, media: URL.createObjectURL(file), mediaType: type });
-        setEditErrors({ ...editErrors, media: "" });
-      } else {
-        setFormData({ ...formData, media: URL.createObjectURL(file), mediaType: type });
-        setFormErrors({ ...formErrors, media: "" });
-      }
+    if (!file) return;
+
+    const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+    const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const allowedVideoTypes = ["video/mp4", "audio/mp3"];
+
+    if (![...allowedImageTypes, ...allowedVideoTypes].includes(file.type)) {
+      toast.error("Only JPG, JPEG, PNG images and MP3, MP4 videos are allowed!");
+      e.target.value = null;
+      return;
     }
+
+    if (file.size > MAX_SIZE) {
+      toast.error("File size must be less than 5 MB!");
+      e.target.value = null;
+      return;
+    }
+
+    const fileType = file.type.startsWith("image") ? "image" : "video";
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Only = reader.result.split(",")[1]; // just the base64
+      const previewUrl = URL.createObjectURL(file); // blob URL for preview
+
+      if (isEdit) {
+        setEditData({
+          ...editData,
+          data: base64Only,        // store base64 for API
+          type: fileType,
+          fileName: file.name,
+          previewUrl,             // store blob URL for preview
+          fileObject: file        // store the actual File object (optional)
+        });
+      } else {
+        setFormData({
+          ...formData,
+          data: base64Only,
+          type: fileType,
+          fileName: file.name,
+          previewUrl,
+          fileObject: file
+        });
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
+
+
 
   // Validate Add Form
   const validateAddForm = () => {
-    let errors = { title: "", media: "" };
+    let errors = { title: "", data: "" };
     let valid = true;
     if (!formData.title.trim()) {
       errors.title = "Title is required.";
       valid = false;
     }
-    if (!formData.media) {
-      errors.media = "Media file is required.";
+    if (!formData.data) {
+      errors.data = "Media file is required.";
       valid = false;
     }
     setFormErrors(errors);
+    return valid;
+  };
+
+  // Validate Edit Form
+  const validateEditForm = () => {
+    let errors = { title: "", data: "" };
+    let valid = true;
+    if (!editData.title.trim()) {
+      errors.title = "Title is required.";
+      valid = false;
+    }
+    if (!editData.data) {
+      errors.data = "Media file is required.";
+      valid = false;
+    }
+    setEditErrors(errors);
     return valid;
   };
 
@@ -105,73 +204,64 @@ const AdsManagement = () => {
   const handleSaveAd = async () => {
     if (!validateAddForm()) return;
 
-    const typeKey = activeKey === 1 ? "dashboard" : activeKey === 2 ? "service" : "clinic";
+    const category = getCategory();
     const payload = {
       title: formData.title,
-      type: typeKey,
-      media: formData.media,
-      mediaType: formData.mediaType,
+      data: formData.data,
+      type: formData.type,
+      filename: formData.fileName,
     };
 
     try {
-      const { data } = await axios.post(`${BASE_URL_API}/ads`, payload);
+      const { data } = await axios.post(API[category].post, payload);
       setAdsData((prev) => ({
         ...prev,
-        [typeKey]: [...prev[typeKey], data.data],
+        [category]: [...prev[category], data.data],
       }));
       setShowAddModal(false);
-      setFormData({ title: "", media: "", mediaType: "" });
-      setFormErrors({ title: "", media: "" });
+      setFormData({ title: "", data: "", type: "", fileName: "" });
+      fetchAds();
     } catch (err) {
       console.log(err);
+      toast.error("Failed to add advertisement!");
     }
-  };
-
-  // Validate Edit Form
-  const validateEditForm = () => {
-    let errors = { title: "", media: "" };
-    let valid = true;
-    if (!editData.title.trim()) {
-      errors.title = "Title is required.";
-      valid = false;
-    }
-    if (!editData.media) {
-      errors.media = "Media file is required.";
-      valid = false;
-    }
-    setEditErrors(errors);
-    return valid;
   };
 
   // Update Ad
   const handleUpdateAd = async () => {
     if (!validateEditForm()) return;
 
+    const category = getCategory();
     const payload = {
       title: editData.title,
-      media: editData.media,
-      mediaType: editData.mediaType,
+      data: editData.data,
+      type: editData.type,
+      filename: editData.fileName,
     };
 
     try {
-      await axios.put(`${BASE_URL_API}/ads/${editData._id}`, payload);
+      await axios.put(API[category].update(editData._id), payload);
+      toast.success("Advertisement updated successfully!");
       fetchAds();
       setShowEditModal(false);
-      setEditData({ _id: "", title: "", media: "", mediaType: "" });
-      setEditErrors({ title: "", media: "" });
+      setEditData({ _id: "", title: "", data: "", type: "", fileName: "" });
     } catch (err) {
       console.log(err);
+      toast.error("Failed to update advertisement!");
     }
   };
 
   // Delete Ad
-  const deleteAd = async (id) => {
-    if (!window.confirm("Delete this ad?")) return;
+  const confirmDelete = async () => {
+    const category = getCategory();
     try {
-      await axios.delete(`${BASE_URL_API}/ads/${id}`);
+      await axios.delete(API[category].delete(deleteId));
+      toast.success("Advertisement deleted successfully!");
       fetchAds();
+      setShowDeleteModal(false);
     } catch (err) {
       console.log(err);
+      toast.error("Failed to delete advertisement!");
     }
   };
 
@@ -182,79 +272,117 @@ const AdsManagement = () => {
   };
 
   const handleEdit = (ad) => {
-    setEditData({ _id: ad._id, title: ad.title || "", media: ad.media || "", mediaType: ad.mediaType || "image" });
-    setEditErrors({ title: "", media: "" });
+    setEditData({
+      _id: ad._id,
+      title: ad.title || "",
+      data: ad.data || "",
+      type: ad.type || "image",
+      fileName: ad.fileName || "",
+    });
+    setEditErrors({ title: "", data: "" });
+    if (editFileInputRef.current) editFileInputRef.current.value = null;
     setShowEditModal(true);
   };
 
   const getActiveAds = activeKey === 1 ? adsData.dashboard : activeKey === 2 ? adsData.service : adsData.clinic;
 
   return (
-    <CCard>
-      <div className="text-white p-3 d-flex justify-content-between align-items-center rounded"
-        style={{ background: "linear-gradient(135deg, var(--color-black), var(--color-bgcolor))" }}>
+    <CCard className="mb-3">
+      <div
+        className="text-white p-3 d-flex justify-content-between align-items-center rounded"
+        style={{ background: "linear-gradient(135deg, var(--color-black), var(--color-bgcolor))" }}
+      >
         <h5 className="mb-1" style={{ color: "white" }}>Advertisement Management</h5>
-        <CButton color="primary" onClick={openAddModal}>+ Add Ad</CButton>
+        <CButton color="primary" onClick={openAddModal}>
+          + Add Ad
+        </CButton>
       </div>
 
       <CCardBody>
         {/* Tabs */}
         <CNav variant="tabs" className="mb-3">
-          <CNavItem><CNavLink active={activeKey === 1} onClick={() => setActiveKey(1)}>Dashboard Ads</CNavLink></CNavItem>
-          <CNavItem><CNavLink active={activeKey === 2} onClick={() => setActiveKey(2)}>Service Ads</CNavLink></CNavItem>
-          <CNavItem><CNavLink active={activeKey === 3} onClick={() => setActiveKey(3)}>Clinic Ads</CNavLink></CNavItem>
+          <CNavItem>
+            <CNavLink active={activeKey === 1} onClick={() => setActiveKey(1)}>
+              Dashboard Ads
+            </CNavLink>
+          </CNavItem>
+          <CNavItem>
+            <CNavLink active={activeKey === 2} onClick={() => setActiveKey(2)}>
+              Service Ads
+            </CNavLink>
+          </CNavItem>
+          <CNavItem>
+            <CNavLink active={activeKey === 3} onClick={() => setActiveKey(3)}>
+              Clinic Ads
+            </CNavLink>
+          </CNavItem>
         </CNav>
 
-        {/* Table */}
-        <CTabContent>
-          <CTabPane visible={true}>
-            <CCard className="border-light shadow-sm">
-              <CCardBody>
-                <h5 className="fw-bold mb-3">{activeKey === 1 ? "Dashboard Ads" : activeKey === 2 ? "Service Ads" : "Clinic Ads"}</h5>
-                <div className="table-responsive">
-                  <CTable striped hover responsive>
-                    <CTableHead className="pink-table">
-                      <CTableRow>
-                        <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
-                        <CTableHeaderCell className="text-center">Title</CTableHeaderCell>
-                        <CTableHeaderCell className="text-center">Media</CTableHeaderCell>
-                        <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody className="pink-table">
-                      {getActiveAds.length === 0 ? (
-                        <CTableRow ><CTableDataCell colSpan={4} className="text-center">No Ads Found</CTableDataCell></CTableRow>
-                      ) : (
-                        getActiveAds.map((ad, index) => (
-                          <CTableRow key={ad._id}>
-                            <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
-                            <CTableDataCell className="text-center">{ad.title}</CTableDataCell>
-                            <CTableDataCell className="text-center">
-                              {ad.mediaType === "image" && <CImage src={ad.media} width="80" height="60" style={{ objectFit: "contain", background: "#f8f8f8", padding: "3px" }} />}
-                              {ad.mediaType === "video" && <video src={ad.media} width="80" height="60" controls />}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">
-                              <div className="d-flex justify-content-center gap-2">
-                                <button className="actionBtn view" onClick={() => handleView(ad)}><Eye size={18} /></button>
-                                <button className="actionBtn edit" onClick={() => handleEdit(ad)}><Edit2 size={18} /></button>
-                                <button className="actionBtn delete" onClick={() => deleteAd(ad._id)}><Trash2 size={18} /></button>
-                              </div>
-                            </CTableDataCell>
-                          </CTableRow>
-                        ))
-                      )}
-                    </CTableBody>
-                  </CTable>
+        {/* Cards */}
+        <div className="d-flex flex-wrap gap-3">
+          {getActiveAds.length === 0 ? (
+            <div className="text-center w-100">No Ads Found</div>
+          ) : (
+            getActiveAds.map((ad) => (
+              <CCard
+                key={ad._id}
+                className="shadow-sm p-3 flex-grow-1"
+                style={{
+                  flex: "1 1 calc(33% - 10px)",
+                  minWidth: "250px",
+                  maxWidth: "calc(33% - 10px)",
+                }}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    height: "180px",
+                    overflow: "hidden",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  {ad.type === "image" ? (
+                    <CImage
+                      src={ad.data}
+                      alt={ad.fileName}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <video
+                      src={ad.data}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      controls
+                    />
+                  )}
                 </div>
-              </CCardBody>
-            </CCard>
-          </CTabPane>
-        </CTabContent>
+                <CCardBody className="text-center">
+                  <div className="d-flex justify-content-center gap-2 flex-wrap">
+                    <button className="actionBtn view" onClick={() => handleView(ad)}>
+                      <Eye size={18} />
+                    </button>
+                    <button className="actionBtn edit" onClick={() => handleEdit(ad)}>
+                      <Edit2 size={18} />
+                    </button>
+                    <button className="actionBtn delete" onClick={() => {
+                      setDeleteId(ad._id);
+                      setShowDeleteModal(true);
+                    }}>
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </CCardBody>
+              </CCard>
+            ))
+          )}
+        </div>
       </CCardBody>
 
-      {/* ADD MODAL */}
-      <CModal visible={showAddModal} onClose={() => setShowAddModal(false)}>
-        <CModalHeader><CModalTitle>Add Advertisement</CModalTitle></CModalHeader>
+      {/* Add, Edit, View, Delete Modals */}
+      {/* Add Modal */}
+      <CModal size="lg" className="custom-modal" visible={showAddModal} onClose={() => setShowAddModal(false)}>
+        <CModalHeader>
+          <CModalTitle>Add Advertisement</CModalTitle>
+        </CModalHeader>
         <CModalBody>
           <CFormLabel>Title <span style={{ color: "red" }}>*</span></CFormLabel>
           <CFormInput
@@ -267,11 +395,35 @@ const AdsManagement = () => {
           {formErrors.title && <div style={{ color: "red", fontSize: "0.85em" }}>{formErrors.title}</div>}
 
           <CFormLabel className="mt-3">Upload Media (Image/Video) <span style={{ color: "red" }}>*</span></CFormLabel>
-          <CFormInput type="file" accept="image/*,video/mp4" onChange={(e) => handleMediaUpload(e)} />
-          {formErrors.media && <div style={{ color: "red", fontSize: "0.85em" }}>{formErrors.media}</div>}
+          <CFormInput
+            ref={addFileInputRef}
+            type="file"
+            accept="image/*,video/mp4,audio/mp3"
+            onChange={(e) => handleFileUpload(e)}
+          />
+          {formErrors.data && <div style={{ color: "red", fontSize: "0.85em" }}>{formErrors.data}</div>}
 
-          {formData.media && formData.mediaType === "image" && <img src={formData.media} alt="Preview" style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }} />}
-          {formData.media && formData.mediaType === "video" && <video controls src={formData.media} style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }} />}
+          {formData.data && (
+            <>
+              {formData.type === "image" ? (
+                <img src={`data:image/*;base64,${formData.data}`} style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }} />
+              ) : (
+                <video src={`data:video/mp4;base64,${formData.data}`} style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }} controls />
+              )}
+              <CButton
+                color="danger"
+                size="sm"
+                className="mt-2"
+                onClick={() => {
+                  setFormData({ ...formData, data: "", type: "", fileName: "" });
+                  setFormErrors({ ...formErrors, data: "" });
+                  if (addFileInputRef.current) addFileInputRef.current.value = null;
+                }}
+              >
+                Clear Media
+              </CButton>
+            </>
+          )}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setShowAddModal(false)}>Cancel</CButton>
@@ -279,11 +431,16 @@ const AdsManagement = () => {
         </CModalFooter>
       </CModal>
 
-      {/* EDIT MODAL */}
-      <CModal visible={showEditModal} onClose={() => setShowEditModal(false)}>
-        <CModalHeader><CModalTitle>Edit Advertisement</CModalTitle></CModalHeader>
+      {/* Edit Modal */}
+      <CModal size="lg" className="custom-modal" visible={showEditModal} onClose={() => setShowEditModal(false)}>
+        <CModalHeader>
+          <CModalTitle>Edit Advertisement</CModalTitle>
+        </CModalHeader>
         <CModalBody>
-          <CFormLabel>Title <span style={{ color: "red" }}>*</span></CFormLabel>
+          {/* Title Input */}
+          <CFormLabel>
+            Title <span style={{ color: "red" }}>*</span>
+          </CFormLabel>
           <CFormInput
             value={editData.title}
             onChange={(e) => {
@@ -293,33 +450,120 @@ const AdsManagement = () => {
           />
           {editErrors.title && <div style={{ color: "red", fontSize: "0.85em" }}>{editErrors.title}</div>}
 
-          <CFormLabel className="mt-3">Upload Media (Image/Video) <span style={{ color: "red" }}>*</span></CFormLabel>
-          <CFormInput type="file" accept="image/*,video/mp4" onChange={(e) => handleMediaUpload(e, true)} />
-          {editErrors.media && <div style={{ color: "red", fontSize: "0.85em" }}>{editErrors.media}</div>}
+          {/* File Upload */}
+          <CFormLabel className="mt-2">
+            Upload New Media (Image/Video) <span style={{ color: "red" }}>*</span>
+          </CFormLabel>
 
-          {editData.media && editData.mediaType === "image" && <img src={editData.media} alt="Preview" style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }} />}
-          {editData.media && editData.mediaType === "video" && <video controls src={editData.media} style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }} />}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowEditModal(false)}>Cancel</CButton>
-          <CButton color="primary" onClick={handleUpdateAd}>Update</CButton>
-        </CModalFooter>
-      </CModal>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            {/* Text input to show filename */}
+            <CFormInput
+              type="text"
+              placeholder="No file chosen"
+              value={editData.fileName || ""}
+              disabled
+            />
 
-      {/* VIEW MODAL */}
-      <CModal visible={showViewModal} onClose={() => setShowViewModal(false)}>
-        <CModalHeader><CModalTitle>View Advertisement</CModalTitle></CModalHeader>
-        <CModalBody>
-          {selectedAd && (
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={editFileInputRef}
+              accept="image/*,video/mp4,audio/mp3"
+              style={{ display: "none" }}
+              onChange={(e) => handleFileUpload(e, true)}
+            />
+
+            {/* Button to trigger file input */}
+            <CButton
+              color="primary"
+              onClick={() => editFileInputRef.current && editFileInputRef.current.click()}
+            >
+              Browse
+            </CButton>
+          </div>
+
+          {editErrors.data && <div style={{ color: "red", fontSize: "0.85em" }}>{editErrors.data}</div>}
+
+          {/* Preview */}
+          {editData.data && (
             <>
-              <h5>{selectedAd.title}</h5>
-              {selectedAd.mediaType === "image" && <CImage src={selectedAd.media} style={{ width: "100%", objectFit: "contain" }} />}
-              {selectedAd.mediaType === "video" && <video controls src={selectedAd.media} style={{ width: "100%" }} />}
+              {editData.type === "image" ? (
+                <img
+                  src={editData.previewUrl || editData.data}
+                  alt={editData.fileName}
+                  style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }}
+                />
+              ) : (
+                <video
+                  controls
+                  src={editData.previewUrl || editData.data}
+                  style={{ width: "100%", marginTop: "10px", borderRadius: "8px", border: "1px solid #ddd" }}
+                />
+              )}
+
+              {/* Clear Button */}
+              <CButton
+                color="danger"
+                size="sm"
+                className="mt-2"
+                onClick={() => {
+                  setEditData({ ...editData, data: "", type: "", fileName: "", previewUrl: "" });
+                  setEditErrors({ ...editErrors, data: "" });
+                  if (editFileInputRef.current) editFileInputRef.current.value = "";
+                }}
+              >
+                Clear Media
+              </CButton>
             </>
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton color="dark" onClick={() => setShowViewModal(false)}>Close</CButton>
+          <CButton color="secondary" onClick={() => setShowEditModal(false)}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={handleUpdateAd}>
+            Update
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* View Modal */}
+      <CModal size="lg" className="custom-modal" visible={showViewModal} onClose={() => setShowViewModal(false)}>
+        <CModalHeader>
+          <CModalTitle className="w-100">
+            <div className="d-flex justify-content-between w-100 ">
+              <div>View Advertisement</div>
+              <div style={{ paddingRight: "20px" }}>
+                {selectedAd ? selectedAd.fileName : ""}</div>
+            </div>
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedAd && (
+            <>
+              {selectedAd.type === "image" ? (
+                <CImage src={selectedAd.data} style={{ width: "100%", objectFit: "contain", maxHeight: "100%" }} />
+              ) : (
+                <video src={selectedAd.data} controls style={{ width: "100%", objectFit: "contain", maxHeight: "100%" }} />
+              )}
+
+            </>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowViewModal(false)}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* Delete Modal */}
+      <CModal visible={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <CModalHeader>
+          <CModalTitle>Confirm Delete</CModalTitle>
+        </CModalHeader>
+        <CModalBody>Are you sure you want to delete this advertisement?</CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</CButton>
+          <CButton color="danger" onClick={confirmDelete}>Delete</CButton>
         </CModalFooter>
       </CModal>
     </CCard>

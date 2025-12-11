@@ -15,21 +15,17 @@ import {
   CModalFooter,
   CButton,
 } from "@coreui/react";
-
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import { getAllRegistrationCodes } from "./RegistrationCodesApi";
 
 const RegistrationCodeManagement = () => {
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("NGK-");
-
   const [filterType, setFilterType] = useState("all"); // <- add this
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
-
+  const [itemsPerPage, setItemsPerPage] = useState(100);
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCode, setSelectedCode] = useState("");
@@ -38,9 +34,9 @@ const RegistrationCodeManagement = () => {
   const [customLink, setCustomLink] = useState(
     "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
   );
-useEffect(() => {
-  fetchCodes();
-}, []);
+  useEffect(() => {
+    fetchCodes();
+  }, []);
 
 
 
@@ -73,8 +69,6 @@ useEffect(() => {
 
   const usedCount = codes.filter((code) => code.used).length;
   const unusedCount = codes.filter((code) => !code.used).length;
-
-
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentItems = filteredCodes.slice(indexOfFirst, indexOfLast);
@@ -158,7 +152,6 @@ Best regards,
               >
                 Unused: {unusedCount}
               </span>
-
               <span
                 style={{
                   color: "#dc3545",
@@ -173,10 +166,8 @@ Best regards,
               >
                 Used: {usedCount}
               </span>
-
             </div>
           </div>
-
           <CFormInput
             placeholder="Search code..."
             value={searchText}
@@ -188,10 +179,7 @@ Best regards,
             }}
             style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa" }}
           />
-
-
         </CCardHeader>
-
         <CCardBody style={{ flex: 1, position: "relative" }}>
           {loading ? (
             <p className="text-center">Loading codes...</p>
@@ -248,44 +236,80 @@ Best regards,
                             {item.code}
                           </h6>
 
+                          {/* BUTTONS FOR UNUSED CODES → SEND + RANK */}
                           {!isUsed && (
-                            <button
-                              onClick={() => openSendModal(item.code)}
-                              style={{
-                                background: "var(--color-bgcolor)",
-                                color: "var(--color-black)",
-                                border: "none",
-                                borderRadius: "6px",
-                                padding: "4px 12px",
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Send
-                            </button>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <button
+                                style={{
+                                  background: "#adb5bd",   // gray background
+                                  color: "#000",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  padding: "4px 12px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 500,
+                                  cursor: "not-allowed",
+                                  opacity: 0.7,
+                                }}
+                                disabled
+                              >
+                                Rank ({item.rank ?? 0})
+                              </button>
+                              <button
+                                onClick={() => openSendModal(item.code)}
+                                style={{
+                                  background: "var(--color-bgcolor)",
+                                  color: "var(--color-black)",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  padding: "4px 12px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 500,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Send
+                              </button>
+                            </div>
                           )}
 
-                          {/* USED CODES → ONLY USED BUTTON */}
+                          {/* BUTTONS FOR USED CODES → USED + RANK */}
                           {isUsed && (
-                            <button
-                              style={{
-                                background: "#ffe6e6",
-                                color: "#cc0000",
-                                border: "1px solid #cc0000",
-                                borderRadius: "6px",
-                                padding: "4px 12px",
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                cursor: "not-allowed",
-                              }}
-                              disabled
-                            >
-                              Used
-                            </button>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <button
+                                style={{
+                                  background: "#adb5bd",   // gray background
+                                  color: "#000",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  padding: "4px 12px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 500,
+                                  cursor: "not-allowed",
+                                  opacity: 0.7,
+                                }}
+                                disabled
+                              >
+                                Rank ({item.rank ?? 0})
+                              </button>
+                              <button
+                                style={{
+                                  background: "#ffe6e6",
+                                  color: "#cc0000",
+                                  border: "1px solid #cc0000",
+                                  borderRadius: "6px",
+                                  padding: "4px 12px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 500,
+                                  cursor: "not-allowed",
+                                }}
+                                disabled
+                              >
+                                Used
+                              </button>
+                            </div>
                           )}
                         </div>
-
                       </CTooltip>
                     );
                   })
@@ -317,10 +341,10 @@ Best regards,
                       }}
                       style={{ width: "80px", display: 'inline-block' }}
                     >
-                      <option value={50}>50</option>
                       <option value={100}>100</option>
-                      <option value={150}>150</option>
                       <option value={200}>200</option>
+                      <option value={300}>300</option>
+                      <option value={500}>500</option>
                     </CFormSelect>
                   </div>
 

@@ -3,6 +3,7 @@ package com.glowkart.admin.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -197,24 +198,21 @@ public class ClinicController {
     // 9. CLINIC LOGIN
     // ---------------------------------------------------
     @PostMapping("/clinics/login")
-    public ResponseEntity<ApiResponse<?>> login(@Valid @RequestBody ClinicLoginRequest request) {
-
+    public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(@RequestBody @Valid ClinicLoginRequest request) {
         Clinic clinic = clinicService.login(request.getUsername(), request.getPassword());
 
-        // Convert Clinic → Clean DTO (includes hospitalLogo, excludes documents)
-        ClinicPublicDTO response = ClinicMapper.toPublicDTO(clinic);
+        if (clinic == null) {
+            // Return JSON-friendly 401 response
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, "Invalid username or password", null));
+        }
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Login successful",
-                        response
-                )
-        );
+        ClinicPublicDTO dto = ClinicMapper.toPublicDTO(clinic);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", dto));
     }
 
     
-    @PutMapping("/updatePassword/{username}")
+    @PutMapping("/clinics/updatePassword/{username}")
     public ResponseEntity<ApiResponse<?>> updatePassword(
             @PathVariable String username,
             @RequestBody ChangePasswordDTO dto) {

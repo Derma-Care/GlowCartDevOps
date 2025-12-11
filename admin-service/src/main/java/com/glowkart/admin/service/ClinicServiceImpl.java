@@ -161,17 +161,20 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
 
-
     @Override
     public Clinic login(String username, String password) {
         Clinic clinic = repo.findByUsername(username);
+
+        // Instead of throwing ResponseStatusException, return null to indicate failure
         if (clinic == null || !"VERIFIED".equals(clinic.getStatus()) || !clinic.getPassword().equals(password)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "Invalid username or password");
+            return null; // failed login
         }
+
         return clinic;
     }
 
+    
+    
     // =====================================================================
     // UPDATE CLINIC
     // =====================================================================

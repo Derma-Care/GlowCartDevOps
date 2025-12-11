@@ -39,4 +39,6 @@ public interface ClinicService {
 	void resendOtp(ForgotPasswordRequest request);
 
 	
+
+	
 }

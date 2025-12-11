@@ -1,53 +1,81 @@
 package com.glowkart.clinicadmin.service;
 
-import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.glowkart.clinicadmin.dto.*;
+import com.glowkart.clinicadmin.feign.AdminServiceFeignClient;
+import feign.FeignException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import com.glowkart.clinicadmin.dto.ApiResponse;
-import com.glowkart.clinicadmin.dto.ClinicInfoDTO;
-import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
-import com.glowkart.clinicadmin.feign.AdminServiceFeignClient;
-
-import feign.FeignException;
 
 @Service
 public class ClinicAuthService {
 
     private final AdminServiceFeignClient client;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public ClinicAuthService(AdminServiceFeignClient client) {
         this.client = client;
     }
 
-    public ResponseEntity<ApiResponse<ClinicInfoDTO>> login(ClinicLoginRequest request) {
+    @FunctionalInterface
+    interface FeignCall<T> {
+        ResponseEntity<ApiResponse<T>> execute();
+    }
+
+    /**
+     * Generic handler for Feign calls.
+     * Handles 2xx normally.
+     * For 4xx/5xx (FeignException), attempts to parse JSON.
+     * If empty body, returns fallback ApiResponse with proper message.
+     */
+    private <T> ResponseEntity<ApiResponse<T>> handleFeignCall(FeignCall<T> call, String fallbackMessage) {
         try {
-            ResponseEntity<ApiResponse<ClinicInfoDTO>> response = client.login(request);
+            // Success: return normal response
+            ResponseEntity<ApiResponse<T>> response = call.execute();
             return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
 
-        } catch (FeignException feignEx) {
+        } catch (FeignException ex) {
+            try {
+                String json = ex.contentUTF8();
 
-            ApiResponse<ClinicInfoDTO> errorResponse = new ApiResponse<>(
-                    false,
-                    "Invalid username or password",
-                    null
-            );
+                if (json != null && !json.isEmpty()) {
+                    // Deserialize JSON into ApiResponse<T>
+                    ApiResponse<T> apiResponse = mapper.readValue(json, new TypeReference<ApiResponse<T>>() {});
+                    return ResponseEntity.status(ex.status()).body(apiResponse);
+                } else {
+                    // Empty body — return fallback message
+                    return ResponseEntity.status(ex.status())
+                            .body(new ApiResponse<>(false, fallbackMessage, null));
+                }
 
-            HttpStatus status = HttpStatus.resolve(feignEx.status());
-            if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
-
-            return ResponseEntity.status(status).body(errorResponse);
-
-        } catch (Exception ex) {
-
-            ApiResponse<ClinicInfoDTO> errorResponse = new ApiResponse<>(
-                    false,
-                    "Internal Server Error: " + ex.getMessage(),
-                    null
-            );
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            } catch (Exception parseErr) {
+                // Parsing failed — return fallback message
+                return ResponseEntity.status(ex.status())
+                        .body(new ApiResponse<>(false, fallbackMessage, null));
+            }
         }
     }
 
+    // ------------------- API METHODS -------------------
+
+    public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(ClinicLoginRequest request) {
+        return handleFeignCall(() -> client.login(request), "Invalid username or password");
+    }
+
+    public ResponseEntity<ApiResponse<Void>> updatePassword(String username, ChangePasswordDTO dto) {
+        return handleFeignCall(() -> client.updatePassword(username, dto), "Failed to update password");
+    }
+
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(ForgotPasswordRequest req) {
+        return handleFeignCall(() -> client.forgotPassword(req), "Failed to send OTP");
+    }
+
+    public ResponseEntity<ApiResponse<Void>> resetPassword(ResetPasswordRequest req) {
+        return handleFeignCall(() -> client.resetPassword(req), "Failed to reset password");
+    }
+
+    public ResponseEntity<ApiResponse<Void>> resendOtp(ForgotPasswordRequest req) {
+        return handleFeignCall(() -> client.resendOtp(req), "Failed to resend OTP");
+    }
 }
