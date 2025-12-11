@@ -1,10 +1,11 @@
 import axios from 'axios'
 
-import { wifiUrl } from '../../../baseUrl'
+import { rgCodes, wifiUrl } from '../../../baseUrl'
+import { http } from '../../../Utils/Interceptors'
 
 export async function getCustomerByCode(code) {
   try {
-    const response = await axios.get(`${wifiUrl}/api/customer/code/${code}`)
+    const response = await axios.get(`${rgCodes}/${code}`)
     return response.data
   } catch (err) {
     console.error('GET Customer Error:', err)

@@ -318,6 +318,7 @@ const PackageFormModal = ({
                     type="number"
                     placeholder="Sittings"
                     value={item.sittings}
+                    min={0}
                     onChange={(e) =>
                       onChange({
                         target: {

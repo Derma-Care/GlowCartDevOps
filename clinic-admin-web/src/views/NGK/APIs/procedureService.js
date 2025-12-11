@@ -1,9 +1,10 @@
 import axios from 'axios'
-import { BASE_URL, wifiUrl } from '../../../baseUrl'
+import { BASE_URL, getAllProceduresNames, getProcedures, wifiUrl } from '../../../baseUrl'
+import { http } from '../../../Utils/Interceptors'
 
 export const getAllProcedures = async () => {
   try {
-    const response = await axios.get(`${wifiUrl}/procedures/all`)
+    const response = await axios.get(`${wifiUrl}/${getAllProceduresNames}`)
 
     if (response.data?.success) {
       return response.data.data // returns array of procedures
@@ -18,7 +19,7 @@ export const getAllProcedures = async () => {
 
 export const getProcedurePricingByClinicId = async (clinicId) => {
   try {
-    const res = await axios.get(`${BASE_URL}/procedure-pricing/all/${clinicId}`)
+    const res = await http.get(`/${getProcedures}/${clinicId}`)
     return res.data
   } catch (err) {
     console.error('API Error:', err)

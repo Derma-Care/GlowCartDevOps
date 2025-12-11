@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { http } from '../../Utils/Interceptors'
 // import { GetSubServices_ByClinicId } from '../ProcedureManagement/ProcedureManagementAPI'
-import { BASE_URL, getDoctorByClinicId } from '../../baseUrl'
+import { BASE_URL } from '../../baseUrl'
 
 const HospitalContext = createContext()
 

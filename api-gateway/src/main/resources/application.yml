@@ -1,43 +1,56 @@
 spring:
   application:
     name: api-gateway
+
   main:
     web-application-type: reactive
+
   cloud:
     config:
-      uri: http://config-server:8888   # Config Server URI
+      uri: http://config-server:8888
+
     gateway:
+      # ---- GLOBAL TIMEOUTS (VERY IMPORTANT) ----
+      default-filters:
+        - name: RequestTimeout
+          args:
+            timeout: 60000   # 60 seconds
+
+      httpclient:
+        connectTimeout: 30000      # NEW: 30 seconds
+        responseTimeout: 60000     # already present
+        pool:
+          maxConnections: 200
+          acquireTimeout: 30000
+
+      # -------- ROUTES --------
       routes:
-        # 0: Admin Service
         - id: admin-service
           uri: lb://admin-service
           predicates:
             - Path=/admin/**
 
-        # 1: Clinic Admin Service
         - id: clinic-admin-service
           uri: lb://clinicadmin-service
           predicates:
             - Path=/clinic-admin/**
 
-        # 2: Customer Service
         - id: customer-service
           uri: lb://customer-service
           predicates:
             - Path=/api/**
 
-        # 3: Onboarding Service
         - id: onboarding-service
           uri: lb://onboarding-service
           predicates:
             - Path=/onboard/**
 
-        # 4: Procedure Service
         - id: procedure-service
           uri: lb://procedure-service
           predicates:
             - Path=/procedures/**
 
+      # ---- IMPORTANT: CORS ----
       globalcors:
         cors-configurations:
           '[/**]':
@@ -59,9 +72,10 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE:http://eureka-server:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
+
   instance:
     prefer-ip-address: true
 

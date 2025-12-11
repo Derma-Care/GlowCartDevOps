@@ -36,7 +36,7 @@ import SlotModal from '../NGK/Widget/SlotModal'
 import ClinicSlotManager from '../NGK/Widget/SlotModal'
 import AdCarousel from './AdCarousel'
 import { useGlobalSearch } from '../Usecontext/GlobalSearchContext'
-
+import DermaCareLogo from '../../assets/images/logoP.png'
 const WidgetsDropdown = () => {
   const navigate = useNavigate()
   const today = new Date().toISOString().split('T')[0]
@@ -194,7 +194,32 @@ const WidgetsDropdown = () => {
           </div>
         </div>
 
-        <CModal visible={showDoctorsModal} onClose={() => setShowDoctorsModal(false)} size="lg" backdrop="static" className='custom-modal'>
+        {/* <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            width: '100%',
+            backgroundColor: '#fff', // optional
+          }}
+        >
+          <img
+            src={DermaCareLogo}
+            alt="Loading"
+            style={{
+              width: '120px',
+              animation: 'pulseGlow 1.5s infinite ease-in-out',
+            }}
+          />
+        </div> */}
+        <CModal
+          visible={showDoctorsModal}
+          onClose={() => setShowDoctorsModal(false)}
+          size="lg"
+          backdrop="static"
+          className="custom-modal"
+        >
           <CModalHeader>
             <CModalTitle>Doctors List</CModalTitle>
           </CModalHeader>

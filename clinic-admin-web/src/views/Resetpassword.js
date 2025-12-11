@@ -2,6 +2,7 @@ import React, { useImperativeHandle, useState, forwardRef } from 'react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { CForm, CFormInput, CFormLabel, CInputGroup, CInputGroupText } from '@coreui/react'
 import { http } from '../Utils/Interceptors'
+import { passwordRegex } from '../Constant/Constants'
 
 const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
   const [form, setForm] = useState({
@@ -34,7 +35,7 @@ const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
   }
 
   const validatePassword = (password) => {
-    return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/.test(password)
+    return passwordRegex.test(password)
   }
 
   // ------------------------------------------------------

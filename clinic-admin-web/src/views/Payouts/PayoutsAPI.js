@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Customer_Url, Booking_sevice, getAllPayouts, addPayouts } from '../../baseUrl'
+import {   Booking_sevice, getAllPayouts, addPayouts } from '../../baseUrl'
 import { http } from '../../Utils/Interceptors'
 
 export const Get_AllPayoutsData = async () => {

@@ -25,7 +25,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilLockUnlocked, cilShieldAlt } from '@coreui/icons'
 import axios from 'axios'
-import { BASE_URL, SBASE_URL } from '../../../baseUrl'
+
 import { useHospital } from '../../Usecontext/HospitalContext'
 import ResetPassword from '../../../views/Resetpassword'
 import { http, httpPublic } from '../../../Utils/Interceptors'
@@ -33,6 +33,11 @@ import DermaLogo from '../../../assets/images/logoP.png' // adjust path if neede
 import { COLORS, NGK_COLORS } from '../../../Constant/Themes'
 import { toast, ToastContainer } from 'react-toastify'
 import { showCustomToast } from '../../../Utils/Toaster'
+import { emailPattern } from '../../../Constant/Constants'
+import ResetPasswordScreen from '../../Payouts/ResetPasswordForm'
+import ForgotPasswordPage from './ForgotPasswordPage'
+import ForgotPasswordModal from './ForgotPasswordPage'
+import { MainAdmin_URL, updatePassword } from '../../../baseUrl'
 
 const Login = () => {
   const [userName, setUserName] = useState('')
@@ -44,7 +49,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uloading, setULoading] = useState(false)
+
   // const { fetchHospitalDetails,selectedHospital } = useHospital()
+  const [forgotModal, setForgotModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotError, setForgotError] = useState('')
+
   const { selectedHospital, setUser, setHospitalId, setSelectedHospital, fetchAllData } =
     useHospital()
   const navigate = useNavigate()
@@ -152,25 +163,26 @@ const Login = () => {
     // 2️⃣ Get form data
     const form = resetRef.current?.getFormData()
 
-    setLoading(true)
+    setULoading(true)
 
     try {
-      const response = await http.put(`/updatePassword/${form.username}`, {
-        password: form.currentPassword,
+      const response = await axios.put(`${MainAdmin_URL}/${updatePassword}/${form.username}`, {
+        currentPassword: form.currentPassword,
         newPassword: form.newPassword,
         confirmPassword: form.confirmPassword,
       })
 
       if (response.data.success) {
-        showCustomToast('Password updated successfully!', 'success')
+        showCustomToast(`${response.data.message}` || 'Password updated successfully!', 'success')
         setShowResetModal(false)
       } else {
         showCustomToast(response.data.message, 'error')
       }
     } catch (err) {
-      showCustomToast('Error updating password.', 'error')
+      console.log(err)
+      showCustomToast(`${err.response.data.message}` || 'Error updating password.', 'error')
     } finally {
-      setLoading(false)
+      setULoading(false)
     }
   }
 
@@ -309,20 +321,17 @@ const Login = () => {
                       <div className="mt-3">
                         <div className="d-flex justify-content-between align-items-center ">
                           {/* Left: Forgot Password */}
-                          <Link
-                            to="/resetPassword"
+                          <div
                             style={{
                               cursor: 'pointer',
                               color: NGK_COLORS.primary,
                               textDecoration: 'underline',
                               fontSize: '14px',
                             }}
-                            onClick={(e) => {
-                              onClose()
-                            }}
+                            onClick={() => setForgotModal(true)}
                           >
                             Forgot Password?
-                          </Link>
+                          </div>
 
                           {/* Right: Change Password */}
                           <a
@@ -381,6 +390,26 @@ const Login = () => {
           </a>
         </footer>
 
+        <CModal
+          visible={forgotModal}
+          onClose={() => setForgotModal(false)}
+          backdrop="static"
+          alignment="center"
+          className="custom-modal"
+        >
+          <CModalBody
+            className="d-flex justify-content-center align-items-center"
+            style={{ minHeight: '60vh', background: 'linear-gradient(135deg, #ffe6f0, #ffbfd8)' }}
+          >
+            <div className="w-100" style={{ maxWidth: '400px' }}>
+              <p onClick={() => setForgotModal(false)} style={{ cursor: 'pointer' }}>
+                ❌
+              </p>
+              <ForgotPasswordModal forgotModal={forgotModal} setForgotModal={setForgotModal} />
+            </div>
+          </CModalBody>
+        </CModal>
+
         {/* Reset Modal */}
         <CModal
           visible={showResetModal}
@@ -390,12 +419,12 @@ const Login = () => {
           className="custom-modal"
         >
           <CModalHeader>
-            <CModalTitle style={{ color: NGK_COLORS.primary }}>Reset Password</CModalTitle>
+            <CModalTitle style={{ color: NGK_COLORS.primary }}>Change Password</CModalTitle>
           </CModalHeader>
           <CModalBody>
             <ResetPassword
               onClose={() => setShowResetModal(false)}
-              setLoading={setLoading}
+              setLoading={setULoading}
               ref={resetRef}
             />
           </CModalBody>
@@ -406,11 +435,11 @@ const Login = () => {
             <CButton
               type="submit"
               color="primary"
-              disabled={loading}
+              disabled={uloading}
               style={{ backgroundColor: NGK_COLORS.primary, border: 'none' }}
               onClick={handleUpdatePassword}
             >
-              {loading ? 'Updating...' : 'Update Password'}
+              {uloading ? 'Updating...' : 'Update Password'}
             </CButton>
           </CModalFooter>
         </CModal>

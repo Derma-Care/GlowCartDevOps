@@ -135,3 +135,61 @@ a {
   transform: translateY(-3px) scale(1.05);
   box-shadow: 0 10px 26px rgba(255, 46, 133, 0.35);
 }
+/* OTP box styling */
+.otp-box {
+  width: 48px;
+  height: 55px;
+  font-size: 22px;
+  text-align: center;
+  border-radius: 10px;
+  border: 2px solid #c9c9ff;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+/* Focus animation (bounce) */
+.otp-box:focus {
+  border-color: #ff2e85;
+  box-shadow: 0 0 8px #ff2e85aa;
+  transform: scale(1.08);
+}
+
+/* Shake animation when OTP is wrong */
+.otp-error-shake {
+  animation: otpShake 0.35s ease-in-out;
+}
+
+@keyframes otpShake {
+  0% {
+    transform: translateX(0px);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(6px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+@keyframes pulseGlow {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}

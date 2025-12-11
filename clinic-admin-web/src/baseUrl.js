@@ -11,222 +11,62 @@ export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
 // export let wifiUrl = 'https://api.aesthetech.life'
 
 //-------------------------------
-export const SBASE_URL = `${wifiUrl}/clinicadminpublicapis`
+
 export const BASE_URL = `${wifiUrl}/clinic-admin`
 export const MainAdmin_URL = `${wifiUrl}/admin`
-export const subService_URL = `${BASE_URL}/api/v1`
+export const Customer_URL = `${wifiUrl}/api/customer`
 
-export const baseUrlmedicine = `${wifiUrl}/api/doctors`
+// ====================== END POINTS ==========================
 
-// END POINTS
+//Registrations Code
+export const rgCodes = `${Customer_URL}/code`
+
 // login
 export const endPoint = '/clinicLogin'
-//reports
-export const AllReports = `getallreports`
-export const SavingReports = `savereports`
-export const Get_ReportsByBookingId = `getReportByBookingId`
-//appointments
-// export const allBooking_sevices = getAllBookedServices
-export const DeleteBookings = `customer/deleteService`
-export const GetBookingBy_ClinicId = `customer/getAllBookedServicesByClinicId`
-export const GetBookingBy_DoctorId = `customer/getBookingByDoctorId`
+
 //appointments
 export const Booking_sevice = `${wifiUrl}/api`
 
-export const allBooking_sevices = `getAllBookedServices`
-
-// Appointment Management
-export const getAllBookingDetails = 'admin/getAllBookingDetails'
-
-//Doctors
-export const GetBranches_ByClinicId = 'getBranchesByClinicId'
-export const PatientConsentForm = 'getpatientConsentForm'
-export const UpdateConsentForm = 'updatePatientConsentForm'
-
-export const doctorAvailableUrl = 'doctorId'
-export const getDoctorByClinicId = 'getDoctorsByHospitalIdAndBranchId'
-
-export const getAllBookedServices = `customer/getAllBookedServices`
-export const Booking_service_Url = `${wifiUrl}/api`
-export const deleteBookings = `customer/deleteService`
-export const geteBookingBy_ClinicId = `customer/getAllBookedServicesByClinicId`
-
-export const GetBy_DoctorId = 'doctor'
-//Doctor Notifications
-export const Doctor_Url = `${wifiUrl}/api`
-export const getAllDCtrNotifications = 'doctors/notificationToDoctor'
-export const getDoctorIdAndNotifications = 'doctors/hospitalById'
-
-//Test
-export const AllTest = 'labtest/getAllLabTests'
-export const GetTestByHId = 'labtests'
-export const AddTest = 'labtest/addLabTest'
-export const UpdateTest = 'labtest/updateLabTest'
-export const DeleteTest = 'labtest/deleteLabTest'
-
-//Treatments
-export const AllTreatment = 'treatment/getAllTreatments'
-export const GetTreatmentsByHId = 'treatments'
-export const AddTreatment = 'treatment/addTreatment'
-export const UpdateTreatment = 'treatment/updateTreatmentById'
-export const DeleteTreatment = 'treatment/deleteTreatmentById'
-
-//Diseases
-export const AllDiseases = 'get-all-diseases'
-export const GetDiseasesByHId = 'diseases'
-export const AddDisease = 'addDiseases'
-export const UpdateDisease = 'updateDisease'
-export const DeleteDisease = 'deleteDisease'
-
 //============= Forms ===============
-
-//To fetch category,service and subservice
-export const GetSubServiceByHospitalIdandSubServiceId = 'getSubService'
-//Procedure
-export const GetProcedureForm_ByHospitalIdAndProcedureId =
-  'getProcedureFormByHospitalIdAndProcedureId'
-export const Add_ProcedureForm = 'addProcedureForm'
-export const update_ProcedureForm = 'update-procedureForm'
-export const Delete_ProcedureForm = 'delete-procedureForm'
-export const All_ProcedureFormData = 'getAllProcedureForms'
-
-//Pre--Procedure
-export const GetPreProcedureForm_ByHospitalIdAndPreProcedureId =
-  'getPreProcedureFormByHospitalIdAndPreProcedureId'
-export const Add_PreProcedureForm = 'addPreProcedureForm'
-export const update_PreProcedureFormForm = 'update-preprocedure-forms'
-export const Delete_PreProcedureFormForm = 'delete-preprocedure-form'
-export const All_PreProceudreFormData = 'getAllPreProcedureForms'
-//post--Procedure
-export const GetPostProcedureForm_ByHospitalIdAndProcedureId =
-  'getPostProcedureFormByHospitalIdAndPostProcedureId'
-export const Add_PostProcedureForm = 'addPostProcedureForm'
-export const update_PostProcedureForm = 'update-postprocedure-forms'
-export const Delete_PostProcedureForm = 'delete-postprocedure-form'
-export const All_PostProceudreFormData = 'getAllPostProcedureForms'
-
-//notifiction Reponse
-export const NoficationResponse = 'doctors/notificationResponse'
-
-//Advertisement
-export const addCustomerAdvertisement = 'categoryAdvertisement/add'
-export const AllCustomerAdvertisements = 'categoryAdvertisement/getAll'
-
-export const getAllDoctors = `doctors`
-
-// Provider Management
-
-export const ProviderAllData = 'admin/getAllProviderDetails'
-
-export const BasicDetails = 'admin/getCaregiverDetails'
-
-export const updateBasic = 'admin/updateCaregiver'
-
-export const BasicProfile = 'admin/getProviderBasicProfile'
-
-export const UpdateBasicProfile = 'admin/updateBasicProfile'
-
-export const qualification = 'admin/getQualificationDetails'
-
-export const updateQualification = 'admin/updateQualification'
-
-export const Experience = 'admin/getExperienceDetails'
-
-export const updateExperience = 'admin/updateExperienceDetails'
-
-export const AddExperience = 'providers/addExperienceDetails'
-
-export const DeleteExperience = 'admin/deleteExperience'
-
-export const courseCertification = 'admin/getCourseCertificationDetails'
-
-export const updateCourse = 'admin/updateCourseCertification'
-
-export const deleteCourse = 'admin/deleteCourseCertification'
-
-export const Bank = 'admin/getBankAccountDetails'
-
-export const updateBank = 'admin/updateBankAccount'
-
-export const Verification = 'admin/getVerficationDetails'
-
-export const updateVerification = 'admin/verfiyProvider'
-
-export const getAppointments = 'admin/appointments'
 
 //sub Service management
 export const service = 'subService/getAllSubServies'
 export const getservice = 'getServiceByCategoryId'
 export const getService_ByClinicId = 'getSubServiceByHospitalId'
-
 export const Category = 'getAllCategories'
-//main
-export const AddSubService = 'procedure-pricing/create'  // need
+
+//main procedure service
+export const getAllProceduresNames = 'procedures/all' // need
+
+// procedure service Details
+export const getProcedures = 'procedure-pricing/all' // need
+export const AddSubService = 'procedure-pricing/create' // need
 export const updateService = 'procedure-pricing/update' //need
 export const deleteService = 'procedure-pricing/delete' // need
 
 //package
-
-export const getPackage = 'packages'  // need
-export const addPackage = 'packages/create'  // need
+export const getPackage = 'packages' // need
+export const addPackage = 'packages/create' // need
 export const updatePackage = 'procedure-packages/update' //need
 export const deletePackage = 'procedure-packages/delete' // need
- 
 
-//opt  SUb Service
+//SUb Service
 export const subservice = 'getSubServicesByServiceId'
-export const getSubServicesbyserviceId = 'serviceId'
-export const getadminSubServicesbyserviceId = `getSubServicesByServiceId`
-
-// Category Management
-
-export const CategoryAllData = 'category/getCategories'
-
-export const AddCategory = 'category/addCategory'
-
-export const UpdateCategory = 'category/updateCategory'
-
-export const deleteCategory = 'category/deleteCategory'
-
-// Reassign Appointment
-
-export const getData = 'admin/NotificationToAdminForProviderReassign'
-
-export const postData = 'admin/providerReassign'
-
-// Clinic Registration
-
-export const ClinicAllData = 'v1/clinic/getAllClinics'
-
-export const clinicPost = 'v1/clinic/addClinic'
 
 //payouts
-export const Customer_Url = `${wifiUrl}/api`
+
 export const getAllPayouts = 'payments/getallpayments'
 export const addPayouts = 'payments/addpayment'
 
-//** Customer Management- main **
-export const AddCustomer = 'customers/onboard'
-export const GetAllCustomers = 'customers/hospital'
-// export const UpdateCustomer = 'customers'
-// export const DeleteCustomer = 'customers'
-// export const GetCustomerByCustomerId = 'customers'
-export const Customer = 'customers'
+//forgot password
+export const sendOtp = 'clinics/forgot-password'
+export const resendOTP = 'clinics/resend-otp'
+export const resetPassword = 'clinics/reset-password'
 
-export const GetCustomersByHospitalId = 'customers/hospital'
-export const GetCustomersByBranchId = 'customers/branch'
-export const GetCustomersByHospitalIdAndBranchId = 'customers/hospital'
+export const updatePassword = 'clinics/updatePassword'
 
-//ConsentForm
-export const AddConsent = '/consent-form'
-export const EditConsent = '/consent-form'
-export const DeleteConsent = '/deleteConsentFormById'
-export const GetGenericConsent = '/consent-form'
-export const AddProcedureConsent = '/consent-form'
-export const GetProcedureConsent = 'consent-form'
-
-//Vitals
-export const GetVitalsByPatientId = '/getVitals'
-export const AddVitals = 'addingVitals'
-export const UpdateVitals = '/updateVitals'
-export const DeleteVitals = '/deleteVitals'
+//unwanted
+export const Booking_service_Url = `${wifiUrl}/api/booking`
+export const DeleteBookings = 'getAllBookings'
+ export const getAllBookedServices = 'getBookingsByHospitalId'
+ export const GetBookingBy_ClinicId = 'doctor/getDoctorsByHospitalId'

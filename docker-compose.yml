@@ -1,158 +1,241 @@
 version: '3.8'
 
 services:
+  # ===============================
   # Eureka Service Registry
+  # ===============================
   eureka-server:
-    image: openjdk:17-jdk
-    container_name: service_registry
     build: ./service-registry
+    container_name: service_registry
     ports:
-      - "8761:8761"
+      - "8761:8761"   # Optional, only if you want to access Eureka dashboard
+    restart: always
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://eureka-server:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # API Gateway
+  # ===============================
+  # Config Server
+  # ===============================
+  config-server:
+    build: ./config-server
+    container_name: config_server
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://config-server:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===============================
+  # API Gateway (EXPOSED)
+  # ===============================
   apigateway:
     build: ./api-gateway
     container_name: api_gateway_service
     ports:
-      - "8080:8080"
-    depends_on:
-      - eureka-server
-    networks:
-      - app-network
-
-  # Config Server
-  config-server:
-    build: ./config-server
-    container_name: config_server
-    ports:
-      - "8888:8888"
-    depends_on:
-      - eureka-server
-    networks:
-      - app-network
+      - "8080:8080"   # Exposed to public
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  # Admin Service
-  admin-service:
-    build: ./admin-service
-    container_name: admin_servce
-    ports:
-      - "8082:8082"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_admin
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
     depends_on:
-      - mongodb
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
     networks:
       - app-network
+    entrypoint: ["./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://apigateway:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Clinic Admin Service
-  clinicadmin-service:
-    build: ./clinicadmin-service
-    container_name: clinicadmin_service
-    ports:
-      - "8084:8084"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_clinicadmin
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
-  # Customer Service
-  customer-service:
-    build: ./customer-service
-    container_name: customer_service
-    ports:
-      - "8090:8090"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/customer_db
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
-  # Onboarding Service
-  onboarding-service:
-    build: ./onboarding-service
-    container_name: onboarding_service
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/onboardingdb
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
-  # Procedure Service
-  procedure-service:
-    build: ./procedure-service
-    container_name: procedure_service
-    ports:
-      - "8085:8085"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/procedure_db
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
-  # MongoDB
+  # ===============================
+  # MongoDB (Internal)
+  # ===============================
   mongodb:
     image: mongo:6.0
     container_name: mongodb_service
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    restart: always
     networks:
       - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo admin --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Clinic Admin Web (Frontend)
+  # ===============================
+  # Microservices (INTERNAL ONLY)
+  # ===============================
+  admin-service:
+    build: ./admin-service
+    container_name: admin_service
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_admin
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://admin-service:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  clinicadmin-service:
+    build: ./clinicadmin-service
+    container_name: clinicadmin_service
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_clinicadmin
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://clinicadmin-service:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  customer-service:
+    build: ./customer-service
+    container_name: customer_service
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/customer_db
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://customer-service:8090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  onboarding-service:
+    build: ./onboarding-service
+    container_name: onboarding_service
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/onboardingdb
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://onboarding-service:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  procedure-service:
+    build: ./procedure-service
+    container_name: procedure_service
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/procedure_db
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://procedure-service:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===============================
+  # Frontend Services (EXPOSED)
+  # ===============================
   clinic-admin-web:
     build: ./clinic-admin-web
     container_name: clinic-admin-web-container
-    ports:
-      - "3000:80"
-    environment:
-      - HOST=35.154.152.61
-      - PORT=3000
-      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:
       - app-network
-    depends_on:
-      - apigateway
     restart: always
 
-  # Main Admin Web(Frontend)
   main-admin-web:
     build: ./main-admin-web
     container_name: main-admin-web-container
-    ports:
-      - "4000:80"
-    environment:
-      - HOST=35.154.152.61
-      - PORT=4000
-      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:
       - app-network
-    depends_on:
-      - apigateway
     restart: always
 
+  # ===============================
+  # Nginx Reverse Proxy + HTTPS
+  # ===============================
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - apigateway
+      - clinic-admin-web
+      - main-admin-web
+    networks:
+      - app-network
+    restart: always
+
+# ===============================
+# Networks & Volumes
+# ===============================
 networks:
   app-network:
     driver: bridge

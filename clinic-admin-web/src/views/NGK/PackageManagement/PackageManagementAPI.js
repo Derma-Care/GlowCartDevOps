@@ -1,30 +1,13 @@
 import axios from 'axios'
 
-import {
-  BASE_URL,
-  service,
-  Category,
-  AddSubService,
-  updateService,
-  deleteService,
-  MainAdmin_URL,
-  // subService_URL,
-  subservice,
-  getadminSubServicesbyserviceId,
-  getService_ByClinicId,
-  getservice,
-  getPackage,
-  addPackage,
-  updatePackage,
-  deletePackage,
-} from '../../../baseUrl'
+import { BASE_URL, getPackage, addPackage, updatePackage, deletePackage } from '../../../baseUrl'
 import { toast } from 'react-toastify'
 import { http } from '../../../Utils/Interceptors'
 import { showCustomToast } from '../../../Utils/Toaster'
 
 export const getpackagePricingByClinicId = async (clinicId) => {
   try {
-    const res = await axios.get(`${BASE_URL}/${getPackage}/clinic/${clinicId}`)
+    const res = await http.get(`/${getPackage}/clinic/${clinicId}`)
     return res.data
   } catch (err) {
     console.error('API Error:', err)

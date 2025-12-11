@@ -153,8 +153,8 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 // padding: 8,
                 borderRadius: 14,
 
-                // background: '#fff',
-                // boxShadow: '0 4px 10px rgba(0,0,0,0.12)',
+                background: '#fff',
+                boxShadow: '0px 4px 10px rgba(255, 255, 255, 0.75)',
               }}
             />
           </div>

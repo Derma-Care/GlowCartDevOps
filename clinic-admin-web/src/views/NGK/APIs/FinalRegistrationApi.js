@@ -1,9 +1,10 @@
 import axios from 'axios'
-import { Booking_sevice, wifiUrl } from '../../../baseUrl'
+import { Booking_sevice, Customer_URL, wifiUrl } from '../../../baseUrl'
+import { http } from '../../../Utils/Interceptors'
 
 export const updateStep2 = async (mobile, payload) => {
   try {
-    const response = await axios.post(`${wifiUrl}/api/customer/${mobile}/complete`, payload)
+    const response = await axios.post(`${Customer_URL}/${mobile}/complete`, payload)
     // console.log(addresresponse)
     return response.data
   } catch (error) {

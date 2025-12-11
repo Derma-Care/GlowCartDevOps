@@ -116,7 +116,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     serviceType: [],
     blood: '',
     registraionCode: '',
-    referBy: '',
+    // referBy: '',
     Aadhar: '',
     prescription: '',
     referBy: "Neha's GlowKart",
@@ -247,14 +247,18 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   useEffect(() => {
     async function fetchCities() {
       try {
-        const res = await fetch(`${wifiUrl}/api/customer/cities`)
+        const res = await fetch(`${wifiUrl}/api/customer/cities`, { cache: 'no-store' })
+
+        if (!res.ok) {
+          throw new Error('Server error')
+        }
+
         const json = await res.json()
 
-        if (json.success) {
-          setCityList(json.data) // array of city names
-        }
+        if (json.success) setCityList(json.data)
       } catch (err) {
-        console.error('City fetch error:', err)
+        console.log('City fetch error:', err)
+        showCustomToast('⚠️ Unable to fetch city list. Check your internet.', 'error')
       }
     }
 
@@ -326,7 +330,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
     if (form.serviceStatus == '1') {
       if (!form.clinicName) e.clinicName = 'Clinic name required'
-      if (!form.clinicCityArea) e.clinicCityArea = 'Clinic area required'
+      if (!/^\d{6}$/.test(form.clinicCityArea)) {
+        e.clinicCityArea = 'Pincode must be exactly 6 digits.'
+      }
 
       if (!form.dateOfLastVisit) e.dateOfLastVisit = 'Last visit date required'
       else {
@@ -359,9 +365,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
 
     if (!form.userConsent) e.userConsent = 'You must agree to the User Consent Disclaimer.'
-    if (!/^\d{6}$/.test(form.clinicCityArea)) {
-      e.clinicCityArea = 'Pincode must be exactly 6 digits.'
-    }
 
     setErrors(e)
     // scrollToFirstError(e)
@@ -388,10 +391,18 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    // 1️⃣ Check serviceStatus explicitly
+    if (!form.serviceStatus) {
+      setServiceStatusError('Please choose Yes or No before submitting.')
+      return
+    } else {
+      setServiceStatusError('')
+    }
 
-    const validated = validate()
-    if (!validated.valid) {
-      scrollToFirstError(validated.errorObj)
+    // 2️⃣ Validate all fields
+    const { valid, errorObj } = validate()
+    if (!valid) {
+      scrollToFirstError(errorObj)
       return
     }
 
@@ -410,7 +421,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       referBy: form.referBy,
       aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
-      referBy: form.referBy,
+      // referBy: form.referBy,
       gender: form.gender,
       serviceStatus: form.serviceStatus,
       concern: form.problemDescription.map((item) =>
@@ -429,9 +440,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       form.problemDescription.map((item) => (item === 'other' ? form.otherServiceName : item)),
     )
 
+    setLoading(true)
     try {
-      setLoading(true)
-
       const result = await registerCustomer(payload)
       const newErrors = { ...errors }
       if (!result.success) {
@@ -524,21 +534,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   }, [isRegistration, submitted, showWheel, instagram, userData, winnerPrize, spinWhell])
 
   console.log(form.serviceStatus)
-  // useEffect(() => {
-  //   localStorage.setItem('step_isRegistration', isRegistration)
-  // }, [isRegistration])
-
-  // useEffect(() => {
-  //   localStorage.setItem('step_submitted', submitted)
-  // }, [submitted])
-
-  // useEffect(() => {
-  //   localStorage.setItem('step_showWheel', showWheel)
-  // }, [showWheel])
-
-  // useEffect(() => {
-  //   localStorage.setItem('step_instagram', instagram)
-  // }, [instagram])
 
   const scrollToFirstError = (errorsObject) => {
     const firstErrorField = Object.keys(errorsObject).find((key) => errorsObject[key])
@@ -974,10 +969,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             value={form.dob}
                             max={eighteenYearsAgoISO}
                             onChange={handleChange}
-                            onFocus={(e) => {
-                              // ❌ Do NOT open calendar on focus
-                              e.target.blur() // Prevents auto picker opening on some browsers
-                            }}
+                            // onFocus={(e) => {
+                            //   // ❌ Do NOT open calendar on focus
+                            //   e.target.blur() // Prevents auto picker opening on some browsers
+                            // }}
+                            // onFocus={() => {}}
+
                             // Space for icon
                           />
 
@@ -1001,56 +998,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
                       </CCol>
 
-                      {/* Email + Blood */}
-                      {/* <CCol md={6}>
-                        <CFormLabel
-                          className="label-gradient"
-                          style={{ color: NGK_COLORS.primarySoft }}
-                        >
-                          Email (Optional)
-                        </CFormLabel>
-                        <CFormInput
-                          name="email"
-                          value={form.email}
-                          onChange={handleChange}
-                          placeholder="Enter Email"
-                        />
-                      </CCol> */}
-
-                      {/* <CCol md={6}>
-                        <CFormLabel
-                          className="label-gradient"
-                          style={{ color: NGK_COLORS.primarySoft }}
-                        >
-                          Blood Group (Optional)
-                        </CFormLabel>
-                        <CFormSelect name="blood" value={form.blood} onChange={handleChange}>
-                          <option value="">Select Blood Group</option>
-                          <option value="A+">A+</option>
-                          <option value="A-">A-</option>
-                          <option value="B+">B+</option>
-                          <option value="B-">B-</option>
-                          <option value="O+">O+</option>
-                          <option value="O-">O-</option>
-                          <option value="AB+">AB+</option>
-                          <option value="AB-">AB-</option>
-                        </CFormSelect>
-                      </CCol> */}
-
-                      {/* <CFormSelect
-                        ref={inputRefs.city}
-                        name="city"
-                        value={form.city}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select City</option>
-
-                        {cityList.map((city, index) => (
-                          <option key={index} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </CFormSelect> */}
+                      
 
                       <CCol md={6}>
                         <CFormLabel
@@ -1061,6 +1009,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CFormLabel>
 
                         <Select
+                          styles={{ color: 'black' }}
                           ref={inputRefs.city}
                           name="city"
                           value={form.city ? { label: form.city, value: form.city } : null}
@@ -1275,8 +1224,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             />
 
                             <div style={{ fontSize: '15px', color: '#555' }}>
-                              <strong>Aadhaar Consent:</strong>
-                              <p style={{ marginTop: '6px' }} className="text-muted">
+                              <strong style={{ color: `${NGK_COLORS.primary}` }}>
+                                Aadhaar Consent:
+                              </strong>
+                              <p style={{ marginTop: '6px', color: `${NGK_COLORS.primarySoft}` }}>
                                 <strong>{form.fullName}</strong>, I hereby give explicit and
                                 voluntary consent to <strong>Udit CosmeTech Private Limited</strong>{' '}
                                 to collect and securely process my Aadhaar number for identity
@@ -1308,7 +1259,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                       {/* Consent */}
                       <CCol md={12} ref={serviceStatusRef}>
-                        <div className="d-flex justify-content-between">
+                        <div
+                          className="d-flex justify-content-between"
+                          style={{ color: `${NGK_COLORS.primarySoft}` }}
+                        >
                           <CFormLabel>
                             Have you taken any dermatology related service [Botox, PRP, Laser,
                             etc...] in the last 12 months?
@@ -1348,7 +1302,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             }}
                             onClick={() => handleServiceStatusSelect('2')}
                           >
-                            No, Interested
+                            No, I'm Interested
                           </CButton>
                         </div>
 
@@ -1682,31 +1636,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             )}
                           </CCol>
 
-                          {/* Skin Tone */}
-                          {/* <CCol md={6}>
-                            <CFormLabel
-                              className="label-gradient"
-                              style={{ color: NGK_COLORS.primarySoft }}
-                            >
-                              Your Skin Tone <span className="text-danger">*</span>
-                            </CFormLabel>
-                            <CFormInput
-                              name="skinTone"
-                              placeholder="Eg: Medium, Dusky, Fair..."
-                              value={form.skinTone}
-                              onChange={handleChange}
-                            />
-                            {errors.skinTone && (
-                              <p
-                                style={{
-                                  color: '#ff2e85',
-                                }}
-                              >
-                                {errors.skinTone}
-                              </p>
-                            )}
-                          </CCol> */}
-
                           <CCol md={6}>
                             <CFormLabel
                               className="label-gradient"
@@ -1853,8 +1782,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         <CCol md={12} className="mt-5 d-flex justify-content-end">
                           <CButton
                             style={{ background: NGK_COLORS.primary, color: '#fff' }}
-                            disabled={!form.serviceStatus || loading}
                             type="submit"
+                            disabled={loading} // <-- Remove serviceStatus check HERE
                           >
                             {loading ? 'Submitting...' : 'Submit'}
                           </CButton>

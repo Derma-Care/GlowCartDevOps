@@ -13,14 +13,14 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 
 import ProtectedRoute from './components/ProtectedRoute'
-import { injectTheme } from './Constant/Themes'
+import { injectTheme, NGK_COLORS } from './Constant/Themes'
 import OnboardSuccess from './views/NGK/CustomerRrgistration/OnboardSuccess'
 import NGlowKartPatientRegistration_CoreUI from './views/NGK/CustomerRrgistration/CustomerRegistration'
 import SpinResultCard from './views/NGK/CustomerRrgistration/SpinResultCard'
 import RegistrationSoon from './views/NGK/CustomerRrgistration/RegistrationSoon'
 import PayoutAuthModal from './views/Payouts/PayoutAuthModal'
 import ResetPasswordForm from './views/Payouts/ResetPasswordForm'
-
+import DermaCareLogo from './assets/images/logoP.png'
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
@@ -49,8 +49,32 @@ const App = () => {
     return () => window.removeEventListener('openPayoutAuth', handler)
   }, [])
 
+  
+
   return (
-    <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
+    <Suspense
+      fallback={
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            width: '100%',
+            backgroundColor: '#fff', // optional
+          }}
+        >
+          <img
+            src={DermaCareLogo}
+            alt="Loading"
+            style={{
+              width: '120px',
+              animation: 'pulseGlow 1.5s infinite ease-in-out',
+            }}
+          />
+        </div>
+      }
+    >
       <Routes>
         {/* ✅ Lowercase redirect for consistency */}
         {/* <Route path="/" element={<Navigate to="/dashboard" replace />} /> */}

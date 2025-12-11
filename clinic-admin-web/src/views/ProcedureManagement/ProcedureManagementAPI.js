@@ -7,37 +7,16 @@ import {
   AddSubService,
   updateService,
   deleteService,
-  MainAdmin_URL,
-  // subService_URL,
-  subservice,
-  getadminSubServicesbyserviceId,
-  getService_ByClinicId,
+ 
+  
+ 
   getservice,
 } from '../../baseUrl'
 import { toast } from 'react-toastify'
 import { http } from '../../Utils/Interceptors'
 import { showCustomToast } from '../../Utils/Toaster'
 
-export const subServiceData = async (serviceId) => {
-  console.log('Serviceid response:', serviceId)
-  try {
-    // const response = await axios.get(`${BASE_URL}/serviceId/${serviceId}`)
-    const response = await axios.get(
-      `${BASE_URL}/${getadminSubServicesbyserviceId}/${serviceId}`, //TODO:chnage when apigetway call axios to http
-    )
-
-    console.log('Service response:', response.data)
-    return response.data
-  } catch (error) {
-    if (error.response && error.response.status === 404) {
-      console.log('Service response:', error.response.data) // Log structured response instead of treating it as an error
-      return error.response.data // Return response instead of throwing an error
-    } else {
-      console.error('Unexpected error:', error.message || error)
-      throw error
-    }
-  }
-}
+ 
 export const serviceDataH = async () => {
   console.log('Serviceid response:')
   try {

@@ -207,7 +207,7 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
         <div className="mt-3">
           <div className="d-flex justify-content-between align-items-center ">
             {/* Left: Forgot Password */}
-            <Link
+            <Link  // TODO: Change back to div after routing is done
               to="/resetPassword"
               style={{
                 cursor: 'pointer',

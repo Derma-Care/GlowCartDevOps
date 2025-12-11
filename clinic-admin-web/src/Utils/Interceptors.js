@@ -189,7 +189,7 @@ let isToastActive = false
 const showToastOnce = (message) => {
   if (!isToastActive) {
     isToastActive = true
-    showCustomToast(message,'error', {
+    showCustomToast(message, 'error', 'top-right', {
       onClose: () => {
         // reset when toast closes
         isToastActive = false
