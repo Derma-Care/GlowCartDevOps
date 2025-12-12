@@ -29,20 +29,37 @@ public class RegistrationService {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistrationService.class);
 
- // STEP-1: Verify Registration Code
+    // STEP-1: Verify Registration Code
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> verifyCode(String code) {
 
         // 1️⃣ Find customer by registration code
         Customer customer = customerRepository.findByRegistrationCode(code);
 
-        // 2️⃣ Verify code via admin-service using Feign client
-        ApiResponse<RegistrationResponseDTO> adminResponse = adminServiceClient.verifyCode(new RegistrationRequestDTO(code));
+        // 2️⃣ Call admin-service (with Feign exception handling)
+        ApiResponse<RegistrationResponseDTO> adminResponse;
+        try {
+            adminResponse = adminServiceClient.verifyCode(new RegistrationRequestDTO(code));
+        } catch (FeignException e) {
+            try {
+                String responseBody = e.contentUTF8();
+                ObjectMapper mapper = new ObjectMapper();
+                adminResponse = mapper.readValue(
+                        responseBody,
+                        new TypeReference<ApiResponse<RegistrationResponseDTO>>() {}
+                );
+            } catch (Exception ex) {
+                logger.error("Failed to parse admin-service verify response: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse<>(false, "Unable to verify code!", null));
+            }
+        }
+
         RegistrationResponseDTO adminData = adminResponse.getData();
 
-        if (adminData == null || !adminData.isValid()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    new ApiResponse<>(false, adminResponse.getMessage(), null)
-            );
+        // Return bad request if admin data invalid
+        if (adminData == null || !Boolean.TRUE.equals(adminData.getValid())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(false, adminResponse.getMessage(), adminData));
         }
 
         // 3️⃣ Create customer if first time
@@ -51,66 +68,72 @@ public class RegistrationService {
             customer.setRegistrationCode(code);
         }
 
-        // 4️⃣ Mark code as verified locally
+        // 4️⃣ Mark code as verified
         customer.setRegistrationCodeVerified(true);
 
-        // 5️⃣ Set registration rank from admin if first time
+        // 5️⃣ Set registration rank if first time
         if (customer.getRegistrationRank() == null) {
             customer.setRegistrationRank(adminData.getRank());
         }
 
-        // 6️⃣ Mark code as used on first verification via Feign client
-        if (!adminData.isUsed()) {
+        // 6️⃣ Mark code used if admin says not used
+        if (!Boolean.TRUE.equals(adminData.getUsed())) {
             try {
                 ApiResponse<RegistrationResponseDTO> markUsedResponse =
                         adminServiceClient.markCodeUsed(new RegistrationRequestDTO(code));
+
                 if (markUsedResponse.getData() != null) {
-                    adminData.setUsed(markUsedResponse.getData().isUsed());
+                    adminData.setUsed(markUsedResponse.getData().getUsed());
                 }
             } catch (Exception e) {
                 logger.warn("Failed to mark code as used for {}: {}", code, e.getMessage());
             }
         }
 
-        // 7️⃣ Save customer locally
+        // 7️⃣ Save customer
         customerRepository.save(customer);
 
-        // 8️⃣ Build step flags
-        RegistrationResponseDTO stepResponse = buildStepResponse(customer, code, adminData.isUsed());
+        // 8️⃣ Build full step response
+        RegistrationResponseDTO stepResponse = buildStepResponse(customer, code, adminData.getUsed());
 
-        // 9️⃣ Determine success and message
+        // 9️⃣ Determine if code already claimed
+        boolean allStepsCompleted = Boolean.TRUE.equals(stepResponse.getUsed())
+                && Boolean.TRUE.equals(stepResponse.getIsRegistrationCompleted())
+                && Boolean.TRUE.equals(stepResponse.getIsRegistrationCodeVerified())
+                && Boolean.TRUE.equals(stepResponse.getIsUserProfileCompleted())
+                && Boolean.TRUE.equals(stepResponse.getIsSpinWheelCompleted());
+
         boolean successFlag = true;
         String message = "Code verified successfully!";
+        RegistrationResponseDTO responseData = stepResponse;
 
-        // If registration is fully complete and code is already used, override message & flag
-        if (stepResponse.isUsed() &&
-            stepResponse.isRegistrationCompleted() &&
-            stepResponse.isRegistrationCodeVerified() &&
-            stepResponse.isUserProfileCompleted() &&
-            stepResponse.isSpinWheelCompleted()) {
+        if (allStepsCompleted) {
             successFlag = false;
-            message = "Code already used!";
+            message = "This code has already been claimed. Please try a different code.";
+
+            // Minimal response: only code and used
+            responseData = new RegistrationResponseDTO();
+            responseData.setCode(code);
+            responseData.setUsed(true);
         }
 
-        // 10️⃣ Return final response
-        return ResponseEntity.ok(new ApiResponse<>(successFlag, message, stepResponse));
+        // 🔟 Return final response
+        return ResponseEntity.ok(new ApiResponse<>(successFlag, message, responseData));
     }
 
+    // Build response flags for full response
+    private RegistrationResponseDTO buildStepResponse(Customer customer, String code, Boolean used) {
 
-
-    // Helper: Build registration step response
-    private RegistrationResponseDTO buildStepResponse(Customer customer, String code, boolean used) {
-
-        boolean registrationCodeVerified = customer != null && customer.isRegistrationCodeVerified();
-        boolean userProfileCompleted = customer != null && customer.isUserProfileCompleted();
-        boolean spinWheelCompleted = customer != null && customer.isSpinWheelCompleted();
-        boolean registrationCompleted = customer != null && customer.isRegistrationCompleted();
+        Boolean registrationCodeVerified = customer != null ? customer.isRegistrationCodeVerified() : null;
+        Boolean userProfileCompleted = customer != null ? customer.isUserProfileCompleted() : null;
+        Boolean spinWheelCompleted = customer != null ? customer.isSpinWheelCompleted() : null;
+        Boolean registrationCompleted = customer != null ? customer.isRegistrationCompleted() : null;
 
         return new RegistrationResponseDTO(
                 code,
                 used,
-                true,
-                customer.getRegistrationRank(),       // 🔥 add rank
+                true, // valid
+                customer != null ? customer.getRegistrationRank() : null,
                 registrationCodeVerified,
                 userProfileCompleted,
                 spinWheelCompleted,
@@ -118,37 +141,33 @@ public class RegistrationService {
         );
     }
 
-    // STEP-2: Mark code as used in admin-service
+    // STEP-2: Mark code as used
     public ResponseEntity<ApiResponse<RegistrationResponseDTO>> markCodeUsed(String code) {
-        ApiResponse<RegistrationResponseDTO> adminResponse = null;
 
+        ApiResponse<RegistrationResponseDTO> adminResponse;
         try {
             adminResponse = adminServiceClient.markCodeUsed(new RegistrationRequestDTO(code));
         } catch (FeignException e) {
-            // Extract admin-service response
             try {
                 String responseBody = e.contentUTF8();
                 ObjectMapper mapper = new ObjectMapper();
                 adminResponse = mapper.readValue(
-                        responseBody, new TypeReference<ApiResponse<RegistrationResponseDTO>>() {});
+                        responseBody,
+                        new TypeReference<ApiResponse<RegistrationResponseDTO>>() {}
+                );
             } catch (Exception ex) {
                 logger.error("Failed to parse admin-service response: {}", ex.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                        new ApiResponse<>(false, "Failed to mark code as used", null)
-                );
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse<>(false, "Failed to mark code as used", null));
             }
         }
 
         RegistrationResponseDTO adminData = adminResponse.getData();
 
-        if (adminData == null || !adminData.isValid()) {
-            boolean used = adminData != null && adminData.isUsed();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    new ApiResponse<>(false, adminResponse.getMessage(), adminData)
-            );
+        if (adminData == null || !Boolean.TRUE.equals(adminData.getValid())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(false, adminResponse.getMessage(), adminData));
         }
-
-        // Optionally, update local customer state if needed
 
         return ResponseEntity.ok(new ApiResponse<>(true, adminResponse.getMessage(), adminData));
     }

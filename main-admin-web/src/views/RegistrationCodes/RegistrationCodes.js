@@ -101,26 +101,22 @@ const RegistrationCodeManagement = () => {
 
     const fullNumber = `91${mobileNumber}`;
 
-    const message = `👋 Hello ${name}!
+    const message = `Hi ${name},
 
-🎉 Congratulations! You are just one step away from joining *Neeha's GlowKart Program*.
+We are excited to welcome you to *Neeha’s GlowKart Family*.
 
-🎫 *Your Registration Code:* ${selectedCode}
+Here is your *Registration Code:*  
+${selectedCode}
 
-✨ By registering, you unlock amazing benefits:
-🎁* Exclusive gifts for new registrants
-💰* Special offers and discounts
-🚀* Priority access to our services
-
-🔗 Complete your registration and claim your gifts here:
+To join and claim your welcome gifts, complete your registration here:
 ${customLink}
 
-❓ Need help or have questions? Reply to this message and we'll assist you.
+If you need help, feel free to message anytime.
 
-💚 We can’t wait to welcome you to *Neeha's GlowKart*!
+Warm regards,  
+*Neeha’s GlowKart Team*`;
 
-Best regards,
-*Neeha's GlowKart Team*`;
+
 
     const encoded = encodeURIComponent(message);
     const url = `https://wa.me/${fullNumber}?text=${encoded}`;

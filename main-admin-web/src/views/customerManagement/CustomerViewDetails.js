@@ -37,7 +37,13 @@ const CustomerViewDetails = () => {
         setCustomerData({
           ...data,
           email: data.email || data.emailId,
-          appointments: data.appointments || []
+          appointments: data.appointments || [],
+          serviceStatus: Number(data.serviceStatus || data.service_status),
+          skinTone: data.skinTone || null,
+          concern: data.concern || null,
+          category: data.category || null,
+          photo: data.photo || null,
+          prescription: data.prescription || null
         })
       } catch (err) {
         setError('Failed to load customer details.')
@@ -74,7 +80,6 @@ const CustomerViewDetails = () => {
 
     // PDF
     if (typeof value === 'string' && value.startsWith('data:application/pdf')) {
-      // Convert Base64 to Blob URL
       const base64Data = value.split(',')[1]
       const byteCharacters = atob(base64Data)
       const byteNumbers = new Array(byteCharacters.length)
@@ -106,6 +111,13 @@ const CustomerViewDetails = () => {
     )
   }
 
+  const cleanBase64Image = (value) => {
+    if (!value) return null
+    const clean = value
+      .replace(/^data:image\/(png|jpeg|jpg);base64,/i, '')
+      .replace(/^data:image\/(png|jpeg|jpg);base64,/i, '')
+    return `data:image/jpeg;base64,${clean}`
+  }
 
   // -------------------------
   // TAB VISIBILITY CONDITIONS
@@ -129,7 +141,8 @@ const CustomerViewDetails = () => {
         customerData.clinicName ||
         customerData.clinicCityArea ||
         customerData.dateOfLastVisit ||
-        customerData.serviceType
+        customerData.serviceType ||
+        customerData.serviceStatus
       )
     },
     {
@@ -151,7 +164,6 @@ const CustomerViewDetails = () => {
         customerData.registrationRank
       )
     },
-
     {
       id: 4,
       title: 'Images',
@@ -164,14 +176,12 @@ const CustomerViewDetails = () => {
       id: 5,
       title: 'Other',
       visible: customerData && (
-        customerData.skinTone ||
-        customerData.concern ||
-        customerData.referBy
+        customerData.referBy ||
+        customerData.userProfileCompleted
       )
     }
   ]
 
-  // FILTER OUT HIDDEN TABS
   const visibleTabs = tabs.filter(t => t.visible)
 
   if (loading) {
@@ -199,7 +209,7 @@ const CustomerViewDetails = () => {
         className="text-white p-3 d-flex justify-content-between align-items-center rounded"
         style={{ background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))', color: 'white' }}
       >
-        <h5 className="mb-1" style={{ color: 'white' }}>
+        <h5 className="mb-1" style={{color:"white"}}>
           Customer Details: {customerData.fullName}
         </h5>
 
@@ -268,6 +278,28 @@ const CustomerViewDetails = () => {
                     : customerData.serviceType
                 )}
                 {renderField('Service Status', customerData.serviceStatus)}
+
+                {/* serviceStatus = 1 → show prescription */}
+                {customerData.serviceStatus === 1 && renderField('Prescription', customerData.prescription)}
+
+                {/* serviceStatus = 2 → show skinTone, concern, category */}
+                {customerData.serviceStatus === 2 && (
+                  <>
+                    {renderField('Skin Tone', customerData.skinTone)}
+                    {renderField(
+                      'Concern',
+                      Array.isArray(customerData.concern)
+                        ? customerData.concern.join(', ')
+                        : customerData.concern
+                    )}
+                    {renderField(
+                      'Category',
+                      Array.isArray(customerData.category)
+                        ? customerData.category.join(', ')
+                        : customerData.category
+                    )}
+                  </>
+                )}
               </CRow>
             </CCard>
           </CTabPane>
@@ -326,15 +358,12 @@ const CustomerViewDetails = () => {
             </CCard>
           </CTabPane>
 
-          {/* IMAGES / PDFs */}
+          {/* IMAGES */}
           <CTabPane visible={activeTab === 4}>
             <CCard className="p-3 shadow-sm">
               <CRow className="gy-3">
-                {renderField(
-                  'Photo',
-                  customerData.photo ? `data:image/png;base64,${customerData.photo}` : null
-                )}
-                {renderField('Receipt', customerData.prescription)}
+                {customerData.serviceStatus === 1 && renderField('Receipt', customerData.prescription)}
+                {customerData.serviceStatus === 2 && renderField('Receipt', cleanBase64Image(customerData.photo))}
               </CRow>
             </CCard>
           </CTabPane>
@@ -343,8 +372,6 @@ const CustomerViewDetails = () => {
           <CTabPane visible={activeTab === 5}>
             <CCard className="p-3 shadow-sm">
               <CRow className="gy-3">
-                {renderField('Skin Tone', customerData.skinTone)}
-                {renderField('Concern', customerData.concern)}
                 {renderField('Referral By', customerData.referBy)}
                 {renderField('User Profile Completed', customerData.userProfileCompleted ? 'Yes' : 'No')}
               </CRow>

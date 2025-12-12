@@ -1,21 +1,25 @@
 package com.glowkart.customer.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegistrationResponseDTO {
-
     private String code;
-    private boolean used;     // true only when registration completed
-    private boolean valid;    // true if code exists
-    private Integer rank;     // 🔥 added rank field
+    private Boolean used;     // true only when registration completed
+    private Boolean valid;    // true if code exists
+    private Integer rank;     
 
-    private boolean isRegistrationCodeVerified;
-    private boolean isUserProfileCompleted;
-    private boolean isSpinWheelCompleted;
-    private boolean isRegistrationCompleted;
+    private Boolean isRegistrationCodeVerified;
+    private Boolean isUserProfileCompleted;
+    private Boolean isSpinWheelCompleted;
+    private Boolean isRegistrationCompleted;
 }
+

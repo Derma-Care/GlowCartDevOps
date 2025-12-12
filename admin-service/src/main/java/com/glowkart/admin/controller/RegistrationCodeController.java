@@ -52,7 +52,7 @@ public class RegistrationCodeController {
 
         if (result.isUsed()) {
             return ResponseEntity.ok(
-                    new ApiResponse<>(false, "Code already used!", result)
+                    new ApiResponse<>(false, "This code has already been claimed. Please try a different code.", result)
             );
         }
 
@@ -75,7 +75,7 @@ public class RegistrationCodeController {
 
         if (result.isUsed()) {
             return ResponseEntity.ok(
-                    new ApiResponse<>(false, "Code already used!", result)
+                    new ApiResponse<>(false, "This code has already been claimed. Please try a different code.", result)
             );
         }
 
