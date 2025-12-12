@@ -21,24 +21,30 @@ import RegistrationSoon from './views/NGK/CustomerRrgistration/RegistrationSoon'
 import PayoutAuthModal from './views/Payouts/PayoutAuthModal'
 import ResetPasswordForm from './views/Payouts/ResetPasswordForm'
 import DermaCareLogo from './assets/images/logoP.png'
+import { showCustomToast } from './Utils/Toaster'
+import useNetwork from './views/NGK/Utills/networkInterceptor'
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
-  const storedTheme = useSelector((state) => state.theme)
+  // const storedTheme = useSelector((state) => state.theme)
 
   useEffect(() => {
     injectTheme()
   }, [])
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const theme = urlParams.get('theme')?.match(/^[A-Za-z0-9\s]+/)?.[0]
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search)
+  //   const theme = urlParams.get('theme')?.match(/^[A-Za-z0-9\s]+/)?.[0]
 
-    if (theme) {
-      setColorMode(theme)
-    } else if (!isColorModeSet()) {
-      setColorMode(storedTheme)
-    }
-  }, [storedTheme, isColorModeSet, setColorMode])
+  //   if (theme) {
+  //     setColorMode(theme)
+  //   } else if (!isColorModeSet()) {
+  //     setColorMode(storedTheme)
+  //   }
+  // }, [storedTheme, isColorModeSet, setColorMode])
+
+  useEffect(() => {
+    setColorMode('light') // Always force light mode
+  }, [])
 
   const navigate = useNavigate()
   const [showPayoutAuth, setShowPayoutAuth] = useState(false)
@@ -49,7 +55,40 @@ const App = () => {
     return () => window.removeEventListener('openPayoutAuth', handler)
   }, [])
 
-  
+  const { online, speed } = useNetwork()
+
+  const prevState = React.useRef({ online: online, speed: speed })
+
+  useEffect(() => {
+    // If first render → don't show "Internet Connected"
+    if (prevState.current.online === undefined) {
+      prevState.current = { online, speed }
+      return
+    }
+
+    // 1️⃣ When offline → show error
+    if (!online) {
+      showCustomToast('❌ No Internet Connection', 'error')
+    }
+
+    // 2️⃣ When slow internet → show warning
+    else if (speed === 'slow') {
+      showCustomToast('⚠️ Slow Internet... Please wait', 'warning')
+    }
+
+    // 3️⃣ Show "Connected" ONLY when:
+    //    - Previously offline → now online
+    //    - Previously slow → now fast
+    else if (
+      (prevState.current.online === false && online === true) ||
+      (prevState.current.speed === 'slow' && speed === 'fast')
+    ) {
+      showCustomToast('✅ Internet Connected', 'success')
+    }
+
+    // save previous state
+    prevState.current = { online, speed }
+  }, [online, speed])
 
   return (
     <Suspense

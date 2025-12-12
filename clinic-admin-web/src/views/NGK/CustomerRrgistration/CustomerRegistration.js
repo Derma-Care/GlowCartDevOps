@@ -32,6 +32,8 @@ import OnboardingStepsModal from '../Widget/OnboardingStepsModal'
 import RegistrationCodeCard from '../Widget/RegistrationCodeCard'
 import { NGK_COLORS } from '../../../Constant/Themes'
 import { BASE_URL, wifiUrl } from '../../../baseUrl'
+import AadhaarConsentModal from './AadhaarConsentModal'
+import UserConsentModal from './UserConsentModal'
 export default function NGlowKartPatientRegistration_CoreUI() {
   //   const today = new Date()
   const today = new Date()
@@ -836,15 +838,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           amazing prizes.
                         </p>
                       </div>
-
-                      {/* <RegistrationCodeCard
-                      form={form}
-                      error={error}
-                      isRegistration={isRegistration}
-                      verifyLoading={verifyLoading}
-                      handleRefChange={handleRefChange}
-                      handleSubmitReferralCode={handleSubmitReferralCode}
-                    /> */}
                     </div>
                   </>
                 ) : (
@@ -962,25 +955,34 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CFormLabel>
 
                         <div style={{ position: 'relative' }}>
+                          {!form.dob && (
+                            <span
+                              style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                pointerEvents: 'none',
+                                color: '#999',
+                              }}
+                            >
+                              dd/mm/yyyy
+                            </span>
+                          )}
+
                           <CFormInput
-                            ref={inputRefs.dob}
+                            id="dobInput"
                             type="date"
                             name="dob"
                             value={form.dob}
                             max={eighteenYearsAgoISO}
                             onChange={handleChange}
-                            // onFocus={(e) => {
-                            //   // ❌ Do NOT open calendar on focus
-                            //   e.target.blur() // Prevents auto picker opening on some browsers
-                            // }}
-                            // onFocus={() => {}}
-
-                            // Space for icon
+                            style={{ position: 'relative', zIndex: 2 }}
                           />
 
-                          {/* 📌 Calendar icon */}
-                          {/* <span
-                            onClick={() => document.getElementById('dobInput')?.showPicker()}
+                          {/* Calendar icon */}
+                          <span
+                            onClick={() => document.getElementById('dobInput')?.showPicker?.()}
                             style={{
                               position: 'absolute',
                               right: '10px',
@@ -989,16 +991,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               cursor: 'pointer',
                               fontSize: '20px',
                               color: NGK_COLORS.primarySoft,
+                              zIndex: 3,
                             }}
                           >
                             📅
-                          </span> */}
+                          </span>
                         </div>
 
                         {errors.dob && <p style={{ color: '#ff2e85' }}>{errors.dob}</p>}
                       </CCol>
-
-                      
 
                       <CCol md={6}>
                         <CFormLabel
@@ -1385,7 +1386,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             )}
                           </CCol>
 
-                          <CCol md={6}>
+                          {/* <CCol md={6}>
                             <CFormLabel
                               className="label-gradient"
                               style={{ color: NGK_COLORS.primarySoft }}
@@ -1410,6 +1411,76 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               }}
                               onChange={handleChange}
                             />
+
+                            {errors.dateOfLastVisit && (
+                              <p style={{ color: '#ff2e85' }}>{errors.dateOfLastVisit}</p>
+                            )}
+                          </CCol> */}
+
+                          <CCol md={6}>
+                            <CFormLabel
+                              className="label-gradient"
+                              style={{ color: NGK_COLORS.primarySoft }}
+                            >
+                              Last Visit Date <span className="text-danger">*</span>
+                            </CFormLabel>
+
+                            <div style={{ position: 'relative' }}>
+                              {/* Placeholder dd/mm/yyyy (only when input is empty) */}
+                              {!form.dateOfLastVisit && (
+                                <span
+                                  style={{
+                                    position: 'absolute',
+                                    left: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    pointerEvents: 'none',
+                                    color: '#999',
+                                  }}
+                                >
+                                  dd/mm/yyyy
+                                </span>
+                              )}
+
+                              <CFormInput
+                                id="lastVisitInput"
+                                ref={inputRefs.dateOfLastVisit}
+                                type="date"
+                                name="dateOfLastVisit"
+                                max={maxToday} // today
+                                min={minDate12Months} // today - 1 year
+                                value={form.dateOfLastVisit}
+                                style={{ position: 'relative', zIndex: 2 }}
+                                onFocus={(e) => {
+                                  const input = e.target
+                                  input.value = maxToday // show today when opening picker
+                                  input.showPicker?.()
+                                  setTimeout(() => {
+                                    if (!form.dateOfLastVisit) input.value = ''
+                                  }, 0)
+                                }}
+                                onChange={handleChange}
+                              />
+
+                              {/* 📅 Calendar icon (tap to open picker) */}
+                              <span
+                                onClick={() =>
+                                  document.getElementById('lastVisitInput')?.showPicker?.()
+                                }
+                                style={{
+                                  position: 'absolute',
+                                  right: '9px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  cursor: 'pointer',
+                                  fontSize: '20px',
+                                  color: NGK_COLORS.primarySoft,
+                                  zIndex: 3,
+                                }}
+                              >
+                                📅
+                              </span>
+                            </div>
 
                             {errors.dateOfLastVisit && (
                               <p style={{ color: '#ff2e85' }}>{errors.dateOfLastVisit}</p>
@@ -1691,22 +1762,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             )}
                           </CCol>
 
-                          {/* Upload Optional Photo */}
-                          {/* <CCol md={6}>
-                          <CFormLabel>Upload Photo (Optional)</CFormLabel>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={async (e) => {
-                              const file = e.target.files[0]
-                              if (!file) return
-                              const base64 = await processFile(file)
-                              setForm((p) => ({ ...p, samplePhoto: base64 }))
-                            }}
-                          />
-                          {form.samplePhoto && <UploadedPreview src={form.samplePhoto} />}
-                        </CCol> */}
-
                           <CCol md={6}>
                             <CFormLabel
                               className="label-gradient"
@@ -1795,7 +1850,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
               </CForm>
             )}
           </div>
-          {showAadhaarModal && (
+          {/* {showAadhaarModal && (
             <div className="aadhaar-modal-backdrop text-black">
               <div className="aadhaar-modal">
                 <h2>Aadhaar Consent Notice</h2>
@@ -1917,15 +1972,16 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                 </button>
               </div>
             </div>
-          )}
+          )} */}
 
-          {showConsentModal && (
+          <AadhaarConsentModal show={showAadhaarModal} onClose={() => setShowAadhaarModal(false)} />
+
+          <UserConsentModal show={showConsentModal} onClose={() => setShowConsentModal(false)} />
+
+          {/* {showConsentModal && (
             <div className="aadhaar-modal-backdrop">
               <div className="aadhaar-modal">
-                {/* CLOSE ICON (Top Right) */}
-                {/* <button className="close-icon-btn" onClick={() => setShowConsentModal(false)}>
-                  ✕
-                </button> */}
+            
 
                 <h2>User Consent Disclaimer</h2>
 
@@ -1967,13 +2023,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                   </p>
                 </div>
 
-                {/* BOTTOM CLOSE BUTTON */}
+             
                 <button className="aadhaar-close-btn" onClick={() => setShowConsentModal(false)}>
                   Agree
                 </button>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

@@ -17,95 +17,153 @@ export default function SpinResultCard({ prize, onReset, setInstagram, form, use
 
   if (!finalPrize) return <p>No prize found</p>
 
+  //   const handleShare = async () => {
+  //     try {
+  //       setLoading(true)
+
+  //       const caption = `I just won ${finalPrize.spinRewardValue} an exciting gift from Neha's GlowKart! 🎁✨
+  // Thanks to Neha's GlowKart for the amazing surprises! 💖
+  // #nkgderma #GlowKartWinner #GlowKartGifts #LuckySpin `
+
+  //       // ---------------------------
+  //       // 1. COPY CAPTION (with fallback)
+  //       // ---------------------------
+  //       try {
+  //         await navigator.clipboard.writeText(caption)
+  //         console.log('Clipboard: success')
+  //       } catch (err) {
+  //         console.warn('Clipboard API failed, using fallback', err)
+
+  //         // Fallback copy
+  //         const textarea = document.createElement('textarea')
+  //         textarea.value = caption
+  //         textarea.style.position = 'fixed'
+  //         textarea.style.opacity = '0'
+  //         document.body.appendChild(textarea)
+  //         textarea.select()
+  //         document.execCommand('copy')
+  //         document.body.removeChild(textarea)
+  //       }
+
+  //       // ---------------------------
+  //       // 2. VALIDATE cardRef
+  //       // ---------------------------
+  //       if (!cardRef.current) {
+  //         setLoading(false)
+  //         toast.error('❌ Unable to capture image (ref missing).')
+  //         return
+  //       }
+
+  //       // ---------------------------
+  //       // 3. GENERATE IMAGE SAFELY
+  //       // ---------------------------
+  //       const canvas = await html2canvas(cardRef.current, {
+  //         scale: 2,
+  //         useCORS: true,
+  //         allowTaint: false,
+  //         logging: false,
+  //       })
+
+  //       const image = canvas.toDataURL('image/png')
+
+  //       console.log('Canvas generated successfully')
+
+  //       // ---------------------------
+  //       // 4. DOWNLOAD IMAGE (Safari / iOS Safe)
+  //       // ---------------------------
+  //       const link = document.createElement('a')
+  //       link.href = image
+  //       link.download = `NGlowKart-Prize-${finalPrize.spinRewardValue}.png`
+
+  //       document.body.appendChild(link)
+  //       link.click()
+  //       document.body.removeChild(link)
+
+  //       showCustomToast(
+  //         '📸 Image saved & caption copied! 🚀 Opening Instagram…',
+  //         { autoClose: 2800 },
+  //         'top-left',
+  //       )
+
+  //       // ---------------------------
+  //       // 5. DELAY & SHOW INSTAGRAM POPUP
+  //       // ---------------------------
+  //       setTimeout(() => {
+  //         const instaTab = window.open('https://instagram.com', '_blank')
+  //         if (!instaTab) toast.error('⚠️ Enable popups to continue.')
+  //         setInstagram(true)
+
+  //         setLoading(false)
+  //       }, 5000)
+  //     } catch (err) {
+  //       console.error('🔥 handleShare error:', err)
+  //       setLoading(false)
+  //       toast.error('❌ Something went wrong.')
+  //     }
+  //   }
+
   const handleShare = async () => {
+    // -------- OPEN TAB EARLY (prevents popup blocking) --------
+    const instaTab = window.open('', '_blank')
+
+    if (!instaTab) {
+      toast.error('⚠️ Enable pop-ups for a smoother experience.')
+      return
+    }
+
     try {
       setLoading(true)
 
       const caption = `I just won ${finalPrize.spinRewardValue} an exciting gift from Neha's GlowKart! 🎁✨
 Thanks to Neha's GlowKart for the amazing surprises! 💖
-#nkgderma #GlowKartWinner #GlowKartGifts #LuckySpin `
+#nkgderma #GlowKartWinner #GlowKartGifts #LuckySpin`
 
-      // ---------------------------
-      // 1. COPY CAPTION (with fallback)
-      // ---------------------------
+      // 1. COPY CAPTION
       try {
         await navigator.clipboard.writeText(caption)
-        console.log('Clipboard: success')
-      } catch (err) {
-        console.warn('Clipboard API failed, using fallback', err)
-
-        // Fallback copy
+      } catch {
         const textarea = document.createElement('textarea')
         textarea.value = caption
-        textarea.style.position = 'fixed'
-        textarea.style.opacity = '0'
         document.body.appendChild(textarea)
         textarea.select()
         document.execCommand('copy')
         document.body.removeChild(textarea)
       }
 
-      // ---------------------------
-      // 2. VALIDATE cardRef
-      // ---------------------------
+      // 2. CHECK REF
       if (!cardRef.current) {
+        instaTab.close() // close the empty tab
         setLoading(false)
-        toast.error('❌ Unable to capture image (ref missing).')
+        toast.error('❌ Unable to capture image.')
         return
       }
 
-      // ---------------------------
-      // 3. GENERATE IMAGE SAFELY
-      // ---------------------------
+      // 3. GENERATE IMAGE
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
         useCORS: true,
-        allowTaint: false,
-        logging: false,
       })
-
       const image = canvas.toDataURL('image/png')
 
-      console.log('Canvas generated successfully')
-
-      // ---------------------------
-      // 4. DOWNLOAD IMAGE (Safari / iOS Safe)
-      // ---------------------------
+      // 4. DOWNLOAD IMAGE
       const link = document.createElement('a')
       link.href = image
       link.download = `NGlowKart-Prize-${finalPrize.spinRewardValue}.png`
-
       document.body.appendChild(link)
       link.click()
-      document.body.removeChild(link)
+      link.remove()
 
-      showCustomToast(
-        '📸 Image saved & caption copied! 🚀 Opening Instagram…',
-        { autoClose: 2800 },
-        'top-left',
-      )
+      showCustomToast('📸 Image saved & caption copied! 🚀 Opening Instagram…')
 
-      // ---------------------------
-      // 5. DELAY & SHOW INSTAGRAM POPUP
-      // ---------------------------
-      setTimeout(() => {
-        const instaTab = window.open('https://instagram.com', '_blank')
-        if (!instaTab) toast.error('⚠️ Enable popups to continue.')
-        setInstagram(true)
+      // -------- UPDATE THE PRE-OPENED TAB --------
+      instaTab.location.href = 'https://instagram.com'
 
-        // const a = document.createElement('a')
-        // a.href = 'https://www.instagram.com/'
-        // a.target = '_blank'
-        // a.rel = 'noopener noreferrer' // 🔥 prevents HTTP downgrade
-        // document.body.appendChild(a)
-        // a.click()
-        // document.body.removeChild(a)
-
-        setLoading(false)
-      }, 5000)
-    } catch (err) {
-      console.error('🔥 handleShare error:', err)
+      setInstagram(true)
       setLoading(false)
+    } catch (err) {
+      console.error(err)
+      setLoading(false)
+      instaTab.close() // close failed tab
       toast.error('❌ Something went wrong.')
     }
   }
