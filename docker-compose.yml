@@ -1,72 +1,16 @@
-version: '3.8'
+version: "3.9"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
 
 services:
-  # ===============================
-  # Eureka Service Registry
-  # ===============================
-  eureka-server:
-    build: ./service-registry
-    container_name: service_registry
-    ports:
-      - "8761:8761"   # Optional, only if you want to access Eureka dashboard
-    restart: always
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://eureka-server:8761/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   # ===============================
-  # Config Server
-  # ===============================
-  config-server:
-    build: ./config-server
-    container_name: config_server
-    environment:
-      - SPRING_PROFILES_ACTIVE=production
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
-    restart: always
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://config-server:8888/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # ===============================
-  # API Gateway (EXPOSED)
-  # ===============================
-  apigateway:
-    build: ./api-gateway
-    container_name: api_gateway_service
-    ports:
-      - "8080:8080"   # Exposed to public
-    environment:
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
-    restart: always
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    networks:
-      - app-network
-    entrypoint: ["./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://apigateway:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # ===============================
-  # MongoDB (Internal)
+  # MongoDB
   # ===============================
   mongodb:
     image: mongo:6.0
@@ -77,168 +21,277 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo admin --quiet
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand({ ping: 1 })' || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 20
       start_period: 30s
 
   # ===============================
-  # Microservices (INTERNAL ONLY)
+  # Eureka Server
+  # ===============================
+  eureka-server:
+    build:
+      context: ./service-registry
+      dockerfile: Dockerfile
+      args:
+        SPRING_PROFILES_ACTIVE: production
+    container_name: glowcartdevops-eureka-server
+    ports:
+      - "8761:8761"
+    restart: always
+    networks:
+      - app-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ===============================
+  # Config Server
+  # ===============================
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+      args:
+        SPRING_PROFILES_ACTIVE: production
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    container_name: glowcartdevops-config-server
+    ports:
+      - "8888:8888"
+    restart: always
+    networks:
+      - app-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ===============================
+  # API Gateway
+  # ===============================
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+      args:
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    container_name: api_gateway_service
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - app-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ===============================
+  # Backend Microservices
   # ===============================
   admin-service:
-    build: ./admin-service
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+      args:
+        SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/glowkart_admin
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     container_name: admin_service
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_admin
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    ports:
+      - "8082:8082"
     restart: always
+    networks:
+      - app-network
     depends_on:
       mongodb:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-    networks:
-      - app-network
-    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://admin-service:8082/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  clinicadmin-service:
-    build: ./clinicadmin-service
-    container_name: clinicadmin_service
+      config-server:
+        condition: service_healthy
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_clinicadmin
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
-    restart: always
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-    networks:
-      - app-network
-    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/glowkart_admin
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://clinicadmin-service:8084/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   customer-service:
-    build: ./customer-service
+    build:
+      context: ./customer-service
+      dockerfile: Dockerfile
+      args:
+        SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/customer_db
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     container_name: customer_service
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/customer_db
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    ports:
+      - "8090:8090"
     restart: always
+    networks:
+      - app-network
     depends_on:
       mongodb:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-    networks:
-      - app-network
-    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+      config-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/customer_db
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://customer-service:8090/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   onboarding-service:
-    build: ./onboarding-service
+    build:
+      context: ./onboarding-service
+      dockerfile: Dockerfile
+      args:
+        SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/onboardingdb
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     container_name: onboarding_service
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/onboardingdb
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    ports:
+      - "8081:8081"
     restart: always
+    networks:
+      - app-network
     depends_on:
       mongodb:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-    networks:
-      - app-network
-    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+      config-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/onboardingdb
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://onboarding-service:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   procedure-service:
-    build: ./procedure-service
+    build:
+      context: ./procedure-service
+      dockerfile: Dockerfile
+      args:
+        SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/proceduredb
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     container_name: procedure_service
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/procedure_db
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://eureka-server:8761/eureka/
+    ports:
+      - "8083:8083"
     restart: always
+    networks:
+      - app-network
     depends_on:
       mongodb:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/proceduredb
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  clinicadmin-service:
+    build:
+      context: ./clinicadmin-service
+      dockerfile: Dockerfile
+      args:
+        SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/clinicadmindb
+        EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+    container_name: clinicadmin_service
+    ports:
+      - "8084:8084"
+    restart: always
     networks:
       - app-network
-    entrypoint: ["./wait-for-it.sh", "mongodb:27017", "--", "./wait-for-it.sh", "eureka-server:8761", "--", "java", "-jar", "app.jar"]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/clinicadmindb
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://procedure-service:8085/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   # ===============================
-  # Frontend Services (EXPOSED)
+  # Frontend Web Services
   # ===============================
   clinic-admin-web:
-    build: ./clinic-admin-web
-    container_name: clinic-admin-web-container
+    build:
+      context: ./clinic-admin-web
+      dockerfile: Dockerfile
+    container_name: clinic_admin_web
+    ports:
+      - "4200:80"
+    restart: always
     networks:
       - app-network
-    restart: always
+    depends_on:
+      api-gateway:
+        condition: service_healthy
 
   main-admin-web:
-    build: ./main-admin-web
-    container_name: main-admin-web-container
-    networks:
-      - app-network
-    restart: always
-
-  # ===============================
-  # Nginx Reverse Proxy + HTTPS
-  # ===============================
-  nginx:
-    image: nginx:latest
-    container_name: nginx_proxy
+    build:
+      context: ./main-admin-web
+      dockerfile: Dockerfile
+    container_name: main_admin_web
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
-    depends_on:
-      - apigateway
-      - clinic-admin-web
-      - main-admin-web
+      - "4300:80"
+    restart: always
     networks:
       - app-network
-    restart: always
-
-# ===============================
-# Networks & Volumes
-# ===============================
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  mongodb_data:
+    depends_on:
+      api-gateway:
+        condition: service_healthy

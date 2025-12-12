@@ -1,30 +1,30 @@
-# -------------------------------
-# Stage 1: Build the application
-# -------------------------------
+# ===============================
+# Stage 1: Build Stage (Maven)
+# ===============================
 FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy only Maven project files first to cache dependencies
+# Copy pom first (dependency caching)
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN mvn -q dependency:go-offline
 
-# Copy source code
+# Copy full source code
 COPY src ./src
 
-# Build the Spring Boot jar (skip tests for faster builds)
-RUN mvn clean package -DskipTests -Dspring-boot.build-image.skip=true
+# Build the Spring Boot application
+RUN mvn -q clean package -DskipTests
 
-# -------------------------------
-# Stage 2: Minimal runtime image
-# -------------------------------
+# ===============================
+# Stage 2: Runtime Stage
+# ===============================
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Copy the built JAR from the build stage
-COPY --from=build /app/target/api-gateway-0.0.1-SNAPSHOT.jar /app/api-gateway.jar
+# Copy built jar (auto detect jar name)
+COPY --from=build /app/target/*.jar /app/service.jar
 
-# Expose the port (matches your Spring Boot application.yml)
+# Expose default Spring Boot port
 EXPOSE 8080
 
-# Run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "api-gateway.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "/app/service.jar"]
