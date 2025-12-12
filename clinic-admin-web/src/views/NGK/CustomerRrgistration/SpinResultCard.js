@@ -173,7 +173,13 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
       style={{
         width: '100%',
         maxWidth: 560,
-        margin: 'auto',
+        margin: '0 auto',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center', // ⭐ centers vertically
+        alignItems: 'center', // ⭐ centers horizontally
+        padding: '20px 0',
       }}
     >
       <div className="header-container">

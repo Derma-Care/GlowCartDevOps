@@ -24,9 +24,9 @@ export default function UserConsentModal({ show, onClose }) {
             <br /><br />
             By continuing, you agree:
             <br /><br />
-            • You visit clinics at your own discretion & risk  
-            • NGK is not liable for reactions, side effects, dissatisfaction, or post-treatment issues  
-            • You will consult directly with clinics for advice & disputes  
+            • You visit clinics at your own discretion & risk  <br />
+            • NGK is not liable for reactions, side effects, dissatisfaction, or post-treatment issues  <br />
+            • You will consult directly with clinics for advice & disputes  <br />
             • NGK only displays offers & information provided by clinics  
           </p>
         </div>

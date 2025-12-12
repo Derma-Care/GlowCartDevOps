@@ -1,5 +1,3 @@
- 
-
 import React, { useEffect, useState } from 'react'
 import { CCard, CCardBody, CButton, CFormInput, CRow, CCol } from '@coreui/react'
 import OnboardSuccess from './OnboardSuccess'
@@ -33,11 +31,65 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
   }
 
   // ------------ FETCH LOCATION (PROMISE) ------------
-  const handleGetLocation = () => {
+  // const handleGetLocation = () => {
+  //   return new Promise((resolve) => {
+  //     if (!navigator.geolocation) {
+  //       showCustomToast('Location is not supported on this device', 'error')
+
+  //       resolve(false)
+  //       return
+  //     }
+
+  //     setLoadingLocation(true)
+
+  //     navigator.geolocation.getCurrentPosition(
+  //       async (pos) => {
+  //         try {
+  //           const { latitude, longitude } = pos.coords
+  //           const response = await fetch(
+  //             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+  //           )
+  //           const data = await response.json()
+
+  //           const readable = data.display_name || `${latitude}, ${longitude}`
+  //           updateForm('address', readable)
+  //         } catch {
+  //           showCustomToast('Unable to fetch address', 'error')
+  //         }
+
+  //         setLoadingLocation(false)
+  //         resolve(true)
+  //       },
+  //       () => {
+  //         setLoadingLocation(false)
+  //         showCustomToast('Location permission denied', 'error')
+
+  //         // alert('Location permission denied')
+  //         resolve(false)
+  //       },
+  //     )
+  //   })
+  // }
+  const handleGetLocation = async () => {
+    // 1️⃣ Check if user previously blocked permission
+    if (navigator.permissions) {
+      try {
+        const perm = await navigator.permissions.query({ name: 'geolocation' })
+        if (perm.state === 'denied') {
+          showCustomToast(
+            'Location is blocked in your browser. Please enable it from Settings → Site Permissions.',
+            'error',
+          )
+          return false
+        }
+      } catch (e) {
+        // Safari does not support permissions API—ignore
+      }
+    }
+
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
         showCustomToast('Location is not supported on this device', 'error')
-
         resolve(false)
         return
       }
@@ -51,10 +103,10 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
             )
+
             const data = await response.json()
 
-            const readable = data.display_name || `${latitude}, ${longitude}`
-            updateForm('address', readable)
+            updateForm('address', data.display_name || `${latitude}, ${longitude}`)
           } catch {
             showCustomToast('Unable to fetch address', 'error')
           }
@@ -62,11 +114,18 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
           setLoadingLocation(false)
           resolve(true)
         },
-        () => {
+        (error) => {
           setLoadingLocation(false)
-          showCustomToast('Location permission denied', 'error')
 
-          // alert('Location permission denied')
+          if (error.code === 1) {
+            showCustomToast(
+              'Location permission denied. Please enable it in browser settings.',
+              'error',
+            )
+          } else {
+            showCustomToast('Unable to get your location.', 'error')
+          }
+
           resolve(false)
         },
       )
@@ -147,7 +206,6 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
   return (
     <>
       <div
-        
         style={{
           width: '100%',
           borderRadius: 20,
@@ -155,7 +213,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
- 
+
           overflow: 'hidden', // 🚀 Disable scrolling COMPLETELY
         }}
       >

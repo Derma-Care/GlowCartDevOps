@@ -1798,7 +1798,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {form.skinTone === 'other' && (
                               <div style={{ marginTop: 10 }}>
                                 <CFormLabel
-                                  className="label-gradient text-muted"
+                                  className="label-gradient  "
                                   style={{ color: NGK_COLORS.primarySoft }}
                                 >
                                   Specify Other Skin Tone
@@ -1821,7 +1821,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                           <CCol md={6}>
                             <CFormLabel
-                              className="label-gradient text-muted"
+                              className="label-gradient  "
                               style={{ color: NGK_COLORS.primarySoft }}
                             >
                               Upload Photo (Optional)
