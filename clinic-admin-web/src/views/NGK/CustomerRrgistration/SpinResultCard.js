@@ -103,14 +103,6 @@ export default function SpinResultCard({ prize, onReset, setInstagram, form, use
   //   }
 
   const handleShare = async () => {
-    // -------- OPEN TAB EARLY (prevents popup blocking) --------
-    const instaTab = window.open('', '_blank')
-
-    if (!instaTab) {
-      toast.error('⚠️ Enable pop-ups for a smoother experience.')
-      return
-    }
-
     try {
       setLoading(true)
 
@@ -118,7 +110,7 @@ export default function SpinResultCard({ prize, onReset, setInstagram, form, use
 Thanks to Neha's GlowKart for the amazing surprises! 💖
 #nkgderma #GlowKartWinner #GlowKartGifts #LuckySpin`
 
-      // 1. COPY CAPTION
+      // Copy caption
       try {
         await navigator.clipboard.writeText(caption)
       } catch {
@@ -127,44 +119,52 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
         document.body.appendChild(textarea)
         textarea.select()
         document.execCommand('copy')
-        document.body.removeChild(textarea)
+        textarea.remove()
       }
 
-      // 2. CHECK REF
+      // Generate Image
       if (!cardRef.current) {
-        instaTab.close() // close the empty tab
+        toast.error('Unable to capture the image.')
         setLoading(false)
-        toast.error('❌ Unable to capture image.')
         return
       }
 
-      // 3. GENERATE IMAGE
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
         useCORS: true,
       })
+
       const image = canvas.toDataURL('image/png')
 
-      // 4. DOWNLOAD IMAGE
+      // Download Image
       const link = document.createElement('a')
       link.href = image
       link.download = `NGlowKart-Prize-${finalPrize.spinRewardValue}.png`
-      document.body.appendChild(link)
       link.click()
-      link.remove()
 
       showCustomToast('📸 Image saved & caption copied! 🚀 Opening Instagram…')
 
-      // -------- UPDATE THE PRE-OPENED TAB --------
-      instaTab.location.href = 'https://instagram.com'
+      // -------- 100% RELIABLE INSTAGRAM OPENING --------
+      const instagramApp = 'instagram://app'
+      const instagramWeb = 'https://www.instagram.com'
 
-      setInstagram(true)
-      setLoading(false)
+      // Try opening Instagram app
+      window.location.href = instagramApp
+
+      // If app fails → open browser after 1 sec
+      setTimeout(() => {
+        window.open(instagramWeb, '_blank')
+      }, 900)
+
+      // After 5 seconds → go to next step (Instagram Screenshot Page)
+      setTimeout(() => {
+        setInstagram(true)
+        setLoading(false)
+      }, 5000)
     } catch (err) {
       console.error(err)
       setLoading(false)
-      instaTab.close() // close failed tab
-      toast.error('❌ Something went wrong.')
+      toast.error('Something went wrong.')
     }
   }
 
