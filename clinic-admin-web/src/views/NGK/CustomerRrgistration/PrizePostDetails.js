@@ -8,6 +8,7 @@ import { UploadedPreview } from '../Utills/FileUpload'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { NGK_COLORS } from '../../../Constant/Themes'
 import { Row } from 'react-bootstrap'
+import ClipLoader from 'react-spinners/ClipLoader'
 import DermaCareLogo from '../../../assets/images/logoP.png'
 export default function PrizePostDetails({ form, setForm, onSubmit, userData }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
@@ -269,7 +270,15 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
                 onClick={handleGetLocation}
                 disabled={loadingLocation}
               >
-                {loadingLocation ? 'Fetching...' : '📌 Use Location'}
+                {/* {loadingLocation ? 'Fetching...' : '📌 Use Location'} */}
+                {loadingLocation ? (
+                  <>
+                    <ClipLoader size={18} color={NGK_COLORS.primary} />
+                    <span style={{ marginLeft: 8 }}>Fetching...</span>
+                  </>
+                ) : (
+                  '📌 Use Location'
+                )}
               </CButton>
             </CCol>
           </CRow>
