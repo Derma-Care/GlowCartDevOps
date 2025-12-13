@@ -185,28 +185,34 @@ const ClinicManagement = ({ service }) => {
   const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
 
   const sendNGKRegistrationLink = async (email) => {
+    setLoadingLink(true)   // 🔥 MOVE THIS TO TOP (IMPORTANT)
+
     try {
-      setLoadingLink(true)
       const response = await fetch(`${NGkRegistrationLink}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name: nameInput })
       })
+
       const data = await response.json()
+
       if (!response.ok || data.success === false) {
-        toast.error(data.message || "Failed to send link")
+        toast.error(data?.message || "Failed to send link")
         return
       }
-      toast.success("Link sent successfully!")
+
+      toast.success(data?.message || "Link sent successfully!")
+
       setIsLink(false)
       setLinkInputValue("")
       setNameInput("")
-    } catch {
+    } catch (error) {
       toast.error("Something went wrong")
     } finally {
-      setLoadingLink(false)
+      setLoadingLink(false) // 🔥 ENABLE AGAIN AFTER API
     }
   }
+
 
   return (
     <div className="d-flex justify-content-center mt-4">
@@ -421,15 +427,14 @@ const ClinicManagement = ({ service }) => {
                 {nameError}
               </p>
             )}
-
-
             <br />
 
             {/* EMAIL / MOBILE FIELD */}
             <CFormInput
               type="text"
               autoComplete="email"
-              label="Mobile number / Email Id"
+              // label="Mobile number / Email Id"
+              label="Email Id"
               value={linkInputValue}
               onChange={(e) => setLinkInputValue(e.target.value)}
               placeholder="Type here..."
@@ -443,17 +448,19 @@ const ClinicManagement = ({ service }) => {
 
             <CButton
               color="primary"
-              disabled={loadingLink}
+              disabled={
+                loadingLink ||
+                nameInput.trim() === "" ||
+                linkInputValue.trim() === "" ||
+                nameError
+              }
               onClick={() => {
-                if (nameError || nameInput.trim() === "") {
-                  toast.error("Enter a valid name (letters only)");
-                  return;
-                }
                 sendNGKRegistrationLink(linkInputValue)
               }}
             >
               {loadingLink ? "Sending..." : "Send"}
             </CButton>
+
           </CModalFooter>
         </CModal>
       </div>

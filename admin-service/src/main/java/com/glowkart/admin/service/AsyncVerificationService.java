@@ -77,17 +77,18 @@ public class AsyncVerificationService {
         data.put("subject", "GlowKart Registration Status – Rejected");
         data.put("message",
                 "Thank you for registering with GlowKart. After reviewing your submission, we are unable to approve "
-                        + "your registration at this time.\n"
-                        + "Reason for rejection: " + reason + "\n\n"
+                        + "your registration at this time.\n\n"
                         + "You may correct the issue and reapply at any time. If you have questions or believe this "
                         + "was an error, please contact our support team.");
+        data.put("reason", reason); // Pass the rejection reason separately
 
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }
+
     
     
-    // 5. OTP Sending (Updated - includes OTP type)
+ // 5. OTP Sending (Updated - includes OTP type)
     @Async
     public void sendOtpAsync(Clinic clinic, String otp, String otpType) {
         Map<String, String> data = new HashMap<>();
@@ -96,22 +97,20 @@ public class AsyncVerificationService {
         String msgHeader;
 
         if ("PAYOUT_PASSWORD_RESET".equals(otpType)) {
-            subject = "GlowKart Payout Password Reset OTP";
-            msgHeader = "Your OTP for resetting your *Payout* password is: ";
+            subject = "GlowKart Payout Login Password Reset OTP";
+            msgHeader = "Your OTP for resetting your Payout password:";
         } else {
             subject = "GlowKart Clinic Login Password Reset OTP";
-            msgHeader = "Your OTP for resetting your *Clinic Login* password is: ";
+            msgHeader = "Your OTP for resetting your Clinic Login password:";
         }
 
         data.put("subject", subject);
-        data.put("message",
-                msgHeader + otp +
-                        "\nThis OTP is valid for 10 minutes.");
-
+        data.put("message", msgHeader + "\n" + otp + "\nThis OTP is valid for 10 minutes.");
         data.put("otpType", otpType);
 
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
     }
+
 
 }

@@ -58,15 +58,23 @@ export const subservice = 'getSubServicesByServiceId'
 export const getAllPayouts = 'payments/getallpayments'
 export const addPayouts = 'payments/addpayment'
 
-//forgot password
+//forgot password login
 export const sendOtp = 'clinics/forgot-password'
 export const resendOTP = 'clinics/resend-otp'
 export const resetPassword = 'clinics/reset-password'
 
 export const updatePassword = 'clinics/updatePassword'
 
+//payout login
+export const payoutlogin = 'payout-login' //done
+
+export const sendPayoutOtp = 'payout-forgot-password'
+export const resendPayoutOTP = 'payout-resend-otp'
+export const resetPayoutPassword = 'payout-reset-password'
+export const payoutsupdatePassword = 'updatePayoutPassword'  //done
+
 //unwanted
 export const Booking_service_Url = `${wifiUrl}/api/booking`
 export const DeleteBookings = 'getAllBookings'
- export const getAllBookedServices = 'getBookingsByHospitalId'
- export const GetBookingBy_ClinicId = 'doctor/getDoctorsByHospitalId'
+export const getAllBookedServices = 'getBookingsByHospitalId'
+export const GetBookingBy_ClinicId = 'doctor/getDoctorsByHospitalId'

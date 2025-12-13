@@ -15,7 +15,8 @@ import { NGK_COLORS } from '../../Constant/Themes'
 import { showCustomToast } from '../../Utils/Toaster'
 import { Link } from 'react-router-dom'
 import { http } from '../../Utils/Interceptors'
-
+import { payoutlogin, payoutsupdatePassword } from '../../baseUrl'
+import ForgotPasswordPayoutContent from '../pages/login/ForgotPayoutPasswordPage'
 export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -27,31 +28,31 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
   const [attempts, setAttempts] = useState(0)
   const [loading, setLoading] = useState(false)
   const [ploading, setPLoading] = useState(false)
-
+  const [forgotModal, setForgotModal] = useState(false)
   const { selectedHospital } = useHospital()
 
-  const dummyUser = {
-    username: 'admin',
-    password: '1234',
-  }
+  // const dummyUser = {
+  //   username: 'admin',
+  //   password: '1234',
+  // }
 
-  // CHECK LOCK STATUS FROM LOCAL STORAGE
-  useEffect(() => {
-    const lockTime = localStorage.getItem('payout_lock_time')
+  // // CHECK LOCK STATUS FROM LOCAL STORAGE
+  // useEffect(() => {
+  //   const lockTime = localStorage.getItem('payout_lock_time')
 
-    if (lockTime) {
-      const now = Date.now()
+  //   if (lockTime) {
+  //     const now = Date.now()
 
-      if (now - Number(lockTime) < 60 * 60 * 1000) {
-        setAttempts(3)
-        setGeneralError(
-          'Too many failed attempts. Please contact Clinic Management or wait 1 hour.',
-        )
-      } else {
-        localStorage.removeItem('payout_lock_time')
-      }
-    }
-  }, [visible])
+  //     if (now - Number(lockTime) < 60 * 60 * 1000) {
+  //       setAttempts(3)
+  //       setGeneralError(
+  //         'Too many failed attempts. Please contact Clinic Management or wait 1 hour.',
+  //       )
+  //     } else {
+  //       localStorage.removeItem('payout_lock_time')
+  //     }
+  //   }
+  // }, [visible])
 
   // RESET FORM WHEN MODAL CLOSES
   useEffect(() => {
@@ -66,7 +67,63 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
     }
   }, [visible])
 
-  const handleLogin = () => {
+  // const handleLogin = async () => {
+  //   setUsernameError('')
+  //   setPasswordError('')
+  //   setGeneralError('')
+
+  //   if (!username.trim()) setUsernameError('Username is required')
+  //   if (!password.trim()) setPasswordError('Password is required')
+  //   if (!username.trim() || !password.trim()) return
+
+  //   if (attempts >= 3) {
+  //     setGeneralError('Too many failed attempts. Please contact Clinic Management or wait 1 hour.')
+  //     return
+  //   }
+
+  //   setLoading(true)
+
+  //   try {
+  //     const response = await http.post(`/${payoutlogin}`, {
+  //       payoutUsername: username,
+  //       payoutPassword: password,
+  //     })
+  //     console.log('PAYOUT LOGIN RESPONSE:', response)
+  //     if (response.data?.success) {
+  //       // ✅ SUCCESS
+  //       localStorage.removeItem('payout_lock_time')
+  //       setAttempts(0)
+  //       onSuccess()
+  //       return
+  //     }
+
+  //     // ❌ FAILED (backend returned success=false)
+  //     throw new Error(response.data?.message || 'Invalid credentials')
+  //   } catch (err) {
+  //     const newAttempts = attempts + 1
+  //     setAttempts(newAttempts)
+
+  //     if (newAttempts >= 3) {
+  //       // 🔒 LOCK
+  //       localStorage.setItem('payout_lock_time', Date.now().toString())
+
+  //       sendPayoutLockEmail({
+  //         username,
+  //         email: selectedHospital?.data?.email,
+  //       })
+
+  //       setGeneralError(
+  //         'Too many failed attempts. Please contact Clinic Management or wait 1 hour.',
+  //       )
+  //     } else {
+  //       setGeneralError(err.message || 'Invalid username or password')
+  //     }
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
+  const handleLogin = async () => {
     setUsernameError('')
     setPasswordError('')
     setGeneralError('')
@@ -82,33 +139,42 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
 
     setLoading(true)
 
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const response = await http.post(`/${payoutlogin}`, {
+        payoutUsername: username,
+        payoutPassword: password,
+      })
 
-      // SUCCESS LOGIN
-      if (username === dummyUser.username && password === dummyUser.password) {
+      // ✅ SUCCESS (only for 200)
+      if (response.data?.success) {
+        localStorage.removeItem('payout_lock_time')
+        setAttempts(0)
         onSuccess()
         return
       }
+    } catch (err) {
+      const backendMessage = err.response?.data?.message || 'Invalid payout username or password'
 
-      // FAILED LOGIN
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
 
       if (newAttempts >= 3) {
-        // STORE LOCK TIME
         localStorage.setItem('payout_lock_time', Date.now().toString())
 
-        // SEND EMAIL TO MANAGEMENT
-        sendPayoutLockEmail({ username, email: selectedHospital?.data.email })
+        sendPayoutLockEmail({
+          username,
+          email: selectedHospital?.data?.email,
+        })
 
         setGeneralError(
-          `Too many failed attempts. Please contact Clinic Management or wait 1 hour. ${selectedHospital?.data.email}`,
+          'Too many failed attempts. Please contact Clinic Management or wait 1 hour.',
         )
       } else {
-        setGeneralError('Invalid username or password')
+        setGeneralError(backendMessage)
       }
-    }, 2000)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const loginDisabled = attempts >= 3 || loading
@@ -124,10 +190,10 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
     setPLoading(true)
 
     try {
-      const response = await http.put(`/updatePassword/${form.username}`, {
-        password: form.currentPassword,
-        newPassword: form.newPassword,
-        confirmPassword: form.confirmPassword,
+      const response = await http.put(`/${payoutsupdatePassword}/${form.username}`, {
+        currentPayoutPassword: form.currentPassword,
+        newPayoutPassword: form.newPassword,
+        confirmPayoutPassword: form.confirmPassword,
       })
 
       if (response.data.success) {
@@ -202,29 +268,25 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
           }}
         />
         {passwordError && <small style={{ color: 'red' }}>{passwordError}</small>}
+        {/* GENERAL ERROR */}
+        {generalError && <p style={{ color: 'red' }}>{generalError}</p>}
 
         {/* FORGOT PASSWORD */}
         <div className="mt-3">
           <div className="d-flex justify-content-between align-items-center ">
             {/* Left: Forgot Password */}
-            <Link  // TODO: Change back to div after routing is done
-              to="/resetPassword"
+
+            <div
               style={{
                 cursor: 'pointer',
-                color: 'var(--color-black)',
+                color: NGK_COLORS.primary,
                 textDecoration: 'underline',
                 fontSize: '14px',
               }}
-              onClick={() => {
-                onClose()
-                setGeneralError(
-                  'We have sent a password reset link to your registered email. Please check your inbox.',
-                  'info',
-                )
-              }}
+              onClick={() => setForgotModal(true)}
             >
               Forgot Password?
-            </Link>
+            </div>
 
             {/* Right: Change Password */}
             <a
@@ -243,6 +305,29 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
             </a>
           </div>
         </div>
+
+        <CModal
+          visible={forgotModal}
+          onClose={() => setForgotModal(false)}
+          backdrop="static"
+          alignment="center"
+          className="custom-modal"
+        >
+          <CModalBody
+            className="d-flex justify-content-center align-items-center"
+            style={{ minHeight: '60vh', background: 'linear-gradient(135deg, #ffe6f0, #ffbfd8)' }}
+          >
+            <div className="w-100" style={{ maxWidth: '400px' }}>
+              <p onClick={() => setForgotModal(false)} style={{ cursor: 'pointer' }}>
+                ❌
+              </p>
+              <ForgotPasswordPayoutContent
+                forgotModal={forgotModal}
+                setForgotModal={setForgotModal}
+              />
+            </div>
+          </CModalBody>
+        </CModal>
 
         <CModal
           visible={showResetModal}
@@ -276,9 +361,6 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
             </CButton>
           </CModalFooter>
         </CModal>
-
-        {/* GENERAL ERROR */}
-        {generalError && <p style={{ color: 'red' }}>{generalError}</p>}
       </CModalBody>
 
       <CModalFooter>

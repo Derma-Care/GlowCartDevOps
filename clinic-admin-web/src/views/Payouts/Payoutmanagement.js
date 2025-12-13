@@ -28,6 +28,8 @@ import { Edit2, Eye, Trash2 } from 'lucide-react'
 import LoadingIndicator from '../../Utils/loader'
 import { showCustomToast } from '../../Utils/Toaster'
 import Pagination from '../../Utils/Pagination'
+import { Link } from 'react-router-dom'
+import { NGK_COLORS } from '../../Constant/Themes'
 
 // ✅ Dummy API methods
 // replace these with your real API methods
@@ -199,9 +201,17 @@ const PayoutManagement = () => {
   const displayData = filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
 
   return (
-    <CContainer className="p-4">
+    <CContainer>
       <ToastContainer />
-
+      <Link
+        to="/dashboard"
+        className="d-flex justify-content-end mb-3  "
+        style={{ textDecoration: 'none' }}
+      >
+        <button className="btn" style={{ backgroundColor: "var(--color-black)", color: 'white' }}>
+          Logout
+        </button>
+      </Link>
       <CRow className="mb-3 align-items-center">
         <CCol md={6}>
           {' '}

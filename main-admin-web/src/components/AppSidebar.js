@@ -51,15 +51,40 @@ const AppSidebar = () => {
             className="d-flex justify-content-center underline-none"
             style={{ marginLeft: '20px' }}
           >
-           
+
           </div>
         </div>
       </CSidebarHeader>
 
       <AppSidebarNav items={navigation} />
+      <CSidebarFooter className="border-top d-none d-lg-flex flex-column align-items-center py-2">
+        <div
+          style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: ` var(--color-black)`,
+            lineHeight: '1.2',
+          }}
+        >
+          Neeha&apos;s GlowKart
+        </div>
 
-      <CSidebarFooter className="border-top d-none d-lg-flex">
-        <CSidebarToggler onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })} />
+        <div
+          style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: `var(--color-black)`,
+            marginBottom: '6px',
+          }}
+        >
+          UDIT Cosmetics PVT LTD
+        </div>
+
+        <CSidebarToggler
+          onClick={() =>
+            dispatch({ type: 'set', sidebarShow: !sidebarShow })
+          }
+        />
       </CSidebarFooter>
     </CSidebar>
   )
