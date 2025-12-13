@@ -51,6 +51,7 @@ app:
 
 notification:
   default-from-email: ${NOTIFICATION_FROM_EMAIL:no-reply@glowkart.com}
+  clinic-login-url: ${CLINIC_LOGIN_URL:https://glowkartclinic.ashokfruit.shop/login}
 
 eureka:
   client:
