@@ -5,6 +5,8 @@ import com.glowkart.onboarding.exception.ResourceNotFoundException;
 import com.glowkart.onboarding.model.OnboardingToken;
 import com.glowkart.onboarding.repo.OnboardingTokenRepository;
 
+import jakarta.mail.MessagingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,31 +39,35 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public String createAndSendToken(String whatsappNumber, String email, String name) {
-        if ((whatsappNumber == null || whatsappNumber.isBlank()) &&
-            (email == null || email.isBlank())) {
+
+        // --- 1. Validate Inputs ---
+        if (isBlank(whatsappNumber) && isBlank(email)) {
             throw new BadRequestException("Provide either WhatsApp number or Email");
         }
 
         Instant now = Instant.now();
         OnboardingToken tokenToSend = null;
 
-        if (email != null && !email.isBlank()) {
-            Optional<OnboardingToken> usedEmail = repo.findByEmailAndUsedTrue(email);
-            if (usedEmail.isPresent()) {
+        // --- 2. Check if email is already used completely ---
+        if (!isBlank(email)) {
+            repo.findByEmailAndUsedTrue(email).ifPresent(t -> {
                 throw new BadRequestException("This email has already completed onboarding");
-            }
+            });
         }
 
-        if (email != null && !email.isBlank()) {
-            Optional<OnboardingToken> active = repo.findByEmailAndUsedFalseAndExpiresAtAfter(email, now);
-            if (active.isPresent()) tokenToSend = active.get();
+        // --- 3. Reuse existing valid email token ---
+        if (!isBlank(email)) {
+            tokenToSend = repo.findByEmailAndUsedFalseAndExpiresAtAfter(email, now)
+                              .orElse(null);
         }
 
-        if (tokenToSend == null && whatsappNumber != null && !whatsappNumber.isBlank()) {
-            Optional<OnboardingToken> active = repo.findByWhatsappNumberAndUsedFalseAndExpiresAtAfter(whatsappNumber, now);
-            if (active.isPresent()) tokenToSend = active.get();
+        // --- 4. Reuse existing valid WhatsApp token ---
+        if (tokenToSend == null && !isBlank(whatsappNumber)) {
+            tokenToSend = repo.findByWhatsappNumberAndUsedFalseAndExpiresAtAfter(whatsappNumber, now)
+                              .orElse(null);
         }
 
+        // --- 5. Create new token if needed ---
         if (tokenToSend == null) {
             tokenToSend = new OnboardingToken();
             tokenToSend.setId(UUID.randomUUID().toString());
@@ -70,23 +76,39 @@ public class OnboardingServiceImpl implements OnboardingService {
             tokenToSend.setCreatedAt(now);
             tokenToSend.setExpiresAt(now.plus(expiry));
             tokenToSend.setUsed(false);
-            repo.save(tokenToSend);
 
+            repo.save(tokenToSend);
             logger.info("Created new token {}", tokenToSend.getId());
         } else {
             logger.info("Reusing existing active token {}", tokenToSend.getId());
         }
 
-        // Send Email and WhatsApp with dynamic name
-        if (email != null && !email.isBlank()) {
-            emailSender.sendOnboardingEmail(email, tokenToSend.getId(), email, whatsappNumber, name);
+        // --- 6. Send Email Safely ---
+        if (!isBlank(email)) {
+            try {
+                emailSender.sendOnboardingEmail(email, tokenToSend.getId(), email, whatsappNumber, name);
+            } catch (MessagingException e) {
+                logger.error("Failed to send onboarding email to {}", email, e);
+            }
         }
-        if (whatsappNumber != null && !whatsappNumber.isBlank()) {
-            whatsAppSender.sendOnboardingWhatsApp(whatsappNumber, tokenToSend.getId(), email, whatsappNumber, name);
+
+        // --- 7. Send WhatsApp Safely ---
+        if (!isBlank(whatsappNumber)) {
+            try {
+                whatsAppSender.sendOnboardingWhatsApp(whatsappNumber, tokenToSend.getId(), email, whatsappNumber, name);
+            } catch (Exception e) {
+                logger.error("Failed to send onboarding WhatsApp to {}", whatsappNumber, e);
+            }
         }
 
         return tokenToSend.getId();
     }
+
+    // --- Helper Method ---
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
 
 
     @Override

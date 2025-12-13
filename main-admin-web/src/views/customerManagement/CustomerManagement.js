@@ -55,6 +55,8 @@ const CustomerManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [customerIdToDelete, setCustomerIdToDelete] = useState(null)
   const [formErrors, setFormErrors] = useState({})
+  const [selectedMobiles, setSelectedMobiles] = useState([])
+  const [isMultiDelete, setIsMultiDelete] = useState(false)
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -111,33 +113,33 @@ const CustomerManagement = () => {
   }, [fetchCustomers])
 
   useEffect(() => {
-  const trimmedQuery = searchQuery.toLowerCase().trim()
-  if (!trimmedQuery) {
-    setFilteredData(customerData)
+    const trimmedQuery = searchQuery.toLowerCase().trim()
+    if (!trimmedQuery) {
+      setFilteredData(customerData)
+      setCurrentPage(1)
+      return
+    }
+
+    const filtered = customerData.filter((customer) => {
+      const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
+      const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
+      const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
+
+      // Extract pincode from address if available
+      const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
+      const pincodeMatch = addressPincode.startsWith(trimmedQuery)
+
+      // Service type match
+      const serviceTypeMatch = (customer?.serviceType || []).some(
+        (type) => type.toLowerCase().startsWith(trimmedQuery)
+      )
+
+      return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
+    })
+
+    setFilteredData(filtered)
     setCurrentPage(1)
-    return
-  }
-
-  const filtered = customerData.filter((customer) => {
-    const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
-    const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
-    const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
-
-    // Extract pincode from address if available
-    const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
-    const pincodeMatch = addressPincode.startsWith(trimmedQuery)
-
-    // Service type match
-    const serviceTypeMatch = (customer?.serviceType || []).some(
-      (type) => type.toLowerCase().startsWith(trimmedQuery)
-    )
-
-    return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
-  })
-
-  setFilteredData(filtered)
-  setCurrentPage(1)
-}, [searchQuery, customerData])
+  }, [searchQuery, customerData])
 
 
   const handleCustomerViewDetails = (mobile) => {
@@ -210,11 +212,27 @@ const CustomerManagement = () => {
     }
   }
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= Math.ceil(filteredData.length / itemsPerPage)) {
-      setCurrentPage(page)
+ 
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+  
+  const handleSelectOne = (mobile) => {
+    setSelectedMobiles((prev) =>
+      prev.includes(mobile)
+        ? prev.filter((m) => m !== mobile)
+        : [...prev, mobile]
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (selectedMobiles.length === currentItems.length) {
+      setSelectedMobiles([])
+    } else {
+      setSelectedMobiles(currentItems.map((c) => c.mobile))
     }
   }
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -281,46 +299,46 @@ const CustomerManagement = () => {
   }
 
 
- const handleCancel = () => {
-  setIsAdding(false)
-  setIsEditing(false)
-  setCurrentMobile(null)
-  setFormData({
-    fullName: '',
-    mobile: '',
-    gender: '',
-    emailId: '',
-    dob: '',
-    referCode: '',
-  })
-  setFormErrors({})
+  const handleCancel = () => {
+    setIsAdding(false)
+    setIsEditing(false)
+    setCurrentMobile(null)
+    setFormData({
+      fullName: '',
+      mobile: '',
+      gender: '',
+      emailId: '',
+      dob: '',
+      referCode: '',
+    })
+    setFormErrors({})
 
-  // Preserve search filtered data
-  if (searchQuery.trim()) {
-    // If search query exists, keep filteredData as is
-    setFilteredData(
-      customerData.filter((customer) => {
-        const trimmedQuery = searchQuery.toLowerCase().trim()
-        const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
-        const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
-        const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
+    // Preserve search filtered data
+    if (searchQuery.trim()) {
+      // If search query exists, keep filteredData as is
+      setFilteredData(
+        customerData.filter((customer) => {
+          const trimmedQuery = searchQuery.toLowerCase().trim()
+          const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
+          const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
+          const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
 
-        const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
-        const pincodeMatch = addressPincode.startsWith(trimmedQuery)
+          const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
+          const pincodeMatch = addressPincode.startsWith(trimmedQuery)
 
-        const serviceTypeMatch = (customer?.serviceType || []).some(
-          (type) => type.toLowerCase().startsWith(trimmedQuery)
-        )
+          const serviceTypeMatch = (customer?.serviceType || []).some(
+            (type) => type.toLowerCase().startsWith(trimmedQuery)
+          )
 
-        return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
-      })
-    )
-  } else {
-    // If no search query, show all data
-    setFilteredData(customerData)
+          return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
+        })
+      )
+    } else {
+      // If no search query, show all data
+      setFilteredData(customerData)
+    }
+    setCurrentPage(1)
   }
-  setCurrentPage(1)
-}
 
 
   const paginatedData = filteredData.slice(
@@ -355,15 +373,33 @@ const CustomerManagement = () => {
 
   const confirmDeleteCustomer = async () => {
     try {
-      await deleteCustomerData(customerIdToDelete)
-      toast.success('Customer deleted successfully')
+      if (isMultiDelete) {
+        await Promise.all(
+          selectedMobiles.map((mobile) => deleteCustomerData(mobile))
+        )
 
-      setCustomerData((prev) =>
-        prev.filter((c) => c.mobile !== customerIdToDelete)
-      )
-      setFilteredData((prev) =>
-        prev.filter((c) => c.mobile !== customerIdToDelete)
-      )
+        toast.success('Selected customers deleted successfully')
+
+        setCustomerData((prev) =>
+          prev.filter((c) => !selectedMobiles.includes(c.mobile))
+        )
+        setFilteredData((prev) =>
+          prev.filter((c) => !selectedMobiles.includes(c.mobile))
+        )
+
+        setSelectedMobiles([])
+        setIsMultiDelete(false)
+      } else {
+        await deleteCustomerData(customerIdToDelete)
+        toast.success('Customer deleted successfully')
+
+        setCustomerData((prev) =>
+          prev.filter((c) => c.mobile !== customerIdToDelete)
+        )
+        setFilteredData((prev) =>
+          prev.filter((c) => c.mobile !== customerIdToDelete)
+        )
+      }
     } catch (error) {
       console.error('Delete failed:', error)
       toast.error('Failed to delete customer')
@@ -466,12 +502,26 @@ const CustomerManagement = () => {
                 Add New Customer
               </CButton>
             </div> */}
+            {/* 🗑 Delete Selected */}
+            <div className="col-md-3 d-flex justify-content-end">
+              <CButton
+                color="danger"
+                disabled={selectedMobiles.length === 0}
+                onClick={() => {
+                  setIsMultiDelete(true)
+                  setIsModalVisible(true)
+                }}
+              >
+                Delete Selected ({selectedMobiles.length})
+              </CButton>
+            </div>
           </CRow>
+
 
           {loading ? (
             <CTable striped hover responsive>
-              <CTableHead className='pink-table'>
-                <CTableRow>
+              <CTableHead>
+                <CTableRow >
                   <CTableHeaderCell colSpan={6} className="text-center">
                     <LoadingIndicator message="Loading customer data..." />
                   </CTableHeaderCell>
@@ -487,6 +537,19 @@ const CustomerManagement = () => {
               <CTable striped hover responsive>
                 <CTableHead className='pink-table'>
                   <CTableRow>
+                    {/* Select All */}
+                    {/* <CTableHeaderCell className="text-center">
+                      <input
+                        type="checkbox"
+                        checked={
+                          currentItems.length > 0 &&
+                          selectedMobiles.length === currentItems.length
+                        }
+                        onChange={handleSelectAll}
+                      /> </CTableHeaderCell> */}
+                    <CTableHeaderCell className="text-center">
+                      Select
+                    </CTableHeaderCell>
                     <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">Full Name</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">Mobile Number</CTableHeaderCell>
@@ -499,6 +562,15 @@ const CustomerManagement = () => {
                 <CTableBody className='pink-table'>
                   {currentItems.map((customer, index) => (
                     <CTableRow key={customer.mobile || index}>
+                      {/* Row Checkbox */}
+                      <CTableDataCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedMobiles.includes(customer.mobile)}
+                          onChange={() => handleSelectOne(customer.mobile)}
+                        />
+                      </CTableDataCell>
+
                       <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
                       <CTableDataCell className="text-center">{customer?.fullName || '-'}</CTableDataCell>
                       <CTableDataCell className="text-center">{customer?.mobile || '-'}</CTableDataCell>
@@ -527,6 +599,7 @@ const CustomerManagement = () => {
                             className="actionBtn delete"
                             onClick={() => {
                               setCustomerIdToDelete(customer?.mobile)
+                              setIsMultiDelete(false)
                               setIsModalVisible(true)
                             }}
                             title="Delete"
@@ -537,11 +610,16 @@ const CustomerManagement = () => {
 
                         <ConfirmationModal
                           isVisible={isModalVisible}
-                          message="Are you sure you want to delete this customer?"
+                          message={
+                            isMultiDelete
+                              ? `Are you sure you want to delete ${selectedMobiles.length} customers?`
+                              : 'Are you sure you want to delete this customer?'
+                          }
                           onConfirm={confirmDeleteCustomer}
                           onCancel={() => {
                             setIsModalVisible(false)
                             setCustomerIdToDelete(null)
+                            setIsMultiDelete(false)
                           }}
                         />
                       </CTableDataCell>

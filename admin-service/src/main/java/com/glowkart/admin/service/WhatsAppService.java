@@ -29,16 +29,16 @@ public class WhatsAppService {
     @PostConstruct
     public void init() {
         if (accountSid == null || authToken == null || fromNumber == null) {
-            logger.warn("Twilio credentials missing. WhatsApp messages will not be sent.");
+            logger.warn("Twilio credentials missing.");
         } else {
             Twilio.init(accountSid, authToken);
-            logger.info("Twilio initialized successfully.");
+            logger.info("Twilio initialized.");
         }
     }
 
     public void sendWhatsApp(String to, Map<String, String> data) {
         if (to == null || to.isBlank()) {
-            logger.warn("WhatsApp message not sent: recipient number is blank");
+            logger.warn("WhatsApp not sent: blank number");
             return;
         }
 
@@ -49,30 +49,30 @@ public class WhatsAppService {
                     buildMessageBody(data)
             ).create();
 
-            logger.info("WhatsApp message sent to {}", to);
+            logger.info("WhatsApp sent to {}", to);
         } catch (Exception e) {
-            logger.error("WhatsApp sending failed to {}: {}", to, e.getMessage(), e);
+            logger.error("WhatsApp failed to {}: {}", to, e.getMessage(), e);
         }
     }
 
     private String buildMessageBody(Map<String, String> data) {
 
-        String bodyMessage = data.getOrDefault("message", "");
-        String username = data.get("username");
-        String password = data.get("password");
+        String otpType = data.get("otpType");
 
         StringBuilder body = new StringBuilder();
-        body.append("Hello,\n\n");
-        body.append(bodyMessage).append("\n\n");
 
-        if (username != null && password != null) {
-            body.append("Username: ").append(username).append("\n")
-                .append("Password: ").append(password).append("\n\n");
+        body.append("Hello,\n\n");
+
+        if ("PAYOUT_PASSWORD_RESET".equals(otpType)) {
+            body.append("Payout Password Reset OTP\n\n");
+        } else if ("CLINIC_PASSWORD_RESET".equals(otpType)) {
+            body.append("Clinic Login Password Reset OTP\n\n");
         }
+
+        body.append(data.getOrDefault("message", "")).append("\n\n");
 
         body.append("Regards,\nGlowKart Team");
 
         return body.toString();
     }
-
 }

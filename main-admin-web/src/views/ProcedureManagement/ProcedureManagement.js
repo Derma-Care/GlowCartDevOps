@@ -47,7 +47,7 @@ const ProcedureManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
   const [errors, setErrors] = useState({ procedure: '' })
-
+  const [searchTerm, setSearchTerm] = useState('')
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
@@ -91,44 +91,44 @@ const ProcedureManagement = () => {
   /* ===========================
       SUBMIT ALL TEMP PROCEDURES
      =========================== */
-const handleSubmitAll = async () => {
-  let successCount = 0;
-  let failCount = 0;
-  let failedItems = [];
+  const handleSubmitAll = async () => {
+    let successCount = 0;
+    let failCount = 0;
+    let failedItems = [];
 
-  for (const name of tempProcedures) {
-    try {
-      const res = await createProcedure({ procedureName: name });
+    for (const name of tempProcedures) {
+      try {
+        const res = await createProcedure({ procedureName: name });
 
-      if (res && res.success !== false) {
-        successCount++;
-      } else {
+        if (res && res.success !== false) {
+          successCount++;
+        } else {
+          failCount++;
+          failedItems.push(name);
+        }
+      } catch (err) {
         failCount++;
         failedItems.push(name);
       }
-    } catch (err) {
-      failCount++;
-      failedItems.push(name);
     }
-  }
 
-  // Show ONLY ONE toast message
-  if (successCount > 0 && failCount === 0) {
-    toast.success(`${successCount} procedures added successfully`);
-  } 
-  else if (successCount > 0 && failCount > 0) {
-    toast.warn(
-      `${successCount} added successfully, ${failCount} failed: ${failedItems.join(", ")}`
-    );
-  } 
-  else {
-    toast.error(`Failed to add procedures: ${failedItems.join(", ")}`);
-  }
+    // Show ONLY ONE toast message
+    if (successCount > 0 && failCount === 0) {
+      toast.success(`${successCount} procedures added successfully`);
+    }
+    else if (successCount > 0 && failCount > 0) {
+      toast.warn(
+        `${successCount} added successfully, ${failCount} failed: ${failedItems.join(", ")}`
+      );
+    }
+    else {
+      toast.error(`Failed to add procedures: ${failedItems.join(", ")}`);
+    }
 
-  fetchProcedures();
-  setTempProcedures([]);
-  setShowModal(false);
-};
+    fetchProcedures();
+    setTempProcedures([]);
+    setShowModal(false);
+  };
 
   const handleView = (procedure) => {
     setSelectedProcedure(procedure)
@@ -157,11 +157,19 @@ const handleSubmitAll = async () => {
     }
     setShowDeleteModal(false)
   }
+  const filteredProcedures = procedures.filter((proc) =>
+    proc.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = procedures.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(procedures.length / itemsPerPage)
+  const currentItems = filteredProcedures.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(filteredProcedures.length / itemsPerPage)
+
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
 
   return (
     <>
@@ -169,55 +177,75 @@ const handleSubmitAll = async () => {
 
       <CCard className="mt-4">
         <CCardHeader>
-          <div className="d-flex justify-content-between align-items-center">
-            <h4 className="mb-0" style={{ color: COLORS.black }}>Procedure Management</h4>
-            <CButton
-              color="secondary"
-              style={{ backgroundColor: COLORS.black, color: COLORS.white }}
-              onClick={() => {
-                setEditMode(false)
-                setProcedureInput('')
-                setTempProcedures([])
-                setShowModal(true)
-              }}
-            >+ Add New Procedure</CButton>
+          <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <h4 className="mb-0" style={{ color: COLORS.black }}>
+              Procedure Management
+            </h4>
+
+            <div className="d-flex align-items-center gap-2">
+              {/* Global Search */}
+              <CFormInput
+                placeholder="Search procedure..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1)
+                }}
+                style={{ width: '220px' }}
+              />
+
+              {/* Add Button */}
+              <CButton
+                color="secondary"
+                style={{ backgroundColor: COLORS.black, color: COLORS.white }}
+                onClick={() => {
+                  setEditMode(false)
+                  setProcedureInput('')
+                  setTempProcedures([])
+                  setShowModal(true)
+                }}
+              >
+                + Add New Procedure
+              </CButton>
+            </div>
           </div>
+
         </CCardHeader>
 
         {loading ? (
           <LoadingIndicator message="Fetching Procedure Details, Please wait..." />
         ) : (
-         <CTable striped hover responsive>
-  <CTableHead className='pink-table'>
-    <CTableRow>
-      <CTableHeaderCell className="text-center" style={{ width: "10%" }}>S.No</CTableHeaderCell>
-      <CTableHeaderCell className="text-center" style={{ width: "60%" }}>Procedure</CTableHeaderCell>
-      <CTableHeaderCell className="text-center" style={{ width: "30%" }}>Actions</CTableHeaderCell>
-    </CTableRow>
-  </CTableHead>
+          <CTable striped hover responsive >
+            <CTableHead className='pink-table'>
+              <CTableRow>
+                <CTableHeaderCell className="text-center" style={{ width: "10%" }}>S.No</CTableHeaderCell>
+                <CTableHeaderCell className="text-center" style={{ width: "60%" }}>Procedure</CTableHeaderCell>
+                <CTableHeaderCell className="text-center" style={{ width: "30%" }}>Actions</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
 
-  <CTableBody className='pink-table'>
-    {currentItems.length > 0 ? (
-      currentItems.map((row, index) => (
-        <CTableRow key={row.id}>
-          <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
-          <CTableDataCell className="text-center">{row.name}</CTableDataCell>
-          <CTableDataCell className="text-center">
-            <div className="d-flex justify-content-center gap-2">
-              <button className="actionBtn" onClick={() => handleView(row)}><Eye size={18}/></button>
-              <button className="actionBtn" onClick={() => handleEdit(row)}><Edit2 size={18}/></button>
-              <button className="actionBtn" onClick={() => confirmDelete(row.id)}><Trash2 size={18}/></button>
-            </div>
-          </CTableDataCell>
-        </CTableRow>
-      ))
-    ) : (
-      <CTableRow>
-        <CTableDataCell colSpan={3} className="text-center">No procedures found</CTableDataCell>
-      </CTableRow>
-    )}
-  </CTableBody>
-</CTable>
+            <CTableBody className='pink-table'>
+              {currentItems.length > 0 ? (
+                currentItems.map((row, index) => (
+                  <CTableRow key={row.id}>
+                    <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
+                    <CTableDataCell className="text-center">{row.name}</CTableDataCell>
+                    <CTableDataCell className="text-center">
+                      <div className="d-flex justify-content-center gap-2">
+                        <button className="actionBtn" onClick={() => handleView(row)}><Eye size={18} /></button>
+                        <button className="actionBtn" onClick={() => handleEdit(row)}><Edit2 size={18} /></button>
+                        <button className="actionBtn" onClick={() => confirmDelete(row.id)}><Trash2 size={18} /></button>
+                      </div>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              ) : (
+                <CTableRow>
+                  <CTableDataCell colSpan={3} className="text-center">No procedures found</CTableDataCell>
+                </CTableRow>
+              )}
+            </CTableBody>
+          </CTable>
 
         )}
 
@@ -228,7 +256,7 @@ const handleSubmitAll = async () => {
               <CFormSelect
                 value={itemsPerPage}
                 onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                style={{ width: '80px',display: 'inline-block' }}
+                style={{ width: '80px', display: 'inline-block' }}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -237,14 +265,29 @@ const handleSubmitAll = async () => {
             </div>
 
             <div>
-              <div>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, procedures.length)} of {procedures.length} entries</div>
+              <div>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredProcedures.length)} of {filteredProcedures.length} entries
+              </div>
 
               <CPagination align="end">
-                <CPaginationItem disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Previous</CPaginationItem>
-                {[...Array(totalPages)].map((_, i) => (
-                  <CPaginationItem active={i + 1 === currentPage} key={i} onClick={() => setCurrentPage(i + 1)}>{i + 1}</CPaginationItem>
-                ))}
-                <CPaginationItem disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Next</CPaginationItem>
+                <CPaginationItem disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>Previous</CPaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    if (totalPages <= 5) return true;
+                    if (currentPage <= 3) return page <= 5;
+                    if (currentPage >= totalPages - 2)
+                      return page >= totalPages - 4;
+                    return page >= currentPage - 2 && page <= currentPage + 2;
+                  })
+                  .map((page) => (
+                    <CPaginationItem
+                      key={page}
+                      active={page === currentPage}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </CPaginationItem>
+                  ))}
+                <CPaginationItem disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next</CPaginationItem>
               </CPagination>
             </div>
           </div>
@@ -296,14 +339,14 @@ const handleSubmitAll = async () => {
         </CModalFooter>
       </CModal>
 
-     
-        <ConfirmationModal
-          isVisible={showDeleteModal}
-          message="Are you sure you want to delete this procedure?"
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
-        />
-   
+
+      <ConfirmationModal
+        isVisible={showDeleteModal}
+        message="Are you sure you want to delete this procedure?"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+
     </>
   )
 }

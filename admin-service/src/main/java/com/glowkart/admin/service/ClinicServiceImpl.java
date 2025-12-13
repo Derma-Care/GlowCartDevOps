@@ -26,6 +26,9 @@ public class ClinicServiceImpl implements ClinicService {
     private final OnboardingClient onboardingClient;
     private final AsyncVerificationService asyncVerificationService;
 
+    private static final String CLINIC_PASSWORD_RESET = "CLINIC_PASSWORD_RESET";
+    private static final String PAYOUT_PASSWORD_RESET = "PAYOUT_PASSWORD_RESET";
+
     public ClinicServiceImpl(
             ClinicRepository repo,
             OnboardingClient onboardingClient,
@@ -60,10 +63,17 @@ public class ClinicServiceImpl implements ClinicService {
 
         decodeDocuments(dto, clinic);
 
-        Map<String, String> credentials = CredentialGenerator.generate();
+     // Generate login credentials
+        Map<String, String> credentials = CredentialGenerator.generateLoginCredentials();
         clinic.setUsername(credentials.get("username"));
         clinic.setPassword(credentials.get("password")); // PLAIN TEXT PASSWORD
 
+        // Generate payout credentials
+        Map<String, String> payoutCredentials = CredentialGenerator.generatePayoutCredentials();
+        clinic.setPayoutUsername(payoutCredentials.get("payoutUsername"));
+        clinic.setPayoutPassword(payoutCredentials.get("payoutPassword"));
+
+        
         clinic.setStatus("PENDING");
         clinic.setCreatedAt(Instant.now());
 
@@ -92,12 +102,21 @@ public class ClinicServiceImpl implements ClinicService {
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("VERIFIED");
 
+        // Generate login credentials if missing
         if (clinic.getUsername() == null || clinic.getPassword() == null) {
-            Map<String, String> creds = CredentialGenerator.generate();
+            Map<String, String> creds = CredentialGenerator.generateLoginCredentials();
             clinic.setUsername(creds.get("username"));
             clinic.setPassword(creds.get("password"));
         }
 
+        // Generate payout credentials if missing
+        if (clinic.getPayoutUsername() == null || clinic.getPayoutPassword() == null) {
+            Map<String, String> payoutCreds = CredentialGenerator.generatePayoutCredentials();
+            clinic.setPayoutUsername(payoutCreds.get("payoutUsername"));
+            clinic.setPayoutPassword(payoutCreds.get("payoutPassword"));
+        }
+        
+        
         repo.save(clinic);
         asyncVerificationService.sendCredentialsAsync(clinic);
         return clinic;
@@ -138,23 +157,7 @@ public class ClinicServiceImpl implements ClinicService {
         return repo.findByStatusIgnoreCase("VERIFIED");
     }
 
-    // ==========================================================================================
-    // LOGIN (PLAIN TEXT)
-    // ==========================================================================================
-    @Override
-    public Clinic login(String username, String password) {
-        Clinic clinic = repo.findByUsername(username);
-
-        if (clinic == null || !"VERIFIED".equalsIgnoreCase(clinic.getStatus())) {
-            return null;
-        }
-
-        if (!clinic.getPassword().equals(password)) {
-            return null;
-        }
-
-        return clinic;
-    }
+   
 
     // ==========================================================================================
     // UPDATE CLINIC (FULL LOGIC)
@@ -258,6 +261,25 @@ public class ClinicServiceImpl implements ClinicService {
         return repo.save(clinic);
     }
 
+    
+    // ==========================================================================================
+    // LOGIN (PLAIN TEXT)
+    // ==========================================================================================
+    @Override
+    public Clinic login(String username, String password) {
+        Clinic clinic = repo.findByUsername(username);
+
+        if (clinic == null || !"VERIFIED".equalsIgnoreCase(clinic.getStatus())) {
+            return null;
+        }
+
+        if (!clinic.getPassword().equals(password)) {
+            return null;
+        }
+
+        return clinic;
+    }
+    
     // ==========================================================================================
     // CHANGE PASSWORD — PLAIN TEXT
     // ==========================================================================================
@@ -307,20 +329,25 @@ public class ClinicServiceImpl implements ClinicService {
         }
 
         if (clinic == null) {
-            throw new ProcedureServiceException(id.contains("@") ?
-                    "No clinic found with this email" :
-                    "No clinic found with this WhatsApp", 404, null);
+            throw new ProcedureServiceException(
+                    id.contains("@")
+                            ? "No clinic found with this email"
+                            : "No clinic found with this WhatsApp",
+                    404, null
+            );
         }
 
         Instant now = Instant.now();
 
         if (clinic.getOtpSentTime() != null &&
                 now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
-            throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
+            throw new ProcedureServiceException(
+                    "OTP already sent. Please wait before requesting again",
+                    429, null
+            );
         }
 
-        SecureRandom random = new SecureRandom();
-        String otp = String.valueOf(100000 + random.nextInt(900000));
+        String otp = String.valueOf(100000 + new SecureRandom().nextInt(900000));
 
         clinic.setOtpCode(otp);
         clinic.setOtpExpiry(now.plusSeconds(300));
@@ -329,11 +356,18 @@ public class ClinicServiceImpl implements ClinicService {
 
         repo.save(clinic);
 
-        asyncVerificationService.sendOtpAsync(clinic, otp);
+        // 🔥 IMPORTANT CHANGE
+        asyncVerificationService.sendOtpAsync(
+                clinic,
+                otp,
+                CLINIC_PASSWORD_RESET
+        );
 
-        return new ApiResponse<>(true,
+        return new ApiResponse<>(
+                true,
                 isEmail ? "OTP sent to email" : "OTP sent to WhatsApp",
-                null);
+                null
+        );
     }
 
     // ==========================================================================================
@@ -353,20 +387,25 @@ public class ClinicServiceImpl implements ClinicService {
         }
 
         if (clinic == null) {
-            throw new ProcedureServiceException(id.contains("@") ?
-                    "No clinic found with this email" :
-                    "No clinic found with this WhatsApp", 404, null);
+            throw new ProcedureServiceException(
+                    id.contains("@")
+                            ? "No clinic found with this email"
+                            : "No clinic found with this WhatsApp",
+                    404, null
+            );
         }
 
         Instant now = Instant.now();
 
         if (clinic.getOtpSentTime() != null &&
                 now.isBefore(clinic.getOtpSentTime().plusSeconds(30))) {
-            throw new ProcedureServiceException("OTP already sent. Please wait before requesting again", 429, null);
+            throw new ProcedureServiceException(
+                    "OTP already sent. Please wait before requesting again",
+                    429, null
+            );
         }
 
-        SecureRandom random = new SecureRandom();
-        String otp = String.valueOf(100000 + random.nextInt(900000));
+        String otp = String.valueOf(100000 + new SecureRandom().nextInt(900000));
 
         clinic.setOtpCode(otp);
         clinic.setOtpExpiry(now.plusSeconds(300));
@@ -375,11 +414,20 @@ public class ClinicServiceImpl implements ClinicService {
 
         repo.save(clinic);
 
-        asyncVerificationService.sendOtpAsync(clinic, otp);
+        // 🔥 IMPORTANT CHANGE
+        asyncVerificationService.sendOtpAsync(
+                clinic,
+                otp,
+                CLINIC_PASSWORD_RESET
+        );
 
-        return new ApiResponse<>(true,
-                isEmail ? "OTP resent to email" : "OTP resent to WhatsApp", null);
+        return new ApiResponse<>(
+                true,
+                isEmail ? "OTP resent to email" : "OTP resent to WhatsApp",
+                null
+        );
     }
+
 
     // ==========================================================================================
     // RESET PASSWORD
@@ -438,6 +486,229 @@ public class ClinicServiceImpl implements ClinicService {
                 null);
     }
 
+    
+    // ==========================================================================================
+    
+ // ==========================================================================================
+ // PAYOUT LOGIN (PLAIN TEXT)
+ // ==========================================================================================
+ @Override
+ public Clinic payoutLogin(String payoutUsername, String payoutPassword) {
+     Clinic clinic = repo.findByPayoutUsername(payoutUsername);
+
+     if (clinic == null || !"VERIFIED".equalsIgnoreCase(clinic.getStatus())) {
+         return null;
+     }
+
+     if (!clinic.getPayoutPassword().equals(payoutPassword)) {
+         return null;
+     }
+
+     return clinic;
+ }
+
+ // ==========================================================================================
+ // CHANGE PAYOUT PASSWORD — PLAIN TEXT
+ // ==========================================================================================
+ @Override
+ public void changePayoutPassword(ChangePayoutPasswordDTO dto) {
+
+     Clinic clinic = repo.findByPayoutUsername(dto.getPayoutUsername());
+     if (clinic == null) {
+         throw new ProcedureServiceException("Invalid payout username", 404, null);
+     }
+
+     if (!clinic.getPayoutPassword().equals(dto.getCurrentPayoutPassword())) {
+         throw new ProcedureServiceException("Current payout password is incorrect", 400, null);
+     }
+
+     if (dto.getCurrentPayoutPassword().equals(dto.getNewPayoutPassword())) {
+         throw new ProcedureServiceException("New payout password must be different from current password", 400, null);
+     }
+
+     if (!dto.getNewPayoutPassword().equals(dto.getConfirmPayoutPassword())) {
+         throw new ProcedureServiceException("New payout password and confirm password do not match", 400, null);
+     }
+
+     clinic.setPayoutPassword(dto.getNewPayoutPassword());
+     repo.save(clinic);
+ }
+
+ // ==========================================================================================
+ // FORGOT PAYOUT PASSWORD (OTP)
+ // ==========================================================================================
+ @Override
+ public ApiResponse<Void> forgotPayoutPassword(ForgotPasswordRequest request) {
+
+     String id = request.getIdentifier();
+
+     Clinic clinic = repo.findByEmail(id);
+     boolean isEmail = true;
+
+     if (clinic == null) {
+         clinic = repo.findByWhatsappNumber(id);
+         isEmail = false;
+     }
+
+     if (clinic == null) {
+         throw new ProcedureServiceException(
+                 id.contains("@")
+                         ? "No clinic found with this email"
+                         : "No clinic found with this WhatsApp",
+                 404, null
+         );
+     }
+
+     Instant now = Instant.now();
+
+     if (clinic.getPayoutOtpSentTime() != null &&
+             now.isBefore(clinic.getPayoutOtpSentTime().plusSeconds(30))) {
+         throw new ProcedureServiceException(
+                 "OTP already sent. Please wait before requesting again",
+                 429, null
+         );
+     }
+
+     String otp = String.valueOf(100000 + new SecureRandom().nextInt(900000));
+
+     clinic.setPayoutOtpCode(otp);
+     clinic.setPayoutOtpExpiry(now.plusSeconds(300));
+     clinic.setPayoutOtpSentTime(now);
+     clinic.setPayoutOtpAttempts(0);
+
+     repo.save(clinic);
+
+     // 🔥 IMPORTANT CHANGE
+     asyncVerificationService.sendOtpAsync(
+             clinic,
+             otp,
+             PAYOUT_PASSWORD_RESET
+     );
+
+     return new ApiResponse<>(
+             true,
+             isEmail ? "Payout OTP sent to email" : "Payout OTP sent to WhatsApp",
+             null
+     );
+ }
+
+
+ // ==========================================================================================
+ // RESEND PAYOUT OTP
+ // ==========================================================================================
+ @Override
+ public ApiResponse<Void> resendPayoutOtp(ForgotPasswordRequest request) {
+
+     String id = request.getIdentifier();
+
+     Clinic clinic = repo.findByEmail(id);
+     boolean isEmail = true;
+
+     if (clinic == null) {
+         clinic = repo.findByWhatsappNumber(id);
+         isEmail = false;
+     }
+
+     if (clinic == null) {
+         throw new ProcedureServiceException(
+                 id.contains("@")
+                         ? "No clinic found with this email"
+                         : "No clinic found with this WhatsApp",
+                 404, null
+         );
+     }
+
+     Instant now = Instant.now();
+
+     if (clinic.getPayoutOtpSentTime() != null &&
+             now.isBefore(clinic.getPayoutOtpSentTime().plusSeconds(30))) {
+         throw new ProcedureServiceException(
+                 "OTP already sent. Please wait before requesting again",
+                 429, null
+         );
+     }
+
+     String otp = String.valueOf(100000 + new SecureRandom().nextInt(900000));
+
+     clinic.setPayoutOtpCode(otp);
+     clinic.setPayoutOtpExpiry(now.plusSeconds(300));
+     clinic.setPayoutOtpSentTime(now);
+     clinic.setPayoutOtpAttempts(0);
+
+     repo.save(clinic);
+
+     // 🔥 IMPORTANT CHANGE
+     asyncVerificationService.sendOtpAsync(
+             clinic,
+             otp,
+             PAYOUT_PASSWORD_RESET
+     );
+
+     return new ApiResponse<>(
+             true,
+             isEmail ? "Payout OTP resent to email" : "Payout OTP resent to WhatsApp",
+             null
+     );
+ }
+
+
+ // ==========================================================================================
+ // RESET PAYOUT PASSWORD
+ // ==========================================================================================
+ @Override
+ public ApiResponse<Void> resetPayoutPassword(ResetPasswordRequest request) {
+
+     String id = request.getIdentifier();
+     Clinic clinic;
+     boolean isEmail = id.contains("@");
+
+     if (isEmail) {
+         clinic = repo.findByEmail(id);
+         if (clinic == null) {
+             throw new ProcedureServiceException("No clinic found with this email", 404, null);
+         }
+     } else {
+         clinic = repo.findByWhatsappNumber(id);
+         if (clinic == null) {
+             throw new ProcedureServiceException("No clinic found with this WhatsApp number", 404, null);
+         }
+     }
+
+     if (clinic.getPayoutOtpCode() == null || clinic.getPayoutOtpExpiry() == null) {
+         throw new ProcedureServiceException("OTP was not requested", 400, null);
+     }
+
+     if (Instant.now().isAfter(clinic.getPayoutOtpExpiry())) {
+         throw new ProcedureServiceException("OTP expired", 400, null);
+     }
+
+     if (clinic.getPayoutOtpAttempts() >= 5) {
+         throw new ProcedureServiceException("Max OTP attempts exceeded", 429, null);
+     }
+
+     if (!request.getOtp().equals(clinic.getPayoutOtpCode())) {
+         clinic.setPayoutOtpAttempts(clinic.getPayoutOtpAttempts() + 1);
+         repo.save(clinic);
+         throw new ProcedureServiceException("Invalid OTP", 400, null);
+     }
+
+     clinic.setPayoutPassword(request.getNewPassword());
+     clinic.setPayoutOtpCode(null);
+     clinic.setPayoutOtpExpiry(null);
+     clinic.setPayoutOtpSentTime(null);
+     clinic.setPayoutOtpAttempts(0);
+
+     repo.save(clinic);
+
+     return new ApiResponse<>(true,
+             isEmail ?
+                     "Payout password reset successful for email" :
+                     "Payout password reset successful for WhatsApp",
+             null);
+ }
+
+    
+    
 
     // ==========================================================================================
     // HELPER METHODS

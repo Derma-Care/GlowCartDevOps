@@ -23,7 +23,9 @@ public class CustomerDetailsDTO {
     @Pattern(regexp = "^[6-9][0-9]{9}$", message = "mobile must be a valid 10-digit Indian number")
     private String mobile;
 
+    @NotBlank(message = "city is required")   // ✅ ADD THIS
     private String city;
+    
     private LocalDate dob;
 
     @NotBlank(message = "gender is required")  // <-- Gender is now required

@@ -62,6 +62,8 @@ public class AsyncVerificationService {
 
         data.put("username", clinic.getUsername());
         data.put("password", clinic.getPassword());
+        data.put("payoutUsername", clinic.getPayoutUsername());
+        data.put("payoutPassword", clinic.getPayoutPassword());
 
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);
@@ -85,14 +87,28 @@ public class AsyncVerificationService {
     }
     
     
+    // 5. OTP Sending (Updated - includes OTP type)
     @Async
-    public void sendOtpAsync(Clinic clinic, String otp) {
+    public void sendOtpAsync(Clinic clinic, String otp, String otpType) {
         Map<String, String> data = new HashMap<>();
 
-        data.put("subject", "GlowKart Password Reset OTP");
+        String subject;
+        String msgHeader;
+
+        if ("PAYOUT_PASSWORD_RESET".equals(otpType)) {
+            subject = "GlowKart Payout Password Reset OTP";
+            msgHeader = "Your OTP for resetting your *Payout* password is: ";
+        } else {
+            subject = "GlowKart Clinic Login Password Reset OTP";
+            msgHeader = "Your OTP for resetting your *Clinic Login* password is: ";
+        }
+
+        data.put("subject", subject);
         data.put("message",
-                "Your OTP for resetting your GlowKart password is: " + otp +
-                "\nThis OTP is valid for 10 minutes.");
+                msgHeader + otp +
+                        "\nThis OTP is valid for 10 minutes.");
+
+        data.put("otpType", otpType);
 
         emailService.sendEmail(clinic.getEmail(), data);
         whatsAppService.sendWhatsApp(clinic.getWhatsappNumber(), data);

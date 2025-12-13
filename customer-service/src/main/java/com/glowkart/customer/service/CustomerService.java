@@ -289,7 +289,8 @@ public class CustomerService {
     private List<String> validateStep1Fields(CustomerDetailsDTO dto) {
         List<String> missingFields = new ArrayList<>();
 
-        // Common field
+        // ✅ Common mandatory fields
+        if (isEmpty(dto.getCity())) missingFields.add("city");
         if (isEmpty(dto.getGender())) missingFields.add("gender");
 
         // Service-specific fields
@@ -299,21 +300,24 @@ public class CustomerService {
             if (dto.getDateOfLastVisit() == null) missingFields.add("dateOfLastVisit");
             if (isEmpty(dto.getServiceType())) missingFields.add("serviceType");
             if (isEmpty(dto.getPrescription())) missingFields.add("prescription");
-        } else if (dto.getServiceStatus() == 2) {
+        } 
+        else if (dto.getServiceStatus() == 2) {
             if (isEmpty(dto.getCategory())) missingFields.add("category");
             if (isEmpty(dto.getConcern())) missingFields.add("concern");
             if (isEmpty(dto.getSkinTone())) missingFields.add("skinTone");
-        } else {
+        } 
+        else {
             throw new InvalidInputException("Invalid serviceStatus value");
         }
 
-        // ✅ Consent checks
+        // Consent checks
         if (dto.getAadhaarConsent() == null || !dto.getAadhaarConsent()) missingFields.add("aadhaarConsent");
         if (dto.getUserConsent() == null || !dto.getUserConsent()) missingFields.add("userConsent");
         if (dto.getPrivacyConsent() == null || !dto.getPrivacyConsent()) missingFields.add("privacyConsent");
 
         return missingFields;
     }
+
 
 
     private boolean isEmpty(Object value) {

@@ -5,9 +5,25 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.glowkart.admin.dto.*;
+import com.glowkart.admin.dto.ApiResponse;
+import com.glowkart.admin.dto.ChangePasswordDTO;
+import com.glowkart.admin.dto.ChangePayoutPasswordDTO;
+import com.glowkart.admin.dto.ClinicLoginRequest;
+import com.glowkart.admin.dto.ClinicPublicDTO;
+import com.glowkart.admin.dto.ClinicRegistrationDTO;
+import com.glowkart.admin.dto.ClinicRejectionRequest;
+import com.glowkart.admin.dto.ForgotPasswordRequest;
+import com.glowkart.admin.dto.PayoutLoginRequest;
+import com.glowkart.admin.dto.ResetPasswordRequest;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.service.ClinicService;
 import com.glowkart.admin.util.ClinicMapper;
@@ -294,4 +310,96 @@ public class ClinicController {
         resp.setStatusCode(HttpStatus.OK.value());
         return ResponseEntity.ok(resp);
     }
+    
+ // ---------------------------------------------------
+ // 15. PAYOUT LOGIN
+ // ---------------------------------------------------
+    @PostMapping("/clinics/payout-login")
+    public ResponseEntity<ApiResponse<Void>> payoutLogin(
+            @Valid @RequestBody PayoutLoginRequest request) {
+
+        Clinic clinic = clinicService.payoutLogin(
+                request.getPayoutUsername(),
+                request.getPayoutPassword()
+        );
+
+        if (clinic == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(
+                            false,
+                            "Invalid payout username or password",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
+        }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Payout login successful",
+                        null,
+                        HttpStatus.OK.value()
+                )
+        );
+    }
+
+
+ // ---------------------------------------------------
+ // 16. CHANGE PAYOUT PASSWORD
+ // ---------------------------------------------------
+ @PutMapping("/clinics/updatePayoutPassword/{payoutUsername}")
+ public ResponseEntity<ApiResponse<?>> changePayoutPassword(
+         @PathVariable String payoutUsername,
+         @RequestBody ChangePayoutPasswordDTO dto) {
+
+     dto.setPayoutUsername(payoutUsername);
+
+     clinicService.changePayoutPassword(dto);
+
+     return ResponseEntity.ok(
+             new ApiResponse<>(
+                     true,
+                     "Payout password updated successfully",
+                     null,
+                     HttpStatus.OK.value()
+             )
+     );
+ }
+
+ // ---------------------------------------------------
+ // 17. PAYOUT FORGOT PASSWORD
+ // ---------------------------------------------------
+ @PostMapping("/clinics/payout-forgot-password")
+ public ResponseEntity<ApiResponse<Void>> payoutForgotPassword(
+         @Valid @RequestBody ForgotPasswordRequest request) {
+
+     ApiResponse<Void> resp = clinicService.forgotPayoutPassword(request);
+     resp.setStatusCode(HttpStatus.OK.value());
+     return ResponseEntity.ok(resp);
+ }
+
+ // ---------------------------------------------------
+ // 18. PAYOUT RESET PASSWORD
+ // ---------------------------------------------------
+ @PostMapping("/clinics/payout-reset-password")
+ public ResponseEntity<ApiResponse<Void>> payoutResetPassword(
+         @Valid @RequestBody ResetPasswordRequest request) {
+
+     ApiResponse<Void> resp = clinicService.resetPayoutPassword(request);
+     resp.setStatusCode(HttpStatus.OK.value());
+     return ResponseEntity.ok(resp);
+ }
+
+ // ---------------------------------------------------
+ // 19. PAYOUT RESEND OTP
+ // ---------------------------------------------------
+ @PostMapping("/clinics/payout-resend-otp")
+ public ResponseEntity<ApiResponse<Void>> payoutResendOtp(
+         @Valid @RequestBody ForgotPasswordRequest request) {
+
+     ApiResponse<Void> resp = clinicService.resendPayoutOtp(request);
+     resp.setStatusCode(HttpStatus.OK.value());
+     return ResponseEntity.ok(resp);
+ }
+
 }

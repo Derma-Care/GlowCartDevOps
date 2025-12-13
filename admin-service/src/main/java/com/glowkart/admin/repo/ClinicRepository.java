@@ -8,12 +8,15 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ClinicRepository extends MongoRepository<Clinic, String> {
     boolean existsByWhatsappNumber(String whatsappNumber);
+    
     Clinic findByUsername(String username);
- // NEW: fetch clinics by status (case-insensitive)
+
+    // NEW: fetch clinics by status (case-insensitive)
     List<Clinic> findByStatusIgnoreCase(String string);
 
     Clinic findByEmail(String email);
     Clinic findByWhatsappNumber(String whatsappNumber);
 
-
+    // NEW: fetch clinic by payout username
+    Clinic findByPayoutUsername(String payoutUsername);
 }

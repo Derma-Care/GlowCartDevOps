@@ -8,12 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.glowkart.clinicadmin.dto.ApiResponse;
-import com.glowkart.clinicadmin.dto.ChangePasswordDTO;
-import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
-import com.glowkart.clinicadmin.dto.ClinicPublicDTO;
-import com.glowkart.clinicadmin.dto.ForgotPasswordRequest;
-import com.glowkart.clinicadmin.dto.ResetPasswordRequest;
+import com.glowkart.clinicadmin.dto.*;
 import com.glowkart.clinicadmin.service.ClinicAuthService;
 
 @RestController
@@ -26,15 +21,18 @@ public class ClinicAuthController {
         this.authService = authService;
     }
 
+    // ------------------- CLINIC LOGIN / PASSWORD APIs -------------------
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(@RequestBody ClinicLoginRequest request) {
         return authService.login(request);
     }
-    
+
     @PutMapping("/updatePassword/{username}")
     public ResponseEntity<ApiResponse<Void>> updatePassword(
             @PathVariable String username,
-            @RequestBody ChangePasswordDTO dto) {
+            @RequestBody ChangePasswordDTO dto
+    ) {
         return authService.updatePassword(username, dto);
     }
 
@@ -53,4 +51,33 @@ public class ClinicAuthController {
         return authService.resendOtp(request);
     }
 
+    // ------------------- PAYOUT LOGIN / PASSWORD APIs -------------------
+
+    @PostMapping("/payout-login")
+    public ResponseEntity<ApiResponse<Void>> payoutLogin(@RequestBody PayoutLoginRequest request) {
+        return authService.payoutLogin(request);
+    }
+
+    @PutMapping("/updatePayoutPassword/{payoutUsername}")
+    public ResponseEntity<ApiResponse<Void>> changePayoutPassword(
+            @PathVariable String payoutUsername,
+            @RequestBody ChangePayoutPasswordDTO dto
+    ) {
+        return authService.changePayoutPassword(payoutUsername, dto);
+    }
+
+    @PostMapping("/payout-forgot-password")
+    public ResponseEntity<ApiResponse<Void>> payoutForgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return authService.payoutForgotPassword(request);
+    }
+
+    @PostMapping("/payout-reset-password")
+    public ResponseEntity<ApiResponse<Void>> payoutResetPassword(@RequestBody ResetPasswordRequest request) {
+        return authService.payoutResetPassword(request);
+    }
+
+    @PostMapping("/payout-resend-otp")
+    public ResponseEntity<ApiResponse<Void>> payoutResendOtp(@RequestBody ForgotPasswordRequest request) {
+        return authService.payoutResendOtp(request);
+    }
 }

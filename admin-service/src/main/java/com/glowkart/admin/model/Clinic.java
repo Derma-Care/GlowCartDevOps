@@ -27,6 +27,10 @@ public class Clinic {
     private String username; // Clinic login username
     private String password; // Clinic login password
 
+    
+    private String payoutUsername;
+    private String payoutPassword;
+
     private double hospitalOverallRating;
     private String contactNumber;
     private String openingTime;
@@ -91,7 +95,10 @@ public class Clinic {
     private Instant otpSentTime;     // Last OTP sent time
     private int otpAttempts;         // Count of OTP verification attempts
 
-    
+    private String payoutOtpCode;
+    private Instant payoutOtpExpiry;
+    private Instant payoutOtpSentTime;
+    private int payoutOtpAttempts;
 
  // Add THIS:
     private List<Doctor> doctorsList;

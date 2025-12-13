@@ -17,9 +17,10 @@ public class RegistrationResponseDTO {
     private Boolean valid;    // true if code exists
     private Integer rank;     
 
-    private Boolean isRegistrationCodeVerified;
-    private Boolean isUserProfileCompleted;
-    private Boolean isSpinWheelCompleted;
-    private Boolean isRegistrationCompleted;
+    private Boolean registrationCodeVerified;
+    private Boolean userProfileCompleted;
+    private Boolean spinWheelCompleted;
+    private Boolean registrationCompleted;
+
 }
 

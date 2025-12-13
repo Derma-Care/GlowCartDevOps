@@ -70,7 +70,9 @@ const Clinic_getDetails = ({ service }) => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredClinics.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
-
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
   return (
     <div className="d-flex justify-content-center mt-4">
       <div style={{ width: '95%', maxWidth: '1200px' }}>
@@ -189,9 +191,9 @@ const Clinic_getDetails = ({ service }) => {
 
             {/* Pagination */}
             {filteredClinics.length > 0 && (
-              <div className="d-flex justify-content-between align-items-center mt-3">
+              <div className="d-flex justify-content-between px-3 pb-3 mt-3">
                 <div>
-                  <label className="me-2">Rows:</label>
+                  <label className="me-2">Rows per page:</label>
                   <CFormSelect
                     value={itemsPerPage}
                     onChange={(e) => {
@@ -208,30 +210,38 @@ const Clinic_getDetails = ({ service }) => {
                 </div>
                 <div>
                   <div>
-                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length}
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length}entries
                   </div>
 
                   <CPagination align="end">
                     <CPaginationItem
                       disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => prev - 1)}
+                      onClick={() => handlePageChange(currentPage - 1)}
                     >
                       Previous
                     </CPaginationItem>
 
-                    {[...Array(totalPages)].map((_, idx) => (
-                      <CPaginationItem
-                        key={idx + 1}
-                        active={currentPage === idx + 1}
-                        onClick={() => setCurrentPage(idx + 1)}
-                      >
-                        {idx + 1}
-                      </CPaginationItem>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((page) => {
+                        if (totalPages <= 5) return true;
+                        if (currentPage <= 3) return page <= 5;
+                        if (currentPage >= totalPages - 2)
+                          return page >= totalPages - 4;
+                        return page >= currentPage - 2 && page <= currentPage + 2;
+                      })
+                      .map((page) => (
+                        <CPaginationItem
+                          key={page}
+                          active={page === currentPage}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </CPaginationItem>
+                      ))}
 
                     <CPaginationItem
                       disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(prev => prev + 1)}
+                      onClick={() => handlePageChange(currentPage + 1)}
                     >
                       Next
                     </CPaginationItem>

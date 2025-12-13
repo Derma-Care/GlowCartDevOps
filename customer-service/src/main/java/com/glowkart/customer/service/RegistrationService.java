@@ -97,11 +97,13 @@ public class RegistrationService {
         RegistrationResponseDTO stepResponse = buildStepResponse(customer, code, adminData.getUsed());
 
         // 9️⃣ Determine if code already claimed
-        boolean allStepsCompleted = Boolean.TRUE.equals(stepResponse.getUsed())
-                && Boolean.TRUE.equals(stepResponse.getIsRegistrationCompleted())
-                && Boolean.TRUE.equals(stepResponse.getIsRegistrationCodeVerified())
-                && Boolean.TRUE.equals(stepResponse.getIsUserProfileCompleted())
-                && Boolean.TRUE.equals(stepResponse.getIsSpinWheelCompleted());
+        boolean allStepsCompleted =
+                Boolean.TRUE.equals(stepResponse.getUsed())
+                && Boolean.TRUE.equals(stepResponse.getRegistrationCompleted())
+                && Boolean.TRUE.equals(stepResponse.getRegistrationCodeVerified())
+                && Boolean.TRUE.equals(stepResponse.getUserProfileCompleted())
+                && Boolean.TRUE.equals(stepResponse.getSpinWheelCompleted());
+
 
         boolean successFlag = true;
         String message = "Code verified successfully!";
