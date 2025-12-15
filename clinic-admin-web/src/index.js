@@ -6,13 +6,13 @@ import 'core-js'
 import App from './App'
 import './App.css'
 import store from './store'
-import { HospitalProvider } from './views/Usecontext/HospitalContext'
-import { GlobalSearchProvider } from './views/Usecontext/GlobalSearchContext'
+
+ 
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { attachInterceptors } from './Utils/Interceptors' // <-- interceptor file
 import './views/Style/toastify.css'
-import { NavigationProvider } from './views/Usecontext/NavigationProvider'
+
 import { BrowserRouter } from 'react-router-dom'
 import NGlowKartPatientRegistration_CoreUI from './views/NGK/CustomerRrgistration/CustomerRegistration'
 import PrizePostDetails from './views/NGK/CustomerRrgistration/PrizePostDetails'
@@ -31,10 +31,10 @@ function Root() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <NavigationProvider>
-          <GlobalSearchProvider>
-            <HospitalProvider>
-              {/* ✅ Toast container globally */}
+        
+        
+           
+        
               <ToastContainer
                 position="top-right"
                 limit={3}
@@ -45,11 +45,9 @@ function Root() {
                 }}
               />
               <App />
-              {/* <OnboardSuccess /> */}
-              {/* <NGlowKartPatientRegistration_CoreUI /> */}
-            </HospitalProvider>
-          </GlobalSearchProvider>
-        </NavigationProvider>
+           
+     
+      
       </BrowserRouter>
     </Provider>
   )

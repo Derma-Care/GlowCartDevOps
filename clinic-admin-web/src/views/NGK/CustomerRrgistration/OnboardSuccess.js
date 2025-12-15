@@ -12,7 +12,8 @@ export default function OnboardSuccess({ visible = true }) {
 
   const confettiRef = useRef(null)
   const location = useLocation()
-  const { name } = location.state || {} // fallback if undefined
+  const { name, data } = location.state || {} // fallback if undefined
+  console.log(location.state)
   console.log(name)
 
   useEffect(() => {
@@ -207,6 +208,10 @@ export default function OnboardSuccess({ visible = true }) {
               You're all set — enjoy exploring treatments, booking appointments, and unlocking
               exclusive offers.
             </p>
+            <div className="mb-3">
+              You will receive the gift <strong>({data.spinRewardValue})</strong>. It will be delivered to your
+              registered delivery address within one week.
+            </div>
 
             <LaunchCountdown onComplete={() => setLaunchDone(true)} />
 
@@ -303,15 +308,15 @@ export default function OnboardSuccess({ visible = true }) {
               Please check your Instagram and WhatsApp for our exclusive offers.
             </p>
             <img
-                        src={DermaCareLogo}
-                        alt="logo"
-                        style={{
-                          height: 40,
-                          borderRadius: 12,
-                          objectFit: 'fill',
-                          // border: '1px solid #eee',
-                        }}
-                      />
+              src={DermaCareLogo}
+              alt="logo"
+              style={{
+                height: 40,
+                borderRadius: 12,
+                objectFit: 'fill',
+                // border: '1px solid #eee',
+              }}
+            />
           </motion.div>
         </motion.div>
       )}

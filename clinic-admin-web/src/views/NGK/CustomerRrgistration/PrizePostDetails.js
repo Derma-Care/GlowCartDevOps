@@ -176,7 +176,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
       // On success:
       onSubmit()
       navigate('/onboard-success', {
-        state: { name: userData.fullName },
+        state: { name: userData.fullName,data: userData},
       })
 
       sessionStorage.removeItem('ngk_session')

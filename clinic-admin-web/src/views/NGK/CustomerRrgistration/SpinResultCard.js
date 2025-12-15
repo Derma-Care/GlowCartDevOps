@@ -340,12 +340,12 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           animation: 'blinkGlow 1.6s infinite ease-in-out',
         }}
       >
-        <p style={{ margin: 0 }}>
+        <p style={loaderStyles.desc}>
           Share your winning moment on Instagram to proceed to the next step and provide your
           delivery address.
         </p>
 
-        <p style={loaderStyles.desc}>[optional]</p>
+        <p style={{color:NGK_COLORS.primary}}>[optional]</p>
       </div>
 
       {/* Animation Styles */}
