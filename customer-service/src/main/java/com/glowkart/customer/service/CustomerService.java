@@ -1,6 +1,7 @@
 package com.glowkart.customer.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.CityRequestDTO;
+import com.glowkart.customer.dto.CityResponseDTO;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
@@ -22,6 +25,7 @@ import com.glowkart.customer.exception.CustomerNotFoundException;
 import com.glowkart.customer.exception.DuplicateAadhaarException;
 import com.glowkart.customer.exception.DuplicateMobileException;
 import com.glowkart.customer.exception.InvalidInputException;
+import com.glowkart.customer.feign.AdminCityClient;
 import com.glowkart.customer.feign.WheelSliceClient;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
@@ -31,7 +35,6 @@ import com.glowkart.customer.util.AadhaarUtils;
 public class CustomerService {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
-
     @Autowired
     private CustomerRepository customerRepository;
 
@@ -39,43 +42,46 @@ public class CustomerService {
     private WheelSliceClient wheelSliceClient;
 
     @Autowired
+    private AdminCityClient adminCityClient;
+
+    @Autowired
     private RegistrationService registrationService;
 
     // ==================== STEP 1: Save Customer ====================
     @Transactional
     public ApiResponse<Customer> saveCustomer(CustomerDetailsDTO dto) {
-        // Find customer by registration code
         Customer customer = customerRepository.findByRegistrationCode(dto.getRegistrationCode());
         if (customer == null) {
             log.warn("Invalid registration code: {}", dto.getRegistrationCode());
             throw new CustomerNotFoundException("Invalid user session");
         }
 
-        // Check if registration code is verified
         if (!customer.isRegistrationCodeVerified()) {
             return new ApiResponse<>(false, "Verify registration code first", customer);
         }
 
-        // Duplicate checks
         checkDuplicateMobile(dto.getMobile(), customer.getMobile());
         checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
 
-        // Step 1: Field validation
         List<String> missingFields = validateStep1Fields(dto);
         if (!missingFields.isEmpty()) {
             return new ApiResponse<>(false,
                     "Missing required fields: " + String.join(", ", missingFields), null);
         }
 
-        // Check if city exists, log or handle if new
+        // ==================== City Handling ====================
         if (!cityExists(dto.getCity())) {
-            log.info("New city '{}' detected, will be stored with this customer.", dto.getCity());
-            // No special action needed since city is stored per customer
+            log.info("New city '{}' detected. Saving to admin-service.", dto.getCity());
+            try {
+                CityRequestDTO cityRequest = new CityRequestDTO(dto.getCity());
+                adminCityClient.addCity(cityRequest);
+            } catch (Exception e) {
+                log.error("Failed to save new city '{}' to admin-service: {}", dto.getCity(), e.getMessage());
+            }
         } else {
-            log.info("City '{}' already exists.", dto.getCity());
+            log.info("City '{}' already exists in admin-service.", dto.getCity());
         }
-        
-        // Step 2: Copy fields to Customer entity
+
         copyStep1Fields(dto, customer);
         customer.setUserProfileCompleted(true);
         customerRepository.save(customer);
@@ -84,27 +90,35 @@ public class CustomerService {
         return new ApiResponse<>(true, "Step-1 completed. Please proceed to the next step.", customer);
     }
 
-    // New method to get distinct cities (case-insensitive, trimmed, sorted)
+    // ==================== GET DISTINCT CITIES (FROM ADMIN-SERVICE) ====================
     public List<String> getDistinctCities() {
-        return customerRepository.findAll().stream()
-            .map(Customer::getCity)
-            .filter(city -> city != null && !city.trim().isEmpty())
-            .map(String::trim)
-            .map(String::toLowerCase)
-            .distinct()
-            .sorted()
-            .map(city -> Character.toUpperCase(city.charAt(0)) + city.substring(1)) // Capitalize first letter
-            .collect(Collectors.toList());
+        ApiResponse<List<CityResponseDTO>> response = adminCityClient.getAllCities();
+
+        if (!response.isSuccess() || response.getData() == null) {
+            log.warn("Failed to fetch cities from admin-service. Returning empty list.");
+            return Collections.emptyList();
+        }
+
+        return response.getData().stream()
+                .map(CityResponseDTO::getName)
+                .filter(name -> name != null && !name.trim().isEmpty())
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .distinct()
+                .sorted()
+                .map(city -> Character.toUpperCase(city.charAt(0)) + city.substring(1))
+                .collect(Collectors.toList());
     }
 
-    // Check if city exists (case-insensitive)
     public boolean cityExists(String city) {
         if (city == null || city.isBlank()) return false;
+
         String normalized = city.trim().toLowerCase();
         return getDistinctCities().stream()
                 .map(String::toLowerCase)
                 .anyMatch(c -> c.equals(normalized));
     }
+
  // ==================== STEP 2: Spin Wheel ====================
 
     @Transactional
@@ -336,7 +350,14 @@ public class CustomerService {
     private void copyStep1Fields(CustomerDetailsDTO dto, Customer customer) {
         customer.setFullName(dto.getFullName());
         customer.setMobile(dto.getMobile());
-        customer.setCity(dto.getCity());
+     // ==================== Normalize city ====================
+        if (dto.getCity() != null && !dto.getCity().isBlank()) {
+            String normalizedCity = dto.getCity().trim().toLowerCase();
+            normalizedCity = Character.toUpperCase(normalizedCity.charAt(0)) + normalizedCity.substring(1);
+            customer.setCity(normalizedCity);
+        } else {
+            customer.setCity(null);
+        }
         customer.setDob(dto.getDob());
         customer.setRegistrationCode(dto.getRegistrationCode());
         customer.setReferBy(dto.getReferBy());

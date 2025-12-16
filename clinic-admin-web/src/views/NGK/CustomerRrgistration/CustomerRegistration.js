@@ -395,7 +395,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     const e = {}
 
     if (!form.fullName) e.fullName = 'Full name is required'
-    if (!/^\d{10}$/.test(form.mobile)) e.mobile = 'Enter a valid 10-digit mobile number'
+    if (!/^\d{10}$/.test(form.mobile)) {
+      e.mobile = 'Enter a valid 10-digit mobile number'
+    } else if (!/^[6-9]/.test(form.mobile)) {
+      e.mobile = 'Mobile number must start with 6, 7, 8, or 9'
+    }
+
     // if (!form.city) e.city = 'City is required'
 
     if (!form.city) {
@@ -1011,10 +1016,29 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           inputMode="numeric"
                           value={form.mobile}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '')
+                            let value = e.target.value.replace(/\D/g, '') // only digits
+
+                            if (value.length > 10) value = value.slice(0, 10)
+
                             handleChange({ target: { name: 'mobile', value } })
+
+                            // live validation
+                            if (value.length > 0 && !/^[6-9]/.test(value)) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                mobile: 'Mobile number must start with 6, 7, 8, or 9',
+                              }))
+                            } else if (value.length > 0 && value.length < 10) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                mobile: 'Mobile number must be 10 digits',
+                              }))
+                            } else {
+                              setErrors((prev) => ({ ...prev, mobile: null }))
+                            }
                           }}
                         />
+
                         {errors.mobile && (
                           <p
                             style={{
@@ -1058,7 +1082,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CFormLabel>
 
                         <div style={{ position: 'relative' }}>
-                          {!form.dob && (
+                          {/* {!form.dob && (
                             <span
                               style={{
                                 position: 'absolute',
@@ -1071,38 +1095,38 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             >
                               dd/mm/yyyy
                             </span>
-                          )}
+                          )} */}
 
                           <CFormInput
                             id="dobInput"
                             type="date"
                             name="dob"
                             value={form.dob}
-                            ref={inputRefs.dob}
                             min={hundredYearsAgoISO}
                             max={eighteenYearsAgoISO}
-                            style={{ position: 'relative', zIndex: 2 }}
-                            onFocus={(e) => {
-                              const input = e.target
-
-                              // ✅ iOS FIX: force picker to open at 18+ date
-                              if (!form.dob) {
-                                input.value = eighteenYearsAgoISO
-                              }
-
-                              input.showPicker?.()
-
-                              // if user cancels, clear value
-                              setTimeout(() => {
-                                if (!form.dob) input.value = ''
-                              }, 0)
-                            }}
+                            onClick={(e) => e.preventDefault()} // ✅ stop auto open
+                            onFocus={(e) => e.target.blur()} // ✅ iOS fix
                             onChange={handleChange}
                           />
 
                           {/* Calendar icon */}
                           <span
-                            onClick={() => document.getElementById('dobInput')?.showPicker?.()}
+                            onClick={() => {
+                              const input = document.getElementById('dobInput')
+
+                              // force 18+ default date
+                              if (!input.value) {
+                                input.value = eighteenYearsAgoISO
+                                input.dispatchEvent(new Event('change', { bubbles: true }))
+                              }
+
+                              // open picker
+                              if (input.showPicker) {
+                                input.showPicker()
+                              } else {
+                                input.click() // iOS fallback
+                              }
+                            }}
                             style={{
                               position: 'absolute',
                               right: '10px',
