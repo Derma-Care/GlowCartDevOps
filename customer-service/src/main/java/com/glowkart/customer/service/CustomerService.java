@@ -20,6 +20,7 @@ import com.glowkart.customer.dto.CityResponseDTO;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
+import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.dto.WheelSliceDto;
 import com.glowkart.customer.exception.CustomerNotFoundException;
 import com.glowkart.customer.exception.DuplicateAadhaarException;
@@ -47,6 +48,13 @@ public class CustomerService {
     @Autowired
     private RegistrationService registrationService;
 
+    @Autowired
+    private RewardService rewardService;
+
+    @Autowired
+    private RewardQueryService rewardQueryService;
+
+    
     // ==================== STEP 1: Save Customer ====================
     @Transactional
     public ApiResponse<Customer> saveCustomer(CustomerDetailsDTO dto) {
@@ -143,6 +151,7 @@ public class CustomerService {
         }
 
         WheelSliceDto winningSlice;
+
         if (dto.getRewardId() != null && !dto.getRewardId().isBlank()) {
             winningSlice = allSlices.stream()
                     .filter(s -> s.getId().equals(dto.getRewardId()))
@@ -152,14 +161,8 @@ public class CustomerService {
                 return new ApiResponse<>(false, "Invalid rewardId!", customer);
             }
         } else {
-            if (customer.getServiceStatus() == 1) {
-                Integer rank = customer.getRegistrationRank();
-                if (rank == null) rank = Integer.MAX_VALUE;
-                winningSlice = rank <= 500 ? allSlices.get(0) : allSlices.get(Math.min(6, allSlices.size() - 1));
-            } else {
-                int randomIndex = (int) (Math.random() * allSlices.size());
-                winningSlice = allSlices.get(randomIndex);
-            }
+            // Centralized winning slice logic
+            winningSlice = determineWinningSlice(customer, allSlices);
         }
 
         customer.setSpinRewardId(winningSlice.getId());
@@ -174,29 +177,53 @@ public class CustomerService {
 
  // ==================== STEP 3: Complete Registration ====================
     @Transactional
-    public ApiResponse<Customer> completeRegistrationByMobile(String mobile, CompleteRegistrationDTO dto) {
+    public ApiResponse<Map<String, Object>> completeRegistrationByMobile(
+            String mobile,
+            CompleteRegistrationDTO dto) {
+
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
-        if (!customer.isSpinWheelCompleted())
-            return new ApiResponse<>(false, "Complete Spin Wheel first!", customer);
+        if (!customer.isSpinWheelCompleted()) {
+            return new ApiResponse<>(false, "Complete Spin Wheel first!", null);
+        }
 
-        // Only address is relevant now
+        if (customer.isRegistrationCompleted()) {
+            return new ApiResponse<>(false, "Registration already completed", null);
+        }
+
+        // Save address and mark registration complete
         customer.setAddress(dto.getAddress());
         customer.setRegistrationCompleted(true);
 
+        // 🎁 Apply registration reward
+        rewardService.applyRegistrationReward(customer);
+
         customerRepository.save(customer);
 
+        // Mark registration code as used
         try {
             registrationService.markCodeUsed(customer.getRegistrationCode());
         } catch (Exception e) {
-            log.error("Failed to mark code as used for registrationCode {}: {}",
-                      customer.getRegistrationCode(), e.getMessage());
+            log.error("Failed to mark code as used: {}", e.getMessage());
         }
 
-        log.info("Registration completed for mobile: {}", mobile);
-        return new ApiResponse<>(true, "Registration completed successfully!", customer);
+        // Fetch wallet summary
+        WalletSummaryDTO walletSummary = rewardQueryService.getWalletSummary(customer.getMobile());
+
+        // Prepare combined response
+        Map<String, Object> responseData = Map.of(
+                "customer", customer,
+                "walletSummary", walletSummary
+        );
+
+        return new ApiResponse<>(
+                true,
+                "Registration completed successfully! 100 points credited",
+                responseData
+        );
     }
+
 
 
  // ==================== GET WHEEL SLICES ====================
@@ -217,40 +244,8 @@ public class CustomerService {
             return new ApiResponse<>(false, "Wheel slices not configured", null);
         }
 
-        WheelSliceDto winningSlice;
-
-        // 🎯 If spin already completed → Always return the stored result
-        if (customer.isSpinWheelCompleted() && customer.getSpinRewardId() != null) {
-            winningSlice = allSlices.stream()
-                    .filter(s -> s.getId().equals(customer.getSpinRewardId()))
-                    .findFirst()
-                    .orElse(allSlices.get(0));
-        } 
-        else {
-            // 🎯 First time → decide winner RANDOMLY but in allowed range
-            if (customer.getServiceStatus() == 1) {
-                // YES USERS
-                Integer rank = customer.getRegistrationRank();
-                if (rank == null) rank = Integer.MAX_VALUE;
-
-                if (rank <= 500) {
-                    // ⭐ HIGH-VALUE USERS → RANDOM BETWEEN INDEX 0–5
-                    int randomIndex = (int) (Math.random() * 6); // 0–5
-                    winningSlice = allSlices.get(randomIndex);
-                } else {
-                    // ⭐ LOW-VALUE USERS → RANDOM BETWEEN INDEX 6–11
-                    int min = 6;
-                    int max = allSlices.size(); // exclusive
-                    int randomIndex = min + (int)(Math.random() * (max - min)); // 6–11
-                    winningSlice = allSlices.get(randomIndex);
-                }
-            } 
-            else {
-                // INTERESTED USERS → RANDOM BETWEEN 0–11
-                int randomIndex = (int) (Math.random() * allSlices.size());
-                winningSlice = allSlices.get(randomIndex);
-            }
-        }
+        // Centralized winning slice logic
+        WheelSliceDto winningSlice = determineWinningSlice(customer, allSlices);
 
         Map<String, Object> response = new HashMap<>();
         response.put("allSlices", allSlices);
@@ -260,7 +255,47 @@ public class CustomerService {
     }
 
 
+ // ==================== HELPER: DETERMINE WINNING SLICE ====================
+    private WheelSliceDto determineWinningSlice(Customer customer, List<WheelSliceDto> allSlices) {
+        if (allSlices == null || allSlices.isEmpty()) return null;
 
+        // If already spun, return stored reward
+        if (customer.isSpinWheelCompleted() && customer.getSpinRewardId() != null) {
+            return allSlices.stream()
+                    .filter(s -> s.getId().equals(customer.getSpinRewardId()))
+                    .findFirst()
+                    .orElse(allSlices.get(0));
+        }
+
+        // First-time spin logic
+        if (customer.getServiceStatus() == 1) {
+            // YES USERS
+            if ("male".equalsIgnoreCase(customer.getGender())) {
+                // Male YES users → only slices 10,11,12 (indexes 9,10,11)
+                int[] allowedIndexes = {9, 10, 11};
+                int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
+                return allSlices.get(randomIndex);
+            } else {
+                // Female YES users → existing rank-based logic
+                Integer rank = customer.getRegistrationRank();
+                if (rank == null) rank = Integer.MAX_VALUE;
+
+                if (rank <= 500) {
+                    int randomIndex = (int) (Math.random() * 6); // 0–5
+                    return allSlices.get(randomIndex);
+                } else {
+                    int min = 6;
+                    int max = allSlices.size(); // exclusive
+                    int randomIndex = min + (int) (Math.random() * (max - min)); // 6–11
+                    return allSlices.get(randomIndex);
+                }
+            }
+        } else {
+            // INTERESTED USERS → random between all slices
+            int randomIndex = (int) (Math.random() * allSlices.size());
+            return allSlices.get(randomIndex);
+        }
+    }
 
 
  // ==================== CRUD ====================

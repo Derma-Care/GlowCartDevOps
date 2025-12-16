@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.util.AadhaarUtils;
 
 import lombok.Data;
@@ -76,11 +78,21 @@ public class Customer {
     // Final registration
     private String address;
 
+ // ==================== REWARD ====================
+    private Integer rewardPoints = 0;
+    private boolean registrationRewardGiven = false;
+
+    
     private boolean registrationCodeVerified = false;
     private boolean isUserProfileCompleted = false;
     private boolean isSpinWheelCompleted = false;
     private boolean isRegistrationCompleted = false;
 
+    
+    @Transient // Not stored in DB
+    private WalletSummaryDTO walletSummary;
+    
+    
     public String getAadharNumber() {
         if (aadharLast4 == null) return null;
         return AadhaarUtils.maskAadhaar(aadharLast4);

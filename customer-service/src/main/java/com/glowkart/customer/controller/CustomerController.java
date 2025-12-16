@@ -54,15 +54,16 @@ public class CustomerController {
 
     // ==================== STEP 3 ====================
     @PostMapping("/customer/{mobile}/complete")
-    public ResponseEntity<ApiResponse<Customer>> step3(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> step3(
             @PathVariable String mobile,
             @RequestBody @Valid CompleteRegistrationDTO dto) {
 
-        ApiResponse<Customer> response = customerService.completeRegistrationByMobile(mobile, dto);
+        ApiResponse<Map<String, Object>> response = customerService.completeRegistrationByMobile(mobile, dto);
 
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
                 .body(response);
     }
+
 
     // ==================== GET Wheel Slices ====================
     @GetMapping("/customer/{mobile}/wheel-slices")
@@ -107,4 +108,6 @@ public class CustomerController {
         return response.isSuccess() ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+    
+    
 }
