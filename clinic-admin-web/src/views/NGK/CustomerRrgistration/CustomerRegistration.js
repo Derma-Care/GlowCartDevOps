@@ -66,6 +66,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const [serviceStatusError, setServiceStatusError] = useState('')
   const [cityList, setCityList] = useState([])
   const [highlightAadhaarConsent, setHighlightAadhaarConsent] = useState(false)
+  const [cityOptions, setCityOptions] = useState([])
 
   const indianSkinTones = [
     { value: 'Very Fair', label: 'Very Fair' },
@@ -77,21 +78,21 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     { value: 'Other', label: 'Other' },
   ]
 
-  const STATE_CITY_MAP = {
-    Telangana: ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam'],
-    'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore'],
-    'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Erode'],
-    Karnataka: ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Belagavi'],
-    Kerala: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
-    Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad'],
-  }
+  // const STATE_CITY_MAP = {
+  //   Telangana: ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam'],
+  //   'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore'],
+  //   'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Erode'],
+  //   Karnataka: ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Belagavi'],
+  //   Kerala: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
+  //   Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad'],
+  // }
 
-  const cityOptions = Object.values(STATE_CITY_MAP)
-    .flat()
-    .map((city) => ({
-      label: city,
-      value: city,
-    }))
+  // const cityOptions = Object.values(STATE_CITY_MAP)
+  //   .flat()
+  //   .map((city) => ({
+  //     label: city,
+  //     value: city,
+  //   }))
 
   useEffect(() => {
     async function fetchProcedures() {
@@ -292,14 +293,19 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   async function fetchCities() {
     try {
       const res = await fetch(`${wifiUrl}/api/customer/cities`, { cache: 'no-store' })
-      console.log(res)
-      if (!res.ok) {
-        throw new Error('Server error')
-      }
+
+      if (!res.ok) throw new Error('Server error')
 
       const json = await res.json()
 
-      if (json.success) setCityList(json.data)
+      if (json.success && Array.isArray(json.data)) {
+        const formattedCities = json.data.map((city) => ({
+          label: city,
+          value: city,
+        }))
+
+        setCityOptions(formattedCities)
+      }
     } catch (err) {
       console.log('City fetch error:', err)
       showCustomToast('⚠️ Unable to fetch city list. Check your internet.', 'error')
