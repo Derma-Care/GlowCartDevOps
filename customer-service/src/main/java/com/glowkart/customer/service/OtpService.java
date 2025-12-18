@@ -6,6 +6,7 @@ import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -41,9 +42,10 @@ public class OtpService {
     }
 
     /**
-     * Send or Resend OTP (SMS only)
+     * Send or resend OTP
      */
     public void sendOtp(String mobile) {
+
         long now = System.currentTimeMillis();
 
         // Cooldown protection
@@ -51,7 +53,7 @@ public class OtpService {
         if (lastSent != null &&
             now - lastSent < TimeUnit.SECONDS.toMillis(RESEND_COOLDOWN_SECONDS)) {
             throw new OtpCooldownException(
-                    "Please wait 30 seconds before resending OTP"
+                    "Please wait " + RESEND_COOLDOWN_SECONDS + " seconds before resending OTP"
             );
         }
 
@@ -64,14 +66,12 @@ public class OtpService {
         } else {
             otp = generateOtp();
             otpStorage.put(mobile, otp);
-            otpExpiry.put(
-                    mobile,
-                    now + TimeUnit.MINUTES.toMillis(OTP_VALIDITY_MINUTES)
-            );
+            otpExpiry.put(mobile, now + TimeUnit.MINUTES.toMillis(OTP_VALIDITY_MINUTES));
         }
 
         lastSentTime.put(mobile, now);
 
+        // Send SMS via Twilio
         Message.creator(
                 new PhoneNumber("+91" + mobile),
                 new PhoneNumber(fromPhone),
@@ -114,5 +114,23 @@ public class OtpService {
             otp.append(random.nextInt(10));
         }
         return otp.toString();
+    }
+
+    /**
+     * Cleanup expired OTPs every 1 minute
+     */
+    @Scheduled(fixedRate = 60_000)
+    public void cleanupExpiredOtps() {
+        long now = System.currentTimeMillis();
+        otpExpiry.entrySet().removeIf(entry -> {
+            String mobile = entry.getKey();
+            Long expiryTime = entry.getValue();
+            if (expiryTime != null && now > expiryTime) {
+                otpStorage.remove(mobile);
+                lastSentTime.remove(mobile);
+                return true;
+            }
+            return false;
+        });
     }
 }

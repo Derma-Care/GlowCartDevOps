@@ -27,17 +27,18 @@ public class AuthController {
         Customer customer = customerService.getCustomer(dto.getMobile()).getData();
 
         if (customer == null || !customer.isRegistrationCompleted()) {
-            return ResponseEntity.badRequest().body(
-                    new ApiResponse<>(false,
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse<>(false,
                             "Customer not registered or registration incomplete",
-                            null)
-            );
+                            null,
+                            400));
         }
 
         otpService.sendOtp(dto.getMobile());
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "OTP sent successfully", dto.getMobile())
+                new ApiResponse<>(true, "OTP sent successfully", dto.getMobile(), 200)
         );
     }
 
@@ -49,15 +50,15 @@ public class AuthController {
         boolean valid = otpService.verifyOtp(dto.getMobile(), dto.getOtp());
 
         if (!valid) {
-            return ResponseEntity.badRequest().body(
-                    new ApiResponse<>(false, "Invalid or expired OTP", null)
-            );
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse<>(false, "Invalid or expired OTP", null, 400));
         }
 
         Customer customer = customerService.getCustomer(dto.getMobile()).getData();
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Login successful", customer)
+                new ApiResponse<>(true, "Login successful", customer, 200)
         );
     }
 }
