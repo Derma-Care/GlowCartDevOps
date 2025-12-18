@@ -56,7 +56,7 @@ async:
   max-pool-size: 20
   queue-capacity: 50
 
-# =================== Twilio Configuration ===================
+
 # =================== Twilio Configuration ===================
 twilio:
   accountSid: ${TWILIO_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
