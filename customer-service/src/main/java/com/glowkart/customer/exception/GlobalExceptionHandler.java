@@ -77,4 +77,13 @@ public class GlobalExceptionHandler {
         ApiResponse<String> response = new ApiResponse<>(false, "Something went wrong!", null);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+    
+    @ExceptionHandler(OtpCooldownException.class)
+    public ResponseEntity<ApiResponse<String>> handleOtpCooldown(
+            OtpCooldownException ex) {
+
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(false, ex.getMessage(), null)
+        );
+    }
 }

@@ -1,13 +1,16 @@
 package com.glowkart.customer.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import com.glowkart.customer.exception.OtpCooldownException;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -22,55 +25,94 @@ public class OtpService {
     @Value("${twilio.fromPhone}")
     private String fromPhone;
 
-    // Store OTP temporarily in memory (or use Redis for production)
-    private final Map<String, String> otpStorage = new HashMap<>();
-    private final Map<String, Long> otpExpiry = new HashMap<>();
+    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final Map<String, Long> otpExpiry = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastSentTime = new ConcurrentHashMap<>();
 
     private static final int OTP_LENGTH = 6;
     private static final int OTP_VALIDITY_MINUTES = 5;
+    private static final int RESEND_COOLDOWN_SECONDS = 30;
 
     private final SecureRandom random = new SecureRandom();
 
-    public OtpService() {}
-
-    public void sendOtp(String mobile) {
+    @PostConstruct
+    public void init() {
         Twilio.init(accountSid, authToken);
+    }
 
-        String otp = generateOtp();
-        otpStorage.put(mobile, otp);
-        otpExpiry.put(mobile, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(OTP_VALIDITY_MINUTES));
+    /**
+     * Send or Resend OTP (SMS only)
+     */
+    public void sendOtp(String mobile) {
+        long now = System.currentTimeMillis();
+
+        // Cooldown protection
+        Long lastSent = lastSentTime.get(mobile);
+        if (lastSent != null &&
+            now - lastSent < TimeUnit.SECONDS.toMillis(RESEND_COOLDOWN_SECONDS)) {
+            throw new OtpCooldownException(
+                    "Please wait 30 seconds before resending OTP"
+            );
+        }
+
+        String otp;
+        Long expiry = otpExpiry.get(mobile);
+
+        // Reuse OTP if still valid
+        if (expiry != null && now < expiry && otpStorage.containsKey(mobile)) {
+            otp = otpStorage.get(mobile);
+        } else {
+            otp = generateOtp();
+            otpStorage.put(mobile, otp);
+            otpExpiry.put(
+                    mobile,
+                    now + TimeUnit.MINUTES.toMillis(OTP_VALIDITY_MINUTES)
+            );
+        }
+
+        lastSentTime.put(mobile, now);
 
         Message.creator(
-                new com.twilio.type.PhoneNumber("+91" + mobile),
-                new com.twilio.type.PhoneNumber(fromPhone),
-                "Your OTP for GlowKart login is: " + otp
+                new PhoneNumber("+91" + mobile),
+                new PhoneNumber(fromPhone),
+                "Your GlowKart OTP is: " + otp + ". Valid for 5 minutes."
         ).create();
     }
 
+    /**
+     * Verify OTP
+     */
     public boolean verifyOtp(String mobile, String otp) {
         String storedOtp = otpStorage.get(mobile);
         Long expiryTime = otpExpiry.get(mobile);
 
-        if (storedOtp == null || expiryTime == null || System.currentTimeMillis() > expiryTime) {
-            otpStorage.remove(mobile);
-            otpExpiry.remove(mobile);
-            return false; // OTP expired or not sent
+        if (storedOtp == null || expiryTime == null) {
+            return false;
         }
 
-        boolean isValid = storedOtp.equals(otp);
-        if (isValid) {
-            otpStorage.remove(mobile);
-            otpExpiry.remove(mobile);
+        if (System.currentTimeMillis() > expiryTime) {
+            clearOtp(mobile);
+            return false;
         }
 
-        return isValid;
+        boolean valid = storedOtp.equals(otp);
+        if (valid) {
+            clearOtp(mobile);
+        }
+        return valid;
+    }
+
+    private void clearOtp(String mobile) {
+        otpStorage.remove(mobile);
+        otpExpiry.remove(mobile);
+        lastSentTime.remove(mobile);
     }
 
     private String generateOtp() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder otp = new StringBuilder();
         for (int i = 0; i < OTP_LENGTH; i++) {
-            sb.append(random.nextInt(10));
+            otp.append(random.nextInt(10));
         }
-        return sb.toString();
+        return otp.toString();
     }
 }
