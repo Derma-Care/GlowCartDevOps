@@ -1,13 +1,23 @@
 package com.glowkart.procedure.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.glowkart.procedure.dto.ApiResponse;
+import com.glowkart.procedure.dto.ProcedureOfferDTO;
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
 import com.glowkart.procedure.service.ProcedurePricingService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/procedures")
@@ -60,4 +70,11 @@ public class ProcedurePricingController {
         service.delete(procedureId, clinicId);
         return new ApiResponse<>(true, "Procedure pricing deleted successfully", null);
     }
+    
+    @GetMapping("/pricing/offers")
+    public ApiResponse<List<ProcedureOfferDTO>> getProcedureOffers() {
+        List<ProcedureOfferDTO> offers = service.getProcedureOffers();
+        return new ApiResponse<>(true, "Procedure offers fetched successfully", offers);
+    }
+
 }

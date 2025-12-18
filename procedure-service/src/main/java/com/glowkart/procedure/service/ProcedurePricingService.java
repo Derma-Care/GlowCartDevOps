@@ -1,5 +1,6 @@
 package com.glowkart.procedure.service;
 
+import com.glowkart.procedure.dto.ProcedureOfferDTO;
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
 
 import java.util.List;
@@ -19,5 +20,7 @@ public interface ProcedurePricingService {
     List<ProcedurePricingDTO> getAll();
     
     ProcedurePricingDTO getByProcedureId(String procedureId);
+
+	List<ProcedureOfferDTO> getProcedureOffers();
 
 }

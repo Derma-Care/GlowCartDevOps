@@ -1,14 +1,18 @@
 package com.glowkart.procedure.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.glowkart.procedure.client.ClinicFeignClient;
+import com.glowkart.procedure.dto.ProcedureOfferDTO;
 import com.glowkart.procedure.dto.ProcedurePricingDTO;
 import com.glowkart.procedure.exception.DuplicateResourceException;
 import com.glowkart.procedure.exception.ResourceNotFoundException;
@@ -320,5 +324,29 @@ return mapper.toDto(pricingRepository.save(existing));
         calculatePricing(best);
 
         return mapper.toDto(best);
+    }
+    
+    
+    public List<ProcedureOfferDTO> getProcedureOffers() {
+        // fetch all pricing from repository
+        List<ProcedurePricingDTO> allPricing = getAll();
+
+        // aggregate min/max per procedure
+        Map<String, ProcedureOfferDTO> offerMap = new HashMap<>();
+
+        for (ProcedurePricingDTO pricing : allPricing) {
+            String id = pricing.getProcedureId();
+            String name = pricing.getProcedureName();
+            int discount = (int) pricing.getTotalDiscountPercentage();
+
+            offerMap.compute(id, (k, v) -> {
+                if (v == null) return new ProcedureOfferDTO(id, name, discount, discount);
+                v.setMinOffer(Math.min(v.getMinOffer(), discount));
+                v.setMaxOffer(Math.max(v.getMaxOffer(), discount));
+                return v;
+            });
+        }
+
+        return new ArrayList<>(offerMap.values());
     }
 }

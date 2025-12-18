@@ -1,6 +1,7 @@
 package com.glowkart.customer.feign;
 
 import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.CustomerProcedureOfferDTO;
 import com.glowkart.customer.dto.ProcedureDTO;
 import com.glowkart.customer.dto.ProcedurePackageDTO;
 import com.glowkart.customer.dto.ProcedurePricingDTO;
@@ -13,26 +14,20 @@ import java.util.List;
 @FeignClient(name = "procedure-service")
 public interface ProcedureServiceClient {
 
-    // 1️⃣ All procedures
+    // 1️⃣ All procedures (master list)
     @GetMapping("/procedures/all")
     ApiResponse<List<ProcedureDTO>> getAllProcedures();
 
-    // 2️⃣ Packages for a clinic
-    @GetMapping("/procedures/packages/clinic/{clinicId}")
-    ApiResponse<List<ProcedurePackageDTO>> getPackagesByClinic(@PathVariable("clinicId") String clinicId);
+    // 2️⃣ All packages (across all clinics)
+    @GetMapping("/procedures/packages/all")
+    ApiResponse<List<ProcedurePackageDTO>> getAllPackages();
 
-    // 3️⃣ Pricing for all procedures in a clinic
-    @GetMapping("/procedures/pricing/all/{clinicId}")
-    ApiResponse<List<ProcedurePricingDTO>> getPricingByClinic(@PathVariable("clinicId") String clinicId);
-
-    // 4️⃣ Pricing for a specific procedure in a clinic
-    @GetMapping("/procedures/pricing/get/{procedureId}/{clinicId}")
-    ApiResponse<ProcedurePricingDTO> getPricingByProcedureAndClinic(
-            @PathVariable("procedureId") String procedureId,
-            @PathVariable("clinicId") String clinicId
-    );
-
-    // 5️⃣ Pricing for a procedure (without clinic) if needed
+    // 3️⃣ Pricing for a procedure (best / default / lowest)
     @GetMapping("/procedures/pricing/get/{procedureId}")
-    ApiResponse<ProcedurePricingDTO> getPricingByProcedure(@PathVariable("procedureId") String procedureId);
+    ApiResponse<ProcedurePricingDTO> getPricingByProcedure(
+            @PathVariable("procedureId") String procedureId
+    );
+    
+    @GetMapping("/procedures/pricing/offers")
+    ApiResponse<List<CustomerProcedureOfferDTO>> getProcedureOffers();
 }
