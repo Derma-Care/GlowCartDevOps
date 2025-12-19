@@ -16,7 +16,10 @@ import {
   CPagination,
   CPaginationItem,
   CCard,
-  CCardHeader, CFormSelect
+  CCardHeader, CFormSelect,
+  CInputGroupText,
+  CForm,
+  CInputGroup
 } from '@coreui/react'
 
 import { ToastContainer, toast } from 'react-toastify'
@@ -33,6 +36,8 @@ import LoadingIndicator from '../../Utils/loader'
 import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
 import { Edit2, Eye, Trash2 } from 'lucide-react'
 import { COLORS } from '../../Constant/Themes'
+import CIcon from '@coreui/icons-react'
+import { cilSearch } from '@coreui/icons'
 
 const ProcedureManagement = () => {
   const [procedures, setProcedures] = useState([])
@@ -183,17 +188,24 @@ const ProcedureManagement = () => {
             </h4>
 
             <div className="d-flex align-items-center gap-2">
-              {/* Global Search */}
-              <CFormInput
-                placeholder="Search procedure..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value)
-                  setCurrentPage(1)
-                }}
-                style={{ width: '220px' }}
-              />
-
+              <CForm style={{ width: "50%" }}>
+                <CInputGroup>
+                  {/* Global Search */}
+                  <CFormInput
+                    placeholder="Search procedure..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                    type="text"
+                    style={{ border: "1px solid #7e3a93" }}
+                  />
+                  <CInputGroupText style={{ border: "1px solid #7e3a93" }}>
+                    <CIcon icon={cilSearch} />
+                  </CInputGroupText>
+                </CInputGroup>
+              </CForm>
               {/* Add Button */}
               <CButton
                 color="secondary"

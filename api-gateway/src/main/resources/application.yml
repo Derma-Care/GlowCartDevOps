@@ -58,6 +58,8 @@ spring:
               - "http://localhost:3000"
               - "https://glowkartclinic.ashokfruit.shop"
               - "https://glowkartmain.ashokfruit.shop"
+              - "https://glowkartdoctor.ashokfruit.shop"
+
             allowedMethods:
               - GET
               - POST

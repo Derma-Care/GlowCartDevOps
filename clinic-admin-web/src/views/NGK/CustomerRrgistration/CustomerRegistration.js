@@ -40,8 +40,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
 
   const eighteenYearsAgoISO = eighteenYearsAgo.toISOString().split('T')[0]
-  const hundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
-  const hundredYearsAgoISO = hundredYearsAgo.toISOString().split('T')[0]
 
   // subtract 12 months
   const past1Year = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
@@ -65,8 +63,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const [showConsentModal, setShowConsentModal] = useState(false)
   const [serviceStatusError, setServiceStatusError] = useState('')
   const [cityList, setCityList] = useState([])
-  const [highlightAadhaarConsent, setHighlightAadhaarConsent] = useState(false)
-  const [cityOptions, setCityOptions] = useState([])
 
   const indianSkinTones = [
     { value: 'Very Fair', label: 'Very Fair' },
@@ -78,22 +74,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     { value: 'Other', label: 'Other' },
   ]
 
-  // const STATE_CITY_MAP = {
-  //   Telangana: ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam'],
-  //   'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore'],
-  //   'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Erode'],
-  //   Karnataka: ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Belagavi'],
-  //   Kerala: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
-  //   Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad'],
-  // }
-
-  // const cityOptions = Object.values(STATE_CITY_MAP)
-  //   .flat()
-  //   .map((city) => ({
-  //     label: city,
-  //     value: city,
-  //   }))
-
   useEffect(() => {
     async function fetchProcedures() {
       const list = await getAllProcedures()
@@ -103,7 +83,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         label: item.procedureName,
       }))
       formatted.push({
-        value: 'other',
+        value: 'Other',
         label: 'Others',
       })
 
@@ -156,7 +136,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     // Interested flow
     serviceStatus: '',
     interestCategory: '',
-    otherInterestCategory: '',
     problemDescription: [],
     skinTone: '',
     samplePhoto: '',
@@ -236,7 +215,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   }
 
   const showOtherInput = form.serviceType?.includes('other')
-
   function handleChange(e) {
     const { name, value, type, checked } = e.target
 
@@ -293,55 +271,22 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   async function fetchCities() {
     try {
       const res = await fetch(`${wifiUrl}/api/customer/cities`, { cache: 'no-store' })
-
-      if (!res.ok) throw new Error('Server error')
+      console.log(res)
+      if (!res.ok) {
+        throw new Error('Server error')
+      }
 
       const json = await res.json()
 
-      if (json.success && Array.isArray(json.data)) {
-        const formattedCities = json.data.map((city) => ({
-          label: city,
-          value: city,
-        }))
-
-        setCityOptions(formattedCities)
-      }
+      if (json.success) setCityList(json.data)
     } catch (err) {
       console.log('City fetch error:', err)
       showCustomToast('⚠️ Unable to fetch city list. Check your internet.', 'error')
     }
   }
-
-  //   const [cityOptions, setCityOptions] = useState([])
-  // const [loadingCities, setLoadingCities] = useState(false)
-
-  // const fetchCities = async () => {
-  //   try {
-  //     setLoadingCities(true)
-  //     const res = await axios.get('/api/cities')
-
-  //     // Merge all state cities into one list
-  //     const allCities = Object.values(res.data.data).flat()
-
-  //     setCityOptions(allCities)
-  //   } catch (error) {
-  //     console.error('City API error', error)
-  //   } finally {
-  //     setLoadingCities(false)
-  //   }
-  // }
-
-  const hasFetchedRef = React.useRef(false)
-
-  if (!hasFetchedRef.current) {
-    const navEntry = performance.getEntriesByType('navigation')[0]
-
-    if (navEntry?.type === 'reload') {
-      fetchCities()
-    }
-
-    hasFetchedRef.current = true
-  }
+  // useEffect(() => {
+  //   fetchCities()
+  // }, [])
 
   const handleSubmitReferralCode = async () => {
     const code = form.registraionCode.trim()
@@ -401,12 +346,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     const e = {}
 
     if (!form.fullName) e.fullName = 'Full name is required'
-    if (!/^\d{10}$/.test(form.mobile)) {
-      e.mobile = 'Enter a valid 10-digit mobile number'
-    } else if (!/^[6-9]/.test(form.mobile)) {
-      e.mobile = 'Mobile number must start with 6, 7, 8, or 9'
-    }
-
+    if (!/^\d{10}$/.test(form.mobile)) e.mobile = 'Enter a valid 10-digit mobile number'
     // if (!form.city) e.city = 'City is required'
 
     if (!form.city) {
@@ -451,12 +391,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     }
     // ✔ INTERESTED FLOW – Validate interest info
     if (form.serviceStatus === '2') {
-      if (!form.interestCategory) {
-        e.interestCategory = 'Please select a category'
-      } else if (form.interestCategory === 'Other' && !form.otherInterestCategory.trim()) {
-        e.otherInterestCategory = 'Please specify the category'
-      }
-
+      if (!form.interestCategory) e.interestCategory = 'Please select an interest category'
       if (!form.problemDescription || form.problemDescription.length === 0)
         e.problemDescription = 'Please select at least one concern'
 
@@ -947,7 +882,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             color: NGK_COLORS.primary,
                           }}
                         >
-                          Early access members will receive free gifts by spinning the wheel.
                           Provide valid registration details and get a free spin for a chance to win
                           amazing prizes.
                         </p>
@@ -1022,29 +956,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           inputMode="numeric"
                           value={form.mobile}
                           onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, '') // only digits
-
-                            if (value.length > 10) value = value.slice(0, 10)
-
+                            const value = e.target.value.replace(/\D/g, '')
                             handleChange({ target: { name: 'mobile', value } })
-
-                            // live validation
-                            if (value.length > 0 && !/^[6-9]/.test(value)) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                mobile: 'Mobile number must start with 6, 7, 8, or 9',
-                              }))
-                            } else if (value.length > 0 && value.length < 10) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                mobile: 'Mobile number must be 10 digits',
-                              }))
-                            } else {
-                              setErrors((prev) => ({ ...prev, mobile: null }))
-                            }
                           }}
                         />
-
                         {errors.mobile && (
                           <p
                             style={{
@@ -1088,7 +1003,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </CFormLabel>
 
                         <div style={{ position: 'relative' }}>
-                          {/* {!form.dob && (
+                          {!form.dob && (
                             <span
                               style={{
                                 position: 'absolute',
@@ -1101,38 +1016,22 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             >
                               dd/mm/yyyy
                             </span>
-                          )} */}
+                          )}
 
                           <CFormInput
                             id="dobInput"
                             type="date"
                             name="dob"
                             value={form.dob}
-                            min={hundredYearsAgoISO}
+                            ref={inputRefs.dob}
                             max={eighteenYearsAgoISO}
-                            onClick={(e) => e.preventDefault()} // ✅ stop auto open
-                            onFocus={(e) => e.target.blur()} // ✅ iOS fix
                             onChange={handleChange}
+                            style={{ position: 'relative', zIndex: 2 }}
                           />
 
                           {/* Calendar icon */}
                           <span
-                            onClick={() => {
-                              const input = document.getElementById('dobInput')
-
-                              // force 18+ default date
-                              if (!input.value) {
-                                input.value = eighteenYearsAgoISO
-                                input.dispatchEvent(new Event('change', { bubbles: true }))
-                              }
-
-                              // open picker
-                              if (input.showPicker) {
-                                input.showPicker()
-                              } else {
-                                input.click() // iOS fallback
-                              }
-                            }}
+                            onClick={() => document.getElementById('dobInput')?.showPicker?.()}
                             style={{
                               position: 'absolute',
                               right: '10px',
@@ -1151,7 +1050,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         {errors.dob && <p style={{ color: 'red' }}>{errors.dob}</p>}
                       </CCol>
 
-                      {/* <CCol md={6}>
+                      <CCol md={6}>
                         <CFormLabel
                           className="label-gradient "
                           style={{ color: NGK_COLORS.primarySoft }}
@@ -1176,12 +1075,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             isSearchable
                           />
                         </div>
-                      
+                        {/* Show input if user selects OTHER */}
                         {form.city === 'other' && (
                           <CFormInput
                             ref={inputRefs.otherCity}
                             className="mt-2"
-                            placeholder="Enter City / Area"
+                            placeholder="Enter City"
                             value={form.otherCity || ''}
                             onChange={(e) => {
                               const val = e.target.value
@@ -1196,45 +1095,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         {errors.otherCity && <p style={{ color: 'red' }}>{errors.otherCity}</p>}
 
                         {errors.city && <p style={{ color: 'red' }}>{errors.city}</p>}
-                      </CCol> */}
-                      <CCol md={6}>
-                        <CFormLabel
-                          className="label-gradient"
-                          style={{ color: NGK_COLORS.primarySoft }}
-                        >
-                          City <span className="text-danger">*</span>
-                        </CFormLabel>
-
-                        <Select
-                          placeholder="Select or Search City"
-                          isSearchable
-                          value={form.city ? { label: form.city, value: form.city } : null}
-                          onChange={(selected) => {
-                            setForm((prev) => ({
-                              ...prev,
-                              city: selected?.value || '',
-                              otherCity: '',
-                            }))
-                            setErrors((prev) => ({ ...prev, city: null }))
-                          }}
-                          options={[...cityOptions, { label: 'Other', value: 'other' }]}
-                          styles={selectStyles}
-                        />
-
-                        {/* Other city input */}
-                        {form.city === 'other' && (
-                          <CFormInput
-                            className="mt-2"
-                            placeholder="Enter your city"
-                            value={form.otherCity}
-                            onChange={(e) =>
-                              setForm((prev) => ({ ...prev, otherCity: e.target.value }))
-                            }
-                          />
-                        )}
-
-                        {errors.city && <p style={{ color: 'red' }}>{errors.city}</p>}
-                        {errors.otherCity && <p style={{ color: 'red' }}>{errors.otherCity}</p>}
                       </CCol>
 
                       {/* {errors.city && <p style={{ color: '#ff2e85' }}>{errors.city}</p>} */}
@@ -1254,38 +1114,18 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             inputMode="numeric"
                             maxLength={12}
                             value={form.Aadhar}
-                            placeholder="Enter 12-digit Aadhaar number"
-                            onFocus={() => {
-                              if (!form.aadhaarConsent) {
-                                showCustomToast(
-                                  '⚠️ Please accept Aadhaar consent before entering Aadhaar number',
-                                  'error',
-                                )
-
-                                // highlight consent section
-                                setHighlightAadhaarConsent(true)
-
-                                // remove highlight after 2 seconds
-                                setTimeout(() => setHighlightAadhaarConsent(false), 2000)
-
-                                // move user to consent section
-                                inputRefs.aadhaarConsent?.current?.scrollIntoView({
-                                  behavior: 'smooth',
-                                  block: 'center',
-                                })
-                              }
-                            }}
                             onChange={(e) => {
-                              if (!form.aadhaarConsent) return // ❌ block typing
-
-                              const value = e.target.value.replace(/\D/g, '')
+                              const value = e.target.value.replace(/\D/g, '') // Only digits
                               handleChange({ target: { name: 'Aadhar', value } })
 
+                              // If user typed all 12 digits
                               if (value.length === 12) {
                                 setErrors((prev) => ({ ...prev, Aadhar: null }))
                                 setAadharVerified(true)
                               } else {
                                 setAadharVerified(false)
+
+                                // Show error only when user enters something but not 12 digits
                                 if (value.length > 0 && value.length < 12) {
                                   setErrors((prev) => ({
                                     ...prev,
@@ -1296,15 +1136,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                 }
                               }
                             }}
-                            disabled={!form.aadhaarConsent}
+                            placeholder="Enter 12-digit Aadhaar number"
                           />
                         </div>
-                        {!form.aadhaarConsent && (
-                          <p style={{ color: '#ff2e85', fontSize: '12px' }}>
-                            Please accept Aadhaar consent to enable this field
-                          </p>
-                        )}
-
                         {errors.Aadhar && (
                           <p
                             style={{
@@ -1423,19 +1257,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               type="checkbox"
                               checked={form.aadhaarConsent}
                               disabled={form.aadhaarConsent}
-                              style={{
-                                width: '15px',
-                                height: '15px',
-                                accentColor: NGK_COLORS.primary, // Checkbox color
-                                cursor: 'pointer',
-                                marginTop: '3px',
-                                backgroundColor: highlightAadhaarConsent
-                                  ? '#fff3f6'
-                                  : 'transparent',
-                                borderRadius: '10px',
-                                padding: highlightAadhaarConsent ? '10px' : '0',
-                                transition: 'all 0.3s ease',
-                              }}
                               onChange={(e) => {
                                 setForm({ ...form, aadhaarConsent: e.target.checked })
 
@@ -1444,6 +1265,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
                                   setServiceStatusError('')
                                 }
+                              }}
+                              style={{
+                                width: '15px',
+                                height: '15px',
+                                accentColor: NGK_COLORS.primary, // Checkbox color
+                                cursor: 'pointer',
+                                marginTop: '3px',
                               }}
                             />
 
@@ -1740,12 +1568,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {/* Other input */}
                             {showOtherInput && (
                               <div style={{ marginTop: 10 }}>
-                                {/* <CFormLabel
+                                <CFormLabel
                                   className="label-gradient"
                                   style={{ color: NGK_COLORS.primarySoft }}
                                 >
                                   Specify Other Service
-                                </CFormLabel> */}
+                                </CFormLabel>
                                 <CFormInput
                                   ref={inputRefs.otherServiceName}
                                   placeholder="Enter Service Name"
@@ -1843,17 +1671,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             <CFormSelect
                               name="interestCategory"
                               value={form.interestCategory}
-                              onChange={(e) => {
-                                handleChange(e)
-
-                                // reset custom input when switching away from Other
-                                if (e.target.value !== 'Other') {
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    otherInterestCategory: '',
-                                  }))
-                                }
-                              }}
+                              onChange={handleChange}
                             >
                               <option value="">Select...</option>
                               <option value="Skin">Skin</option>
@@ -1862,7 +1680,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               <option value="Body">Body</option>
                               <option value="Other">Others</option>
                             </CFormSelect>
-
                             {errors.interestCategory && (
                               <p
                                 style={{
@@ -1871,26 +1688,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               >
                                 {errors.interestCategory}
                               </p>
-                            )}
-                            {form.interestCategory === 'Other' && (
-                              <div className="mt-2">
-                                <CFormInput
-                                  ref={inputRefs.otherInterestCategory}
-                                  placeholder="Please specify category"
-                                  value={form.otherInterestCategory}
-                                  onChange={(e) => {
-                                    setForm((prev) => ({
-                                      ...prev,
-                                      otherInterestCategory: e.target.value,
-                                    }))
-                                    setErrors((prev) => ({ ...prev, otherInterestCategory: null }))
-                                  }}
-                                />
-                              </div>
-                            )}
-
-                            {errors.otherInterestCategory && (
-                              <p style={{ color: 'red' }}>{errors.otherInterestCategory}</p>
                             )}
                           </CCol>
 
@@ -1941,12 +1738,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {/* Show Other input */}
                             {form.problemDescription?.includes('other') && (
                               <div style={{ marginTop: 10 }}>
-                                {/* <CFormLabel
+                                <CFormLabel
                                   className="label-gradient"
                                   style={{ color: NGK_COLORS.primarySoft }}
                                 >
                                   Specify Other Concern
-                                </CFormLabel> */}
+                                </CFormLabel>
                                 <CFormInput
                                   ref={inputRefs.otherServiceName}
                                   placeholder="Enter your concern"

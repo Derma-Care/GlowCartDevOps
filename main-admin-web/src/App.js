@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import { injectTheme } from './Constant/Themes'
 import './scss/style.scss'
 import ClinicOnboardingSuccess from './views/clinicManagement/SuccessOnboradClinic'
+import RegistrationCodeManagement from './views/RegistrationCodes/RegistrationCodes'
 
 // Lazy-loaded default pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -66,6 +67,10 @@ const App = () => {
           <Route
             path="/clinic-registration"
             element={<ClinicRegistration />}
+          />
+            <Route
+            path="/registration-codes"
+            element={<RegistrationCodeManagement />}
           />
 
           <Route

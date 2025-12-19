@@ -60,7 +60,7 @@ const AppSidebar = () => {
       <CSidebarFooter className="border-top d-none d-lg-flex flex-column align-items-center py-2">
         <div
           style={{
-            fontSize: '18px',
+            fontSize: '14px',
             fontWeight: 'bold',
             color: ` var(--color-black)`,
             lineHeight: '1.2',
@@ -71,13 +71,13 @@ const AppSidebar = () => {
 
         <div
           style={{
-            fontSize: '18px',
+            fontSize: '12px',
             fontWeight: 'bold',
             color: `var(--color-black)`,
             marginBottom: '6px',
           }}
         >
-          UDIT Cosmetics PVT LTD
+         Udit Cosmetech Private Limited
         </div>
 
         <CSidebarToggler

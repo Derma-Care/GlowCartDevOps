@@ -12,7 +12,6 @@ export default function OnboardingStepsModal() {
       {/* Trigger Button */}
       <CButton
         style={{
-          fontSize:"16px",
           color: NGK_COLORS.primary,
           textDecoration: 'underline', // ← correct value
         }}

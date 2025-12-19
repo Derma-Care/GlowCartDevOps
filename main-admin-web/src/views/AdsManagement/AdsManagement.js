@@ -333,40 +333,60 @@ const AdsManagement = () => {
                   maxWidth: "calc(33% - 10px)",
                 }}
               >
+                {/* Media Wrapper (SAME SIZE FOR ALL) */}
                 <div
                   style={{
-                    position: "relative",
-                    height: "180px",
+                    width: "100%",
+                    height: "180px",          // SAME height for all images
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     overflow: "hidden",
                     borderBottom: "1px solid #ddd",
+                    backgroundColor: "#f8f9fa",
                   }}
                 >
                   {ad.type === "image" ? (
                     <CImage
                       src={ad.data}
                       alt={ad.fileName}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain", // NO CUT, SAME SIZE
+                      }}
                     />
                   ) : (
                     <video
                       src={ad.data}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       controls
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",   // video fills card
+                      }}
                     />
                   )}
                 </div>
+
+                {/* Actions */}
                 <CCardBody className="text-center">
                   <div className="d-flex justify-content-center gap-2 flex-wrap">
                     <button className="actionBtn view" onClick={() => handleView(ad)}>
                       <Eye size={18} />
                     </button>
+
                     <button className="actionBtn edit" onClick={() => handleEdit(ad)}>
                       <Edit2 size={18} />
                     </button>
-                    <button className="actionBtn delete" onClick={() => {
-                      setDeleteId(ad._id);
-                      setShowDeleteModal(true);
-                    }}>
+
+                    <button
+                      className="actionBtn delete"
+                      onClick={() => {
+                        setDeleteId(ad._id)
+                        setShowDeleteModal(true)
+                      }}
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -375,6 +395,10 @@ const AdsManagement = () => {
             ))
           )}
         </div>
+
+
+
+
       </CCardBody>
 
       {/* Add, Edit, View, Delete Modals */}

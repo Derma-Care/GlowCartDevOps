@@ -1,5 +1,5 @@
 // ServiceFormModal.jsx
-import React from 'react'
+import React, { useState } from 'react'
 import {
   CModal,
   CModalHeader,
@@ -13,9 +13,12 @@ import {
   CFormText,
   CFormSelect,
   CFormTextarea,
-  CButton,CInputGroup ,CInputGroupText 
+  CButton, CInputGroup, CInputGroupText
 } from '@coreui/react'
+
+import { cilChevronBottom } from '@coreui/icons'
 import ProcedureQA from './QASection'
+import CIcon from '@coreui/icons-react'
 
 const ServiceFormModal = ({
   visible,
@@ -31,6 +34,24 @@ const ServiceFormModal = ({
   onSubServiceChange,
 }) => {
   const isEdit = mode === 'edit'
+  const [procedureSearch, setProcedureSearch] = useState('')
+  const [showProcedureList, setShowProcedureList] = useState(false)
+
+  // 🔹 Detect typing vs selected value
+  const isTyping =
+    procedureSearch &&
+    !isProcedure?.some(
+      (p) => p.procedureName === procedureSearch
+    )
+
+  // 🔹 Filter logic (CORE FIX)
+  const filteredProcedures = isTyping
+    ? isProcedure?.filter((procedure) =>
+        procedure.procedureName
+          .toLowerCase()
+          .includes(procedureSearch.toLowerCase())
+      )
+    : isProcedure
 
   return (
     <CModal
@@ -50,28 +71,73 @@ const ServiceFormModal = ({
         <CForm>
           {/* Procedure Name + Price + Discount + GST */}
           <CRow>
-            <CCol md={3} className="mb-4">
+          <CCol md={3} className="mb-4 position-relative">
               <h6>
                 Procedure Name <span className="text-danger">*</span>
               </h6>
-              <CFormSelect
-                name="subServiceId"
-                disabled={isEdit}
-                value={newService.subServiceId || ''}
-                onChange={onSubServiceChange}
-              >
-                <option value="">Select Procedure</option>
-                {isProcedure?.map((procedure) => (
-                  <option key={procedure.procedureId} value={procedure.procedureId}>
-                    {procedure.procedureName}
-                  </option>
-                ))}
-              </CFormSelect>
+
+              <CInputGroup>
+                <CFormInput
+                  placeholder="Select procedure"
+                  value={procedureSearch}
+                  disabled={isEdit}
+                  onChange={(e) => {
+                    setProcedureSearch(e.target.value)
+                    setShowProcedureList(true)
+                  }}
+                  onFocus={() => setShowProcedureList(true)}
+                />
+
+                <CInputGroupText
+                  style={{
+                    cursor: 'pointer',
+                    color: showProcedureList ? '#0d6efd' : '#6c757d',
+                    transform: showProcedureList ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onClick={() => setShowProcedureList((prev) => !prev)}
+                >
+                  <CIcon icon={cilChevronBottom} />
+                </CInputGroupText>
+              </CInputGroup>
+
+              {showProcedureList && filteredProcedures?.length > 0 && (
+                <div
+                  className="border rounded bg-white shadow-sm position-absolute w-100"
+                  style={{
+                    zIndex: 1050,
+                    maxHeight: 180,
+                    overflowY: 'auto',
+                  }}
+                >
+                  {filteredProcedures.map((procedure) => (
+                    <div
+                      key={procedure.procedureId}
+                      className="px-3 py-2"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setProcedureSearch(procedure.procedureName)
+                        setShowProcedureList(false)
+                        onSubServiceChange({
+                          target: {
+                            name: 'subServiceId',
+                            value: procedure.procedureId,
+                          },
+                        })
+                      }}
+                    >
+                      {procedure.procedureName}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {errors.subServiceName && (
-                <CFormText className="text-danger">{errors.subServiceName}</CFormText>
+                <CFormText className="text-danger">
+                  {errors.subServiceName}
+                </CFormText>
               )}
             </CCol>
-
             <CCol md={3} className="mb-4">
               <h6>
                 Procedure Price <span className="text-danger">*</span>

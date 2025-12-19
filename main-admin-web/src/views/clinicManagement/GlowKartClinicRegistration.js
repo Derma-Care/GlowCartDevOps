@@ -702,15 +702,14 @@ const ClinicRegistration = () => {
 
   // ✅ Save to localStorage for frontend-only preview/debug
   const formattedConsultationDays = `${formData.consultationExpiration} days`
-  const previewData = {
-    ...formData,
-    consultationExpiration: formattedConsultationDays,
-  }
-  localStorage.setItem('clinicFormPreview', JSON.stringify(previewData))
-  console.log('👁️ Clinic Form Preview (Frontend only):', previewData)
+// Create preview data
+const previewData = {
+  ...formData,
+  consultationExpiration: formattedConsultationDays,
+};
 
-  const previewFromLocalStorage = JSON.parse(localStorage.getItem('clinicFormPreview'))
-  console.log('📦 Loaded from localStorage for preview:', previewFromLocalStorage)
+
+
   // ✅ Extract token from URL and store in localStorage
   // Extract from URL and save in localStorage
   useEffect(() => {

@@ -25,6 +25,7 @@ const Clinic_getDetails = React.lazy(() => import('./views/Package_ProcedureMana
 const PayoutManagement = React.lazy(() => import('./views/Payouts/Payoutmanagement'))
 const FCMNotification = React.lazy(() => import('./views/PushNotification/PushNotificationScreen'))
 const RegistrationCodeManagement = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodes'))
+const RegistrationCodeManagementDev = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodesDev'))
 const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/GlowKartClinicDetails'))
 
 const routes = [
@@ -48,6 +49,7 @@ const routes = [
   { path: '/push-notifications', name: 'FCMNotification', element: FCMNotification },
   { path: '/membership-management', name: 'Membership Management', element: MembershipTable },
   { path: '/packages-procedures', name: 'Procedures & Package Management', element: Clinic_getDetails },
+  { path: '/registration-codes-dev', name: 'Registration Codes ', element: RegistrationCodeManagementDev },
   { path: '/registration-codes', name: 'Registration Codes ', element: RegistrationCodeManagement },
   { path: '/clinic-details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
   { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs }

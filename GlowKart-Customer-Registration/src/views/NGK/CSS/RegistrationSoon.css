@@ -1,0 +1,177 @@
+/* ================= DESKTOP DEFAULT ================= */
+.rs-page {
+  min-height: 100vh;
+  width: 100%;
+  background: white;
+  padding: 50px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.rs-top-logo {
+  position: absolute;
+  top: 30px;
+  right: 40px;
+}
+
+.rs-top-logo img {
+  width: 120px;
+}
+
+/* Layout */
+.rs-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1250px;
+  margin: auto;
+  gap: 40px;
+}
+
+/* LEFT */
+.rs-left {
+  flex: 1;
+}
+
+.rs-title {
+  font-size: 54px;
+  font-weight: 300;
+  color: #d2025b;
+}
+
+.rs-bold {
+  font-size: 64px;
+  font-weight: 700;
+  color: #e76585ff;
+}
+
+.rs-subtitle {
+  margin-top: 15px;
+  font-size: 18px;
+  color: #555;
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+/* Instagram Button */
+.rs-btn {
+  background: #d2025b;
+  color: #fff;
+  padding: 14px 22px;
+  margin-top: 20px;
+  border-radius: 14px;
+  border: none;
+  font-size: 17px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  animation: rsPulse 2s infinite ease-in-out;
+  box-shadow: 0 4px 12px rgba(255, 0, 128, 0.3);
+}
+
+.rs-btn-icon {
+  width: 22px;
+  height: 22px;
+  background: white;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+/* Glow Animation */
+@keyframes rsPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 0, 128, 0.4);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 18px rgba(255, 0, 128, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 0, 128, 0.4);
+  }
+}
+
+/* DESKTOP IMAGE */
+.rs-img-desktop img {
+  width: 100%;
+  max-width: 550px;
+  border-radius: 18px;
+}
+
+/* MOBILE IMAGE — hidden on desktop */
+.rs-img-mobile,
+.rs-mobile-logo {
+  display: none;
+}
+
+/* ================= MOBILE VIEW FIX ================= */
+@media (max-width: 768px) {
+  .rs-wrapper {
+    flex-direction: column;
+    padding: 0;
+    gap: 20px;
+    text-align: left;
+  }
+
+  .rs-top-logo {
+    display: none !important;
+  }
+
+  /* SHOW IMAGE ON TOP */
+  .rs-img-desktop {
+    display: none !important;
+  }
+
+  .rs-img-mobile {
+    display: block !important;
+    width: 100%;
+  }
+
+  .rs-img-mobile img {
+    width: 100%;
+  }
+
+  /* MOBILE LOGO AFTER IMAGE */
+  .rs-mobile-logo {
+    display: block !important;
+    width: 50%;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+
+  .rs-mobile-logo img {
+    width: 100% !important;
+  }
+
+  .rs-left {
+    order: 3;
+    padding: 0 10px;
+  }
+
+  .rs-title {
+    font-size: 32px !important;
+  }
+
+  .rs-bold {
+    font-size: 38px !important;
+  }
+
+  .rs-subtitle {
+    font-size: 15px !important;
+    width: 100%;
+  }
+
+  .rs-btn {
+    width: 100%;
+    max-width: 330px;
+    margin-top: 25px;
+    font-size: 14px;
+  }
+}

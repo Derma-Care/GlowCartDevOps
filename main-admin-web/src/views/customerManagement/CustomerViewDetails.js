@@ -19,7 +19,6 @@ import { NGK_COLORS } from '../../Constant/Themes'
 const CustomerViewDetails = () => {
   const navigate = useNavigate()
   const { mobileNumber } = useParams()
-
   const [activeTab, setActiveTab] = useState(0)
   const [customerData, setCustomerData] = useState(null)
   const [loading, setLoading] = useState(true)

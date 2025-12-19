@@ -18,11 +18,13 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getAllRegistrationCodes } from "./RegistrationCodesApi";
+import CIcon from "@coreui/icons-react";
+import { cilCopy } from "@coreui/icons";
 
 const RegistrationCodeManagement = () => {
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState("NGK-");
+  const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState("all"); // <- add this
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(100);
@@ -32,7 +34,7 @@ const RegistrationCodeManagement = () => {
   const [name, setName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [customLink, setCustomLink] = useState(
-    "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
+    "https://registration.ngkderma.com"
   );
   useEffect(() => {
     fetchCodes();
@@ -57,14 +59,20 @@ const RegistrationCodeManagement = () => {
   };
 
   const filteredCodes = codes
-    .filter((code) =>
-      code.code.toLowerCase().includes(searchText.toLowerCase())
-    )
-    .filter((code) => {
-      if (filterType === "used") return code.used;
-      if (filterType === "unused") return !code.used;
+    .filter((item) => {
+      const search = searchText.toLowerCase();
+
+      return (
+        item.code.toLowerCase().includes(search) ||
+        String(item.rank ?? "").includes(search)
+      );
+    })
+    .filter((item) => {
+      if (filterType === "used") return item.used;
+      if (filterType === "unused") return !item.used;
       return true;
     });
+
 
 
   const usedCount = codes.filter((code) => code.used).length;
@@ -83,7 +91,7 @@ const RegistrationCodeManagement = () => {
     setName("");
     setMobileNumber("");
     setCustomLink(
-      "https://glowkartclinic.ashokfruit.shop/NGK-Registration-Form"
+      "https://registration.ngkderma.com"
     );
     setModalVisible(true);
   };
@@ -123,6 +131,15 @@ Warm regards,
     window.open(url, "_blank");
 
     setModalVisible(false);
+  };
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code)
+      .then(() => {
+        toast.success("Registration code copied");
+      })
+      .catch(() => {
+        toast.error("Failed to copy code");
+      });
   };
 
   return (
@@ -165,12 +182,10 @@ Warm regards,
             </div>
           </div>
           <CFormInput
-            placeholder="Search code..."
+            placeholder="Search by code or rank..."
             value={searchText}
             onChange={(e) => {
-              let val = e.target.value;
-              if (!val.startsWith("NGK-")) val = "NGK-";
-              setSearchText(val);
+              setSearchText(e.target.value);
               setCurrentPage(1);
             }}
             style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa" }}
@@ -234,23 +249,31 @@ Warm regards,
 
                           {/* BUTTONS FOR UNUSED CODES → SEND + RANK */}
                           {!isUsed && (
-                            <div style={{ display: "flex", gap: "6px" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
                               <button
                                 style={{
-                                  background: "#adb5bd",   // gray background
+                                  background: "#adb5bd",
                                   color: "#000",
                                   border: "none",
                                   borderRadius: "6px",
-                                  padding: "4px 12px",
-                                  fontSize: "0.75rem",
+                                  padding: "4px 10px",
+                                  fontSize: "0.7rem",
                                   fontWeight: 500,
                                   cursor: "not-allowed",
                                   opacity: 0.7,
+                                  whiteSpace: "nowrap",
                                 }}
                                 disabled
                               >
                                 Rank ({item.rank ?? 0})
                               </button>
+
                               <button
                                 onClick={() => openSendModal(item.code)}
                                 style={{
@@ -262,12 +285,28 @@ Warm regards,
                                   fontSize: "0.75rem",
                                   fontWeight: 500,
                                   cursor: "pointer",
+                                  whiteSpace: "nowrap",
                                 }}
                               >
                                 Send
                               </button>
+
+                              <CTooltip content="Copy code">
+                                <CIcon
+                                  icon={cilCopy}
+                                  size="sm"
+                                  onClick={() => handleCopyCode(item.code)}
+                                  style={{
+                                    cursor: "pointer",
+                                    color: "#000",
+                                    width: "16px",
+                                    height: "16px",
+                                  }}
+                                />
+                              </CTooltip>
                             </div>
                           )}
+
 
                           {/* BUTTONS FOR USED CODES → USED + RANK */}
                           {isUsed && (

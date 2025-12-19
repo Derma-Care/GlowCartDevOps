@@ -221,6 +221,7 @@ export const NGkRegistrationBaseUrl='https://glowkartapi.ashokfruit.shop'
 // Clinic
 export const CLINIC_REGISTRATION_URL = `${BASE_URL_API}/clinics/register`;
 
+
 // Procedure Endpoints
 export const PROCEDURE_CREATE_URL = `${BASE_URL_API}/procedures/create`;
 export const PROCEDURE_GET_ALL_URL = `${BASE_URL_API}/procedures/all`;
@@ -242,7 +243,10 @@ export const statusapi = {
 export const NGkRegistrationLink = `${NGkRegistrationBaseUrl}/onboard/request-link`
 export const getAllQuestions = '/clinicQuestions/getAll'
 export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'
-export const REGISTRATION_CODE_GET_ALL_URL=`${BASE_URL_API}/api/registration/all`
+export const REGISTRATION_CODE_GET_ALL_URL_DEV=`${BASE_URL_API}/api/registration/all`
+export const REGISTRATION_CODE_GET_ALL_URL=`https://api.ngkderma.com/admin/api/registration/all`
+
+
 export const getBasicDetails = 'customers'
 export const CustomerAllData = 'customers/all'
 export const deleteService = 'procedure-pricing/delete'

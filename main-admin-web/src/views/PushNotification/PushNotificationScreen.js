@@ -22,6 +22,8 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
+  CPaginationItem,
+  CPagination, CFormSelect,
 } from '@coreui/react'
 import Select from 'react-select'
 import ConfirmationModal from '../../components/ConfirmationModal'
@@ -63,12 +65,27 @@ const FCMNotification = () => {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(5)
-  const paginatedNotifications = sentNotifications.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  )
-  const totalPages = Math.ceil(sentNotifications.length / pageSize)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
+
+  const filteredData = sentNotifications
+
+  // Always keep totalPages at least 1
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage))
+
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+
+  const paginatedNotifications =
+    filteredData.length > 0
+      ? filteredData.slice(indexOfFirstItem, indexOfLastItem)
+      : []
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
 
   // 🖼 Handle image
   const handleImageChange = (e) => {
@@ -169,7 +186,7 @@ const FCMNotification = () => {
 
     const payload = {
       clinicId,
- 
+
       title,
       body,
       image,
@@ -252,102 +269,95 @@ const FCMNotification = () => {
   }
 
   return (
-    <div className="container mt-1" style={{ maxWidth: '900px' }}>
+    <div className="container-xl py-3">
       <ToastContainer />
       {/* Form */}
-      <CCard className="shadow-sm border-0 mb-4" style={{ color: 'var(--color-black)' }}>
+      <CCard className="mb-4 shadow-sm border-0">
+        <CCardHeader className="bg-white border-bottom">
+          <h5 className="mb-0 fw-semibold">
+            {isEditing ? 'Edit Push Notification' : 'Create Push Notification'}
+          </h5>
+        </CCardHeader>
+
         <CCardBody>
-          <CRow>
-            <CCol md={5}>
-              <CFormLabel>Title</CFormLabel>
+          <CRow className="gy-4">
+            {/* Left */}
+            <CCol lg={5} md={12}>
+              <CFormLabel className="fw-semibold">Title</CFormLabel>
               <CFormInput
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter Title..."
+                placeholder="Enter title"
               />
 
-              <CFormLabel className="mt-3">Image (Optional)</CFormLabel>
+              <CFormLabel className="fw-semibold mt-3">Image (optional)</CFormLabel>
               <CFormInput type="file" accept="image/*" onChange={handleImageChange} />
+
               {image && (
-                <img
-                  src={image}
-                  alt="preview"
-                  style={{ width: '100%', borderRadius: 8, marginTop: 10 }}
-                />
+                <div className="mt-3 text-center">
+                  <img
+                    src={image}
+                    alt="preview"
+                    className="img-fluid rounded border"
+                    style={{ maxHeight: 180 }}
+                  />
+                </div>
               )}
             </CCol>
-            <CCol md={7}>
-              <CFormLabel>Body</CFormLabel>
+
+            {/* Right */}
+            <CCol lg={7} md={12}>
+              <CFormLabel className="fw-semibold">Message</CFormLabel>
               <CFormTextarea
-                rows="4"
+                rows={5}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Enter Message..."
+                placeholder="Enter notification message"
               />
 
-              <CFormCheck
-                className="mt-3"
-                type="checkbox"
-                label="Send to all users"
-                checked={sendAll}
-                onChange={(e) => setSendAll(e.target.checked)}
-              />
+              <div className="mt-3">
+                <CFormCheck
+                  label="Send to all users"
+                  checked={sendAll}
+                  onChange={(e) => setSendAll(e.target.checked)}
+                />
+              </div>
             </CCol>
           </CRow>
+
           {!sendAll && (
-            <div className="mt-3">
-              <CFormLabel>Select Customers</CFormLabel>
+            <div className="mt-4">
+              <CFormLabel className="fw-semibold">Select Customers</CFormLabel>
               <Select
                 isMulti
                 options={customerOptions}
                 value={selectedCustomers}
-                onChange={(selected) => setSelectedCustomers(selected || [])}
-                isLoading={loading}
-                placeholder="🔍 Search & Select Customers..."
-                closeMenuOnSelect={false}
-                menuPlacement="auto"
+                onChange={(v) => setSelectedCustomers(v || [])}
+                placeholder="Search customers"
                 menuPortalTarget={document.body}
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    borderColor: '#ccc',
-                    boxShadow: 'none',
-                    '&:hover': { borderColor: '#999' },
-                  }),
-                  option: (base, { isFocused, isSelected }) => ({
-                    ...base,
-                    backgroundColor: isSelected ? '#000' : isFocused ? '#f1f1f1' : 'white',
-                    color: isSelected ? 'white' : 'var(--color-black)',
-                    cursor: 'pointer',
-                  }),
-                }}
               />
             </div>
           )}
 
-          {responseLog && (
-            <CAlert color={responseLog.error ? 'danger' : 'success'} className="mt-3">
-              {responseLog.error || responseLog.success}
-            </CAlert>
-          )}
-
-          <CButton
-            className="mt-4 w-100"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-          >
-            {isLoading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
-                {isEditing ? 'Updating...' : 'Sending...'}
-              </>
-            ) : (
-              <>{isEditing ? '💾 Update Notification' : '🚀 Send Notification'}</>
-            )}
-          </CButton>
+          <div className="d-grid mt-4">
+            <CButton
+              style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  {isEditing ? 'Updating...' : 'Sending...'}
+                </>
+              ) : (
+                isEditing ? 'Update Notification' : 'Send Notification'
+              )}
+            </CButton>
+          </div>
         </CCardBody>
       </CCard>
+
 
       {/* Table */}
       <CCard className="mb-2">
@@ -361,165 +371,154 @@ const FCMNotification = () => {
             </CAlert>
           )}
 
-          <CTable bordered hover responsive align="middle">
-            <CTableHead>
-              <CTableRow className="pink-table  w-auto">
-                <CTableHeaderCell style={{ width: '5%' }}>#</CTableHeaderCell>
-                <CTableHeaderCell style={{ width: '20%' }}>Title</CTableHeaderCell>
-                <CTableHeaderCell style={{ width: '40%' }}>Body</CTableHeaderCell>
-                <CTableHeaderCell>Date</CTableHeaderCell>
-                <CTableHeaderCell>Image</CTableHeaderCell>
-                <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
+          <CTable striped hover responsive>
+            <CTableHead className='pink-table'>
+              <CTableRow>
+                <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Title</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Body</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Date</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Image</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody className="pink-table">
-              {paginatedNotifications.map((n, idx) => (
-                <CTableRow key={idx}>
-                  <CTableDataCell>{(currentPage - 1) * pageSize + idx + 1}</CTableDataCell>
-                  <CTableDataCell>{n.title}</CTableDataCell>
-                  <CTableDataCell>{n.body}</CTableDataCell>
-                  <CTableDataCell>{new Date().toLocaleString()}</CTableDataCell>
-                  <CTableDataCell>
-                    {n.image ? (
-                      <img src={n.image} alt="notif" style={{ width: 50, borderRadius: 5 }} />
-                    ) : (
-                      '-'
-                    )}
-                  </CTableDataCell>
-                  <CTableDataCell className="text-end">
-                    <div className="d-flex justify-content-end gap-2">
-                      {can('Push Notification', 'read') && (
-                        <button className="actionBtn" title="View" onClick={() => handleView(n)}>
+              {paginatedNotifications.length > 0 ? (
+                paginatedNotifications.map((n, idx) => (
+                  <CTableRow key={idx}>
+                    <CTableDataCell className="text-center">
+                      {(currentPage - 1) * itemsPerPage + idx + 1}
+                    </CTableDataCell>
+                    <CTableDataCell className="text-center">{n.title}</CTableDataCell>
+                    <CTableDataCell className="text-center">{n.body}</CTableDataCell>
+                    <CTableDataCell className="text-center">{new Date().toLocaleString()}</CTableDataCell>
+                    <CTableDataCell className="text-center">
+                      {n.image ? (
+                        <img src={n.image} alt="notif" style={{ width: 50, borderRadius: 5 }} />
+                      ) : (
+                        '-'
+                      )}
+                    </CTableDataCell >
+                    <CTableDataCell className="text-center">
+                      <div className="d-flex justify-content-end gap-2">
+
+                        <button className="actionBtn view" onClick={() => handleView(n)}>
                           <Eye size={18} />
                         </button>
-                      )}
-                      {can('Push Notification', 'update') && (
-                        <button className="actionBtn" title="Edit" onClick={() => handleEdit(n)}>
+                        <button className="actionBtn edit" onClick={() => handleEdit(n)}>
                           <Edit2 size={18} />
                         </button>
-                      )}
-                      {can('Push Notification', 'delete') && (
                         <button
-                          className="actionBtn"
-                          title="Delete"
+                          className="actionBtn delete"
                           onClick={() => {
-                            setSelectedItem(n.id)      // store the selected item
-                            setDeleteConfirm(true)  // show confirmation modal
+                            setSelectedItem(n.id)
+                            setDeleteConfirm(true)
                           }}
                         >
                           <Trash2 size={18} />
                         </button>
-                      )}
-                    </div>
+
+                      </div>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              ) : (
+                <CTableRow>
+                  <CTableDataCell colSpan={6} className="text-center py-4 text-muted">
+                    No data found
                   </CTableDataCell>
                 </CTableRow>
-              ))}
+              )}
             </CTableBody>
+
           </CTable>
 
           {/* Pagination */}
-          <div className="mt-3">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-            />
+          <div className="d-flex justify-content-between px-3 pb-3 mt-3">
+
+            {/* Rows per page */}
+            <div>
+              <label className="me-2">Rows per page:</label>
+              <CFormSelect
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                style={{ width: '80px', display: 'inline-block' }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </CFormSelect>
+            </div>
+
+            {/* Info + Pagination */}
+            <div className="text-end">
+              <div className="mb-1 text-muted">
+                {filteredData.length === 0
+                  ? 'Showing 0 to 0 of 0 entries'
+                  : `Showing ${indexOfFirstItem + 1} to ${Math.min(
+                    indexOfLastItem,
+                    filteredData.length
+                  )} of ${filteredData.length} entries`}
+              </div>
+
+              <CPagination align="end">
+                <CPaginationItem
+                  disabled={filteredData.length === 0 || currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  Previous
+                </CPaginationItem>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <CPaginationItem
+                    key={page}
+                    active={page === currentPage}
+                    disabled={filteredData.length === 0}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </CPaginationItem>
+                ))}
+
+                <CPaginationItem
+                  disabled={
+                    filteredData.length === 0 || currentPage === totalPages
+                  }
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  Next
+                </CPaginationItem>
+              </CPagination>
+            </div>
           </div>
         </CCardBody>
       </CCard>
 
       {/* View Modal */}
-      <CModal
-        visible={viewMode}
-        onClose={() => setViewMode(false)}
-        backdrop="static"
-        className="custom-modal"
-        size="lg"
-      >
+      <CModal visible={viewMode} size="lg" onClose={() => setViewMode(false)}>
         <CModalHeader>
-          <CModalTitle>View Notification</CModalTitle>
+          <CModalTitle>Notification Details</CModalTitle>
         </CModalHeader>
 
         <CModalBody>
-          {selectedItem && (
-            <>
-              <div className="row mb-3" style={{ color: 'var(-color-black)' }}>
-                <div className="col-md-4 mb-2">
-                  <strong>Clinic ID:</strong> {selectedItem.clinicId || '—'}
-                </div>
-             
-                <div className="col-md-4 mb-2">
-                  <strong>Title:</strong> {selectedItem.title || '—'}
-                </div>
+          <CRow className="mb-3">
+            <CCol md={6}><strong>Title:</strong> {selectedItem?.title}</CCol>
+            <CCol md={6}><strong>Send All:</strong> {selectedItem?.sendAll ? 'Yes' : 'No'}</CCol>
+          </CRow>
 
-                <div className="col-md-4 mb-2">
-                  <strong>Body:</strong> {selectedItem.body || '—'}
-                </div>
-                <div className="col-md-4 mb-2">
-                  <strong>Send All:</strong> {selectedItem.sendAll ? 'Yes' : 'No'}
-                </div>
-                <div className="col-md-4 mb-2">
-                  <strong>Tokens:</strong>{' '}
-                  {selectedItem.tokens ? selectedItem.tokens.join(', ') : '—'}
-                </div>
-              </div>
+          <p><strong>Message:</strong></p>
+          <p className="text-muted">{selectedItem?.body}</p>
 
-              {selectedItem.image && (
-                <div className="mb-4">
-                  <strong>Image:</strong>
-                  <img
-                    src={selectedItem.image}
-                    alt="Notification Preview"
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      marginTop: '5px',
-                      border: '2px solid var(--main-color)',
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* ✅ Customer Data Grid */}
-              {selectedItem.customerData && selectedItem.customerData.length > 0 && (
-                <div>
-                  <h6 className="mb-3" style={{ color: 'var(--main-color)' }}>
-                    Customer Data:
-                  </h6>
-
-                  <div className="customer-grid">
-                    {selectedItem.customerData.map((cust, idx) => {
-                      const name = Object.keys(cust)[0]
-                      const details = cust[name]
-                      return (
-                        <div className="customer-card" key={idx}>
-                          <div className="col-item">
-                            <strong style={{ color: 'var(--main-color)' }}>{name}</strong>
-                            <p>📞 {details.mobileNumber}</p>
-                          </div>
-                          <div className="col-item">
-                            <strong>Customer ID:</strong>
-                            <p>{details.customerId}</p>
-                          </div>
-                          <div className="col-item">
-                            <strong>Patient ID:</strong>
-                            <p>{details.patientId}</p>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {selectedItem.createdAt && (
-                <p className="mt-3">
-                  <strong>Created At:</strong> {new Date(selectedItem.createdAt).toLocaleString()}
-                </p>
-              )}
-            </>
+          {selectedItem?.image && (
+            <img
+              src={selectedItem.image}
+              alt=""
+              className="img-fluid rounded border mt-3"
+            />
           )}
         </CModalBody>
 
@@ -529,6 +528,7 @@ const FCMNotification = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
 
       {/* Delete Modal */}
       <ConfirmationModal
