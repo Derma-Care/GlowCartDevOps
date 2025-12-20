@@ -1009,7 +1009,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       </div>
 
                       {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
-                      {/* <small className="sub-gradient-text">Registration</small> */}
+                      {/* <small className="sub-gradient-text">Registration</smmall> */}
                     </div>
                     <CRow className="g-4 mt-4">
                       {/* Full Name + Mobile */}
