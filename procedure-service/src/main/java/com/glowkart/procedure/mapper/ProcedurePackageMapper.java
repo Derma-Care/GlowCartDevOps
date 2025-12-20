@@ -17,8 +17,8 @@ public class ProcedurePackageMapper {
         entity.setId(dto.getPackageId());
         entity.setPackageName(dto.getPackageName());
         entity.setClinicId(dto.getClinicId());
-        entity.setClinicName(dto.getClinicName());
-        entity.setClinicAddress(dto.getClinicAddress());
+        entity.setName(dto.getName());
+        entity.setAddress(dto.getAddress());
 
         entity.setProcedures(dto.getProcedures() != null ?
                 dto.getProcedures().stream()
@@ -68,8 +68,8 @@ public class ProcedurePackageMapper {
         dto.setPackageId(entity.getId());
         dto.setPackageName(entity.getPackageName());
         dto.setClinicId(entity.getClinicId());
-        dto.setClinicName(entity.getClinicName());
-        dto.setClinicAddress(entity.getClinicAddress());
+        dto.setName(entity.getName());
+        dto.setAddress(entity.getAddress());
 
         dto.setProcedures(entity.getProcedures() != null ?
                 entity.getProcedures().stream()

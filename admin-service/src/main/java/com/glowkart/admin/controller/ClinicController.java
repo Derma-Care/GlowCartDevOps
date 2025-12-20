@@ -21,6 +21,7 @@ import com.glowkart.admin.dto.ClinicLoginRequest;
 import com.glowkart.admin.dto.ClinicPublicDTO;
 import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.ClinicRejectionRequest;
+import com.glowkart.admin.dto.ClinicResponse;
 import com.glowkart.admin.dto.ForgotPasswordRequest;
 import com.glowkart.admin.dto.PayoutLoginRequest;
 import com.glowkart.admin.dto.ResetPasswordRequest;
@@ -148,19 +149,15 @@ public class ClinicController {
     // 6. GET CLINIC BY ID
     // ---------------------------------------------------
     @GetMapping("/clinics/{clinicId}")
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable String clinicId) {
-
+    public ResponseEntity<ApiResponse<ClinicResponse>> getById(@PathVariable String clinicId) {
         Clinic clinic = clinicService.getById(clinicId);
+        ClinicResponse response = ClinicMapper.toClinicResponse(clinic);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Clinic fetched successfully",
-                        clinic,
-                        HttpStatus.OK.value()
-                )
+            new ApiResponse<>(true, "Clinic fetched successfully", response, HttpStatus.OK.value())
         );
     }
+
 
     // ---------------------------------------------------
     // 7. UPDATE CLINIC

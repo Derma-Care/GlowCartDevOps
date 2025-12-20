@@ -13,4 +13,8 @@ public class OtpVerifyDTO {
     @NotBlank(message = "OTP is required")
     @Pattern(regexp = "^[0-9]{6}$", message = "OTP must be 6 digits")
     private String otp;
+    
+ // ✅ NEW (FCM device token)
+    @NotBlank(message = "Device token is required")
+    private String deviceToken;
 }

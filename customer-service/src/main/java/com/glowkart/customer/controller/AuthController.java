@@ -3,9 +3,9 @@ package com.glowkart.customer.controller;
 import com.glowkart.customer.dto.*;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.service.CustomerService;
+import com.glowkart.customer.service.NotificationProducer;
 import com.glowkart.customer.service.OtpService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,52 +13,47 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class AuthController {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
+    private final OtpService otpService;
+    private final NotificationProducer notificationProducer;
 
-    @Autowired
-    private OtpService otpService;
-
-    // SEND / RESEND OTP
-    @PostMapping("/auth/send-otp")
-    public ResponseEntity<ApiResponse<String>> sendOtp(
-            @RequestBody @Valid OtpRequestDTO dto) {
-
-        Customer customer = customerService.getCustomer(dto.getMobile()).getData();
-
-        if (customer == null || !customer.isRegistrationCompleted()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new ApiResponse<>(false,
-                            "Customer not registered or registration incomplete",
-                            null,
-                            400));
-        }
-
-        otpService.sendOtp(dto.getMobile());
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, "OTP sent successfully", dto.getMobile(), 200)
-        );
+    public AuthController(CustomerService customerService,
+                          OtpService otpService,
+                          NotificationProducer notificationProducer) {
+        this.customerService = customerService;
+        this.otpService = otpService;
+        this.notificationProducer = notificationProducer;
     }
 
-    // VERIFY OTP
+    @PostMapping("/auth/send-otp")
+    public ResponseEntity<ApiResponse<String>> sendOtp(@RequestBody @Valid OtpRequestDTO dto) {
+        otpService.sendOtp(dto.getMobile());
+        return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent", dto.getMobile(), 200));
+    }
+
     @PostMapping("/auth/verify-otp")
     public ResponseEntity<ApiResponse<Customer>> verifyOtp(
             @RequestBody @Valid OtpVerifyDTO dto) {
 
-        boolean valid = otpService.verifyOtp(dto.getMobile(), dto.getOtp());
-
-        if (!valid) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new ApiResponse<>(false, "Invalid or expired OTP", null, 400));
+        // 1️⃣ Verify OTP
+        if (!otpService.verifyOtp(dto.getMobile(), dto.getOtp())) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Invalid OTP", null, 400));
         }
 
+        // 2️⃣ Fetch customer
         Customer customer = customerService.getCustomer(dto.getMobile()).getData();
+
+        // 3️⃣ Save device token
+        customer.setDeviceToken(dto.getDeviceToken());
+        customerService.saveCustomerEntity(customer);  // ✅ Use service layer
+
+        // 4️⃣ Publish login success event
+        notificationProducer.sendLoginSuccess(customer);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Login successful", customer, 200)
         );
     }
+
 }

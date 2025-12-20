@@ -1,6 +1,13 @@
 package com.glowkart.procedure.service;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.glowkart.procedure.client.ClinicFeignClient;
+import com.glowkart.procedure.dto.ApiResponse;
 import com.glowkart.procedure.dto.ClinicResponse;
 import com.glowkart.procedure.dto.ProcedureItemDTO;
 import com.glowkart.procedure.dto.ProcedurePackageDTO;
@@ -10,12 +17,8 @@ import com.glowkart.procedure.mapper.ProcedurePackageMapper;
 import com.glowkart.procedure.model.ProcedurePackage;
 import com.glowkart.procedure.repo.ProcedurePackageRepository;
 import com.glowkart.procedure.repo.ProcedurePricingRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -33,29 +36,45 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     @Override
     public ProcedurePackageDTO create(ProcedurePackageDTO dto) {
 
+        // Fetch clinic info
         ClinicResponse clinic = fetchClinic(dto.getClinicId());
+
+        // Debug: print the entire clinic object to see its fields
+        System.out.println("Fetched Clinic from Feign: " + clinic);
+
+        // Check for duplicate package name
         checkDuplicatePackageName(dto.getClinicId(), dto.getPackageName());
+
+        // Validate procedures
         validateProcedures(dto);
 
-        // NEW: Validate Discount & Offer Rules
+        // Validate discount & offer rules
         validateDiscountAndOffer(dto);
 
+        // Calculate total sittings
         dto.setSittings(dto.getProcedures().stream()
                 .mapToInt(ProcedureItemDTO::getNoOfSittings)
                 .sum());
 
+        // Set offer status and calculate pricing
         setOfferActive(dto);
         calculatePricing(dto);
 
-        dto.setClinicName(clinic.getName());
-        dto.setClinicAddress(clinic.getAddress());
+        // Set name & address from clinic
+        // Make sure you use the correct getter names based on ClinicResponse
+        dto.setName(clinic.getName());      // or clinic.getClinicName()
+        dto.setAddress(clinic.getAddress()); // or clinic.getClinicAddress()
 
+        // Map to entity and save
         ProcedurePackage entity = mapper.toEntity(dto);
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
 
-        return mapper.toDto(repo.save(entity));
+        ProcedurePackage saved = repo.save(entity);
+
+        return mapper.toDto(saved);
     }
+
 
     // ============================================================
     // UPDATE PACKAGE
@@ -88,8 +107,8 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         setOfferActive(dto);
         calculatePricing(dto);
 
-        dto.setClinicName(clinic.getName());
-        dto.setClinicAddress(clinic.getAddress());
+        dto.setName(clinic.getName());
+        dto.setAddress(clinic.getAddress());
 
         ProcedurePackage updated = mapper.toEntity(dto);
         updated.setCreatedAt(existing.getCreatedAt());
@@ -180,12 +199,15 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     // ============================================================
 
     private ClinicResponse fetchClinic(String clinicId) {
-        ClinicResponse response = clinicClient.getClinicById(clinicId);
-        if (response == null) {
+        ApiResponse<ClinicResponse> apiResponse = clinicClient.getClinicById(clinicId);
+
+        if (apiResponse == null || !apiResponse.isSuccess() || apiResponse.getData() == null) {
             throw new BadRequestException("INVALID_CLINIC", "Invalid clinicId: " + clinicId);
         }
-        return response;
+
+        return apiResponse.getData();
     }
+
 
     private void checkDuplicatePackageName(String clinicId, String packageName) {
         boolean exists = repo.findByClinicId(clinicId)

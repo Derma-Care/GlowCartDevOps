@@ -109,6 +109,20 @@ services:
       - eureka-server
     networks:
       - app-network
+  
+  notification-service:
+    build: ./notification-service
+    container_name: notification_service
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_notification
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
 
   # MongoDB
   mongodb:
@@ -138,9 +152,9 @@ services:
     restart: always
 
     # GlowKart-Customer-Registration Web (Frontend)
-  GlowKart-Customer-Registration:
-    build: ./GlowKart-Customer-Registration
-    container_name: GlowKart-Customer-Registration-container
+  glowkart-customer-registration:
+    build: ./glowkart-customer-registration
+    container_name: glowkart-customer-registration-container
     ports:
       - "5000:80"
     environment:

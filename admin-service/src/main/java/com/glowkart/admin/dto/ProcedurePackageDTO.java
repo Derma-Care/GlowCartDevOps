@@ -9,8 +9,8 @@ public class ProcedurePackageDTO {
     private String packageId;
     private String packageName;
     private String clinicId;
-    private String clinicName;
-    private String clinicAddress;
+    private String name;
+    private String address;
     private List<ProcedureItemDTO> procedures;
     private int sittings;
 

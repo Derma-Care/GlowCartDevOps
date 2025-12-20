@@ -82,7 +82,9 @@ public class Customer {
     private Integer rewardPoints = 0;
     private boolean registrationRewardGiven = false;
 
-    
+    private String deviceToken;
+ // FCM tokens
+
     private boolean registrationCodeVerified = false;
     private boolean isUserProfileCompleted = false;
     private boolean isSpinWheelCompleted = false;

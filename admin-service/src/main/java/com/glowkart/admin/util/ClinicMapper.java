@@ -1,12 +1,12 @@
 package com.glowkart.admin.util;
 
-import com.glowkart.admin.dto.ClinicPublicDTO;
-import com.glowkart.admin.dto.DoctorDTO;
-import com.glowkart.admin.model.Clinic;
-import com.glowkart.admin.model.Doctor;
-
 import java.util.Base64;
 import java.util.List;
+
+import com.glowkart.admin.dto.ClinicPublicDTO;
+import com.glowkart.admin.dto.ClinicResponse;
+import com.glowkart.admin.dto.DoctorDTO;
+import com.glowkart.admin.model.Clinic;
 
 public class ClinicMapper {
 
@@ -87,5 +87,20 @@ public class ClinicMapper {
         }
 
         return dto;
+    }
+    
+    // -------------------------------
+    // New: Map Clinic to ClinicResponse
+    // -------------------------------
+    public static ClinicResponse toClinicResponse(Clinic clinic) {
+        if (clinic == null) return null;
+
+        ClinicResponse response = new ClinicResponse();
+        response.setClinicId(clinic.getClinicId());
+        response.setName(clinic.getName());
+        response.setAddress(clinic.getAddress());
+        response.setStatus(clinic.getStatus());
+
+        return response;
     }
 }

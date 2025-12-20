@@ -2,6 +2,7 @@ package com.glowkart.clinicadmin.feign;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +13,7 @@ import com.glowkart.clinicadmin.dto.ChangePasswordDTO;
 import com.glowkart.clinicadmin.dto.ChangePayoutPasswordDTO;
 import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
 import com.glowkart.clinicadmin.dto.ClinicPublicDTO;
+import com.glowkart.clinicadmin.dto.ClinicResponse;
 import com.glowkart.clinicadmin.dto.ForgotPasswordRequest;
 import com.glowkart.clinicadmin.dto.PayoutLoginRequest;
 import com.glowkart.clinicadmin.dto.ResetPasswordRequest;
@@ -20,6 +22,9 @@ import com.glowkart.clinicadmin.dto.ResetPasswordRequest;
 @FeignClient(name = "admin-service")
 public interface AdminServiceFeignClient {
 
+	@GetMapping("/admin/clinics/{clinicId}")
+    ApiResponse<ClinicResponse> getClinicById(@PathVariable("clinicId") String clinicId);
+	
     @PostMapping("/admin/clinics/login")
     ResponseEntity<ApiResponse<ClinicPublicDTO>> login(@RequestBody ClinicLoginRequest request);
 

@@ -54,7 +54,13 @@ public class CustomerService {
     @Autowired
     private RewardQueryService rewardQueryService;
 
-    
+    /**
+     * Save or update a Customer entity.
+     */
+    @Transactional
+    public Customer saveCustomerEntity(Customer customer) {
+        return customerRepository.save(customer);
+    }
     // ==================== STEP 1: Save Customer ====================
     @Transactional
     public ApiResponse<Customer> saveCustomer(CustomerDetailsDTO dto) {
@@ -276,7 +282,7 @@ public class CustomerService {
                 int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
                 return allSlices.get(randomIndex);
             } else {
-                // Female YES users → existing rank-based logic
+                // Female YES users → rank-based logic
                 Integer rank = customer.getRegistrationRank();
                 if (rank == null) rank = Integer.MAX_VALUE;
 
@@ -290,12 +296,25 @@ public class CustomerService {
                     return allSlices.get(randomIndex);
                 }
             }
+        } else if (customer.getServiceStatus() == 2) {
+            // INTERESTED USERS
+            if ("male".equalsIgnoreCase(customer.getGender())) {
+                // Male INTERESTED users → only slices 4,5,6 (indexes 3,4,5) and 10,11,12 (indexes 9,10,11)
+                int[] allowedIndexes = {3, 4, 5, 9, 10, 11};
+                int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
+                return allSlices.get(randomIndex);
+            } else {
+                // Female INTERESTED users → random between all slices
+                int randomIndex = (int) (Math.random() * allSlices.size());
+                return allSlices.get(randomIndex);
+            }
         } else {
-            // INTERESTED USERS → random between all slices
+            // Fallback: random between all slices
             int randomIndex = (int) (Math.random() * allSlices.size());
             return allSlices.get(randomIndex);
         }
     }
+
 
 
  // ==================== CRUD ====================

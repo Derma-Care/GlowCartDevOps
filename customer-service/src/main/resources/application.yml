@@ -1,6 +1,16 @@
+# =================== AWS SQS ===================
+aws:
+  access-key: ${AWS_ACCESS_KEY_ID}
+  secret-key: ${AWS_SECRET_ACCESS_KEY}
+  region: ap-south-1
+  sqs:
+    notification-queue-url: ${SQS_NOTIFICATION_QUEUE_URL}
+
+# =================== Spring Boot ===================
 spring:
   application:
     name: customer-service
+
   cloud:
     config:
       uri: http://config-server:8888  # Config Server URI
@@ -10,26 +20,24 @@ spring:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/customer_db}
       database: ${SPRING_DATA_MONGODB_DATABASE:customer_db}
 
-  # Increase JSON and file payload limits
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
 
+# =================== Server ===================
 server:
   port: 8090
 
   tomcat:
-    # New property replacing deprecated 'max-http-post-size'
     max-http-form-post-size: 52428800 # 50MB in bytes
 
-  # Optional: enable gzip compression for large JSON payloads
   compression:
     enabled: true
     min-response-size: 1KB
     mime-types: application/json,application/xml,text/html,text/xml,text/plain
 
-# Feign configuration
+# =================== Feign ===================
 feign:
   client:
     config:
@@ -38,7 +46,7 @@ feign:
         readTimeout: 5000
         loggerLevel: full
 
-# Eureka configuration
+# =================== Eureka ===================
 eureka:
   client:
     service-url:
@@ -50,16 +58,14 @@ eureka:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
-# Optional async configuration if needed
+# =================== Async Executor ===================
 async:
   core-pool-size: 5
   max-pool-size: 20
   queue-capacity: 50
 
-
-# =================== Twilio Configuration ===================
+# =================== Twilio ===================
 twilio:
   accountSid: ${TWILIO_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
   authToken: ${TWILIO_AUTH_TOKEN:YOUR_TWILIO_AUTH_TOKEN}
   fromPhone: ${TWILIO_FROM_PHONE:+1234567890}
-

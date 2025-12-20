@@ -16,8 +16,8 @@ public class ProcedurePackage {
 
     private String packageName;
     private String clinicId;
-    private String clinicName;
-    private String clinicAddress;
+    private String name;
+    private String address;
 
     private List<ProcedureItem> procedures;
     private int sittings;
