@@ -54,7 +54,7 @@ public class Customer {
     private String registrationCode;
     private String referBy;
     private Integer registrationRank;
-
+    private String referId;  // This will hold the referId
     // Aadhaar
     @JsonIgnore
     @Indexed(unique = true)

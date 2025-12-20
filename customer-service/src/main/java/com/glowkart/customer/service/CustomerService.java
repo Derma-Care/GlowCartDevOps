@@ -1,5 +1,6 @@
 package com.glowkart.customer.service;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +65,7 @@ public class CustomerService {
     // ==================== STEP 1: Save Customer ====================
     @Transactional
     public ApiResponse<Customer> saveCustomer(CustomerDetailsDTO dto) {
+        // Fetch the customer by the registration code (existing functionality)
         Customer customer = customerRepository.findByRegistrationCode(dto.getRegistrationCode());
         if (customer == null) {
             log.warn("Invalid registration code: {}", dto.getRegistrationCode());
@@ -74,6 +76,7 @@ public class CustomerService {
             return new ApiResponse<>(false, "Verify registration code first", customer);
         }
 
+        // Check for duplicates and validation (existing functionality)
         checkDuplicateMobile(dto.getMobile(), customer.getMobile());
         checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
 
@@ -96,12 +99,40 @@ public class CustomerService {
             log.info("City '{}' already exists in admin-service.", dto.getCity());
         }
 
+        // ==================== Generate Unique ReferId ====================
+        generateAndSetReferId(customer);  // Generate and set the referId
+
+        // Copy the data from DTO to customer object
         copyStep1Fields(dto, customer);
+
         customer.setUserProfileCompleted(true);
         customerRepository.save(customer);
 
         log.info("Step-1 completed for mobile: {}", customer.getMobile());
         return new ApiResponse<>(true, "Step-1 completed. Please proceed to the next step.", customer);
+    }
+
+    // Generate and set referId to customer
+    private void generateAndSetReferId(Customer customer) {
+        String referId;
+        do {
+            // Generate referId in the format "NGK-" followed by a random 6-character string
+            referId = "NGK-" + generateRandomString(6);
+        } while (customerRepository.findByReferId(referId) != null);  // Ensure it's unique by checking DB
+        
+        customer.setReferId(referId);  // Set the unique referId for the customer
+    }
+
+    // Helper method to generate a random alphanumeric string of the specified length
+    private String generateRandomString(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder stringBuilder = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(chars.length());
+            stringBuilder.append(chars.charAt(index));
+        }
+        return stringBuilder.toString();
     }
 
     // ==================== GET DISTINCT CITIES (FROM ADMIN-SERVICE) ====================
