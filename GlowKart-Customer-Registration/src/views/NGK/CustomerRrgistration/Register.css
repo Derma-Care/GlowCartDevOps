@@ -258,10 +258,11 @@ label:hover {
   display: none !important;
 }
 .registraionCodeClass {
-  width: 360px;
+  width: 65%;
   text-align: left;
   /* background: #ffffff; */
-  padding: 28px 26px;
+  margin-top: 40px;
+  padding: 20px 26px;
   border-radius: 18px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border: 1px solid #f4e7f9;
@@ -269,16 +270,14 @@ label:hover {
 .registraionCodeInput {
   border-radius: 12px;
   height: 45px;
-  margin-top: 15px;
-  margin-bottom: 25px;
+  margin-top: 40px;
+  margin-bottom: 20px;
   border: 1px solid var(--ngk-accent-pink); /* Replace JS variable with CSS variable */
   background: transparent;
   transition: 0.25s;
   font-weight: 500;
-  color: "white";
- 
+  color: 'white';
 }
-
 
 /* Mobile layout: full width & hide image */
 @media (max-width: 768px) {
@@ -292,6 +291,12 @@ label:hover {
     position: relative;
     overflow: hidden; /* Prevents blur overflow */
   }
+  .registraionCodeClass {
+    width: 100%;
+  }
+  .registraionCodeInput {
+    margin-top: -10px;
+  }
 
   .bg::before {
     content: '';
@@ -299,23 +304,20 @@ label:hover {
     inset: 0; /* full width + height */
     background-image: url('../../../assets/images/bg2.png');
     background-repeat: no-repeat;
- 
+
     background-size: contain;
 
     filter: blur(20px); /* Blur effect */
-   
+
     z-index: -1; /* Behind content */
     opacity: 0.9; /* Optional soft fade */
   }
- 
 
   .registraionCodeClass {
     background: none;
     box-shadow: none;
     border: none;
- 
   }
- 
 
   .form-panel {
     width: 100% !important;

@@ -876,10 +876,41 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
+                      }}
+                    >
+                      <CCol
+                        md={8}
+                        style={{
+                          fontSize: 13,
+                          textAlign: 'center',
+                          color: NGK_COLORS.primary,
+                          border: '1px solid grey',
+                          borderRadius: '10px',
+                          padding: '10px',
+                          fontWeight: '500',
+                          marginTop: '40px',
+                        }}
+                      >
+                        You don’t have a registration code, don’t worry!! DM us on Instagram{' '}
+                        <a
+                          href="https://www.instagram.com/ngkderma"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "blue", fontWeight: '600' }}
+                        >
+                          @ngkderma
+                        </a>
+                        , and we will send one.
+                      </CCol>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
                         alignContent: 'center',
                         width: '100%',
-                        minHeight: '70vh',
-                        padding: '20px 0',
                       }}
                     >
                       <div className="registraionCodeClass">
