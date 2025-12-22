@@ -1,0 +1,429 @@
+:root {
+  /* PRIMARY BRAND COLORS */
+  --ngk-primary: #3a3ea2;
+  --ngk-primary-light: #d1ebfa;
+
+  /* SECONDARY / ACCENT COLORS */
+  --ngk-accent-pink: #d2025b;
+  --ngk-accent-pink2: #a82e4c;
+  --ngk-accent-bg: #f5cae25d;
+
+  /* GRADIENTS */
+  --ngk-gradient-hero: linear-gradient(-270deg, #d2025b, #a82e4c);
+  --ngk-gradient-sub: linear-gradient(90deg, #d1ebfa, #3a3ea2);
+
+  /* BUTTON SHADOW / EFFECT COLORS */
+  --ngk-btn-shadow: rgba(255, 46, 133, 0.3);
+  --ngk-btn-shadow-hover: rgba(255, 46, 133, 0.45);
+
+  /* SCROLLBAR COLORS */
+  --scroll-track: #f0f0f0;
+  --scroll-thumb: #b5b5b5;
+  --scroll-thumb-hover: #888;
+
+  /* TEXT COLORS */
+  --ngk-text-dark: #444;
+
+  /* BACKDROP / OVERLAY */
+  --ngk-overlay: rgba(0, 0, 0, 0.55);
+}
+
+/* Chrome, Edge, Safari scrollbar */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #b5b5b5;
+  border-radius: 10px;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* Firefox */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #b5b5b5 #f0f0f0;
+}
+
+/* Form panel desktop */
+.form-panel {
+  width: 55%;
+  padding: 40px 30px;
+  overflow-y: auto;
+}
+
+/* PINK CHECKBOX (100% working for CoreUI) */
+.custom-checkbox .form-check-input {
+  accent-color: var(--ngk-accent-pink) !important;
+  border: 2px solid var(--ngk-accent-pink) !important;
+  width: 18px;
+  height: 18px;
+}
+.custom-checkbox .form-check-input:checked {
+  background-color: var(--ngk-accent-pink) !important;
+  border-color: var(--ngk-accent-pink) !important;
+}
+label:hover {
+  background: #ffe6f5;
+  border-color: var(--ngk-accent-pink);
+}
+.derma-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Blurred background layer */
+.derma-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../../../assets/images/bgMain.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  filter: blur(6px); /* Blur strength */
+  transform: scale(1.1); /* Prevents edge cutoff after blur */
+
+  z-index: -1; /* Behind your content */
+  opacity: 0.85; /* Optional: soft fade */
+}
+
+.glass-card {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 8px !important;
+}
+
+.derma-hero {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+}
+
+.hero-highlight {
+  position: relative;
+  padding: 40px 20px;
+}
+
+.hero-highlight::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 46, 133, 0.35) 0%,
+    rgba(255, 46, 133, 0.15) 35%,
+    rgba(255, 46, 133, 0.05) 70%,
+    transparent 100%
+  );
+  filter: blur(30px);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.derma-btn {
+  background-color: var(var(--ngk-accent-pink)) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.25s ease;
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(255, 46, 133, 0.3);
+}
+
+.derma-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 46, 133, 0.45);
+  background-color: var(--ngk-accent-pink) !important; /* slightly lighter pink */
+}
+
+.derma-btn:active {
+  transform: translateY(0px) scale(0.97);
+  box-shadow: 0 4px 10px rgba(255, 46, 133, 0.3);
+}
+.label-gradient {
+  width: 100%;
+  display: inline-block;
+  background: linear-gradient(to right, var(--ngk-accent-bg), transparent);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.aadhaar-link {
+  color: var(--ngk-accent-pink);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.aadhaar-link:hover {
+  color: var(--ngk-accent-pink);
+}
+
+/* Backdrop */
+.aadhaar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  color: black !important;
+}
+
+/* Modal box */
+.aadhaar-modal {
+  background: #fff;
+  width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px #0004;
+  animation: fadeIn 0.25s ease;
+}
+
+.aadhaar-modal h2 {
+  margin-top: 0;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.aadhaar-modal-content {
+  margin-top: 15px;
+  line-height: 1.6;
+  font-size: 15px;
+  color: #444;
+}
+
+.aadhaar-modal-content p {
+  white-space: pre-wrap;
+}
+
+.aadhaar-close-btn {
+  margin-top: 20px;
+  padding: 10px 18px;
+  background: #d1ebfa;
+  color: rgb(0, 0, 0);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.aadhaar-close-btn:hover {
+  background: var(--ngk-accent-pink);
+  color: white;
+}
+
+/* Nice fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.gradient-text {
+  background: linear-gradient(-270deg, var(--ngk-accent-pink), #a82e4c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.sub-gradient-text {
+  background: linear-gradient(90deg, #d1ebfa, var(--ngk-accent-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 18px;
+  font-weight: 600;
+  display: block;
+  text-align: center;
+}
+.header-container img {
+  display: none !important;
+}
+.registraionCodeClass {
+  width: 65%;
+  text-align: left;
+  /* background: #ffffff; */
+  margin-top: 40px;
+  padding: 20px 26px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f4e7f9;
+}
+.registraionCodeInput {
+  border-radius: 12px;
+  height: 45px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  border: 1px solid var(--ngk-accent-pink); /* Replace JS variable with CSS variable */
+  background: transparent;
+  transition: 0.25s;
+  font-weight: 500;
+  color: 'white';
+}
+
+/* Mobile layout: full width & hide image */
+@media (max-width: 768px) {
+  .left-image {
+    display: none !important;
+  }
+  .header-container img {
+    display: block !important;
+  }
+  .bg {
+    position: relative;
+    overflow: hidden; /* Prevents blur overflow */
+  }
+  .registraionCodeClass {
+    width: 100%;
+  }
+  .registraionCodeInput {
+    margin-top: -10px;
+  }
+
+  .bg::before {
+    content: '';
+    position: absolute;
+    inset: 0; /* full width + height */
+    background-image: url('../../../assets/images/bg2.png');
+    background-repeat: no-repeat;
+
+    background-size: contain;
+
+    filter: blur(20px); /* Blur effect */
+
+    z-index: -1; /* Behind content */
+    opacity: 0.9; /* Optional soft fade */
+  }
+
+  .registraionCodeClass {
+    background: none;
+    box-shadow: none;
+    border: none;
+  }
+
+  .form-panel {
+    width: 100% !important;
+    padding: 24px 18px !important;
+  }
+  .gradient-text {
+    background: linear-gradient(-270deg, var(--ngk-accent-pink), #a82e4c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 26px;
+    font-weight: 900;
+  }
+}
+/* Mobile Registration Screen */
+.mobile-reg-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: linear-gradient(180deg, #ffe5f2, #ffffff);
+}
+
+/* Card */
+.mobile-reg-card {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffffcc;
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 28px 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Title */
+.mobile-title {
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 25px;
+  background: linear-gradient(90deg, #d2025b, #a82e4c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Input */
+.mobile-input {
+  border-radius: 12px !important;
+  padding: 12px !important;
+  border: 1px solid #e7e7e7 !important;
+  font-weight: 500;
+}
+
+/* Error */
+.mobile-error {
+  color: #ff2e85;
+  margin-top: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Button */
+.mobile-btn {
+  width: 100% !important;
+  margin-top: 18px;
+  padding: 12px 0 !important;
+  background: linear-gradient(90deg, #d2025b, #a82e4c) !important;
+  border-radius: 12px !important;
+  border: none !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: white !important;
+  box-shadow: 0 4px 14px rgba(210, 2, 91, 0.4) !important;
+  transition: 0.2s;
+}
+
+.mobile-btn:active {
+  transform: scale(0.97);
+}
+
+/* Description */
+.mobile-description {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+  color: #707070;
+  line-height: 1.4;
+}
+
+/* Smooth fade animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Fix */
+@media (min-width: 769px) {
+  .mobile-reg-container {
+    background: transparent !important;
+  }
+}

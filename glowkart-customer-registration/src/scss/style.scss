@@ -1,0 +1,72 @@
+// @import "variables";
+
+@import '@coreui/coreui/scss/coreui';
+@import '@coreui/chartjs/scss/coreui-chartjs';
+
+@import 'vendors/simplebar';
+
+@import 'theme';
+
+@import 'custom';
+
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+);
+
+@media (max-width: map-get($breakpoints, sm)) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: map-get($breakpoints, md)) and (max-width: map-get($breakpoints, lg)) {
+  .custom-container {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: map-get($breakpoints, xl)) {
+  .custom-header {
+    font-size: 1.5rem;
+  }
+}
+
+.custom-card {
+  @media (max-width: 768px) {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  @media (min-width: 1200px) {
+    margin: 2rem;
+    padding: 2rem;
+  }
+}
+
+/* Mobile layout: Procedure 60%, Sittings 20%, Delete 10% */
+@media (max-width: 576px) {
+  .procedure-row .procedure-col {
+    flex: 0 0 60% !important;
+    max-width: 60% !important;
+  }
+
+  .procedure-row .sitting-col {
+    flex: 0 0 20% !important;
+    max-width: 20% !important;
+  }
+
+  .procedure-row .delete-col {
+    flex: 0 0 10% !important;
+    max-width: 10% !important;
+  }
+}
+.blur-background {
+  filter: blur(4px);
+  pointer-events: none; /* prevents clicking background */
+  user-select: none;
+}

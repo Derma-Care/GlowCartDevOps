@@ -1,0 +1,542 @@
+.onboard-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px 0;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.star {
+  background: #ffe9ef;
+  padding: 8px;
+  border-radius: 50%;
+  font-size: 18px;
+}
+
+.step-row {
+  display: flex;
+  padding: 14px 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.step-row:last-child {
+  border-bottom: none;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffe8f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #e91e63;
+  margin-right: 12px;
+}
+
+.step-content {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.step-icon {
+  font-size: 20px;
+}
+
+.step-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.step-subtitle {
+  font-size: 13px;
+  color: #555;
+  margin-top: 3px;
+}
+
+.delivery-box {
+  margin-top: 15px;
+  padding: 12px;
+  background: #fff6fb;
+  border-radius: 12px;
+  border: 1px solid #ffd6e7;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #d81b60;
+}
+/* Modal Background */
+.onboard-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Modal Box */
+.onboard-modal-box {
+  background: #fff;
+  padding: 0;
+  width: 90%;
+  max-width: 450px;
+  height: 90vh; /* FIXED HEIGHT */
+  overflow: hidden; /* ENABLE SCROLL */
+  border-radius: 18px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  animation: popup 0.3s ease;
+}
+
+/* Popup Animation */
+@keyframes popup {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Close Button */
+.close-btn {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Open Button */
+.onboard-open-btn {
+  width: 100%;
+  background: #ff4fa1;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+.onboard-open-btn:hover {
+  background: #ff2f8b;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  float: right;
+  margin-top: -10px;
+  color: #555;
+}
+.close-btn:hover {
+  color: #000;
+}
+.blink-text {
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+    color: red;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.step-row {
+  display: flex;
+  gap: 16px;
+  padding: 15px 0;
+  border-bottom: 1px solid #f1e1f5;
+  align-items: center;
+}
+
+.step-number {
+  width: 70px;
+  height: 70px;
+  border-radius: 14px;
+  background: #ffe4f3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #ff2e85;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.step-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: #d81b60;
+}
+
+.step-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-icon {
+  font-size: 32px;
+}
+
+.step-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.step-subtitle {
+  font-size: 14px;
+  color: #777;
+}
+
+/* Delivery Box */
+.delivery-box {
+  margin-top: 20px;
+  padding: 12px;
+  background: #fff5fb;
+  border: 1px solid #ffd0ec;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+.blink-text {
+  animation: blink 1.4s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.steps-wrapper {
+  padding: 20px;
+  position: relative;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.steps-flow {
+  margin-top: 25px;
+  position: relative;
+}
+
+.step-box {
+  width: '100%';
+  padding: 18px;
+  border-radius: 12px;
+  color: #fff;
+  margin-bottom: 20px;
+  position: relative;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.step-number-box {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.step-count {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.step-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-icon {
+  font-size: 32px;
+}
+
+.step-arrow {
+  width: 35px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 5px;
+  margin-left: auto;
+  position: relative;
+}
+
+.step-arrow::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: -5px;
+  border-left: 12px solid rgba(255, 255, 255, 0.7);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.step-subtitle {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* Delivery box */
+.delivery-box {
+  padding: 14px;
+  background: #fff5fb;
+  border: 1px solid #ffd0ec;
+  border-radius: 10px;
+  margin-top: 25px;
+}
+
+.blink-text {
+  animation: blink 1.3s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* Modal height 90vh */
+.onboarding-modal .modal-content {
+  height: 90vh !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+/* Header fixed */
+.modal-header-fixed {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Body scrollable */
+.modal-body-scroll {
+  flex: 1;
+  overflow-y: auto !important;
+  padding: 20px;
+}
+
+/* Footer fixed */
+.modal-footer-fixed {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  z-index: 10;
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+}
+
+/* Step box styles */
+.step-box {
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 22px;
+  display: flex;
+  gap: 16px;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.step-number-box {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.step-label {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.step-count {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.step-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.step-icon {
+  font-size: 32px;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.step-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Footer message */
+.delivery-box {
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff0f7;
+  border: 1px solid #ffcbe7;
+}
+
+.blink-text {
+  animation: blink 1.3s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* MOBILE FIX */
+@media (max-width: 480px) {
+  .steps-wrapper {
+    padding: 12px !important;
+  }
+
+  .step-box {
+    width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: 14px !important;
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+
+  .step-number-box {
+    min-width: 55px !important;
+    padding: 8px !important;
+  }
+
+  .step-title {
+    font-size: 15px !important;
+  }
+
+  .step-subtitle {
+    font-size: 13px !important;
+  }
+
+  .step-icon {
+    font-size: 26px !important;
+  }
+}
+/* Close Button – Works on Mobile & Desktop */
+.onboard-close-btn {
+  width: 100%; /* full width row */
+  display: flex;
+  justify-content: flex-end; /* move button to right */
+  margin-top: 10px;
+}
+
+.close-button {
+  background: #ff4fa1;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.close-button:hover {
+  background: #e23487;
+}
+
+/* Mobile Optimization */
+@media (max-width: 480px) {
+  .onboard-close-btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+  }
+}
