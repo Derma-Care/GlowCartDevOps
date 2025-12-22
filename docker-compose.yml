@@ -22,19 +22,6 @@ services:
     networks:
       - app-network
 
-  # Config Server
-  config-server:
-    build: ./config-server
-    container_name: config_server
-    ports:
-      - "8888:8888"
-    depends_on:
-      - eureka-server
-    networks:
-      - app-network
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
   # Admin Service
   admin-service:
     build: ./admin-service
@@ -43,21 +30,6 @@ services:
       - "8082:8082"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_admin
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
-  # Clinic Admin Service
-  clinicadmin-service:
-    build: ./clinicadmin-service
-    container_name: clinicadmin_service
-    ports:
-      - "8084:8084"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_clinicadmin
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - mongodb
@@ -80,21 +52,6 @@ services:
     networks:
       - app-network
 
-  # Onboarding Service
-  onboarding-service:
-    build: ./onboarding-service
-    container_name: onboarding_service
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/onboardingdb
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
   # Procedure Service
   procedure-service:
     build: ./procedure-service
@@ -110,19 +67,6 @@ services:
     networks:
       - app-network
   
-  notification-service:
-    build: ./notification-service
-    container_name: notification_service
-    ports:
-      - "9090:9090"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_notification
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
 
   # MongoDB
   mongodb:
@@ -135,22 +79,6 @@ services:
     networks:
       - app-network
 
-  # Clinic Admin Web (Frontend)
-  clinic-admin-web:
-    build: ./clinic-admin-web
-    container_name: clinic-admin-web-container
-    ports:
-      - "3000:80"
-    environment:
-      - HOST=35.154.152.61
-      - PORT=3000
-      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
-    networks:
-      - app-network
-    depends_on:
-      - apigateway
-    restart: always
-
     # GlowKart-Customer-Registration Web (Frontend)
   glowkart-customer-registration:
     build: ./glowkart-customer-registration
@@ -160,22 +88,6 @@ services:
     environment:
       - HOST=35.154.152.61
       - PORT=5000
-      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
-    networks:
-      - app-network
-    depends_on:
-      - apigateway
-    restart: always
-
-  # Main Admin Web(Frontend)
-  main-admin-web:
-    build: ./main-admin-web
-    container_name: main-admin-web-container
-    ports:
-      - "4000:80"
-    environment:
-      - HOST=35.154.152.61
-      - PORT=4000
       - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:
       - app-network
