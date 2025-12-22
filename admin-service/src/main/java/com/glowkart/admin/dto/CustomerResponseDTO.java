@@ -41,7 +41,7 @@ public class CustomerResponseDTO {
     private String registrationCode;
     private String referBy;
     private Integer registrationRank;
-
+    private String referId;  // This will hold the referId
     // Wheel fields
     private String spinRewardId;
     private String spinRewardValue;

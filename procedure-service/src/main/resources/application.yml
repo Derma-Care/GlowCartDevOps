@@ -4,10 +4,10 @@ spring:
 
   cloud:
     config:
-      uri: http://config-server:8888     # <-- Config Server URI added here
+      uri: http://localhost:8888     # <-- Config Server URI added here
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/procedure_db}
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/procedure_db}
       database: ${SPRING_DATA_MONGODB_DATABASE:procedure_db}
 
 server:
@@ -30,7 +30,7 @@ logging:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE:http://eureka-server:8761/eureka/}
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
