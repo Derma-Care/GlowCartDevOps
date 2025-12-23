@@ -66,6 +66,9 @@ public class Clinic {
 
     private double latitude;
     private double longitude;
+ // ADD this field
+    private String state;
+
     private int nabhScore;
     private String branch;
     private String walkthrough;

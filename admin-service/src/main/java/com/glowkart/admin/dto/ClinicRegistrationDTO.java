@@ -18,6 +18,10 @@ public class ClinicRegistrationDTO {
     private String name;
 
     @NotBlank(message = "Address is required")
+    @Pattern(
+        regexp = ".*\\b\\d{6}\\b.*",
+        message = "Address must include a valid 6-digit PIN code"
+    )
     private String address;
 
     @NotBlank(message = "City is required")
@@ -92,6 +96,9 @@ public class ClinicRegistrationDTO {
 
     private double latitude;
     private double longitude;
+ // ADD this field
+    private String state;
+
     private int nabhScore;
     private String branch;
     private String walkthrough;

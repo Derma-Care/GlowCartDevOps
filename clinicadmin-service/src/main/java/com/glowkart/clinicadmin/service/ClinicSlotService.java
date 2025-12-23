@@ -23,7 +23,7 @@ public class ClinicSlotService {
         LocalDate today = LocalDate.now();
         List<String> dateList = new ArrayList<>();
 
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 30; i++) {
             dateList.add(today.plusDays(i).toString()); // YYYY-MM-DD
         }
 

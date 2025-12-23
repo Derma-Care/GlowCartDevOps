@@ -25,6 +25,8 @@ public class ClinicServiceImpl implements ClinicService {
     private final ClinicRepository repo;
     private final OnboardingClient onboardingClient;
     private final AsyncVerificationService asyncVerificationService;
+    private final ReverseGeoService reverseGeoService;
+
 
     private static final String CLINIC_PASSWORD_RESET = "CLINIC_PASSWORD_RESET";
     private static final String PAYOUT_PASSWORD_RESET = "PAYOUT_PASSWORD_RESET";
@@ -32,12 +34,15 @@ public class ClinicServiceImpl implements ClinicService {
     public ClinicServiceImpl(
             ClinicRepository repo,
             OnboardingClient onboardingClient,
-            AsyncVerificationService asyncVerificationService) {
+            AsyncVerificationService asyncVerificationService,
+            ReverseGeoService reverseGeoService) {
 
         this.repo = repo;
         this.onboardingClient = onboardingClient;
         this.asyncVerificationService = asyncVerificationService;
+        this.reverseGeoService = reverseGeoService;
     }
+
 
     // ==========================================================================================
     // REGISTER CLINIC
@@ -787,6 +792,19 @@ public class ClinicServiceImpl implements ClinicService {
         clinic.setIssuingAuthority(dto.getIssuingAuthority());
         clinic.setLatitude(dto.getLatitude());
         clinic.setLongitude(dto.getLongitude());
+     // ---------------------------------------------------
+     // AUTO-DETECT STATE USING LATITUDE & LONGITUDE
+     // ---------------------------------------------------
+     if (dto.getLatitude() != 0 && dto.getLongitude() != 0) {
+
+         String state = reverseGeoService.resolveState(
+                 dto.getLatitude(),
+                 dto.getLongitude()
+         );
+
+         clinic.setState(state);
+     }
+
         clinic.setBranch(dto.getBranch());
         clinic.setWalkthrough(dto.getWalkthrough());
         clinic.setNabhScore(dto.getNabhScore());

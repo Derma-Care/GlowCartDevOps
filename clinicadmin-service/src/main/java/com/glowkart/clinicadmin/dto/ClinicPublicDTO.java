@@ -41,6 +41,7 @@ public class ClinicPublicDTO {
 
     private double latitude;
     private double longitude;
+    private String state;
     private int nabhScore;
     private String branch;
     private String walkthrough;
