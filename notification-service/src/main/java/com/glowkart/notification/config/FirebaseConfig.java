@@ -21,28 +21,32 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void init() throws IOException {
-        InputStream serviceAccount;
+        try (InputStream serviceAccount = loadServiceAccount()) {
 
+            if (serviceAccount == null) {
+                throw new IllegalStateException("Firebase service account file not found at " + serviceAccountPath);
+            }
+
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+                log.info("Firebase initialized successfully using {}", serviceAccountPath);
+            } else {
+                log.info("Firebase already initialized. Skipping initialization.");
+            }
+        }
+    }
+
+    private InputStream loadServiceAccount() throws IOException {
         if (serviceAccountPath.startsWith("classpath:")) {
-            serviceAccount = this.getClass().getClassLoader()
-                    .getResourceAsStream(serviceAccountPath.substring(10));
+            return this.getClass().getClassLoader()
+                    .getResourceAsStream(serviceAccountPath.substring("classpath:".length()));
         } else {
-            serviceAccount = new FileInputStream(serviceAccountPath);
-        }
-
-        if (serviceAccount == null) {
-            throw new IllegalStateException("Firebase service account file not found at " + serviceAccountPath);
-        }
-
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
-
-        if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseApp.initializeApp(options);
-            log.info("Firebase initialized successfully using {}", serviceAccountPath);
-        } else {
-            log.info("Firebase already initialized. Skipping initialization.");
+            return new FileInputStream(serviceAccountPath);
         }
     }
 }
+

@@ -118,13 +118,9 @@ services:
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_notification
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - FIREBASE_SERVICE_ACCOUNT=/opt/secrets/firebase-service-account.json
     depends_on:
       - mongodb
       - eureka-server
-    volumes:
-      # Mount the Firebase JSON file into the container
-      - /absolute/path/on/host/firebase-service-account.json:/opt/secrets/firebase-service-account.json:ro
     networks:
       - app-network
 

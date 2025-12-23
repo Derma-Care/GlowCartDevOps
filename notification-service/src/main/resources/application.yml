@@ -20,13 +20,15 @@ aws:
 
 # Firebase FCM Configuration
 firebase:
-  service-account-path: ${FIREBASE_SERVICE_ACCOUNT}  # prod env variable
+  # Use environment variable FIREBASE_SERVICE_ACCOUNT, fallback to classpath resource for dev
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT:classpath:firebase-service-account.json}
 
 # Eureka configuration for service discovery
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true

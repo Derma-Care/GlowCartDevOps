@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 public class FcmService {
 
     public void sendToDevice(String deviceToken, String title, String body) {
-
         if (deviceToken == null || deviceToken.isBlank()) {
             log.warn("FCM skipped: deviceToken is null or empty");
             return;
@@ -20,16 +19,13 @@ public class FcmService {
         try {
             Message message = Message.builder()
                     .setToken(deviceToken)
-                    .setNotification(
-                            Notification.builder()
-                                    .setTitle(title)
-                                    .setBody(body)
-                                    .build()
-                    )
+                    .setNotification(Notification.builder()
+                            .setTitle(title)
+                            .setBody(body)
+                            .build())
                     .build();
 
             FirebaseMessaging.getInstance().send(message);
-
             log.info("FCM sent successfully to deviceToken={}", mask(deviceToken));
 
         } catch (Exception e) {
@@ -37,12 +33,13 @@ public class FcmService {
         }
     }
 
-    /**
-     * Masks device token for logging
-     */
     private String mask(String token) {
+        if (token == null) {
+            return "****";
+        }
         return token.length() > 10
                 ? token.substring(0, 6) + "****" + token.substring(token.length() - 4)
                 : "****";
     }
 }
+
