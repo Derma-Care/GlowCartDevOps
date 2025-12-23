@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
+
 public class ClinicSlotDetailsDTO {
 
     private String id;

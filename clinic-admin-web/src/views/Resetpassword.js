@@ -3,8 +3,10 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { CForm, CFormInput, CFormLabel, CInputGroup, CInputGroupText } from '@coreui/react'
 import { http } from '../Utils/Interceptors'
 import { passwordRegex } from '../Constant/Constants'
+import { cilLockLocked, cilLockUnlocked } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
 
-const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
+const ResetPassword = forwardRef(({ onClose, setLoading, generalError }, ref) => {
   const [form, setForm] = useState({
     username: '',
     currentPassword: '',
@@ -104,8 +106,13 @@ const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
               onChange={handleChange}
               placeholder="Enter current password"
             />
-            <CInputGroupText onClick={() => setShowCurrent(!showCurrent)}>
-              {showCurrent ? <FaEyeSlash /> : <FaEye />}
+            <CInputGroupText
+              onClick={() => setShowCurrent(!showCurrent)}
+              style={{ cursor: 'pointer' }}
+            >
+              <CIcon icon={showCurrent ? cilLockUnlocked : cilLockLocked} />
+
+              {/* {showCurrent ? <FaEyeSlash /> : <FaEye />} */}
             </CInputGroupText>
           </CInputGroup>
           {errors.currentPassword && <p className="text-danger">{errors.currentPassword}</p>}
@@ -122,8 +129,9 @@ const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
               onChange={handleChange}
               placeholder="Enter new password"
             />
-            <CInputGroupText onClick={() => setShowNew(!showNew)}>
-              {showNew ? <FaEyeSlash /> : <FaEye />}
+            <CInputGroupText onClick={() => setShowNew(!showNew)} style={{ cursor: 'pointer' }}>
+              <CIcon icon={showNew ? cilLockUnlocked : cilLockLocked} />
+              {/* {showNew ? <FaEyeSlash /> : <FaEye />} */}
             </CInputGroupText>
           </CInputGroup>
           {errors.newPassword && <p className="text-danger">{errors.newPassword}</p>}
@@ -140,11 +148,16 @@ const ResetPassword = forwardRef(({ onClose, setLoading }, ref) => {
               onChange={handleChange}
               placeholder="Re-enter password"
             />
-            <CInputGroupText onClick={() => setShowConfirm(!showConfirm)}>
-              {showConfirm ? <FaEyeSlash /> : <FaEye />}
+            <CInputGroupText
+              onClick={() => setShowConfirm(!showConfirm)}
+              style={{ cursor: 'pointer' }}
+            >
+              <CIcon icon={showConfirm ? cilLockUnlocked : cilLockLocked} />
+              {/* {showConfirm ? <FaEyeSlash /> : <FaEye />} */}
             </CInputGroupText>
           </CInputGroup>
           {errors.confirmPassword && <p className="text-danger">{errors.confirmPassword}</p>}
+          {generalError && <p style={{ color: 'red' }}>{generalError}</p>}
         </div>
       </CForm>
     </div>

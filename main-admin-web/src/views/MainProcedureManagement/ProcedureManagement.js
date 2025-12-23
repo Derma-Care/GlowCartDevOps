@@ -10,14 +10,13 @@ import { useHospital } from '../Usecontext/HospitalContext'
 import { showCustomToast } from '../../Utils/Toaster'
 import LoadingIndicator from '../../Utils/loader'
 import Pagination from '../../Utils/Pagination'
-
+import ConfirmationModal from '../../components/ConfirmationModal'
 import { getAllProcedures, getProcedurePricingByClinicId } from './procedureService'
-
 import ServiceFormModal from './ServiceFormModal'
 import ServiceViewModal from './ServiceViewModal'
 import ServiceTable from './ServiceTable'
-import { useLocation, useParams } from 'react-router-dom'
-import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
+import { useParams } from 'react-router-dom'
+
 
 const ServiceManagement = () => {
   const { clinicId } = useParams();
@@ -61,7 +60,7 @@ const ServiceManagement = () => {
     preProcedureQA: [],
     postProcedureQA: [],
     ngkDiscountAmount: '',
-    procedureLink:'',
+    procedureLink: '',
   })
 
   const [errors, setErrors] = useState({
@@ -76,7 +75,6 @@ const ServiceManagement = () => {
     viewDescription: '',
     serviceImage: '',
   })
-
   // ---------- GLOBAL SEARCH & PAGINATION ----------
   const { searchQuery, setSearchQuery } = useGlobalSearch()
   const [currentPage, setCurrentPage] = useState(1)
@@ -196,6 +194,28 @@ const ServiceManagement = () => {
     if (!newService.sittings || newService.sittings.trim() === '') {
       newErrors.sittings = 'Number of sittings is required.'
     }
+    if (newService.discount && newService.discount.trim() !== '') {
+      // discount exists → validate dates
+      if (!newService.offerValidDate) {
+        newErrors.offerValidDate = 'Offer Start Date is required when discount is applied.'
+      }
+
+      // if (!newService.offerEndDate) {
+      //   newErrors.offerEndDate = 'Offer End Date is required when discount is applied.'
+      // }
+    }
+    if (newService.offerValidDate && newService.offerEndDate) {
+      const start = new Date(newService.offerValidDate)
+      const end = new Date(newService.offerEndDate)
+
+      if (start > end) {
+        newErrors.offerValidDate = 'Start date cannot be greater than End date.'
+        newErrors.offerEndDate = 'End date must be after Start date.'
+      }
+    }
+    if (newService.discount && Number(newService.discount) > 100) {
+      newErrors.discount = 'Discount cannot exceed 100%.'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -206,23 +226,25 @@ const ServiceManagement = () => {
   const handleChange = (e) => {
     const { name, value, files, type } = e.target
 
-
     if (type === 'file' && files && files[0]) {
-      const file = files[0];
-      const reader = new FileReader();
+      const file = files[0]
+      const reader = new FileReader()
       reader.onloadend = () => {
         setNewService((prev) => ({
           ...prev,
           [name]: reader.result, // full base64 data URL
           serviceImageFile: file,
-        }));
-
-        // Clear error for the file field
-        setErrors((prev) => ({ ...prev, [name]: '' }));
-      };
-      reader.readAsDataURL(file);
-      return;
+        }))
+        // ✅ CLEAR IMAGE ERROR HERE
+        setErrors((prev) => ({
+          ...prev,
+          serviceImage: '',
+        }))
+      }
+      reader.readAsDataURL(file)
+      return
     }
+
     const numericFields = [
       'consultationFee',
       'minTimeValue',
@@ -261,16 +283,23 @@ const ServiceManagement = () => {
     setNewService((prev) => ({ ...prev, [name]: newValue }))
   }
 
-  const handleSubServiceChange = (e) => {
-    const selectedId = e.target.value
-    const selectedItem = isProcedure.find((p) => p.procedureId === selectedId)
+  const handleSubServiceChange = (selectedOption) => {
+    const selectedId = selectedOption?.value || ''
+
+    const selectedItem = isProcedure.find((p) => String(p.procedureId) === String(selectedId))
 
     setNewService((prev) => ({
       ...prev,
       subServiceId: selectedId,
       subServiceName: selectedItem?.procedureName || '',
     }))
+
+    setErrors((prev) => ({
+      ...prev,
+      subServiceName: '',
+    }))
   }
+
 
   // ---------- HANDLERS: MODAL OPEN/CLOSE ----------
 
@@ -290,12 +319,12 @@ const ServiceManagement = () => {
       offerValidDate: '',
       offerEndDate: '',
       serviceImage: '',
-      procedureLink:'',
       serviceImageFile: null,
       viewDescription: '',
       procedureQA: [],
       preProcedureQA: [],
       postProcedureQA: [],
+      procedureLink: '',
     })
     setErrors({})
   }
@@ -333,7 +362,7 @@ const ServiceManagement = () => {
     setNewService({
       subServiceId: service.procedureId,
       subServiceName: service.procedureName,
-      ngkDiscountAmount:service.ngkDiscountPercentage,
+      ngkDiscountAmount: service.ngkDiscountPercentage,
       price: String(service.price ?? ''),
       discount: String(service.discountPercentage ?? ''),
       gst: String(service.gst ?? ''),
@@ -412,8 +441,8 @@ const ServiceManagement = () => {
         preProcedureQA: newService.preProcedureQA,
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
-        procedureLink: newService.procedureLink || '',
-        ngkDiscountPercentage:newService.ngkDiscountAmount
+        procedureLink: newService.procedureLink,
+        ngkDiscountPercentage: newService.ngkDiscountAmount
       }
 
       const response = await postServiceData(payload) // imported from ProcedureManagementAPI
@@ -421,6 +450,8 @@ const ServiceManagement = () => {
         showCustomToast(response.data.message, 'success')
         handleCloseFormModal()
         fetchProcedurePricing()
+      } else {
+        showCustomToast(response.data.message, 'error')
       }
     } catch (error) {
       console.error('Error in handleAddService:', error?.response || error)
@@ -461,8 +492,6 @@ const ServiceManagement = () => {
         procedureId: newService.subServiceId || '',
         description: newService.viewDescription || '',
         sittings: Number(newService.sittings || 0),
-        ngkDiscountPercentage:newService.ngkDiscountPercentage, 
-          ngkDiscountPercentage:newService.ngkDiscountAmount,
         minTime: newService.minTimeValue
           ? `${newService.minTimeValue} ${newService.minTimeUnit}`
           : '',
@@ -476,17 +505,21 @@ const ServiceManagement = () => {
         taxPercentage: Number(newService.taxPercentage || 0),
         procedureImage: base64ImageToSend,
         gst: Number(newService.gst || 0),
-        procedureLink: newService.procedureLink || '',
         consultationFee: Number(newService.consultationFee || 0),
+        procedureLink: newService.procedureLink,
+        ngkDiscountPercentage: newService.ngkDiscountPercentage,
+        ngkDiscountPercentage: newService.ngkDiscountAmount,
       }
 
-      const response = await updateServiceData(newService.subServiceId, hospitalId, updatedService) // imported from ProcedureManagementAPI
+     const response = await updateServiceData(newService.subServiceId, hospitalId, updatedService) // imported from ProcedureManagementAPI
 
       if (response.success) {
-        showCustomToast('Procedure updated successfully!', 'success')
+        showCustomToast(`${response.message}` || 'Procedure updated successfully!', 'success')
         handleCloseFormModal()
 
         fetchProcedurePricing()
+      } else {
+        showCustomToast(`${response.message}`, 'error')
       }
     } catch (error) {
       console.error('Update failed:', error)
@@ -507,9 +540,13 @@ const ServiceManagement = () => {
     try {
       setDelLoading(true)
       const result = await deleteServiceData(serviceIdToDelete, hospitalId)
-      console.log('Service deleted:', result)
-      showCustomToast('Procedure deleted successfully!', 'success')
-      fetchProcedurePricing()
+      if (result.success) {
+        console.log('Service deleted:', result)
+        showCustomToast(`${result.message}` || 'Procedure deleted successfully!', 'success')
+        fetchProcedurePricing()
+      } else {
+        showCustomToast(`${result.message}`, 'error')
+      }
     } catch (error) {
       console.error('Error deleting Procedure:', error)
     } finally {
@@ -523,8 +560,8 @@ const ServiceManagement = () => {
   // ---------- RENDER ----------
 
   return (
-    <div style={{ overflow: 'hidden' }}>
-      <ToastContainer closeOnClick={true} />
+    <div >
+      <ToastContainer />
 
       {/* Top Right "Add" Button (if needed) */}
       <div>
@@ -590,9 +627,23 @@ const ServiceManagement = () => {
       {/* Delete Confirmation */}
       <ConfirmationModal
         isVisible={isModalVisible}
+        title="Delete Procedure"
         message="Are you sure you want to delete this procedure? This action cannot be undone."
+        confirmText={
+          delloading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+              Deleting...
+            </>
+          ) : (
+            'Yes, Delete'
+          )
+        }
+        cancelText="Cancel"
+        confirmColor="danger"
+        cancelColor="secondary"
         onConfirm={handleConfirmDelete}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={handleCancelDelete}
       />
 
       {/* List / Table */}

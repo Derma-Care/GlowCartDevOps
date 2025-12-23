@@ -56,7 +56,7 @@ const PackageFormModal = ({
                 Package Name <span className="text-danger">*</span>
               </h6>
               <CFormInput
-                disabled={isEdit}
+        
                 type="text"
                 placeholder="Package Name"
                 name="packageName"

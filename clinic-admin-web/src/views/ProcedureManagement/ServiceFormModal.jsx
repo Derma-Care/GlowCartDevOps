@@ -16,6 +16,7 @@ import {
   CButton,
 } from '@coreui/react'
 import ProcedureQA from './QASection'
+import Select from 'react-select'
 
 const ServiceFormModal = ({
   visible,
@@ -31,6 +32,10 @@ const ServiceFormModal = ({
   onSubServiceChange,
 }) => {
   const isEdit = mode === 'edit'
+  const procedureOptions = isProcedure.map((p) => ({
+    value: p.procedureId,
+    label: p.procedureName,
+  }))
 
   return (
     <CModal
@@ -54,19 +59,31 @@ const ServiceFormModal = ({
               <h6>
                 Procedure Name <span className="text-danger">*</span>
               </h6>
-              <CFormSelect
-                name="subServiceId"
-                disabled={isEdit}
-                value={newService.subServiceId || ''}
+
+              <Select
+                options={procedureOptions}
+                isSearchable
+                placeholder="Select Procedure"
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                value={
+                  procedureOptions.find(
+                    (opt) => String(opt.value) === String(newService.subServiceId),
+                  ) || null
+                }
                 onChange={onSubServiceChange}
-              >
-                <option value="">Select Procedure</option>
-                {isProcedure?.map((procedure) => (
-                  <option key={procedure.procedureId} value={procedure.procedureId}>
-                    {procedure.procedureName}
-                  </option>
-                ))}
-              </CFormSelect>
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    minHeight: '38px',
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 9999,
+                  }),
+                }}
+              />
+
               {errors.subServiceName && (
                 <CFormText className="text-danger">{errors.subServiceName}</CFormText>
               )}

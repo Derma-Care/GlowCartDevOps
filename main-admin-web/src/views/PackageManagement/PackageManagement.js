@@ -10,18 +10,16 @@ import {
   updatePackageData,
 } from './PackageManagementAPI'
 import { useGlobalSearch } from '../Usecontext/GlobalSearchContext'
-
 import { useHospital } from '../Usecontext/HospitalContext'
 import { showCustomToast } from '../../Utils/Toaster'
 import LoadingIndicator from '../../Utils/loader'
 import Pagination from '../../Utils/Pagination'
-
-import { getAllProcedures, getProcedurePricingByClinicId } from '../MainProcedureManagement/procedureService'
+import {getProcedurePricingByClinicId } from '../MainProcedureManagement/procedureService'
 import PackageViewModal from './PackageViewModal'
 import PackageFormModal from './PackageFormModal'
 import PackageTableData from './PackageTable'
 import { useLocation, useParams } from 'react-router-dom'
-import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
+import ConfirmationModal from '../../components/ConfirmationModal'
 
 const PackageManagement = () => {
   const { clinicId } = useParams();
@@ -451,7 +449,7 @@ const PackageManagement = () => {
     setNewService({
       packageId: service.packageId,
       packageName: service.packageName,
-       ngkDiscountAmount: service.ngkDiscountPercentage,  //TODO:
+      ngkDiscountAmount: service.ngkDiscountPercentage,  //TODO:
       price: String(service.price ?? ''),
       discount: String(service.discountPercentage ?? ''),
       gst: String(service.gst ?? ''),
@@ -521,7 +519,7 @@ const PackageManagement = () => {
             isProcedure.find((x) => x.procedureId === p.procedureId)?.procedureName || '',
           noOfSittings: Number(p.sittings),
         })),
-  ngkDiscountPercentage:newService.ngkDiscountAmount,
+        ngkDiscountPercentage: newService.ngkDiscountAmount,
         description: newService.viewDescription,
         price: Number(newService.price),
         discountPercentage: Number(newService.discount),
@@ -562,9 +560,6 @@ const PackageManagement = () => {
   const handleUpdateService = async () => {
     try {
       setSaveLoading(true)
-
-
-
       let base64ImageToSend = ''
       if (newService.serviceImageFile) {
         const fullBase64String = await toBase64(newService.serviceImageFile)
@@ -591,7 +586,7 @@ const PackageManagement = () => {
         packageId: newService.packageId || '',
         description: newService.viewDescription || '',
         procedures: proceduresPayload,
-        ngkDiscountPercentage:newService.ngkDiscountAmount,
+        ngkDiscountPercentage: newService.ngkDiscountAmount,
         // minTime: newService.minTimeValue
         //   ? `${newService.minTimeValue} ${newService.minTimeUnit}`
         //   : '',
@@ -688,11 +683,8 @@ const PackageManagement = () => {
               >
                 Add Package Details
               </CButton>
-
             </CForm>
           </div>
-
-
         </CForm>
       </div>
 
@@ -722,17 +714,31 @@ const PackageManagement = () => {
       />
 
       {/* Delete Confirmation */}
-      <ConfirmationModal
+<ConfirmationModal
         isVisible={isModalVisible}
+        title="Delete Procedure"
         message="Are you sure you want to delete this procedure? This action cannot be undone."
+        confirmText={
+          delloading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+              Deleting...
+            </>
+          ) : (
+            'Yes, Delete'
+          )
+        }
+        cancelText="Cancel"
+        confirmColor="danger"
+        cancelColor="secondary"
         onConfirm={handleConfirmDelete}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={handleCancelDelete}
       />
 
       {/* List / Table */}
       {loading ? (
         <div className="d-flex justify-content-center align-items-center">
-          <LoadingIndicator message="Loading Procedures..." />
+          <LoadingIndicator message="Loading Packages..." />
         </div>
       ) : error ? (
         <div

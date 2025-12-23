@@ -72,9 +72,6 @@ const RegistrationCodeManagement = () => {
       if (filterType === "unused") return !item.used;
       return true;
     });
-
-
-
   const usedCount = codes.filter((code) => code.used).length;
   const unusedCount = codes.filter((code) => !code.used).length;
   const indexOfLast = currentPage * itemsPerPage;

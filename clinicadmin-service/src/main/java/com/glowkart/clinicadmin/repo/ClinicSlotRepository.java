@@ -2,15 +2,13 @@ package com.glowkart.clinicadmin.repo;
 
 import com.glowkart.clinicadmin.model.ClinicSlot;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
-@Repository
 public interface ClinicSlotRepository extends MongoRepository<ClinicSlot, String> {
 
-    List<ClinicSlot> findByClinicIdAndDateBetween(String clinicId, Date startDate, Date endDate);
+    Optional<ClinicSlot> findByClinicIdAndDate(String clinicId, String date);
 
-    List<ClinicSlot> findByClinicId(String clinicId);
+    List<ClinicSlot> findByClinicIdAndDateIn(String clinicId, List<String> dates);
 }

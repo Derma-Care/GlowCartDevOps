@@ -22,16 +22,14 @@ const ServiceTable = ({
   return (
     <CTable striped hover responsive>
       <CTableHead className="pink-table w-auto">
-        <CTableRow>
-          <CTableHeaderCell style={{ paddingLeft: "40px" }}>
-            S.No
-          </CTableHeaderCell >
-          <CTableHeaderCell className="text-center">Procedure Name</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Discount %</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Offer Start Date</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Offer End Date</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Price</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+         <CTableRow>
+          <CTableHeaderCell style={{ paddingLeft: '40px' }}>S.No</CTableHeaderCell>
+          <CTableHeaderCell>Procedure Name</CTableHeaderCell>
+          <CTableHeaderCell>Discount %</CTableHeaderCell>
+          <CTableHeaderCell>Offer Satrt Date</CTableHeaderCell>
+          <CTableHeaderCell>Offer End Date</CTableHeaderCell>
+          <CTableHeaderCell>Price</CTableHeaderCell>
+          <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
         </CTableRow>
       </CTableHead>
 
@@ -43,31 +41,31 @@ const ServiceTable = ({
                 {index + 1}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {capitalizeWords(item.procedureName || "N/A")}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {item.discountPercentage ?? "NA"}
               </CTableDataCell>
 
               {/* Offer Start Date */}
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {item.offerStart
                   ? new Date(item.offerStart).toLocaleDateString("en-GB")
                   : "NA"}
               </CTableDataCell>
 
               {/* Offer End Date */}
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {item.offerValidDate
                   ? new Date(item.offerValidDate).toLocaleDateString("en-GB")
                   : "NA"}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">₹{item.price || "NA"}</CTableDataCell>
+              <CTableDataCell>₹{item.price || "NA"}</CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell className="text-end">
                 <div className="d-flex justify-content-center gap-2">
                  
                     <button

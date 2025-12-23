@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+
 import {
   CModal,
   CModalHeader,
@@ -7,6 +8,8 @@ import {
   CModalFooter,
   CButton,
   CFormInput,
+  CInputGroup,
+  CInputGroupText,
 } from '@coreui/react'
 import sendPayoutLockEmail from '../../Utils/sendPayoutLockEmail'
 import { useHospital } from '../Usecontext/HospitalContext'
@@ -17,6 +20,8 @@ import { Link } from 'react-router-dom'
 import { http } from '../../Utils/Interceptors'
 import { payoutlogin, payoutsupdatePassword } from '../../baseUrl'
 import ForgotPasswordPayoutContent from '../pages/login/ForgotPayoutPasswordPage'
+import CIcon from '@coreui/icons-react'
+import { cilEyedropper, cilLockLocked, cilLockUnlocked } from '@coreui/icons'
 export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -30,6 +35,7 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
   const [ploading, setPLoading] = useState(false)
   const [forgotModal, setForgotModal] = useState(false)
   const { selectedHospital } = useHospital()
+  const [showPassword, setShowPassword] = useState(false)
 
   // const dummyUser = {
   //   username: 'admin',
@@ -180,13 +186,10 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
   const loginDisabled = attempts >= 3 || loading
 
   const handleUpdatePassword = async () => {
-    // 1️⃣ Validate child form
     const isValid = resetRef.current?.validateForm()
     if (!isValid) return
 
-    // 2️⃣ Get form data
     const form = resetRef.current?.getFormData()
-
     setPLoading(true)
 
     try {
@@ -197,14 +200,15 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
       })
 
       if (response.data.success) {
-        showCustomToast('Password updated successfully!', 'success')
+        showCustomToast(response.data.message || 'Password updated successfully!', 'success')
+        setGeneralError(response.data.message)
         setShowResetModal(false)
       } else {
+        setGeneralError(response.data.message)
         showCustomToast(response.data.message, 'error')
       }
     } catch (err) {
-      showCustomToast(err?.data?.message || 'Error updating password.', 'error')
-      showCustomToast('Error updating password.', 'error')
+      // showCustomToast(err?.response?.data?.message || 'Error updating password', 'error')
     } finally {
       setPLoading(false)
     }
@@ -255,18 +259,27 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
         {usernameError && <small style={{ color: 'red' }}>{usernameError}</small>}
 
         {/* PASSWORD */}
-        <CFormInput
-          className="mt-3 mb-1"
-          type="password"
-          placeholder="Password"
-          value={password}
-          disabled={loginDisabled}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            setPasswordError('')
-            setGeneralError('')
-          }}
-        />
+        <CInputGroup className="mt-3 mb-1">
+          <CFormInput
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            value={password}
+            disabled={loginDisabled}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              setPasswordError('')
+              setGeneralError('')
+            }}
+          />
+
+          <CInputGroupText
+            style={{ cursor: 'pointer' }}
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
+          </CInputGroupText>
+        </CInputGroup>
+
         {passwordError && <small style={{ color: 'red' }}>{passwordError}</small>}
         {/* GENERAL ERROR */}
         {generalError && <p style={{ color: 'red' }}>{generalError}</p>}
@@ -344,6 +357,7 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
               onClose={() => setShowResetModal(false)}
               setLoading={setPLoading}
               ref={resetRef}
+              generalError={generalError}
             />
           </CModalBody>
           <CModalFooter>
@@ -351,7 +365,7 @@ export default function PayoutAuthModal({ visible, onClose, onSuccess }) {
               Close
             </CButton>
             <CButton
-              type="submit"
+              type="button"
               color="primary"
               disabled={ploading}
               style={{ backgroundColor: NGK_COLORS.primary, border: 'none' }}

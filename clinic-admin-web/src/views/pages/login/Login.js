@@ -258,6 +258,7 @@ const Login = () => {
                           }}
                           onChange={(e) => {
                             setUserName(e.target.value)
+                            setErrorMessage('') // ✅ CLEAR GENERAL ERROR
                             if (fieldErrors.userName)
                               setFieldErrors((p) => ({ ...p, userName: '' }))
                           }}
@@ -291,6 +292,7 @@ const Login = () => {
                           }}
                           onChange={(e) => {
                             setPassword(e.target.value)
+                            setErrorMessage('') // ✅ CLEAR GENERAL ERROR
                             if (fieldErrors.password)
                               setFieldErrors((p) => ({ ...p, password: '' }))
                           }}

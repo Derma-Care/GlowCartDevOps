@@ -131,25 +131,6 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
                 </span>
               </CCol>
             )}
-
-            <CCol sm={6}>
-              <span className="mb-1 fw-semibold">Procedure Link:</span>
-
-              {data.procedureLink ? (
-                <a
-                  href={data.procedureLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ marginLeft: '5px' }}
-                >
-                  {data.procedureLink}
-                </a>
-              ) : (
-                <span className="text-muted" style={{ marginLeft: '5px' }}>N/A</span>
-              )}
-            </CCol>
-
-
           </CRow>
         </div>
 
@@ -243,7 +224,23 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
                 <p className="text-muted">No image available</p>
               )}
             </CCol>
-            <CCol sm={6}>
+                     <CCol sm={6}>
+              <span className="mb-1 fw-semibold">Procedure Link:</span>
+
+              {data.procedureLink ? (
+                <a
+                  href={data.procedureLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ marginLeft: '5px' }}
+                >
+                  {data.procedureLink}
+                </a>
+              ) : (
+                <span className="text-muted" style={{ marginLeft: '5px' }}>N/A</span>
+              )}
+            </CCol>
+            <CCol sm={12}>
               <p className="fw-semibold">Description:</p>
               <p className="text-muted">{data.description || 'N/A'}</p>
             </CCol>

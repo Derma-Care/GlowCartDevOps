@@ -33,7 +33,7 @@ import {
 } from './ProcedureAPI'
 
 import LoadingIndicator from '../../Utils/loader'
-import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
+import ConfirmationModal from '../../components/ConfirmationModal'
 import { Edit2, Eye, Trash2 } from 'lucide-react'
 import { COLORS } from '../../Constant/Themes'
 import CIcon from '@coreui/icons-react'
@@ -56,7 +56,9 @@ const ProcedureManagement = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [delloading, setDelLoading] = useState(false)
 
+  const PROCEDURE_REGEX = /^[A-Za-z]+([A-Za-z\s\-\/\+\(\)]*)$/;
   useEffect(() => {
     fetchProcedures()
   }, [])
@@ -81,6 +83,14 @@ const ProcedureManagement = () => {
     if (!trimmed) {
       setErrors({ procedure: 'Procedure name is required' })
       return
+    }
+    // Regex validation
+    if (!PROCEDURE_REGEX.test(trimmed)) {
+      setErrors({
+        procedure:
+          'Only letters, spaces, -, /, + and () are allowed. Numbers & special characters are not allowed.',
+      });
+      return;
     }
 
     if (tempProcedures.map(p => p.toLowerCase()).includes(trimmed.toLowerCase())) {
@@ -154,12 +164,14 @@ const ProcedureManagement = () => {
 
   const handleConfirmDelete = async () => {
     try {
+      setDelLoading(true)
       await deleteProcedure(deleteId)
       toast.success('Procedure deleted successfully')
       fetchProcedures()
     } catch {
       toast.error('Failed to delete procedure')
     }
+    setDelLoading(false)
     setShowDeleteModal(false)
   }
   const filteredProcedures = procedures.filter((proc) =>
@@ -316,7 +328,15 @@ const ProcedureManagement = () => {
           <CFormInput
             placeholder="Enter procedure"
             value={procedureInput}
-            onChange={(e) => setProcedureInput(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              // Allow typing only valid characters
+              if (value === '' || PROCEDURE_REGEX.test(value)) {
+                setProcedureInput(value);
+                setErrors({ procedure: '' });
+              }
+            }}
             invalid={!!errors.procedure}
           />
           {errors.procedure && <p className="text-danger mt-1">{errors.procedure}</p>}<br />
@@ -355,6 +375,19 @@ const ProcedureManagement = () => {
       <ConfirmationModal
         isVisible={showDeleteModal}
         message="Are you sure you want to delete this procedure?"
+        confirmText={
+          delloading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+              Deleting...
+            </>
+          ) : (
+            'Yes, Delete'
+          )
+        }
+        cancelText="Cancel"
+        confirmColor="danger"
+        cancelColor="secondary"
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeleteModal(false)}
       />

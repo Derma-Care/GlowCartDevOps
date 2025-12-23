@@ -153,7 +153,11 @@ const WidgetsDropdown = () => {
           <div className="d-flex gap-2">
             <CButton
               style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-              onClick={() => setFilterTypes([])}
+              onClick={() => {
+                setSelectedDate('')
+                setFilterTypes([])
+              }}
+              setSelectedDate
             >
               All
             </CButton>

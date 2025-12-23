@@ -151,22 +151,6 @@ services:
       - apigateway
     restart: always
 
-    # GlowKart-Customer-Registration Web (Frontend)
-  glowkart-customer-registration:
-    build: ./glowkart-customer-registration
-    container_name: glowkart-customer-registration-container
-    ports:
-      - "5000:80"
-    environment:
-      - HOST=35.154.152.61
-      - PORT=5000
-      - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
-    networks:
-      - app-network
-    depends_on:
-      - apigateway
-    restart: always
-
   # Main Admin Web(Frontend)
   main-admin-web:
     build: ./main-admin-web

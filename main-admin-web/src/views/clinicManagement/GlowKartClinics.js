@@ -69,16 +69,40 @@ const ClinicManagement = ({ service }) => {
   const [nameInput, setNameInput] = useState("")
   const [nameError, setNameError] = useState("")
 
+  const [emailError, setEmailError] = useState("")
   // Validation for Name field
-  const validateName = (value) => {
-    const regex = /^[A-Za-z\s]+$/; // only letters + spaces
-    if (!regex.test(value)) {
-      setNameError("Name should contain only alphabets and spaces");
-    } else {
-      setNameError("");
-    }
-  };
+  const handleNameChange = (e) => {
+    const value = e.target.value
+    const regex = /^[A-Za-z\s]*$/ // letters & spaces only
 
+    if (!regex.test(value)) {
+      setNameError("Only alphabets are allowed")
+      return
+    }
+
+    if (value.trim().length < 3 && value.length > 0) {
+      setNameError("Name must be at least 3 characters")
+    } else {
+      setNameError("")
+    }
+
+    setNameInput(value)
+  }
+  const handleEmailChange = (e) => {
+    const value = e.target.value
+    setLinkInputValue(value)
+
+    const emailRegex =
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
+    if (!value) {
+      setEmailError("Email is required")
+    } else if (!emailRegex.test(value)) {
+      setEmailError("Enter a valid email address")
+    } else {
+      setEmailError("")
+    }
+  }
   useEffect(() => {
     fetchClinics()
     if (location.state?.newClinic) {
@@ -185,13 +209,18 @@ const ClinicManagement = ({ service }) => {
   const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
 
   const sendNGKRegistrationLink = async (email) => {
-    setLoadingLink(true)   // 🔥 MOVE THIS TO TOP (IMPORTANT)
+    if (nameError || emailError || !nameInput.trim() || !email.trim()) {
+      toast.error("Please fix validation errors")
+      return
+    }
+
+    setLoadingLink(true)
 
     try {
       const response = await fetch(`${NGkRegistrationLink}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name: nameInput })
+        body: JSON.stringify({ email, name: nameInput.trim() })
       })
 
       const data = await response.json()
@@ -206,12 +235,15 @@ const ClinicManagement = ({ service }) => {
       setIsLink(false)
       setLinkInputValue("")
       setNameInput("")
-    } catch (error) {
+      setNameError("")
+      setEmailError("")
+    } catch {
       toast.error("Something went wrong")
     } finally {
-      setLoadingLink(false) // 🔥 ENABLE AGAIN AFTER API
+      setLoadingLink(false)
     }
   }
+
 
 
   return (
@@ -409,17 +441,7 @@ const ClinicManagement = ({ service }) => {
               label="Name"
               value={nameInput}
               placeholder="Enter Name"
-              onChange={(e) => {
-                const value = e.target.value;
-                const regex = /^[A-Za-z\s]*$/; // allow only letters & spaces
-
-                if (regex.test(value)) {
-                  setNameInput(value);
-                  setNameError("");
-                } else {
-                  setNameError("Only alphabets allowed");
-                }
-              }}
+              onChange={handleNameChange}
             />
 
             {nameError && (
@@ -427,24 +449,41 @@ const ClinicManagement = ({ service }) => {
                 {nameError}
               </p>
             )}
+
             <br />
 
             {/* EMAIL / MOBILE FIELD */}
             <CFormInput
               type="text"
               autoComplete="email"
-              // label="Mobile number / Email Id"
               label="Email Id"
               value={linkInputValue}
-              onChange={(e) => setLinkInputValue(e.target.value)}
-              placeholder="Type here..."
+              onChange={handleEmailChange}
+              placeholder="Enter Email Id"
             />
+
+            {emailError && (
+              <p style={{ color: "red", fontSize: "14px", marginTop: "5px" }}>
+                {emailError}
+              </p>
+            )}
+
           </CModalBody>
 
           <CModalFooter>
-            <CButton color="secondary" onClick={() => setIsLink(false)}>
+            <CButton
+              color="secondary"
+              onClick={() => {
+                setIsLink(false)
+                setNameInput("")
+                setLinkInputValue("")
+                setNameError("")
+                setEmailError("")
+              }}
+            >
               Cancel
             </CButton>
+
 
             <CButton
               color="primary"
@@ -452,8 +491,10 @@ const ClinicManagement = ({ service }) => {
                 loadingLink ||
                 nameInput.trim() === "" ||
                 linkInputValue.trim() === "" ||
-                nameError
+                nameError ||
+                emailError
               }
+
               onClick={() => {
                 sendNGKRegistrationLink(linkInputValue)
               }}

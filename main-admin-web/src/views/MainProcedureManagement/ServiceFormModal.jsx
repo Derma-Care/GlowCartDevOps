@@ -19,7 +19,7 @@ import {
 import { cilChevronBottom } from '@coreui/icons'
 import ProcedureQA from './QASection'
 import CIcon from '@coreui/icons-react'
-
+import Select from 'react-select'
 const ServiceFormModal = ({
   visible,
   mode, // 'add' | 'edit'
@@ -34,24 +34,11 @@ const ServiceFormModal = ({
   onSubServiceChange,
 }) => {
   const isEdit = mode === 'edit'
-  const [procedureSearch, setProcedureSearch] = useState('')
-  const [showProcedureList, setShowProcedureList] = useState(false)
+  const procedureOptions = isProcedure.map((p) => ({
+    value: p.procedureId,
+    label: p.procedureName,
+  }))
 
-  // 🔹 Detect typing vs selected value
-  const isTyping =
-    procedureSearch &&
-    !isProcedure?.some(
-      (p) => p.procedureName === procedureSearch
-    )
-
-  // 🔹 Filter logic (CORE FIX)
-  const filteredProcedures = isTyping
-    ? isProcedure?.filter((procedure) =>
-        procedure.procedureName
-          .toLowerCase()
-          .includes(procedureSearch.toLowerCase())
-      )
-    : isProcedure
 
   return (
     <CModal
@@ -71,71 +58,38 @@ const ServiceFormModal = ({
         <CForm>
           {/* Procedure Name + Price + Discount + GST */}
           <CRow>
-          <CCol md={3} className="mb-4 position-relative">
+            <CCol md={3} className="mb-4 ">
               <h6>
                 Procedure Name <span className="text-danger">*</span>
               </h6>
 
-              <CInputGroup>
-                <CFormInput
-                  placeholder="Select procedure"
-                  value={procedureSearch}
-                  disabled={isEdit}
-                  onChange={(e) => {
-                    setProcedureSearch(e.target.value)
-                    setShowProcedureList(true)
-                  }}
-                  onFocus={() => setShowProcedureList(true)}
-                />
 
-                <CInputGroupText
-                  style={{
-                    cursor: 'pointer',
-                    color: showProcedureList ? '#0d6efd' : '#6c757d',
-                    transform: showProcedureList ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onClick={() => setShowProcedureList((prev) => !prev)}
-                >
-                  <CIcon icon={cilChevronBottom} />
-                </CInputGroupText>
-              </CInputGroup>
-
-              {showProcedureList && filteredProcedures?.length > 0 && (
-                <div
-                  className="border rounded bg-white shadow-sm position-absolute w-100"
-                  style={{
-                    zIndex: 1050,
-                    maxHeight: 180,
-                    overflowY: 'auto',
-                  }}
-                >
-                  {filteredProcedures.map((procedure) => (
-                    <div
-                      key={procedure.procedureId}
-                      className="px-3 py-2"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setProcedureSearch(procedure.procedureName)
-                        setShowProcedureList(false)
-                        onSubServiceChange({
-                          target: {
-                            name: 'subServiceId',
-                            value: procedure.procedureId,
-                          },
-                        })
-                      }}
-                    >
-                      {procedure.procedureName}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <Select
+                options={procedureOptions}
+                isSearchable
+                placeholder="Select Procedure"
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                value={
+                  procedureOptions.find(
+                    (opt) => String(opt.value) === String(newService.subServiceId),
+                  ) || null
+                }
+                onChange={onSubServiceChange}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    minHeight: '38px',
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 9999,
+                  }),
+                }}
+              />
 
               {errors.subServiceName && (
-                <CFormText className="text-danger">
-                  {errors.subServiceName}
-                </CFormText>
+                <CFormText className="text-danger">{errors.subServiceName}</CFormText>
               )}
             </CCol>
             <CCol md={3} className="mb-4">
@@ -206,6 +160,9 @@ const ServiceFormModal = ({
                 value={newService.offerValidDate || ''}
                 onChange={onChange}
               />
+              {errors.offerValidDate && (
+                <CFormText className="text-danger">{errors.offerValidDate}</CFormText>
+              )}
             </CCol>
 
             <CCol md={3} className="mb-4">
@@ -258,64 +215,56 @@ const ServiceFormModal = ({
               <h6>
                 Min Time <span className="text-danger">*</span>
               </h6>
-              <div className="d-flex">
-                <CFormInput
-                  type="text"
-                  name="minTimeValue"
-                  placeholder="Enter time"
-                  value={newService.minTimeValue || ''}
-                  onChange={onChange}
-                  onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '')
-                  }}
-                />
-                <CFormSelect
-                  name="minTimeUnit"
-                  className="ms-2"
-                  value={newService.minTimeUnit || ''}
-                  onChange={onChange}
-                >
-                  <option value="" disabled>
-                    Select Time
-                  </option>
-                  <option value="minutes">Minutes</option>
-                  <option value="hours">Hours</option>
-                </CFormSelect>
-              </div>
+
+              <CFormInput
+                type="text"
+                name="minTimeValue"
+                placeholder="Enter time"
+                value={newService.minTimeValue || ''}
+                onChange={onChange}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                }}
+              />
+
               {errors.minTimeValue && (
                 <CFormText className="text-danger">{errors.minTimeValue}</CFormText>
               )}
+            </CCol>
+
+            <CCol md={3} className="mb-4">
+              <h6>
+                Min Value <span className="text-danger">*</span>
+              </h6>
+
+              <CFormSelect
+                name="minTimeUnit"
+                className="ms-2"
+                value={newService.minTimeUnit || ''}
+                onChange={onChange}
+              >
+                <option value="" disabled>
+                  Select Value
+                </option>
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+              </CFormSelect>
+
               {errors.minTimeUnit && (
                 <CFormText className="text-danger">{errors.minTimeUnit}</CFormText>
               )}
             </CCol>
 
             <CCol md={3} className="mb-4">
-              <h6>
-                Procedure Image <span className="text-danger">*</span>
-              </h6>
+              <h6>Procedure Link / Url (Optional)</h6>
               <CFormInput
-                type="file"
-                accept="image/*"
-                name="serviceImage"
+                type="text"
+                name="procedureLink"
+                placeholder="Youtube, Facebook, Instagram, etc.."
+                value={newService.procedureLink || ''}
                 onChange={onChange}
               />
-              {newService?.serviceImage && (
-                <img
-                  src={
-                    newService.serviceImage.startsWith('data:')
-                      ? newService.serviceImage
-                      : `data:image/jpeg;base64,${newService.serviceImage}`
-                  }
-                  alt="Preview"
-                  style={{ width: 100, height: 100, marginTop: 10, objectFit: 'cover' }}
-                />
-              )}
-              {errors.serviceImage && (
-                <CFormText className="text-danger">{errors.serviceImage}</CFormText>
-              )}
             </CCol>
-
             <CCol md={3} className="mb-4">
               <h6>
                 View Description <span className="text-danger">*</span>
@@ -331,24 +280,25 @@ const ServiceFormModal = ({
                 <CFormText className="text-danger">{errors.viewDescription}</CFormText>
               )}
             </CCol>
-            <CCol md={6} className="mb-4">
-              <h6>Procedure Video Link</h6>
-              <CFormInput
-                type="url"
-                placeholder="Enter procedure video URL (YouTube, Vimeo, Drive, etc.)"
-                value={newService.procedureLink || ''}
-                name="procedureLink"
-                onChange={onChange}
-              />
-              {newService.procedureLink && (
-                <CButton
-                  color="primary"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => window.open(newService.procedureLink, '_blank')}
-                >
-                  Watch Procedure Video
-                </CButton>
+
+           <CCol md={6} className="mb-4">
+              <h6>
+                Procedure Image <span className="text-danger">*</span>
+              </h6>
+              <CFormInput type="file" accept="image/*" name="serviceImage" onChange={onChange} />
+              {newService?.serviceImage && (
+                <img
+                  src={
+                    newService.serviceImage.startsWith('data:')
+                      ? newService.serviceImage
+                      : `data:image/jpeg;base64,${newService.serviceImage}`
+                  }
+                  alt="Preview"
+                  style={{ width: 100, height: 100, marginTop: 10, objectFit: 'cover' }}
+                />
+              )}
+              {errors.serviceImage && (
+                <CFormText className="text-danger">{errors.serviceImage}</CFormText>
               )}
             </CCol>
 

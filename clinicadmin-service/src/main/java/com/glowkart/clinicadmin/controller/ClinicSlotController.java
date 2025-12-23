@@ -1,29 +1,30 @@
 package com.glowkart.clinicadmin.controller;
 
-import com.glowkart.clinicadmin.model.ClinicSlot;
+import com.glowkart.clinicadmin.dto.*;
 import com.glowkart.clinicadmin.service.ClinicSlotService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/clinic-admin")
 public class ClinicSlotController {
 
-    @Autowired
-    private ClinicSlotService service;
+    private final ClinicSlotService clinicSlotService;
 
-    // Fetch next 15 days slots (with placeholders)
-    @GetMapping("/{clinicId}/slots/next15days")
-    public List<ClinicSlot> getNext15DaysSlots(@PathVariable String clinicId) {
-        return service.getNextNDaysSlots(clinicId, 15);
+    public ClinicSlotController(ClinicSlotService clinicSlotService) {
+        this.clinicSlotService = clinicSlotService;
     }
 
-    // Batch save/update slots
-    @PostMapping("/{clinicId}/slots/batch")
-    public String saveOrUpdateBatch(@PathVariable String clinicId, @RequestBody List<ClinicSlot> slots) {
-        service.saveOrUpdateSlots(clinicId, slots);
-        return "Batch save/update completed successfully!";
+    // GET available slots
+    @GetMapping("/available-slots")
+    public ApiResponse<AvailableSlotsResponse> getAvailableSlots(@RequestParam String clinicId) {
+        AvailableSlotsResponse response = clinicSlotService.getAvailableSlots(clinicId);
+        return new ApiResponse<>(true, "Slots fetched successfully", response, 200);
+    }
+
+    // SAVE slots
+    @PostMapping("/save-slots")
+    public ApiResponse<Void> saveClinicSlots(@RequestBody SaveClinicSlotsRequest request) {
+        clinicSlotService.saveClinicSlots(request);
+        return new ApiResponse<>(true, "Clinic slots saved successfully", null, 200);
     }
 }

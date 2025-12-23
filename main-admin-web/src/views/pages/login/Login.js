@@ -5,7 +5,6 @@ import {
   CButton,
   CCard,
   CCardBody,
-  CCardGroup,
   CCol,
   CContainer,
   CForm,
@@ -13,160 +12,274 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CModal,
+  CModalBody,
+  CSpinner,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilLockUnlocked } from '@coreui/icons'
-import Logo from '../login/GlowKaart.png'
-import { BASE_URL, BASE_URL_API, endPoint } from '../../../baseUrl'
+import {
+  cilLockLocked,
+  cilUser,
+  cilLockUnlocked,
+  cilShieldAlt,
+} from '@coreui/icons'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+
+import LoginBg from '../../../assets/images/bg.jpg'
+import { BASE_URL_API } from '../../../baseUrl'
+import { NGK_COLORS } from '../../../Constant/Themes'
 
 const Login = () => {
   const [userName, setUserName] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-
-  const [errorMessage, setErrorMessage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [forgotModal, setForgotModal] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
+
   const navigate = useNavigate()
-
   const location = useLocation()
-
   const from = location.state?.from?.pathname || '/clinic-management'
-  
+
+  useEffect(() => {
+    localStorage.clear()
+  }, [])
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!userName && !password) {
-      setErrorMessage("Mobile number and password are required.");
-      return;
+    if (!userName || !password) {
+      toast.error('Mobile number and password are required')
+      return
     }
 
-    if (!userName) {
-      setErrorMessage("Mobile number is required.");
-      return;
-    }
-
-    if (!password) {
-      setErrorMessage("Password is required.");
-      return;
-    }
-
-    setIsLoading(true);
-    setErrorMessage(null);
+    setIsLoading(true)
 
     try {
-      const data = {
-        mobileNumber: userName, // Backend expects mobileNumber
-        password: password,
-      };
+      const response = await axios.post(
+        `${BASE_URL_API}/login`,
+        { mobileNumber: userName, password },
+        { headers: { 'Content-Type': 'application/json' } }
+      )
 
-      const response = await axios.post(`${BASE_URL_API}/login`, data, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      if (response.data?.success) {
+        const user = response.data.data
 
-      console.log("API Response:", response.data);
+        localStorage.setItem('authentication', 'true')
+        localStorage.setItem('userName', user.userName)
+        localStorage.setItem('mobileNumber', user.mobileNumber)
+        localStorage.setItem('userId', user.id)
 
-      if (response.data.success === true) {
-        const userData = response.data.data;
-
-        // Save backend data
-        localStorage.setItem("authentication", "true");
-        localStorage.setItem("userName", userData.userName);
-        localStorage.setItem("mobileNumber", userData.mobileNumber);
-        localStorage.setItem("userId", userData.id);
-
-        navigate("/clinic-management");
+        toast.success('Login successful')
+        navigate(from, { replace: true })
       } else {
-        setErrorMessage(response.data.message || "Invalid login credentials.");
+        toast.error(response.data?.message || 'Invalid credentials')
       }
     } catch (error) {
-      const message =
-        error.response?.data?.message || "An unexpected error occurred.";
-      setErrorMessage(message);
-      console.error("Error details:", error.response || error.message);
+      if (error?.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else if (!navigator.onLine) {
+        toast.error('No internet connection')
+      } else {
+        toast.error('Server not responding. Try again later.')
+      }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-useEffect  (() => {
-    localStorage.clear('')
-  },[])
+  }
 
   return (
+    <>
+      <ToastContainer />
 
-    <div style={{ minHeight: '100vh', backgroundColor: "white" }}
-      className="d-flex flex-row align-items-center">
-      <CContainer>
-        <CRow className="justify-content-center">
-          <CCol md={8}>
-            <h1 className="fw-bold" style={{ color: '#FF007F', textAlign: "center" }}>Neeha's GlowKart</h1>
-            <CCardGroup className="shadow-lg rounded-4 overflow-hidden">
+      {/* BACKGROUND */}
+      <div
+        className="min-vh-100 d-flex flex-column"
+        style={{
+          backgroundImage: `url(${LoginBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        {/* CENTER CONTENT */}
+        <div className="flex-grow-1 d-flex align-items-center">
+          <CContainer fluid className="px-3 px-md-5">
+            <CRow className="align-items-center justify-content-center">
 
-              {/* Login Form Card */}
-              <CCard className="p-5" style={{ backgroundColor: '#ffffff' }}>
-                <CCardBody>
-                  <div className="text-center mb-4">
-                    <h1>Login</h1>
-                    <p className="text-secondary fs-6">
-                      Sign in to access your dashboard and manage your clinics efficiently.
-                    </p>
-                  </div>
-                  {errorMessage && <p className="text-danger">{errorMessage}</p>}
-                  <CForm onSubmit={handleSubmit}>
-                    <CInputGroup className="mb-3">
-                      <CInputGroupText>
-                        <CIcon icon={cilUser} />
-                      </CInputGroupText>
-                      <CFormInput
-                        placeholder="Mobile Number"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        autoComplete="tel"
-                      />
+              {/* LEFT INFO – DESKTOP ONLY */}
+              <CCol
+                xs={12}
+                lg={6}
+                className="d-flex flex-column justify-content-center px-3 px-lg-5 mb-4 mb-lg-0 text-center text-lg-start"
+              >
+                <h2 className="fw-bold mb-3" style={{ color: NGK_COLORS.primary }}>
+                  Welcome to Neeha’s GlowKart
+                </h2>
+                <p className="lead mb-4" style={{ opacity: 0.95, color: NGK_COLORS.textDark }}>
+                  Manage dermatology operations seamlessly — appointments,
+                  procedures, offers & more.
+                </p>
+              </CCol>
 
-                    </CInputGroup>
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{ cursor: 'pointer' }}
+
+              {/* LOGIN CARD */}
+              <CCol xs={12} sm={10} md={8} lg={5} xl={4}>
+                <CCard className="shadow-lg border-0 w-100">
+                  <CCardBody className="p-4 p-md-5">
+
+                    <h3 className="text-center fw-bold mb-5" style={{ color: NGK_COLORS.primary }}>
+                      NGK Login
+                    </h3>
+
+                    <CForm onSubmit={handleSubmit}>
+                      {/* Username */}
+                      <CInputGroup>
+                        <CInputGroupText style={{ backgroundColor: NGK_COLORS.primary }}>
+                          <CIcon icon={cilUser} style={{
+                            cursor: 'pointer',
+                            color: 'white',
+                          }} />
+                        </CInputGroupText>
+                        <CFormInput
+                          placeholder="Mobile Number"
+                          value={userName}
+                          style={{
+                            cursor: 'pointer',
+                            borderColor: NGK_COLORS.borderSoft,
+                          }}
+                          onChange={(e) => setUserName(e.target.value)}
+                        />
+                      </CInputGroup>
+
+                      {/* Password */}
+                      <CInputGroup className="mt-3">
+                        <CInputGroupText
+                          style={{ cursor: 'pointer', backgroundColor: NGK_COLORS.primary }}
+                          role="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} style={{ color: 'white' }} />
+                        </CInputGroupText>
+                        <CFormInput
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Password"
+                          style={{
+                            cursor: 'pointer',
+                            borderColor: NGK_COLORS.borderSoft,
+                          }}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </CInputGroup>
+
+                      {/* Links */}
+                      <div className="d-flex flex-column flex-sm-row justify-content-between mt-3">
+                        <span
+                          role="button"
+                          style={{
+                            cursor: 'pointer',
+                            color: NGK_COLORS.primary,
+                            textDecoration: 'underline',
+                            fontSize: '14px',
+                          }}
+                          onClick={() => setForgotModal(true)}
+                        >
+                          Forgot Password?
+                        </span>
+                        <span
+                          role="button"
+                          style={{
+                            color: NGK_COLORS.primary,
+                            fontSize: '14px',
+                          }}
+                          onClick={() => setShowResetModal(true)}
+                        >
+                          Change Password?
+                        </span>
+                      </div>
+
+                      {/* Button */}
+                      <CButton
+                        type="submit"
+                        className="w-100 mt-4" style={{ backgroundColor: NGK_COLORS.primary, color: 'white' }}
+                        disabled={isLoading}
                       >
-                        <CIcon icon={showPassword ? cilLockUnlocked : cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        autoComplete="current-password"
-                      />
-                    </CInputGroup>
-                    <CRow>
-                      <CCol xs={12} className="text-end">
-                        <CButton color="primary" type="submit" disabled={isLoading}>
-                          {isLoading ? 'Logging in...' : 'Login'}
-                        </CButton>
-                      </CCol>
-                    </CRow>
-                  </CForm>
-                </CCardBody>
-              </CCard>
+                        {isLoading ? <CSpinner size="sm" /> : 'Login'}
+                      </CButton>
 
-              {/* Welcome/Brand Card */}
-              <CCard className="text-white py-5 d-none d-md-block"
-                style={{ width: '44%', background: '#d6e5ffff' }}>
-                <CCardBody className="text-center">
-                  <h2 style={{ color: 'black' }}>Welcome!</h2>
-                  <p style={{ fontSize: '0.95rem', color: '#000' }}>
-                    GlowKart helps streamline clinic operations efficiently. Track, coordinate, and manage your clinics seamlessly. </p>
-                  <img src={Logo} alt="GlowKart Logo" style={{ width: '250px' }} />
-                </CCardBody>
-              </CCard>
-            </CCardGroup>
-          </CCol>
-        </CRow>
-      </CContainer>
+                    </CForm>
+
+                  </CCardBody>
+                </CCard>
+              </CCol>
+
+            </CRow>
+          </CContainer>
+        </div>
+
+        {/* FOOTER */}
+      <footer
+  className="
+    mt-auto
+    py-2
+    small
+    opacity-75
+    bg-light
+  "
+>
+  <CContainer>
+    <div
+      className="
+        d-flex
+        flex-column
+        flex-md-row
+        justify-content-between
+        align-items-center
+        gap-2
+        text-center
+        text-md-start
+      "
+      style={{ color: NGK_COLORS.primary }}
+    >
+      <span className="d-inline-flex align-items-center gap-2">
+        <CIcon icon={cilShieldAlt} /> Secure by design
+      </span>
+
+      <span>
+        © {new Date().getFullYear()} Uditcosmetech Pvt Ltd
+      </span>
+
+      <a
+        href="https://uditcosmetech.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: NGK_COLORS.primary }}
+      >
+        About Uditcosmetech Private Limited
+      </a>
     </div>
+  </CContainer>
+</footer>
+
+
+        {/* MODALS */}
+        <CModal visible={forgotModal} onClose={() => setForgotModal(false)} alignment="center">
+          <CModalBody className="text-center py-4">
+            <h5 className="text-primary">Forgot Password</h5>
+          </CModalBody>
+        </CModal>
+
+        <CModal visible={showResetModal} onClose={() => setShowResetModal(false)} alignment="center">
+          <CModalBody className="text-center py-4">
+            <h5 className="text-primary">Change Password</h5>
+          </CModalBody>
+        </CModal>
+      </div>
+    </>
+
+
   )
 }
 

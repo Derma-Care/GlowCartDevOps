@@ -35,7 +35,7 @@ import {
   updateCustomerData,
 } from './CustomerAPI'
 import { ToastContainer, toast } from 'react-toastify'
-import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
+import ConfirmationModal from '../../components/ConfirmationModal'
 import { COLORS } from '../../Constant/Themes'
 import LoadingIndicator from '../../Utils/loader'
 
@@ -57,7 +57,7 @@ const CustomerManagement = () => {
   const [formErrors, setFormErrors] = useState({})
   const [selectedMobiles, setSelectedMobiles] = useState([])
   const [isMultiDelete, setIsMultiDelete] = useState(false)
-
+  const [delloading, setDelLoading] = useState(false)
   const [formData, setFormData] = useState({
     fullName: '',
     mobile: '',
@@ -113,33 +113,32 @@ const CustomerManagement = () => {
   }, [fetchCustomers])
 
   useEffect(() => {
-    const trimmedQuery = searchQuery.toLowerCase().trim()
-    if (!trimmedQuery) {
+    if (!searchQuery.trim()) {
       setFilteredData(customerData)
-      setCurrentPage(1)
-      return
+    } else {
+      const trimmedQuery = searchQuery.toLowerCase().trim()
+
+      const filtered = customerData.filter((customer) => {
+        const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
+        const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
+        const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
+
+        const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
+        const pincodeMatch = addressPincode.startsWith(trimmedQuery)
+
+        const serviceTypeMatch = (customer?.serviceType || []).some(
+          (type) => type.toLowerCase().startsWith(trimmedQuery)
+        )
+
+        return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
+      })
+
+      setFilteredData(filtered)
     }
 
-    const filtered = customerData.filter((customer) => {
-      const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
-      const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
-      const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
+    setCurrentPage(1) // ✅ only when SEARCH changes
+  }, [searchQuery])
 
-      // Extract pincode from address if available
-      const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
-      const pincodeMatch = addressPincode.startsWith(trimmedQuery)
-
-      // Service type match
-      const serviceTypeMatch = (customer?.serviceType || []).some(
-        (type) => type.toLowerCase().startsWith(trimmedQuery)
-      )
-
-      return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
-    })
-
-    setFilteredData(filtered)
-    setCurrentPage(1)
-  }, [searchQuery, customerData])
 
 
   const handleCustomerViewDetails = (mobile) => {
@@ -212,11 +211,11 @@ const CustomerManagement = () => {
     }
   }
 
- 
+
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
-  
+
   const handleSelectOne = (mobile) => {
     setSelectedMobiles((prev) =>
       prev.includes(mobile)
@@ -371,8 +370,18 @@ const CustomerManagement = () => {
     }
   }, [formData.dob])
 
+
+  const adjustCurrentPageAfterDelete = (updatedLength) => {
+    const newTotalPages = Math.ceil(updatedLength / itemsPerPage)
+
+    setCurrentPage((prevPage) =>
+      prevPage > newTotalPages ? Math.max(newTotalPages, 1) : prevPage
+    )
+  }
+
   const confirmDeleteCustomer = async () => {
     try {
+      setDelLoading(true)
       if (isMultiDelete) {
         await Promise.all(
           selectedMobiles.map((mobile) => deleteCustomerData(mobile))
@@ -380,12 +389,17 @@ const CustomerManagement = () => {
 
         toast.success('Selected customers deleted successfully')
 
-        setCustomerData((prev) =>
-          prev.filter((c) => !selectedMobiles.includes(c.mobile))
-        )
-        setFilteredData((prev) =>
-          prev.filter((c) => !selectedMobiles.includes(c.mobile))
-        )
+        setCustomerData((prev) => {
+          const updated = prev.filter((c) => !selectedMobiles.includes(c.mobile))
+          adjustCurrentPageAfterDelete(updated.length)
+          return updated
+        })
+
+        setFilteredData((prev) => {
+          const updated = prev.filter((c) => !selectedMobiles.includes(c.mobile))
+          adjustCurrentPageAfterDelete(updated.length)
+          return updated
+        })
 
         setSelectedMobiles([])
         setIsMultiDelete(false)
@@ -393,21 +407,28 @@ const CustomerManagement = () => {
         await deleteCustomerData(customerIdToDelete)
         toast.success('Customer deleted successfully')
 
-        setCustomerData((prev) =>
-          prev.filter((c) => c.mobile !== customerIdToDelete)
-        )
-        setFilteredData((prev) =>
-          prev.filter((c) => c.mobile !== customerIdToDelete)
-        )
+        setCustomerData((prev) => {
+          const updated = prev.filter((c) => c.mobile !== customerIdToDelete)
+          adjustCurrentPageAfterDelete(updated.length)
+          return updated
+        })
+
+        setFilteredData((prev) => {
+          const updated = prev.filter((c) => c.mobile !== customerIdToDelete)
+          adjustCurrentPageAfterDelete(updated.length)
+          return updated
+        })
       }
     } catch (error) {
       console.error('Delete failed:', error)
       toast.error('Failed to delete customer')
     } finally {
+      setDelLoading(false)
       setIsModalVisible(false)
       setCustomerIdToDelete(null)
     }
   }
+
 
   const validateForm = () => {
     const errors = {}
@@ -496,12 +517,7 @@ const CustomerManagement = () => {
 
             </div>
 
-            {/* <div className="col-md-3 d-flex justify-content-end">
-              <CButton color="secondary"
-                style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }} onClick={() => setIsAdding(true)}>
-                Add New Customer
-              </CButton>
-            </div> */}
+
             {/* 🗑 Delete Selected */}
             <div className="col-md-3 d-flex justify-content-end">
               <CButton
@@ -537,16 +553,7 @@ const CustomerManagement = () => {
               <CTable striped hover responsive>
                 <CTableHead className='pink-table'>
                   <CTableRow>
-                    {/* Select All */}
-                    {/* <CTableHeaderCell className="text-center">
-                      <input
-                        type="checkbox"
-                        checked={
-                          currentItems.length > 0 &&
-                          selectedMobiles.length === currentItems.length
-                        }
-                        onChange={handleSelectAll}
-                      /> </CTableHeaderCell> */}
+
                     <CTableHeaderCell className="text-center">
                       Select
                     </CTableHeaderCell>
@@ -587,13 +594,6 @@ const CustomerManagement = () => {
                             <Eye size={18} />
                           </button>
 
-                          {/* <button
-                            className="actionBtn edit"
-                            onClick={() => handleEditCustomer(customer?.mobile)}
-                            title="Edit"
-                          >
-                            <Edit2 size={18} />
-                          </button> */}
 
                           <button
                             className="actionBtn delete"
@@ -608,26 +608,36 @@ const CustomerManagement = () => {
                           </button>
                         </div>
 
-                        <ConfirmationModal
-                          isVisible={isModalVisible}
-                          message={
-                            isMultiDelete
-                              ? `Are you sure you want to delete ${selectedMobiles.length} customers?`
-                              : 'Are you sure you want to delete this customer?'
-                          }
-                          onConfirm={confirmDeleteCustomer}
-                          onCancel={() => {
-                            setIsModalVisible(false)
-                            setCustomerIdToDelete(null)
-                            setIsMultiDelete(false)
-                          }}
-                        />
                       </CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
               </CTable>
 
+              <ConfirmationModal
+                isVisible={isModalVisible}
+                message={
+                  isMultiDelete
+                    ? `Are you sure you want to delete ${selectedMobiles.length} customers?`
+                    : 'Are you sure you want to delete this customer?'
+                }
+                confirmText={
+                  delloading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Yes, Delete'
+                  )
+                }
+                onConfirm={confirmDeleteCustomer}
+                onCancel={() => {
+                  setIsModalVisible(false)
+                  setCustomerIdToDelete(null)
+                  setIsMultiDelete(false)
+                }}
+              />
               {filteredData.length > 0 && (
                 <div className="d-flex justify-content-between px-3 pb-3 mt-3">
                   {/* Rows per page dropdown */}

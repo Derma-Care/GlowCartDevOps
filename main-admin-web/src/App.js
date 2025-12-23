@@ -61,20 +61,20 @@ const App = () => {
       <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/Login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
           <Route
-            path="/clinic-registration"
+            path="/Clinic-Registration"
             element={<ClinicRegistration />}
           />
             <Route
-            path="/registration-codes"
+            path="/Registration-Codes"
             element={<RegistrationCodeManagement />}
           />
 
           <Route
-            path="/clinic-onboarding-success"
+            path="/Clinic-onboarding-success"
             element={<ClinicOnboardingSuccess />}
           />
 
@@ -83,7 +83,7 @@ const App = () => {
 
           {/* 🚫 BLOCK /dashboard → redirect to login */}
           <Route
-            path="/dashboard"
+            path="/Dashboard"
             element={<Navigate to="/login" replace />}
           />
 

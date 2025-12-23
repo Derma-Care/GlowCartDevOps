@@ -39,7 +39,7 @@ import {
   updateCategoryData,
   deleteCategoryData,
 } from './CategoryAPI'
-import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
+import  ConfirmationModal  from '../../components/ConfirmationModal'
 import { COLORS } from '../../Constant/Themes'
 import LoadingIndicator from '../../Utils/loader'
 
@@ -55,7 +55,7 @@ const CategoryManagement = () => {
   const [editCategoryMode, setEditCategoryMode] = useState(false)
   const [categoryToEdit, setCategoryToEdit] = useState(null)
   const [fileKey, setFileKey] = useState(Date.now()) // used to reset file input
-
+  const [delloading, setDelLoading] = useState(false)
   const [errors, setErrors] = useState({
     categoryName: '',
     categoryImage: '',
@@ -393,12 +393,17 @@ const CategoryManagement = () => {
   const handleConfirmDelete = async () => {
     console.log(categoryIdToDelete)
     try {
+       setDelLoading(true)
       const data = await deleteCategoryData(categoryIdToDelete)
-      setIsModalVisible(false)
+ 
       toast.success(`${data.data}`, { position: 'top-right' })
       fetchData()
     } catch (error) {
       alert('Failed to delete category.')
+    }
+    finally {
+      setDelLoading(false)
+      setIsModalVisible(false)
     }
   }
 
@@ -915,6 +920,19 @@ const CategoryManagement = () => {
       <ConfirmationModal
         isVisible={isModalVisible}
         message="Are you sure you want to delete this category?"
+         confirmText={
+          delloading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+              Deleting...
+            </>
+          ) : (
+            'Yes, Delete'
+          )
+        }
+        cancelText="Cancel"
+        confirmColor="danger"
+        cancelColor="secondary"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

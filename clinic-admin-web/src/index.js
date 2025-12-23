@@ -35,7 +35,7 @@ function Root() {
           <GlobalSearchProvider>
             <HospitalProvider>
               {/* ✅ Toast container globally */}
-              <ToastContainer
+              {/* <ToastContainer
                 position="top-right"
                 limit={3}
                 theme="dark" // base dark theme
@@ -43,7 +43,23 @@ function Root() {
                   backgroundColor: 'var(--color-black)',
                   color: 'white',
                 }}
+              /> */}
+
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                pauseOnHover
+                draggable
+                toastStyle={{
+                  backgroundColor: 'var(--color-black)',
+                  color: 'white',
+                }}
               />
+
               <App />
               {/* <OnboardSuccess /> */}
               {/* <NGlowKartPatientRegistration_CoreUI /> */}

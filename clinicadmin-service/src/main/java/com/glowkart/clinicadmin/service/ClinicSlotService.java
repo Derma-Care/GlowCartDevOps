@@ -1,69 +1,75 @@
 package com.glowkart.clinicadmin.service;
 
+import com.glowkart.clinicadmin.dto.*;
 import com.glowkart.clinicadmin.model.ClinicSlot;
 import com.glowkart.clinicadmin.repo.ClinicSlotRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ClinicSlotService {
 
-    @Autowired
-    private ClinicSlotRepository repository;
+    private final ClinicSlotRepository clinicSlotRepository;
 
-    // Get next N days slots (include placeholders for missing days)
-    public List<ClinicSlot> getNextNDaysSlots(String clinicId, int days) {
-        List<ClinicSlot> slots = new ArrayList<>();
-        LocalDate today = LocalDate.now();
-
-        for (int i = 0; i < days; i++) {
-            LocalDate day = today.plusDays(i);
-            Date startOfDay = Date.from(day.atStartOfDay(ZoneId.of("UTC")).toInstant());
-            Date endOfDay = Date.from(day.plusDays(1).atStartOfDay(ZoneId.of("UTC")).toInstant());
-
-            List<ClinicSlot> daySlots = repository.findByClinicIdAndDateBetween(clinicId, startOfDay, endOfDay);
-
-            if (daySlots.isEmpty()) {
-                ClinicSlot placeholder = new ClinicSlot();
-                placeholder.setClinicId(clinicId);
-                placeholder.setDate(startOfDay);
-                placeholder.setWorkingHours(null);
-                placeholder.setReason(null);
-                slots.add(placeholder);
-            } else {
-                slots.addAll(daySlots);
-            }
-        }
-        return slots;
+    public ClinicSlotService(ClinicSlotRepository clinicSlotRepository) {
+        this.clinicSlotRepository = clinicSlotRepository;
     }
 
-    // Batch save or update
-    public void saveOrUpdateSlots(String clinicId, List<ClinicSlot> slots) {
-        List<ClinicSlot> slotsToSave = new ArrayList<>();
+    // GET available slots for next 15 days
+    public AvailableSlotsResponse getAvailableSlots(String clinicId) {
+        LocalDate today = LocalDate.now();
+        List<String> dateList = new ArrayList<>();
 
-        for (ClinicSlot slot : slots) {
-            Date startOfDay = Date.from(slot.getDate().toInstant());
-            Date endOfDay = Date.from(slot.getDate().toInstant());
+        for (int i = 0; i < 15; i++) {
+            dateList.add(today.plusDays(i).toString()); // YYYY-MM-DD
+        }
 
-            List<ClinicSlot> existing = repository.findByClinicIdAndDateBetween(clinicId, startOfDay, endOfDay);
+        List<ClinicSlot> savedSlots = clinicSlotRepository.findByClinicIdAndDateIn(clinicId, dateList);
 
-            if (existing.isEmpty()) {
-                slot.setClinicId(clinicId);
-                slotsToSave.add(slot);
-            } else {
-                ClinicSlot existingSlot = existing.get(0);
-                existingSlot.setWorkingHours(slot.getWorkingHours());
-                existingSlot.setReason(slot.getReason());
-                slotsToSave.add(existingSlot);
+        List<ClinicSlotDTO> slotDTOs = savedSlots.stream().map(slot -> {
+            ClinicSlotDTO dto = new ClinicSlotDTO();
+            dto.setDate(slot.getDate());
+            dto.setWorkingHours(slot.getWorkingHours());
+            dto.setReason(slot.getReason());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new AvailableSlotsResponse(dateList, slotDTOs);
+    }
+
+    // SAVE slots
+    public void saveClinicSlots(SaveClinicSlotsRequest request) {
+        LocalDate today = LocalDate.now();
+
+        Map<String, ClinicSlotDTO> exceptionMap = new HashMap<>();
+        if (request.getExceptions() != null) {
+            for (ClinicSlotDTO dto : request.getExceptions()) {
+                exceptionMap.put(dto.getDate(), dto);
             }
         }
 
-        repository.saveAll(slotsToSave);
+        for (int i = 0; i < 15; i++) {
+            String dateStr = today.plusDays(i).toString(); // YYYY-MM-DD
+
+            ClinicSlot slot = clinicSlotRepository
+                    .findByClinicIdAndDate(request.getClinicId(), dateStr)
+                    .orElseGet(() -> ClinicSlot.builder()
+                            .clinicId(request.getClinicId())
+                            .date(dateStr)
+                            .build());
+
+            if (exceptionMap.containsKey(dateStr)) {
+                slot.setWorkingHours(false);
+                slot.setReason(exceptionMap.get(dateStr).getReason());
+            } else {
+                slot.setWorkingHours(true);
+                slot.setReason(null);
+            }
+
+            clinicSlotRepository.save(slot);
+        }
     }
 }
