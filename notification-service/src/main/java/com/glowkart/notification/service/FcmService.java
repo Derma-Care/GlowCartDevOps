@@ -33,11 +33,13 @@ public class FcmService {
             log.info("FCM sent successfully to deviceToken={}", mask(deviceToken));
 
         } catch (Exception e) {
-            log.error("FCM failed for deviceToken={} error={}",
-                    mask(deviceToken), e.getMessage(), e);
+            log.error("FCM failed for deviceToken={} error={}", mask(deviceToken), e.getMessage(), e);
         }
     }
 
+    /**
+     * Masks device token for logging
+     */
     private String mask(String token) {
         return token.length() > 10
                 ? token.substring(0, 6) + "****" + token.substring(token.length() - 4)

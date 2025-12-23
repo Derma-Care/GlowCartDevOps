@@ -20,7 +20,7 @@ aws:
 
 # Firebase FCM Configuration
 firebase:
-  service-account-path: ${FIREBASE_SERVICE_ACCOUNT:src/main/resources/firebase-service-account.json}
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT}  # prod env variable
 
 # Eureka configuration for service discovery
 eureka:
