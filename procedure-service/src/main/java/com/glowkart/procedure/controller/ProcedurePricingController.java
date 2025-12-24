@@ -77,4 +77,15 @@ public class ProcedurePricingController {
         return new ApiResponse<>(true, "Procedure offers fetched successfully", offers);
     }
 
+    @GetMapping("/pricing/clinics/{procedureId}")
+    public ApiResponse<List<String>> getClinicIdsByProcedure(
+            @PathVariable String procedureId) {
+
+        return new ApiResponse<>(
+                true,
+                "Clinics fetched for procedure",
+                service.getClinicIdsByProcedure(procedureId)
+        );
+    }
+
 }

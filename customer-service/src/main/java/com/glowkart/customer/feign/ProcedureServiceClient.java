@@ -30,4 +30,10 @@ public interface ProcedureServiceClient {
     
     @GetMapping("/procedures/pricing/offers")
     ApiResponse<List<CustomerProcedureOfferDTO>> getProcedureOffers();
+    
+ // 🔥 NEW: get clinic IDs offering this procedure
+    @GetMapping("/procedures/pricing/clinics/{procedureId}")
+    ApiResponse<List<String>> getClinicIdsByProcedure(
+            @PathVariable String procedureId
+    );
 }

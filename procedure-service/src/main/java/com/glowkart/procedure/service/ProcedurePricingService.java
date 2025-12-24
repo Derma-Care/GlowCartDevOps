@@ -22,5 +22,8 @@ public interface ProcedurePricingService {
     ProcedurePricingDTO getByProcedureId(String procedureId);
 
 	List<ProcedureOfferDTO> getProcedureOffers();
+	
+	List<String> getClinicIdsByProcedure(String procedureId);
+
 
 }

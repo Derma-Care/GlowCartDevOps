@@ -1,0 +1,20 @@
+package com.glowkart.customer.feign;
+
+import java.util.List;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.ClinicPublicDTO;
+
+@FeignClient(name = "admin-service", contextId = "stateClient")
+public interface AdminClinicClient {
+
+    @GetMapping("/admin/public/clinics/by-state")
+    ApiResponse<List<ClinicPublicDTO>> getClinicsByState(
+            @RequestParam String state
+    );
+}
+

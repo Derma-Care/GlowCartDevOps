@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/notifications")
 public class NotificationController {
 
     private final NotificationRepository repository;
@@ -16,7 +16,7 @@ public class NotificationController {
         this.repository = repository;
     }
 
-    @GetMapping("/notifications/{customerId}")
+    @GetMapping("/{customerId}")
     public List<AppNotification> getNotifications(@PathVariable String customerId) {
         return repository.findByCustomerIdOrderByCreatedAtDesc(customerId);
     }

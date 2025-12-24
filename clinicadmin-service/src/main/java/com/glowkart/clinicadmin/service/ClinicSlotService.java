@@ -18,7 +18,7 @@ public class ClinicSlotService {
         this.clinicSlotRepository = clinicSlotRepository;
     }
 
-    // GET available slots for next 15 days
+    // GET available slots for next 30 days
     public AvailableSlotsResponse getAvailableSlots(String clinicId) {
         LocalDate today = LocalDate.now();
         List<String> dateList = new ArrayList<>();
@@ -51,7 +51,7 @@ public class ClinicSlotService {
             }
         }
 
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 30; i++) {
             String dateStr = today.plusDays(i).toString(); // YYYY-MM-DD
 
             ClinicSlot slot = clinicSlotRepository

@@ -19,4 +19,11 @@ public interface ClinicRepository extends MongoRepository<Clinic, String> {
 
     // NEW: fetch clinic by payout username
     Clinic findByPayoutUsername(String payoutUsername);
+
+
+    List<Clinic> findByStateIgnoreCaseAndStatusIgnoreCase(
+            String state,
+            String status
+    );
+
 }

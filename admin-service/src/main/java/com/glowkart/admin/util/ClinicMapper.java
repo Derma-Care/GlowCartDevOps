@@ -30,8 +30,10 @@ public class ClinicMapper {
         dto.setClosingTime(clinic.getClosingTime());
 
         if (clinic.getHospitalLogo() != null) {
-            dto.setHospitalLogo("data:image/png;base64,"
-                    + Base64.getEncoder().encodeToString(clinic.getHospitalLogo()));
+            dto.setHospitalLogo(
+                "data:image/png;base64," +
+                Base64.getEncoder().encodeToString(clinic.getHospitalLogo())
+            );
         }
 
         dto.setWebsite(clinic.getWebsite());
@@ -47,6 +49,10 @@ public class ClinicMapper {
         dto.setSubscription(clinic.getSubscription());
         dto.setLatitude(clinic.getLatitude());
         dto.setLongitude(clinic.getLongitude());
+
+        // ✅ FIX: STATE MAPPING (THIS WAS MISSING)
+        dto.setState(clinic.getState());
+
         dto.setNabhScore(clinic.getNabhScore());
         dto.setBranch(clinic.getBranch());
         dto.setWalkthrough(clinic.getWalkthrough());
@@ -68,29 +74,31 @@ public class ClinicMapper {
         dto.setUpiId(clinic.getUpiId());
         dto.setPanNumber(clinic.getPanNumber());
 
-        // -------------------------------------------------------
-        // NEW: DOCTOR LIST MAPPING
-        // -------------------------------------------------------
-     // Change mapping
+        // -------------------------------
+        // Doctor List Mapping
+        // -------------------------------
         if (clinic.getDoctorsList() != null) {
-            List<DoctorDTO> mappedDoctors = clinic.getDoctorsList().stream().map(doc -> {
-                DoctorDTO d = new DoctorDTO();
-                d.setDoctorName(doc.getDoctorName());
-                d.setRegistrationNumber(doc.getRegistrationNumber());
-                d.setAssociationNumber(doc.getAssociationNumber());
-                d.setAssociationName(doc.getAssociationName());
-                d.setSpecialization(doc.getSpecialization());
-                return d;
-            }).toList();
+            List<DoctorDTO> mappedDoctors = clinic.getDoctorsList()
+                .stream()
+                .map(doc -> {
+                    DoctorDTO d = new DoctorDTO();
+                    d.setDoctorName(doc.getDoctorName());
+                    d.setRegistrationNumber(doc.getRegistrationNumber());
+                    d.setAssociationNumber(doc.getAssociationNumber());
+                    d.setAssociationName(doc.getAssociationName());
+                    d.setSpecialization(doc.getSpecialization());
+                    return d;
+                })
+                .toList();
 
             dto.setDoctorsList(mappedDoctors);
         }
 
         return dto;
     }
-    
+
     // -------------------------------
-    // New: Map Clinic to ClinicResponse
+    // Map Clinic to ClinicResponse
     // -------------------------------
     public static ClinicResponse toClinicResponse(Clinic clinic) {
         if (clinic == null) return null;

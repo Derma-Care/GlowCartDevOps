@@ -349,4 +349,17 @@ return mapper.toDto(pricingRepository.save(existing));
 
         return new ArrayList<>(offerMap.values());
     }
+    
+    
+    @Override
+    public List<String> getClinicIdsByProcedure(String procedureId) {
+
+        return pricingRepository.findByProcedureId(procedureId)
+                .stream()
+                .map(ProcedurePricing::getClinicId)
+                .distinct()
+                .toList();
+    }
+
+
 }
