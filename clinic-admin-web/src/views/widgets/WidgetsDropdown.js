@@ -132,7 +132,7 @@ const WidgetsDropdown = () => {
             style={{ cursor: 'pointer' }}
           />
 
-          <ClinicSlotManager show={showModal} setShow={setShowModal} />
+          <ClinicSlotManager show={showModal} setShow={setShowModal} clinicId={selectedHospital?.data.clinicId}/>
         </CCol>
       </CRow>
 
