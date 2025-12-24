@@ -41,17 +41,70 @@ public class CustomerClinicSearchServiceImpl
                                 .getData()
                 );
 
-        // 4️⃣ Filter + map response
+        // 4️⃣ Filter + FULL map response
         return clinicsInState.stream()
                 .filter(c -> clinicIds.contains(c.getClinicId()))
-                .map(c ->
-                        new ClinicProcedureLinkDTO(
-                                c.getClinicId(),
-                                c.getName(),
-                                c.getCity(),
-                                c.getState()
-                        )
+                .map(c -> ClinicProcedureLinkDTO.builder()
+                        .clinicId(c.getClinicId())
+                        .name(c.getName())
+                        .address(c.getAddress())
+                        .city(c.getCity())
+                        .state(c.getState())
+                        .latitude(c.getLatitude())
+                        .longitude(c.getLongitude())
+
+                        .contactNumber(c.getContactNumber())
+                        .whatsappNumber(c.getWhatsappNumber())
+                        .email(c.getEmail())
+
+                        .openingTime(c.getOpeningTime())
+                        .closingTime(c.getClosingTime())
+
+                        .hospitalLogo(c.getHospitalLogo())
+                        .hospitalOverallRating(c.getHospitalOverallRating())
+
+                        .website(c.getWebsite())
+                        .licenseNumber(c.getLicenseNumber())
+                        .issuingAuthority(c.getIssuingAuthority())
+
+                        .clinicType(c.getClinicType())
+                        .medicinesSoldOnSite(c.getMedicinesSoldOnSite())
+                        .drugLicenseFormType(c.getDrugLicenseFormType())
+                        .hasPharmacist(c.getHasPharmacist())
+
+                        .recommended(c.isRecommended())
+                        .subscription(c.getSubscription())
+                        .nabhScore(c.getNabhScore())
+                        .branch(c.getBranch())
+                        .walkthrough(c.getWalkthrough())
+
+                        .instagramHandle(c.getInstagramHandle())
+                        .twitterHandle(c.getTwitterHandle())
+                        .facebookHandle(c.getFacebookHandle())
+
+                        .primaryContactPerson(c.getPrimaryContactPerson())
+                        .designation(c.getDesignation())
+                        .clinicManagementSoftwareUsage(c.getClinicManagementSoftwareUsage())
+
+                        .bankAccountName(c.getBankAccountName())
+                        .bankAccountNumber(c.getBankAccountNumber())
+                        .ifscCode(c.getIfscCode())
+                        .upiId(c.getUpiId())
+                        .panNumber(c.getPanNumber())
+
+                        // ✅ Map doctors list directly
+                        .doctorsList(c.getDoctorsList())
+
+                        .createdAt(c.getCreatedAt())
+                        .status(c.getStatus())
+                        .username(c.getUsername())
+                        .role(c.getRole())
+                        .permissions(c.getPermissions())
+
+                        .build()
                 )
                 .toList();
+
     }
+
 }
