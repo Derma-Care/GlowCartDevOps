@@ -1,8 +1,11 @@
 package com.glowkart.clinicadmin.service;
 
 import com.glowkart.clinicadmin.dto.*;
+import com.glowkart.clinicadmin.exception.ResourceNotFoundException;
+import com.glowkart.clinicadmin.feign.AdminServiceFeignClient;
 import com.glowkart.clinicadmin.model.ClinicSlot;
 import com.glowkart.clinicadmin.repo.ClinicSlotRepository;
+import feign.FeignException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -13,35 +16,71 @@ import java.util.stream.Collectors;
 public class ClinicSlotService {
 
     private final ClinicSlotRepository clinicSlotRepository;
+    private final AdminServiceFeignClient adminServiceFeignClient;
 
-    public ClinicSlotService(ClinicSlotRepository clinicSlotRepository) {
+    public ClinicSlotService(
+            ClinicSlotRepository clinicSlotRepository,
+            AdminServiceFeignClient adminServiceFeignClient
+    ) {
         this.clinicSlotRepository = clinicSlotRepository;
+        this.adminServiceFeignClient = adminServiceFeignClient;
     }
 
-    // GET available slots for next 30 days
+    // --------------------------------
+    // CLINIC VALIDATION (FEIGN)
+    // --------------------------------
+    private void validateClinicExists(String clinicId) {
+        try {
+            adminServiceFeignClient.getClinicById(clinicId);
+        } catch (FeignException.NotFound ex) {
+            throw new ResourceNotFoundException(
+                    "CLINIC_NOT_FOUND",
+                    "Clinic not found"
+            );
+        }
+    }
+
+    // --------------------------------
+    // GET AVAILABLE SLOTS
+    // --------------------------------
     public AvailableSlotsResponse getAvailableSlots(String clinicId) {
+
+        // ✅ Validate clinic via admin-service
+        validateClinicExists(clinicId);
+
         LocalDate today = LocalDate.now();
         List<String> dateList = new ArrayList<>();
 
         for (int i = 0; i < 30; i++) {
-            dateList.add(today.plusDays(i).toString()); // YYYY-MM-DD
+            dateList.add(today.plusDays(i).toString());
         }
 
-        List<ClinicSlot> savedSlots = clinicSlotRepository.findByClinicIdAndDateIn(clinicId, dateList);
+        List<ClinicSlot> savedSlots =
+                clinicSlotRepository.findByClinicIdAndDateIn(
+                        clinicId, dateList
+                );
 
-        List<ClinicSlotDTO> slotDTOs = savedSlots.stream().map(slot -> {
-            ClinicSlotDTO dto = new ClinicSlotDTO();
-            dto.setDate(slot.getDate());
-            dto.setWorkingHours(slot.getWorkingHours());
-            dto.setReason(slot.getReason());
-            return dto;
-        }).collect(Collectors.toList());
+        List<ClinicSlotDTO> slotDTOs = savedSlots.stream()
+                .map(slot -> {
+                    ClinicSlotDTO dto = new ClinicSlotDTO();
+                    dto.setDate(slot.getDate());
+                    dto.setWorkingHours(slot.getWorkingHours());
+                    dto.setReason(slot.getReason());
+                    return dto;
+                })
+                .collect(Collectors.toList());
 
         return new AvailableSlotsResponse(dateList, slotDTOs);
     }
 
-    // SAVE slots
+    // --------------------------------
+    // SAVE CLINIC SLOTS
+    // --------------------------------
     public void saveClinicSlots(SaveClinicSlotsRequest request) {
+
+        // ✅ Validate clinic via admin-service
+        validateClinicExists(request.getClinicId());
+
         LocalDate today = LocalDate.now();
 
         Map<String, ClinicSlotDTO> exceptionMap = new HashMap<>();
@@ -52,7 +91,7 @@ public class ClinicSlotService {
         }
 
         for (int i = 0; i < 30; i++) {
-            String dateStr = today.plusDays(i).toString(); // YYYY-MM-DD
+            String dateStr = today.plusDays(i).toString();
 
             ClinicSlot slot = clinicSlotRepository
                     .findByClinicIdAndDate(request.getClinicId(), dateStr)

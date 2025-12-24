@@ -20,7 +20,12 @@ public class NotificationProcessor {
         this.repository = repository;
     }
 
-    public void process(NotificationEvent event) throws Exception {
+    public void process(NotificationEvent event) {
+
+        if (event == null || event.getEventId() == null) {
+            log.warn("Invalid notification event");
+            return;
+        }
 
         // 1️⃣ Idempotency
         if (repository.existsById(event.getEventId())) {
@@ -42,15 +47,19 @@ public class NotificationProcessor {
         log.info("Saved notification: eventId={} customerId={}",
                 event.getEventId(), event.getCustomerId());
 
-        // 3️⃣ PUSH notifications
+        // 3️⃣ PUSH
         if (event.getChannels() != null && event.getChannels().contains("PUSH")) {
-            fcmService.sendToDevice(
-                    event.getDeviceToken(),
-                    event.getTitle(),
-                    event.getMessage()
-            );
+            try {
+                fcmService.sendToDevice(
+                        event.getDeviceToken(),
+                        event.getTitle(),
+                        event.getMessage()
+                );
+            } catch (Exception e) {
+                log.error("FCM failed for eventId={}", event.getEventId(), e);
+            }
         }
-     
-        // 4️⃣ TODO: Add EMAIL / SMS channels if needed
     }
+
+    // 4️⃣ TODO: Add EMAIL / SMS channels if needed
 }

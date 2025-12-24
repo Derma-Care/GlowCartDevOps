@@ -25,72 +25,57 @@ public class NotificationConsumer {
 
     private final SqsClient sqsClient;
     private final NotificationProcessor processor;
-    private final NotificationRepository repository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${aws.sqs.notification-queue-url}")
     private String queueUrl;
 
-    // Poll SQS every 5 seconds (or as configured)
     @Scheduled(fixedDelayString = "${sqs.polling-delay:5000}")
     public void pollQueue() {
         try {
-            log.info("Polling SQS queue: {}", queueUrl);  // <-- Add this
+            log.info("Polling SQS queue: {}", queueUrl);
 
             List<Message> messages = sqsClient.receiveMessage(
                     ReceiveMessageRequest.builder()
                             .queueUrl(queueUrl)
                             .maxNumberOfMessages(10)
-                            .waitTimeSeconds(5) // shorter wait time for testing
+                            .waitTimeSeconds(5)
                             .build()
             ).messages();
 
-            log.info("Received {} messages from SQS", messages.size());  // <-- Add this
+            log.info("Received {} messages from SQS", messages.size());
 
             for (Message msg : messages) {
                 processMessage(msg);
             }
 
         } catch (Exception e) {
-            log.error("Error polling SQS queue: {}", e.getMessage(), e);
+            log.error("Error polling SQS queue", e);
         }
     }
-
 
     private void processMessage(Message msg) {
         String messageId = msg.messageId();
         try {
-            NotificationEvent event = objectMapper.readValue(msg.body(), NotificationEvent.class);
+            NotificationEvent event =
+                    objectMapper.readValue(msg.body(), NotificationEvent.class);
 
             log.info("Received SQS message: eventId={} customerId={} messageId={}",
                     event.getEventId(), event.getCustomerId(), messageId);
 
-            // Optional: process custom business logic
+            // ✅ Single responsibility
             processor.process(event);
 
-            // Save notification to MongoDB
-            AppNotification notification = new AppNotification(
-                    event.getEventId(),
-                    event.getCustomerId(),
-                    event.getTitle(),
-                    event.getMessage(),
-                    event.getType(),
-                    LocalDateTime.now()
-            );
-            repository.save(notification);
-            log.info("Saved notification to MongoDB: eventId={} customerId={}", event.getEventId(), event.getCustomerId());
-
-            // Delete message from SQS after successful processing
             sqsClient.deleteMessage(DeleteMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .receiptHandle(msg.receiptHandle())
                     .build());
 
-            log.info("Deleted SQS message after successful processing: eventId={} messageId={}",
+            log.info("Deleted SQS message: eventId={} messageId={}",
                     event.getEventId(), messageId);
 
         } catch (Exception e) {
-            log.error("Failed processing SQS message: messageId={} error={}", messageId, e.getMessage(), e);
+            log.error("Failed processing SQS message: messageId={}", messageId, e);
         }
     }
 }

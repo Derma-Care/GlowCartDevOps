@@ -14,17 +14,32 @@ public class ClinicSlotController {
         this.clinicSlotService = clinicSlotService;
     }
 
-    // GET available slots
     @GetMapping("/available-slots")
-    public ApiResponse<AvailableSlotsResponse> getAvailableSlots(@RequestParam String clinicId) {
-        AvailableSlotsResponse response = clinicSlotService.getAvailableSlots(clinicId);
-        return new ApiResponse<>(true, "Slots fetched successfully", response, 200);
+    public ApiResponse<AvailableSlotsResponse> getAvailableSlots(
+            @RequestParam String clinicId
+    ) {
+        AvailableSlotsResponse response =
+                clinicSlotService.getAvailableSlots(clinicId);
+
+        return new ApiResponse<>(
+                true,
+                "Slots fetched successfully",
+                response,
+                200
+        );
     }
 
-    // SAVE slots
     @PostMapping("/save-slots")
-    public ApiResponse<Void> saveClinicSlots(@RequestBody SaveClinicSlotsRequest request) {
+    public ApiResponse<Void> saveClinicSlots(
+            @RequestBody SaveClinicSlotsRequest request
+    ) {
         clinicSlotService.saveClinicSlots(request);
-        return new ApiResponse<>(true, "Clinic slots saved successfully", null, 200);
+
+        return new ApiResponse<>(
+                true,
+                "Clinic slots saved successfully",
+                null,
+                200
+        );
     }
 }
