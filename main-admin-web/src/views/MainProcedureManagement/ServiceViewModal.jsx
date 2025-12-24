@@ -123,14 +123,20 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               </span>
 
             </CCol>
-            {data.ngkDiscountPercentage && (
+
+            
+
+            {data.ngkDiscountPercentage > 0 && (
               <CCol sm={4}>
-                <span className="mb-1 fw-semibold">NGK Discount Percentage: </span>
+                <span className="fw-semibold me-1">
+                  NGK Discount Percentage:
+                </span>
                 <span className="text-muted">
                   {data.ngkDiscountPercentage}%
                 </span>
               </CCol>
             )}
+
           </CRow>
         </div>
 
@@ -224,7 +230,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
                 <p className="text-muted">No image available</p>
               )}
             </CCol>
-                     <CCol sm={6}>
+            <CCol sm={6}>
               <span className="mb-1 fw-semibold">Procedure Link:</span>
 
               {data.procedureLink ? (

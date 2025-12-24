@@ -281,7 +281,7 @@ const ServiceFormModal = ({
               )}
             </CCol>
 
-           <CCol md={6} className="mb-4">
+           <CCol md={4} className="mb-4">
               <h6>
                 Procedure Image <span className="text-danger">*</span>
               </h6>
@@ -301,10 +301,8 @@ const ServiceFormModal = ({
                 <CFormText className="text-danger">{errors.serviceImage}</CFormText>
               )}
             </CCol>
-
-
             {isEdit && (
-              <CCol md={6} className="mb-4">
+              <CCol md={4} className="mb-4">
                 <h6>NGK Discount Percentage</h6>
 
                 <CInputGroup>

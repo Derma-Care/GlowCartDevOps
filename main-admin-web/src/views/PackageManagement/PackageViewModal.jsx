@@ -125,14 +125,15 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
               {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
             </CCol>
-            <CCol sm={4}>
-              <span className="mb-1 fw-semibold">NGK Discount Percentage: </span>
-              <span className="text-muted">
-                {data.ngkDiscountPercentage
-                  ? `${data.ngkDiscountPercentage}%`
-                  : 'N/A'}
-              </span>
-            </CCol>
+            {Number(data.ngkDiscountPercentage) > 0 && (
+              <CCol sm={4}>
+                <span className="mb-1 fw-semibold">NGK Discount Percentage: </span>
+                <span className="text-muted">
+                  {data.ngkDiscountPercentage}%
+                </span>
+              </CCol>
+            )}
+
           </CRow>
         </div>
 

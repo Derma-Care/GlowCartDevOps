@@ -5,14 +5,17 @@ import { CSpinner, useColorModes } from '@coreui/react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-import routes from './routes'
 import ProtectedRoute from './components/ProtectedRoute'
 import { injectTheme } from './Constant/Themes'
 import './scss/style.scss'
+
+// ✅ IMPORT PUBLIC PAGES DIRECTLY
+
 import ClinicOnboardingSuccess from './views/clinicManagement/SuccessOnboradClinic'
 import RegistrationCodeManagement from './views/RegistrationCodes/RegistrationCodes'
+import ClinicRegistration from './views/clinicManagement/GlowKartClinicRegistration'
 
-// Lazy-loaded default pages
+// Lazy-loaded pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 const Login = React.lazy(() => import('./views/pages/login/Login'))
 const Register = React.lazy(() => import('./views/pages/register/Register'))
@@ -25,7 +28,9 @@ const App = () => {
   )
   const storedTheme = useSelector((state) => state.theme)
 
-  useEffect(() => injectTheme(), [])
+  useEffect(() => {
+    injectTheme()
+  }, [])
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -38,56 +43,44 @@ const App = () => {
     }
   }, [storedTheme, isColorModeSet, setColorMode])
 
-  // Move variable outside JSX
-  const ClinicRegistration = routes.find(
-    (r) => r.path === '/clinic-registration'
-  )?.element
-
   return (
     <BrowserRouter>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
       <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/Login" element={<Login />} />
+
+          {/* ===== PUBLIC ROUTES ===== */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
           <Route
-            path="/Clinic-Registration"
+            path="/clinic-registration"
             element={<ClinicRegistration />}
           />
-            <Route
-            path="/Registration-Codes"
+
+          <Route
+            path="/registration-codes"
             element={<RegistrationCodeManagement />}
           />
 
           <Route
-            path="/Clinic-onboarding-success"
+            path="/clinic-onboarding-success"
             element={<ClinicOnboardingSuccess />}
           />
 
+          {/* ===== ERROR PAGES ===== */}
           <Route path="/404" element={<Page404 />} />
           <Route path="/500" element={<Page500 />} />
 
-          {/* 🚫 BLOCK /dashboard → redirect to login */}
+          {/* 🚫 BLOCK DASHBOARD */}
           <Route
-            path="/Dashboard"
+            path="/dashboard"
             element={<Navigate to="/login" replace />}
           />
 
-          {/* All other routes → DefaultLayout */}
+          {/* ===== PROTECTED ROUTES ===== */}
           <Route
             path="*"
             element={
@@ -96,6 +89,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
         </Routes>
       </Suspense>
     </BrowserRouter>
