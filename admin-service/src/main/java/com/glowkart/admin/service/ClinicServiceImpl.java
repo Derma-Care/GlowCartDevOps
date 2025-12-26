@@ -195,8 +195,26 @@ public class ClinicServiceImpl implements ClinicService {
         updateIfNotNull(dto.getPermissions(), clinic::setPermissions);
 
         if (dto.getHospitalOverallRating() > 0) clinic.setHospitalOverallRating(dto.getHospitalOverallRating());
-        if (dto.getLatitude() != 0) clinic.setLatitude(dto.getLatitude());
-        if (dto.getLongitude() != 0) clinic.setLongitude(dto.getLongitude());
+        
+        boolean latUpdated = dto.getLatitude() != 0;
+        boolean lonUpdated = dto.getLongitude() != 0;
+
+        if (latUpdated) clinic.setLatitude(dto.getLatitude());
+        if (lonUpdated) clinic.setLongitude(dto.getLongitude());
+
+        // ---------------------------------------------------
+        // AUTO-DETECT STATE WHEN LAT/LONG IS UPDATED
+        // ---------------------------------------------------
+        if (latUpdated || lonUpdated) {
+            if (clinic.getLatitude() != 0 && clinic.getLongitude() != 0) {
+                String state = reverseGeoService.resolveState(
+                        clinic.getLatitude(),
+                        clinic.getLongitude()
+                );
+                clinic.setState(state);
+            }
+        }
+
         if (dto.getNabhScore() != 0) clinic.setNabhScore(dto.getNabhScore());
 
         clinic.setRecommended(dto.isRecommended());
