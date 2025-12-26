@@ -1,6 +1,8 @@
 package com.glowkart.customer.exception;
 
-import com.glowkart.customer.dto.ApiResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -9,13 +11,41 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.glowkart.customer.dto.ApiResponse;
+
+import feign.FeignException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    
+
+@ExceptionHandler(FeignException.class)
+public ResponseEntity<ApiResponse<Object>> handleFeignException(FeignException ex) {
+
+    int status = ex.status(); // ← forward exact status (404)
+
+    String message = "Downstream service error";
+
+    try {
+        // Extract exact message from clinic-admin response
+        String content = ex.contentUTF8();
+        if (content != null && content.contains("\"message\"")) {
+            message = content.split("\"message\":\"")[1].split("\"")[0];
+        }
+    } catch (Exception ignored) {}
+
+    ApiResponse<Object> response = new ApiResponse<>(
+            false,
+            message,
+            null,
+            status
+    );
+
+    return ResponseEntity.status(status).body(response);
+}
 
     // ===== Handle Validation Errors (@Valid) =====
     @ExceptionHandler(MethodArgumentNotValidException.class)

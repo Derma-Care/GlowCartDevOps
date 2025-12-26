@@ -49,21 +49,24 @@ public class ClinicSlotService {
         validateClinicExists(clinicId);
 
         LocalDate today = LocalDate.now();
-        List<String> dateList = new ArrayList<>();
+        List<DateWithDayDTO> dateList = new ArrayList<>();
 
         for (int i = 0; i < 30; i++) {
-            dateList.add(today.plusDays(i).toString());
+            LocalDate date = today.plusDays(i);
+            String dayOfWeek = capitalizeFirstLetter(date.getDayOfWeek().toString());
+            dateList.add(new DateWithDayDTO(date.toString(), dayOfWeek));
         }
 
+        // Fetch saved slots
+        List<String> dateStrings = dateList.stream().map(DateWithDayDTO::getDate).toList();
         List<ClinicSlot> savedSlots =
-                clinicSlotRepository.findByClinicIdAndDateIn(
-                        clinicId, dateList
-                );
+                clinicSlotRepository.findByClinicIdAndDateIn(clinicId, dateStrings);
 
         List<ClinicSlotDTO> slotDTOs = savedSlots.stream()
                 .map(slot -> {
                     ClinicSlotDTO dto = new ClinicSlotDTO();
                     dto.setDate(slot.getDate());
+                    dto.setDayOfWeek(slot.getDayOfWeek()); // include day
                     dto.setWorkingHours(slot.getWorkingHours());
                     dto.setReason(slot.getReason());
                     return dto;
@@ -78,7 +81,6 @@ public class ClinicSlotService {
     // --------------------------------
     public void saveClinicSlots(SaveClinicSlotsRequest request) {
 
-        // ✅ Validate clinic via admin-service
         validateClinicExists(request.getClinicId());
 
         LocalDate today = LocalDate.now();
@@ -91,7 +93,9 @@ public class ClinicSlotService {
         }
 
         for (int i = 0; i < 30; i++) {
-            String dateStr = today.plusDays(i).toString();
+            LocalDate date = today.plusDays(i);
+            String dateStr = date.toString();
+            String dayOfWeek = capitalizeFirstLetter(date.getDayOfWeek().toString());
 
             ClinicSlot slot = clinicSlotRepository
                     .findByClinicIdAndDate(request.getClinicId(), dateStr)
@@ -108,7 +112,18 @@ public class ClinicSlotService {
                 slot.setReason(null);
             }
 
+            // Save dayOfWeek
+            slot.setDayOfWeek(dayOfWeek);
+
             clinicSlotRepository.save(slot);
         }
+    }
+
+    // --------------------------------
+    // Helper to capitalize first letter
+    // --------------------------------
+    private String capitalizeFirstLetter(String text) {
+        text = text.toLowerCase();
+        return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 }

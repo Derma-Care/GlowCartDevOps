@@ -21,6 +21,8 @@ public class ClinicSlot {
     // Store date as "YYYY-MM-DD" string
     private String date;
 
+    private String dayOfWeek;  // "Monday", "Tuesday", ...
+
     private Boolean workingHours;
 
     private String reason;

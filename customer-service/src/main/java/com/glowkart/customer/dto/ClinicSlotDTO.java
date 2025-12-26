@@ -1,4 +1,4 @@
-package com.glowkart.clinicadmin.dto;
+package com.glowkart.customer.dto;
 
 import lombok.Data;
 
