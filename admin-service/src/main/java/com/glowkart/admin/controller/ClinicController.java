@@ -158,6 +158,15 @@ public class ClinicController {
         );
     }
 
+    @GetMapping("/clinics/get/{clinicId}")
+    public ResponseEntity<ApiResponse<ClinicRegistrationDTO>> getClinicsById(@PathVariable String clinicId) {
+        Clinic clinic = clinicService.getById(clinicId);
+        ClinicRegistrationDTO response = ClinicMapper.toClinicRegistrationDTO(clinic);
+
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, "Clinic fetched successfully", response, HttpStatus.OK.value())
+        );
+    }
 
     // ---------------------------------------------------
     // 7. UPDATE CLINIC

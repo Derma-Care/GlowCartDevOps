@@ -47,7 +47,7 @@ public class ClinicPublicDTO {
     private String walkthrough;
 
     private String role;
-    private Map<String, List<String>> permissions;
+//    private Map<String, List<String>> permissions;
 
     private String instagramHandle;
     private String twitterHandle;
@@ -57,11 +57,11 @@ public class ClinicPublicDTO {
     private String designation;
     private String clinicManagementSoftwareUsage;
 
-    private String bankAccountName;
-    private String bankAccountNumber;
-    private String ifscCode;
-    private String upiId;
-    private String panNumber;
+//    private String bankAccountName;
+//    private String bankAccountNumber;
+//    private String ifscCode;
+//    private String upiId;
+//    private String panNumber;
 
     private List<DoctorDTO> doctorsList;  // NEW
 }

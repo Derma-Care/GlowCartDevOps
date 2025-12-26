@@ -28,6 +28,12 @@ public interface ProcedureServiceClient {
             @PathVariable("procedureId") String procedureId
     );
     
+    @GetMapping("/procedures/pricing/get/{procedureId}/{clinicId}")
+    ApiResponse<ProcedurePricingDTO> getPricingByProcedureForClinic(
+        @PathVariable("procedureId") String procedureId,
+        @PathVariable("clinicId") String clinicId
+    );
+    
     @GetMapping("/procedures/pricing/offers")
     ApiResponse<List<CustomerProcedureOfferDTO>> getProcedureOffers();
     

@@ -54,7 +54,7 @@ public class ClinicProcedureLinkDTO {
 	    private String walkthrough;
 
 	    private String role;
-	    private Map<String, List<String>> permissions;
+//	    private Map<String, List<String>> permissions;
 
 	    private String instagramHandle;
 	    private String twitterHandle;
@@ -64,11 +64,17 @@ public class ClinicProcedureLinkDTO {
 	    private String designation;
 	    private String clinicManagementSoftwareUsage;
 
-	    private String bankAccountName;
-	    private String bankAccountNumber;
-	    private String ifscCode;
-	    private String upiId;
-	    private String panNumber;
+//	    private String bankAccountName;
+//	    private String bankAccountNumber;
+//	    private String ifscCode;
+//	    private String upiId;
+//	    private String panNumber;
 
 	    private List<DoctorDTO> doctorsList;  // NEW
+
+	 // ✅ New field for procedure pricing
+	    private ProcedurePricingDTO procedurePricing;
+
+	 // After
+	    private String distanceInKm;
 }
