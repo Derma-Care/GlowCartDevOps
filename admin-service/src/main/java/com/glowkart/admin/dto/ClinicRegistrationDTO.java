@@ -34,6 +34,8 @@ public class ClinicRegistrationDTO {
 
     @Email(message = "Invalid email format")
     private String email;
+    
+    private String username;
 
     private double hospitalOverallRating;
 

@@ -7,10 +7,11 @@ import {
     CImage, CButton, CContainer
 } from "@coreui/react";
 import { Eye, Download, Trash2, Edit } from "lucide-react";
-import { updateClinic, deleteClinic } from "../../baseUrl";
+import { updateClinic, deleteClinic, AllClinicData } from "../../baseUrl";
 import "./ClinicDetails.css";
 import { toast } from "react-toastify";
 import { getClinicTimings } from "./GlowKartgetTimingsAPI";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 /** ⭐ LABEL MAP FOR PRETTY UI */
 const LABELS = {
@@ -34,6 +35,7 @@ const LABELS = {
     closingTime: "Closing Time",
     latitude: "Latitude",
     longitude: "Longitude",
+    state: "State",
     bankAccountName: "Account Holder",
     bankAccountNumber: "Account Number",
     ifscCode: "IFSC Code",
@@ -101,29 +103,30 @@ const ClinicDetails = () => {
     const [doctorErrors, setDoctorErrors] = useState({});
     const [logoUploaded, setLogoUploaded] = useState(false);
     const [logoUploadStatus, setLogoUploadStatus] = useState("idle");
-
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [formData, setFormData] = useState(null);  // ✨ FIXED (No default state)
     const [activeTab, setActiveTab] = useState(1);
     const [editMode, setEditMode] = useState({});
     const [loading, setLoading] = useState(false);
     const [timings, setTimings] = useState([]);
     const [loadingTimings, setLoadingTimings] = useState(false);
+    const [showFileDeleteModal, setShowFileDeleteModal] = useState(false);
+    const [fileKeyToDelete, setFileKeyToDelete] = useState(null);
 
     /** ⭐ LOAD DATA WHEN PAGE OPENS OR REFRESHES */
     useEffect(() => {
-        if (state) {
-            setFormData(state); // coming from previous page
-        } else {
-            fetchClinicDetails(); // direct page load / refresh
-        }
-    }, [state]);
+        fetchClinicDetails();
+    }, [clinicId]);
 
     /** 📌 API CALL TO GET CLINIC DATA */
     const fetchClinicDetails = async () => {
         try {
-            const res = await fetch(`${GET_CLINIC_DETAILS_API}/${clinicId}`);
-            const data = await res.json();
-            setFormData(data);
+            const res = await fetch(`${AllClinicData}/get/${clinicId}`);
+            const result = await res.json();
+
+            // ✅ SAFE FOR BOTH RESPONSE TYPES
+            setFormData(result.data ?? result);
+
         } catch (error) {
             toast.error("Failed to load clinic data");
         }
@@ -148,6 +151,7 @@ const ClinicDetails = () => {
         setLoading(true);
         try {
             await updateClinic(clinicId, formData);
+            await fetchClinicDetails();
             toast.success(` ${section} updated!`);
             setEditMode({});
         } catch {
@@ -169,40 +173,58 @@ const ClinicDetails = () => {
         }
     };
 
-    const deleteFile = async (key) => {
-        if (!window.confirm("Delete file?")) return;
+    const deleteFile = async () => {
         try {
-            await updateClinic(clinicId, { [key]: null });
-            setFormData({ ...formData, [key]: null });
+            await updateClinic(clinicId, { [fileKeyToDelete]: null });
+            setFormData({ ...formData, [fileKeyToDelete]: null });
             toast.success("File deleted!");
         } catch {
             toast.error("Delete failed!");
+        } finally {
+            setShowFileDeleteModal(false);
+            setFileKeyToDelete(null);
         }
     };
 
+
     const replaceFile = (key, file) => {
-        if (!file) return;
-        const r = new FileReader();
+    if (!file) return;
 
-        r.onload = async () => {
-            const base64 = r.result.split(",")[1];
-            const updated = { ...formData, [key]: base64 };
-            await updateClinic(clinicId, updated);
-            setFormData(updated);
+    const reader = new FileReader();
 
-            setLogoUploaded(true); // ⭐ mark uploaded
-            toast.success("✅ Logo uploaded successfully!");
-        };
+    reader.onload = async () => {
+        try {
+            const base64 = reader.result.split(",")[1];
 
-        r.readAsDataURL(file);
+            // 1️⃣ Update backend
+            await updateClinic(clinicId, { [key]: base64 });
+
+            // 2️⃣ ALWAYS re-fetch fresh data
+            await fetchClinicDetails();
+
+            toast.success("📄 Document replaced successfully");
+        } catch {
+            toast.error("❌ Failed to replace document");
+        }
     };
+
+    reader.readAsDataURL(file);
+};
+
 
 
 
     const viewPDF = (data) => {
-        const blob = new Blob([Uint8Array.from(atob(data), c => c.charCodeAt(0))], { type: "application/pdf" });
-        window.open(URL.createObjectURL(blob), "_blank");
-    };
+    const byteArray = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+
+    // 🔥 release memory
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+};
+
 
     const tabs = [
         "General Info", "Address & Contact", "Documents",
@@ -403,10 +425,7 @@ const ClinicDetails = () => {
                     </h5>
 
                     <div className="d-flex gap-2">
-                        <CButton color="danger"
-                            onClick={() => window.confirm("Delete clinic?") &&
-                                deleteClinic(clinicId).then(() => navigate(-1))}
-                        >
+                        <CButton color="danger" onClick={() => setShowDeleteModal(true)}>
                             Delete Clinic
                         </CButton>
 
@@ -418,6 +437,22 @@ const ClinicDetails = () => {
                         </CButton>
                     </div>
                 </div>
+                <ConfirmationModal
+                    isVisible={showDeleteModal}
+                    title="Delete Clinic"
+                    message="Are you sure you want to permanently delete this clinic? This action cannot be undone."
+                    confirmText="Yes, Delete"
+                    cancelText="No, Cancel"
+                    confirmColor="danger"
+                    cancelColor="secondary"
+                    onConfirm={async () => {
+                        await deleteClinic(clinicId);
+                        toast.success("Clinic deleted successfully!");
+                        setShowDeleteModal(false);
+                        navigate(-1); // go back
+                    }}
+                    onCancel={() => setShowDeleteModal(false)}
+                />
 
                 <CCardBody>
 
@@ -526,18 +561,21 @@ const ClinicDetails = () => {
                             </div>
                         </CTabPane>
                         {/* ⭐ TAB 2 - ADDRESS & CONTACT */}
+                        {/* ⭐ TAB 2 - ADDRESS & CONTACT */}
                         <CTabPane visible={activeTab === 2}>
                             <div className="section-card">
                                 <CRow>
                                     {[
                                         "address", "city", "branch", "contactNumber", "whatsappNumber", "email", "website",
-                                        "openingTime", "closingTime", "latitude", "longitude"
+                                        "openingTime", "closingTime", "latitude", "longitude", "state"
                                     ].map((key) => (
                                         <CCol md={6} key={key}>
                                             <div className="clinic-field">
                                                 <span className="clinic-label">{LABELS[key]}:</span>
 
                                                 {editMode.addr ? (
+
+                                                    // ⭐ Opening Time Dropdown
                                                     key === "openingTime" ? (
                                                         <select
                                                             className={`form-select ${errors[key] ? "is-invalid" : ""}`}
@@ -551,6 +589,7 @@ const ClinicDetails = () => {
                                                             ))}
                                                         </select>
 
+                                                        // ⭐ Closing Time Dropdown
                                                     ) : key === "closingTime" ? (
                                                         <select
                                                             className={`form-select ${errors[key] ? "is-invalid" : ""}`}
@@ -564,6 +603,22 @@ const ClinicDetails = () => {
                                                             ))}
                                                         </select>
 
+                                                        // ⭐ Email Disabled (Requested)
+                                                    ) : key === "email" ? (
+                                                        <input
+                                                            className="form-control bg-light"
+                                                            value={formData.email || ""}
+                                                            disabled
+                                                            title="Email cannot be edited"
+                                                        />
+
+                                                    ) : key === "state" ? (
+                                                        <input
+                                                            className="form-control bg-light"
+                                                            value={formData.state || ""}
+                                                            disabled
+                                                            title="State cannot be edited"
+                                                        />
                                                     ) : (
                                                         <input
                                                             className={`form-control ${errors[key] ? "is-invalid" : ""}`}
@@ -571,7 +626,7 @@ const ClinicDetails = () => {
                                                             onChange={(e) => {
                                                                 const value = e.target.value;
 
-                                                                // ⭐ Typing rules
+                                                                // Typing validation rules
                                                                 if ((key === "city" || key === "branch") && !/^[A-Za-z\s.]*$/.test(value)) return;
                                                                 if ((key === "contactNumber" || key === "whatsappNumber") && !/^[0-9]*$/.test(value)) return;
                                                                 if ((key === "latitude" || key === "longitude") && !/^-?[0-9.]*$/.test(value)) return;
@@ -580,16 +635,20 @@ const ClinicDetails = () => {
                                                             }}
                                                         />
                                                     )
+
                                                 ) : (
+                                                    // ⭐ VIEW MODE
                                                     <span className="clinic-value">{formData[key] || "—"}</span>
                                                 )}
 
+                                                {/* ⭐ Show Validation Errors */}
                                                 {errors[key] && <small className="text-danger">{errors[key]}</small>}
                                             </div>
                                         </CCol>
                                     ))}
                                 </CRow>
 
+                                {/* ⭐ BOTTOM BUTTONS */}
                                 <ActionButtons
                                     edit={editMode.addr}
                                     loading={loading}
@@ -599,12 +658,13 @@ const ClinicDetails = () => {
                                     onDelete={() =>
                                         deleteSection([
                                             "address", "city", "branch", "contactNumber", "whatsappNumber", "email",
-                                            "website", "openingTime", "closingTime", "latitude", "longitude"
+                                            "website", "openingTime", "closingTime", "latitude", "longitude", "state"
                                         ])
                                     }
                                 />
                             </div>
                         </CTabPane>
+
 
 
 
@@ -653,9 +713,17 @@ const ClinicDetails = () => {
                                                             <Download size={15} /> Download
                                                         </CButton>
 
-                                                        <CButton color="danger" size="sm" onClick={() => deleteFile(key)}>
+                                                        <CButton
+                                                            color="danger"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setFileKeyToDelete(key);
+                                                                setShowFileDeleteModal(true);
+                                                            }}
+                                                        >
                                                             <Trash2 size={15} /> Delete
                                                         </CButton>
+
 
                                                         <label className="btn btn-warning btn-sm">
                                                             <Edit size={15} /> Replace
@@ -893,8 +961,8 @@ const ClinicDetails = () => {
                             <div className="section-card">
                                 <CRow>
                                     {[
-                                        "licenseNumber", "issuingAuthority", "hasPharmacist", "medicinesSoldOnSite",
-                                        "panNumber", "nabhScore", "walkthrough"
+                                        "licenseNumber", "issuingAuthority",
+                                        "panNumber", "walkthrough"
                                     ].map((key) => (
                                         <CCol md={6} key={key}>
                                             <div className="clinic-field">
@@ -927,32 +995,38 @@ const ClinicDetails = () => {
 
                                     {/* ⭐ HOSPITAL LOGO SECTION */}
                                     <CCol md={6}>
-                                        <div className="clinic-field flex-column">
+                                        <div className="clinic-field">
                                             <span className="clinic-label">Hospital Logo</span>
 
-                                            {formData.hospitalLogo ? (
-                                                <>
+                                            {formData.hospitalLogo && (
+                                                <div className="d-flex flex-column align-items-start">
                                                     <CImage
                                                         width={120}
                                                         className="rounded border mb-2"
-                                                        src={`data:image/png;base64,${formData.hospitalLogo}`}
+                                                        src={
+                                                            formData.hospitalLogo.startsWith("data:image")
+                                                                ? formData.hospitalLogo
+                                                                : `data:image/png;base64,${formData.hospitalLogo}`
+                                                        }
                                                     />
 
                                                     {editMode.other && (
                                                         <div className="d-flex gap-2 mt-2">
+                                                            {formData.hospitalLogo && (
+                                                                <CButton
+                                                                    color="danger"
+                                                                    size="sm"
+                                                                    className="flex-fill"
+                                                                    onClick={() => {
+                                                                        setFileKeyToDelete("hospitalLogo");
+                                                                        setShowFileDeleteModal(true);
+                                                                    }}
+                                                                >
+                                                                    🗑 Delete
+                                                                </CButton>
+                                                            )}
 
-                                                            <CButton
-                                                                color="danger"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                    deleteFile("hospitalLogo");
-                                                                    setLogoUploaded(false);
-                                                                }}
-                                                            >
-                                                                🗑 Delete
-                                                            </CButton>
-
-                                                            <label className={`btn ${logoUploaded ? "btn-success" : "btn-warning"} btn-sm mt-1`}>
+                                                            <label className={`btn ${logoUploaded ? "btn-success" : "btn-warning"} btn-sm flex-fill`}>
                                                                 {logoUploaded ? "✔ Uploaded" : "📤 Upload"}
                                                                 <input
                                                                     type="file"
@@ -963,13 +1037,14 @@ const ClinicDetails = () => {
                                                                     }}
                                                                 />
                                                             </label>
-
                                                         </div>
                                                     )}
-                                                </>
-                                            ) : (
-                                                editMode.other && (
-                                                    <label className={`btn ${logoUploaded ? "btn-success" : "btn-warning"} btn-sm mt-1`}>
+                                                </div>
+                                            )}
+
+                                            {!formData.hospitalLogo && editMode.other && (
+                                                <div className="d-flex gap-2 mt-2">
+                                                    <label className={`btn ${logoUploaded ? "btn-success" : "btn-warning"} btn-sm flex-fill`}>
                                                         {logoUploaded ? "✔ Uploaded" : "📤 Upload"}
                                                         <input
                                                             type="file"
@@ -980,10 +1055,11 @@ const ClinicDetails = () => {
                                                             }}
                                                         />
                                                     </label>
-                                                )
+                                                </div>
                                             )}
                                         </div>
                                     </CCol>
+
 
                                 </CRow>
 
@@ -1003,6 +1079,19 @@ const ClinicDetails = () => {
                             </div>
                         </CTabPane>
 
+                        <ConfirmationModal
+                            isVisible={showFileDeleteModal}
+                            title="Delete File"
+                            message="Are you sure you want to delete this file?"
+                            confirmText="Delete"
+                            cancelText="Cancel"
+                            confirmColor="danger"
+                            onConfirm={deleteFile}
+                            onCancel={() => {
+                                setShowFileDeleteModal(false);
+                                setFileKeyToDelete(null);
+                            }}
+                        />
 
                     </CTabContent>
                 </CCardBody>
