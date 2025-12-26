@@ -66,6 +66,7 @@ public class ClinicMapper {
         dto.setFacebookHandle(clinic.getFacebookHandle());
 
         dto.setPrimaryContactPerson(clinic.getPrimaryContactPerson());
+        dto.setAlternateContactNumber(clinic.getAlternateContactNumber());
         dto.setDesignation(clinic.getDesignation());
         dto.setClinicManagementSoftwareUsage(clinic.getClinicManagementSoftwareUsage());
 
@@ -210,6 +211,7 @@ public class ClinicMapper {
 
         dto.setStatus(clinic.getStatus());
         dto.setPrimaryContactPerson(clinic.getPrimaryContactPerson());
+        dto.setAlternateContactNumber(clinic.getAlternateContactNumber());
         dto.setDesignation(clinic.getDesignation());
         dto.setClinicManagementSoftwareUsage(clinic.getClinicManagementSoftwareUsage());
 

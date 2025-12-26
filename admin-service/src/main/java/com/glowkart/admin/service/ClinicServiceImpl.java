@@ -202,6 +202,7 @@ public class ClinicServiceImpl implements ClinicService {
         clinic.setRecommended(dto.isRecommended());
 
         updateIfNotNull(dto.getPrimaryContactPerson(), clinic::setPrimaryContactPerson);
+        updateIfNotNull(dto.getAlternateContactNumber(), clinic::setAlternateContactNumber);
         updateIfNotNull(dto.getDesignation(), clinic::setDesignation);
         updateIfNotNull(dto.getClinicManagementSoftwareUsage(), clinic::setClinicManagementSoftwareUsage);
         updateIfNotNull(dto.getBankAccountName(), clinic::setBankAccountName);
@@ -812,6 +813,7 @@ public class ClinicServiceImpl implements ClinicService {
         clinic.setSubscription(dto.getSubscription());
         clinic.setRecommended(dto.isRecommended());
         clinic.setPrimaryContactPerson(dto.getPrimaryContactPerson());
+        clinic.setAlternateContactNumber(dto.getAlternateContactNumber());
         clinic.setDesignation(dto.getDesignation());
         clinic.setClinicManagementSoftwareUsage(dto.getClinicManagementSoftwareUsage());
         clinic.setBankAccountName(dto.getBankAccountName());

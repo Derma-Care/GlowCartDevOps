@@ -39,6 +39,7 @@ const routes = [
   { path: '/Clinic-Management', name: 'Clinic Management', element: ClinicManagement },
   // { path: '/add-clinic', name: 'Add Clinic', element: AddClinic },
   { path: '/Clinic-Registration', name: 'Clinic Registration', element: ClinicRegistration }, // updated route
+   { path: '/Clinic-Registration/:clinicId', element: ClinicRegistration },   // EDIT
   { path: '/Patients-Management', name: 'Patient Management', element: PatientManagement },
   // { path: '/clinic-management/:hospitalId', name: 'Clinic Details', element: ClinicManagementDetails },
   // { path: '/branch-details/:branchId', name: 'Branch Details', element: BranchDetails },
@@ -52,7 +53,7 @@ const routes = [
   { path: '/Registration-Codes-dev', name: 'Registration Codes ', element: RegistrationCodeManagementDev },
   { path: '/Registration-Codes', name: 'Registration Codes ', element: RegistrationCodeManagement },
   { path: '/Clinic-Details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
-  { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs }
+  { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs },
 
 
 ]

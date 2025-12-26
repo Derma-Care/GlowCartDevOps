@@ -115,6 +115,7 @@ public class ClinicRegistrationDTO {
 
     // New Fields Added
     private String primaryContactPerson;
+    private String alternateContactNumber;
     private String designation;
     private String clinicManagementSoftwareUsage; // Yes / No
 

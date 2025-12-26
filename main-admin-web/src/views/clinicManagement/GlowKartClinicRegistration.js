@@ -251,17 +251,20 @@ const ClinicRegistration = () => {
   const validateForm = () => {
     const newErrors = {}
 
-    // Hospital Name
     if (!formData.name?.trim()) {
       newErrors.name = 'Clinic name is required'
-    } else if (!/^[a-zA-Z\s]{2,50}$/.test(formData.name)) {
-      newErrors.name = 'Clinic name must contain only letters'
+    } else if (!/^[a-zA-Z\s.&'-]{2,100}$/.test(formData.name)) {
+      newErrors.name = 'Clinic name can include letters, spaces, &, ., -, and apostrophe'
     }
 
+
     // Address validation
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required'
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address with pincode is required'
+    } else if (!/\b\d{6}\b/.test(formData.address)) {
+      newErrors.address = 'Please include a valid 6-digit pincode in the address'
     }
+
     if (selectedOption === "Yes") {
       if (!formData.drugLicenseCertificate) {
         newErrors.drugLicenseCertificate = "Please upload Drug License Certificate";
@@ -481,10 +484,11 @@ const ClinicRegistration = () => {
 
     // 🔹 IFSC Code
     if (!formData.ifscCode?.trim()) {
-      newErrors.ifscCode = "IFSC Code is required"
-    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(formData.ifscCode)) {
-      newErrors.ifscCode = "Invalid IFSC Code format"
+      newErrors.ifscCode = "IFSC Code is required";
+    } else if (!/^[A-Z]{3,4}0[A-Z0-9]{6}$/i.test(formData.ifscCode)) {
+      newErrors.ifscCode = "Invalid IFSC Code format (Ex: SBIN0001234)";
     }
+
 
     // 🔹 UPI ID (optional)
     if (formData.upiId?.trim()) {
@@ -496,10 +500,11 @@ const ClinicRegistration = () => {
 
     // 🔹 PAN Number
     if (!formData.panNumber?.trim()) {
-      newErrors.panNumber = "PAN Number is required"
-    } else if (!/[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(formData.panNumber)) {
-      newErrors.panNumber = "Invalid PAN format"
+      newErrors.panNumber = "PAN Number is required";
+    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(formData.panNumber)) {
+      newErrors.panNumber = "Invalid PAN format (Ex: ABCDE1234F)";
     }
+
 
     if (!formData.branch?.trim()) {
       newErrors.branch = "Branch name is required"
@@ -702,11 +707,11 @@ const ClinicRegistration = () => {
 
   // ✅ Save to localStorage for frontend-only preview/debug
   const formattedConsultationDays = `${formData.consultationExpiration} days`
-// Create preview data
-const previewData = {
-  ...formData,
-  consultationExpiration: formattedConsultationDays,
-};
+  // Create preview data
+  const previewData = {
+    ...formData,
+    consultationExpiration: formattedConsultationDays,
+  };
 
 
 
@@ -1358,30 +1363,6 @@ const previewData = {
 
             {/* Row 1 : Clinic Management Software + Subscription */}
             <CRow className="mb-4">
-              {/* <CCol md={6}>
-                <CFormLabel>
-                  Clinic Management Software <span style={{ color: 'red' }}>*</span>
-                </CFormLabel>
-                <CFormInput
-                  type="text"
-                  name="clinicManagementSoftwareUsage"
-                  value={formData.clinicManagementSoftwareUsage || ""}
-                  onChange={(e) => {
-                    const { name, value } = e.target;
-                    setFormData((prev) => ({ ...prev, [name]: value }));
-
-                    const error = !value.trim()
-                      ? "This field is required"
-                      : "";
-                    setErrors((prev) => ({ ...prev, [name]: error || undefined }));
-                  }}
-                  invalid={!!errors.clinicManagementSoftwareUsage}
-                />
-                {errors.clinicManagementSoftwareUsage && (
-                  <CFormFeedback invalid>{errors.clinicManagementSoftwareUsage}</CFormFeedback>
-                )}
-              </CCol> */}
-
               <CCol md={6}>
                 <CFormLabel>
                   Subscription <span style={{ color: 'red' }}>*</span>
@@ -1402,7 +1383,7 @@ const previewData = {
                   <p className="text-danger small">{errors.subscription}</p>
                 )}
               </CCol>
-                  <CCol md={6}>
+              <CCol md={6}>
                 <CFormLabel>Medicines sold on-site</CFormLabel>
                 <CFormSelect
                   name="medicinesSoldOnSite"
@@ -1423,9 +1404,6 @@ const previewData = {
                 </CFormSelect>
               </CCol>
             </CRow>
-
-           
-
             {/* Row 3 : Drug License (conditional) */}
             {formData.medicinesSoldOnSite && (
               <CRow className="mb-4">

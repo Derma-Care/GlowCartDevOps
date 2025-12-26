@@ -61,6 +61,7 @@ public class ClinicProcedureLinkDTO {
 	    private String facebookHandle;
 
 	    private String primaryContactPerson;
+	    private String alternateContactNumber;
 	    private String designation;
 	    private String clinicManagementSoftwareUsage;
 

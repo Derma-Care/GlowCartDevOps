@@ -54,6 +54,7 @@ public class ClinicPublicDTO {
     private String facebookHandle;
 
     private String primaryContactPerson;
+    private String alternateContactNumber;
     private String designation;
     private String clinicManagementSoftwareUsage;
 

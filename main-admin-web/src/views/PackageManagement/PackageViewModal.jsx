@@ -133,7 +133,6 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
                 </span>
               </CCol>
             )}
-
           </CRow>
         </div>
 

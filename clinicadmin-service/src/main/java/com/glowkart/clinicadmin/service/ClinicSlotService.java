@@ -9,6 +9,7 @@ import feign.FeignException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,9 @@ public class ClinicSlotService {
 
     private final ClinicSlotRepository clinicSlotRepository;
     private final AdminServiceFeignClient adminServiceFeignClient;
+
+    private static final DateTimeFormatter DAY_FORMATTER =
+            DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH);
 
     public ClinicSlotService(
             ClinicSlotRepository clinicSlotRepository,
@@ -45,7 +49,6 @@ public class ClinicSlotService {
     // --------------------------------
     public AvailableSlotsResponse getAvailableSlots(String clinicId) {
 
-        // ✅ Validate clinic via admin-service
         validateClinicExists(clinicId);
 
         LocalDate today = LocalDate.now();
@@ -53,12 +56,15 @@ public class ClinicSlotService {
 
         for (int i = 0; i < 30; i++) {
             LocalDate date = today.plusDays(i);
-            String dayOfWeek = capitalizeFirstLetter(date.getDayOfWeek().toString());
+            String dayOfWeek = date.format(DAY_FORMATTER); // Fri, Sat, Sun
+
             dateList.add(new DateWithDayDTO(date.toString(), dayOfWeek));
         }
 
-        // Fetch saved slots
-        List<String> dateStrings = dateList.stream().map(DateWithDayDTO::getDate).toList();
+        List<String> dateStrings = dateList.stream()
+                .map(DateWithDayDTO::getDate)
+                .toList();
+
         List<ClinicSlot> savedSlots =
                 clinicSlotRepository.findByClinicIdAndDateIn(clinicId, dateStrings);
 
@@ -66,7 +72,7 @@ public class ClinicSlotService {
                 .map(slot -> {
                     ClinicSlotDTO dto = new ClinicSlotDTO();
                     dto.setDate(slot.getDate());
-                    dto.setDayOfWeek(slot.getDayOfWeek()); // include day
+                    dto.setDayOfWeek(slot.getDayOfWeek());
                     dto.setWorkingHours(slot.getWorkingHours());
                     dto.setReason(slot.getReason());
                     return dto;
@@ -95,7 +101,7 @@ public class ClinicSlotService {
         for (int i = 0; i < 30; i++) {
             LocalDate date = today.plusDays(i);
             String dateStr = date.toString();
-            String dayOfWeek = capitalizeFirstLetter(date.getDayOfWeek().toString());
+            String dayOfWeek = date.format(DAY_FORMATTER); // Fri, Sat, Sun
 
             ClinicSlot slot = clinicSlotRepository
                     .findByClinicIdAndDate(request.getClinicId(), dateStr)
@@ -112,18 +118,9 @@ public class ClinicSlotService {
                 slot.setReason(null);
             }
 
-            // Save dayOfWeek
             slot.setDayOfWeek(dayOfWeek);
 
             clinicSlotRepository.save(slot);
         }
-    }
-
-    // --------------------------------
-    // Helper to capitalize first letter
-    // --------------------------------
-    private String capitalizeFirstLetter(String text) {
-        text = text.toLowerCase();
-        return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 }

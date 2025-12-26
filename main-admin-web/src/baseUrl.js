@@ -220,7 +220,20 @@ export const BASE_URL_API = "https://glowkartapi.ashokfruit.shop/admin";
 export const NGkRegistrationBaseUrl='https://glowkartapi.ashokfruit.shop'
 // Clinic
 export const CLINIC_REGISTRATION_URL = `${BASE_URL_API}/clinics/register`;
+// UPDATE CLINIC
+export const updateClinic = (clinicId, payload) => {
+  return axios.put(
+    `${BASE_URL_API}/clinics/${clinicId}`,
+    payload
+  );
+};
 
+// DELETE CLINIC
+export const deleteClinic = (clinicId) => {
+  return axios.delete(
+    `${BASE_URL_API}/clinics/${clinicId}`
+  );
+};
 
 // Procedure Endpoints
 export const PROCEDURE_CREATE_URL = `${BASE_URL_API}/procedures/create`;
