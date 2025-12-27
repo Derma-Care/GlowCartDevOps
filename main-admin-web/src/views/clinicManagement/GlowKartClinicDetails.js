@@ -12,6 +12,7 @@ import "./ClinicDetails.css";
 import { toast } from "react-toastify";
 import { getClinicTimings } from "./GlowKartgetTimingsAPI";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import capitalizeWords from "../../Utils/capitalizeWords";
 
 /** ⭐ LABEL MAP FOR PRETTY UI */
 const LABELS = {
@@ -70,7 +71,7 @@ const LABELS = {
 };
 
 /** ⭐ BUTTON GROUP */
-const ActionButtons = ({ edit, loading, onEdit, onSave, onCancel, onDelete }) => (
+const ActionButtons = ({ edit, loading, onEdit, onSave }) => (
     <div className="button-bottom-container">
         {!edit ? (
             <CButton color="primary" onClick={onEdit}>
@@ -81,12 +82,7 @@ const ActionButtons = ({ edit, loading, onEdit, onSave, onCancel, onDelete }) =>
                 <CButton color="success" disabled={loading} onClick={onSave}>
                     {loading ? "Saving..." : "✔ Save"}
                 </CButton>
-                <CButton color="secondary" disabled={loading} onClick={onCancel}>
-                    ✖ Cancel
-                </CButton>
-                <CButton color="danger" disabled={loading} onClick={onDelete}>
-                    🗑 Delete
-                </CButton>
+
             </>
         )}
     </div>
@@ -102,7 +98,6 @@ const ClinicDetails = () => {
     const [editDoctor, setEditDoctor] = useState({ doctorName: "", registrationNumber: "", specialization: "" });
     const [doctorErrors, setDoctorErrors] = useState({});
     const [logoUploaded, setLogoUploaded] = useState(false);
-    const [logoUploadStatus, setLogoUploadStatus] = useState("idle");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [formData, setFormData] = useState(null);  // ✨ FIXED (No default state)
     const [activeTab, setActiveTab] = useState(1);
@@ -112,6 +107,8 @@ const ClinicDetails = () => {
     const [loadingTimings, setLoadingTimings] = useState(false);
     const [showFileDeleteModal, setShowFileDeleteModal] = useState(false);
     const [fileKeyToDelete, setFileKeyToDelete] = useState(null);
+    const [showDeleteDoctorModal, setShowDeleteDoctorModal] = useState(false);
+    const [doctorIndexToDelete, setDoctorIndexToDelete] = useState(null);
 
     /** ⭐ LOAD DATA WHEN PAGE OPENS OR REFRESHES */
     useEffect(() => {
@@ -185,45 +182,136 @@ const ClinicDetails = () => {
             setFileKeyToDelete(null);
         }
     };
+    const [showAddDoctorRow, setShowAddDoctorRow] = useState(false);
+    const [newDoctor, setNewDoctor] = useState({
+        doctorName: "",
+        registrationNumber: "",
+        specialization: "",
+    });
+    const [newDoctorErrors, setNewDoctorErrors] = useState({});
+    const validateNewDoctor = () => {
+        const errors = {};
 
-
-    const replaceFile = (key, file) => {
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = async () => {
-        try {
-            const base64 = reader.result.split(",")[1];
-
-            // 1️⃣ Update backend
-            await updateClinic(clinicId, { [key]: base64 });
-
-            // 2️⃣ ALWAYS re-fetch fresh data
-            await fetchClinicDetails();
-
-            toast.success("📄 Document replaced successfully");
-        } catch {
-            toast.error("❌ Failed to replace document");
+        // ⭐ Doctor Name Validation
+        if (!newDoctor.doctorName.trim()) {
+            errors.doctorName = "Doctor name is required";
+        } else if (!/^[A-Za-z\s.'-]{2,50}$/.test(newDoctor.doctorName)) {
+            errors.doctorName = "Invalid format. Only letters, spaces, . and ' allowed";
         }
+
+        // ⭐ Registration Number Validation
+        if (!newDoctor.registrationNumber.trim()) {
+            errors.registrationNumber = "Registration number is required";
+        } else if (!/^[A-Za-z0-9\/\-]{3,30}$/.test(newDoctor.registrationNumber)) {
+            errors.registrationNumber = "Invalid format (only A-Z, 0-9, -, / allowed)";
+        }
+
+        // ⭐ Specialization Validation
+        if (!newDoctor.specialization.trim()) {
+            errors.specialization = "Specialization is required";
+        } else if (!/^[A-Za-z\s.]{2,50}$/.test(newDoctor.specialization)) {
+            errors.specialization = "Invalid format (letters only)";
+        }
+
+        setNewDoctorErrors(errors);
+        return Object.keys(errors).length === 0; // Return true if NO errors
     };
 
-    reader.readAsDataURL(file);
-};
+    const replaceFile = (key, file) => {
+        if (!file) return;
+
+        const allowedTypes = [
+            "application/pdf",
+            "image/jpeg",
+            "image/png"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Only PDF, JPG, JPEG, PNG files are allowed");
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = async () => {
+            try {
+                // ✅ STRIP data:image/...;base64,
+                const base64 = reader.result.split(",")[1];
+
+                await updateClinic(clinicId, { [key]: base64 });
+                await fetchClinicDetails();
+                toast.success("📄 Document replaced successfully");
+            } catch {
+                toast.error("❌ Failed to replace document");
+            }
+        };
+
+        reader.readAsDataURL(file);
+    };
 
 
 
 
-    const viewPDF = (data) => {
-    const byteArray = Uint8Array.from(atob(data), c => c.charCodeAt(0));
-    const blob = new Blob([byteArray], { type: "application/pdf" });
+    // ✅ Extract mime type safely from base64
+    const getMimeFromBase64 = (base64) => {
+        if (!base64) return null;
+        const match = base64.match(/^data:(.*?);base64,/);
+        return match ? match[1] : null;
+    };
+    const detectMimeType = (base64) => {
+        if (base64.startsWith("/9j")) return "image/jpeg";        // JPG / JPEG
+        if (base64.startsWith("iVBOR")) return "image/png";       // PNG
+        if (base64.startsWith("JVBER")) return "application/pdf"; // PDF
+        return "application/octet-stream";
+    };
 
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
+    // 👁 View PDF / Image
+    const viewFile = (base64) => {
+        const mimeType = detectMimeType(base64);
 
-    // 🔥 release memory
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-};
+        const byteArray = Uint8Array.from(
+            atob(base64),
+            c => c.charCodeAt(0)
+        );
+
+        const blob = new Blob([byteArray], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+
+        window.open(url, "_blank");
+
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    };
+
+    const getExtension = (mime) => {
+        if (mime === "application/pdf") return "pdf";
+        if (mime === "image/jpeg") return "jpg";
+        if (mime === "image/png") return "png";
+        return "file";
+    };
+
+    // ⬇ Download PDF / Image
+    const downloadFile = (base64, fileName = "document") => {
+        const mimeType = detectMimeType(base64);
+        const extension = getExtension(mimeType);
+
+        const byteArray = Uint8Array.from(
+            atob(base64),
+            c => c.charCodeAt(0)
+        );
+
+        const blob = new Blob([byteArray], { type: mimeType });
+
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${fileName}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
 
 
     const tabs = [
@@ -233,7 +321,7 @@ const ClinicDetails = () => {
 
     /** 🕑 WAIT FOR DATA BEFORE RENDER */
     if (!formData) return <div className="text-center p-5">⏳ Loading...</div>;
-    const validateDoctor = () => {
+    const validateDoctorOnly = () => {
         const errors = {};
 
         if (!editDoctor.doctorName.trim()) {
@@ -245,174 +333,17 @@ const ClinicDetails = () => {
         if (!editDoctor.registrationNumber.trim()) {
             errors.registrationNumber = "Registration number required";
         } else if (!/^[A-Za-z0-9-]{3,20}$/.test(editDoctor.registrationNumber)) {
-            errors.registrationNumber = "Invalid Reg No (letters/numbers/-)";
+            errors.registrationNumber = "Invalid Reg No";
         }
 
         if (!editDoctor.specialization.trim()) {
             errors.specialization = "Specialization is required";
         }
-        // ⭐ Clinic Name (Letters, spaces, &, ., -, ')
-        if (!formData.name?.trim()) {
-            errors.name = "Clinic name is required";
-        } else if (!/^[a-zA-Z\s.&'-]{2,100}$/.test(formData.name)) {
-            errors.name = "Only letters, spaces, &, ., -, ' allowed (2–100 chars)";
-        }
-
-        // ⭐ Primary Contact Person (letters, spaces & dot)
-        if (!formData.primaryContactPerson?.trim()) {
-            errors.primaryContactPerson = "Primary contact person is required";
-        } else if (!/^[A-Za-z\s.]{2,50}$/.test(formData.primaryContactPerson)) {
-            errors.primaryContactPerson = "Only letters, spaces & dot (.) allowed";
-        }
-
-        // ⭐ Designation (letters, spaces & dot)
-        if (!formData.designation?.trim()) {
-            errors.designation = "Designation is required";
-        } else if (!/^[A-Za-z\s.]{2,50}$/.test(formData.designation)) {
-            errors.designation = "Only letters, spaces & dot (.) allowed";
-        }
-        // ⭐ Address Validation
-        if (!formData.address?.trim()) {
-            errors.address = "Address with pincode is required";
-        } else if (!/\b\d{6}\b/.test(formData.address)) {
-            errors.address = "Include a valid 6-digit pincode";
-        }
-
-        // ⭐ City (Only letters)
-        if (!formData.city?.trim()) {
-            errors.city = "City is required";
-        } else if (!/^[A-Za-z\s.]{2,50}$/.test(formData.city)) {
-            errors.city = "City must contain only letters & dot";
-        }
-
-        // ⭐ Branch (Only letters)
-        if (!formData.branch?.trim()) {
-            errors.branch = "Branch is required";
-        } else if (!/^[A-Za-z\s.]{2,50}$/.test(formData.branch)) {
-            errors.branch = "Branch must contain only letters & dot";
-        }
-
-        // ⭐ Phone Number (10 digits, 5-9 start)
-        const phoneRegex = /^[5-9][0-9]{9}$/;
-
-        if (!formData.contactNumber?.trim()) {
-            errors.contactNumber = "Contact number is required";
-        } else if (!phoneRegex.test(formData.contactNumber)) {
-            errors.contactNumber = "Must be 10 digits & start with 5-9";
-        }
-
-        if (!formData.whatsappNumber?.trim()) {
-            errors.whatsappNumber = "WhatsApp number is required";
-        } else if (!phoneRegex.test(formData.whatsappNumber)) {
-            errors.whatsappNumber = "Must be 10 digits & start with 5-9";
-        }
-
-        // ⭐ Email format
-        if (!formData.email?.trim()) {
-            errors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            errors.email = "Invalid email format";
-        }
-
-        // ⭐ Website URL check
-        const websiteRegex = /^(http|https):\/\/[^\s]+$/;
-        const normalizeWebsite = (v) => v.startsWith("http") ? v : "https://" + v;
-
-        if (!formData.website?.trim()) {
-            errors.website = "Website is required";
-        } else if (!websiteRegex.test(normalizeWebsite(formData.website.trim()))) {
-            errors.website = "Enter valid URL (http:// or https://)";
-        }
-
-        // ⭐ Latitude (-90 to 90)
-        const lat = parseFloat(formData.latitude);
-        if (!formData.latitude) {
-            errors.latitude = "Latitude is required";
-        } else if (isNaN(lat) || lat < -90 || lat > 90) {
-            errors.latitude = "Must be between -90 and 90";
-        }
-
-        // ⭐ Longitude (-180 to 180)
-        const lng = parseFloat(formData.longitude);
-        if (!formData.longitude) {
-            errors.longitude = "Longitude is required";
-        } else if (isNaN(lng) || lng < -180 || lng > 180) {
-            errors.longitude = "Must be between -180 and 180";
-        }
-        // ⭐ Bank Account Name
-        if (!formData.bankAccountName?.trim()) {
-            errors.bankAccountName = "Account holder name is required";
-        } else if (!/^[A-Za-z\s.]{2,50}$/.test(formData.bankAccountName)) {
-            errors.bankAccountName = "Only letters, spaces & dot allowed";
-        }
-
-        // ⭐ Bank Account Number
-        if (!formData.bankAccountNumber?.trim()) {
-            errors.bankAccountNumber = "Bank account number is required";
-        } else if (!/^[0-9]{9,18}$/.test(formData.bankAccountNumber)) {
-            errors.bankAccountNumber = "Account number must be 9 to 18 digits only";
-        }
-
-        // ⭐ IFSC Code
-        if (!formData.ifscCode?.trim()) {
-            errors.ifscCode = "IFSC Code is required";
-        } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(formData.ifscCode)) {
-            errors.ifscCode = "Invalid IFSC format (Ex: SBIN0001234)";
-        }
-
-        // ⭐ UPI ID (optional but must be valid if provided)
-        if (formData.upiId?.trim() && !/^[\w.-]+@[\w.-]+$/.test(formData.upiId)) {
-            errors.upiId = "Invalid UPI ID format (Ex: ravi@okicici)";
-        }
-
-        // ⭐ License Number
-        if (!formData.licenseNumber?.trim()) {
-            errors.licenseNumber = "License number is required";
-        } else if (!/^[A-Za-z0-9/.\-]{3,30}$/.test(formData.licenseNumber)) {
-            errors.licenseNumber = "Only letters, numbers, / . - allowed (min 3 chars)";
-        }
-
-        // ⭐ Issuing Authority
-        if (!formData.issuingAuthority?.trim()) {
-            errors.issuingAuthority = "Issuing authority is required";
-        } else if (!/^[A-Za-z\s.]{2,50}$/.test(formData.issuingAuthority)) {
-            errors.issuingAuthority = "Only letters, spaces & dot allowed";
-        }
-
-        // ⭐ Has Pharmacist Yes/No
-        if (!formData.hasPharmacist?.trim()) {
-            errors.hasPharmacist = "Specify if pharmacist is available (Yes/No)";
-        } else if (!/^(Yes|No)$/i.test(formData.hasPharmacist)) {
-            errors.hasPharmacist = "Only 'Yes' or 'No' allowed";
-        }
-
-        // ⭐ Medicines Sold On Site Yes/No
-        if (!formData.medicinesSoldOnSite?.trim()) {
-            errors.medicinesSoldOnSite = "Required: Yes or No";
-        } else if (!/^(Yes|No)$/i.test(formData.medicinesSoldOnSite)) {
-            errors.medicinesSoldOnSite = "Only 'Yes' or 'No' allowed";
-        }
-
-        // ⭐ PAN Number
-        if (!formData.panNumber?.trim()) {
-            errors.panNumber = "PAN Number is required";
-        } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/i.test(formData.panNumber)) {
-            errors.panNumber = "Invalid PAN format (ABCDE1234F)";
-        }
-
-        // ⭐ NABH Score (optional or required)
-        if (formData.nabhScore && (isNaN(formData.nabhScore) || formData.nabhScore < 1 || formData.nabhScore > 100)) {
-            errors.nabhScore = "NABH score must be between 1 and 100";
-        }
-
-        // ⭐ Walkthrough (optional but warn if too short)
-        if (formData.walkthrough && formData.walkthrough.length < 3) {
-            errors.walkthrough = "Walkthrough info too short";
-        }
 
         setDoctorErrors(errors);
         return Object.keys(errors).length === 0;
     };
+
 
     return (
         <CContainer fluid className="py-3">
@@ -560,7 +491,7 @@ const ClinicDetails = () => {
                                 />
                             </div>
                         </CTabPane>
-                        {/* ⭐ TAB 2 - ADDRESS & CONTACT */}
+
                         {/* ⭐ TAB 2 - ADDRESS & CONTACT */}
                         <CTabPane visible={activeTab === 2}>
                             <div className="section-card">
@@ -671,16 +602,16 @@ const ClinicDetails = () => {
                         {/* ⭐ TAB 3 - DOCUMENTS */}
                         <CTabPane visible={activeTab === 3}>
                             <div className="section-card">
-                                <CTable bordered responsive>
-                                    <CTableHead className="bg-light">
-                                        <CTableRow>
-                                            <CTableHeaderCell>#</CTableHeaderCell>
-                                            <CTableHeaderCell>Document</CTableHeaderCell>
+                                <CTable striped hover responsive>
+                                    <CTableHead className="pink-table">
+                                        <CTableRow className="text-center">
+                                            <CTableHeaderCell >#</CTableHeaderCell>
+                                            <CTableHeaderCell >Document</CTableHeaderCell>
                                             <CTableHeaderCell>Actions</CTableHeaderCell>
                                         </CTableRow>
                                     </CTableHead>
 
-                                    <CTableBody>
+                                    <CTableBody className="pink-table">
                                         {Object.entries(formData)
                                             .filter(([k, v]) =>
                                                 typeof v === "string" &&
@@ -688,51 +619,41 @@ const ClinicDetails = () => {
                                                 !k.toLowerCase().includes("logo")
                                             )
                                             .map(([key, val], i) => (
-                                                <CTableRow key={key}>
-                                                    <CTableDataCell>{i + 1}</CTableDataCell>
+                                                <CTableRow key={key} className="text-center">
+                                                    <CTableDataCell >{i + 1}</CTableDataCell>
                                                     <CTableDataCell>{LABELS[key]}</CTableDataCell>
-                                                    <CTableDataCell className="d-flex gap-2">
+                                                    <CTableDataCell >
 
-                                                        <CButton color="success" size="sm" onClick={() => viewPDF(val)}>
+                                                        {/* 👁 VIEW */}
+                                                        <CButton
+                                                            color="success"
+                                                            size="sm"
+                                                            onClick={() => viewFile(val)}
+                                                        >
                                                             <Eye size={15} /> View
                                                         </CButton>
 
+                                                        {/* ⬇ DOWNLOAD */}
                                                         <CButton
                                                             size="sm"
-                                                            onClick={() => {
-                                                                const blob = new Blob(
-                                                                    [Uint8Array.from(atob(val), (c) => c.charCodeAt(0))],
-                                                                    { type: "application/pdf" }
-                                                                );
-                                                                const a = document.createElement("a");
-                                                                a.href = URL.createObjectURL(blob);
-                                                                a.download = `${key}.pdf`;
-                                                                a.click();
-                                                            }}
+                                                            onClick={() => downloadFile(val, key)}
                                                         >
                                                             <Download size={15} /> Download
                                                         </CButton>
 
-                                                        <CButton
-                                                            color="danger"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setFileKeyToDelete(key);
-                                                                setShowFileDeleteModal(true);
-                                                            }}
-                                                        >
-                                                            <Trash2 size={15} /> Delete
-                                                        </CButton>
-
-
+                                                        {/* 🔁 REPLACE */}
                                                         <label className="btn btn-warning btn-sm">
                                                             <Edit size={15} /> Replace
-                                                            <input type="file" hidden accept="application/pdf"
+                                                            <input
+                                                                type="file"
+                                                                hidden
+                                                                accept=".pdf,.jpg,.jpeg,.png"
                                                                 onChange={(e) => replaceFile(key, e.target.files[0])}
                                                             />
                                                         </label>
 
                                                     </CTableDataCell>
+
                                                 </CTableRow>
                                             ))}
                                     </CTableBody>
@@ -788,36 +709,40 @@ const ClinicDetails = () => {
                             </div>
                         </CTabPane>
 
-
                         {/* ⭐ TAB 5 - DOCTORS */}
                         <CTabPane visible={activeTab === 5}>
+                            {/* ➕ ADD BUTTON - ONLY IN THIS TAB */}
                             <div className="section-card">
-                                <CTable bordered hover>
-                                    <CTableHead className="bg-light">
-                                        <CTableRow>
+                                <div className="text-end">
+                                    <CButton color="primary" onClick={() => setShowAddDoctorRow(true)}>
+                                        ➕ Add Doctor
+                                    </CButton>
+                                </div><br />
+                                <CTable striped hover responsive>
+                                    <CTableHead className="pink-table">
+                                        <CTableRow className="text-center">
                                             <CTableHeaderCell>#</CTableHeaderCell>
                                             <CTableHeaderCell>Name</CTableHeaderCell>
                                             <CTableHeaderCell>Reg No</CTableHeaderCell>
                                             <CTableHeaderCell>Specialization</CTableHeaderCell>
-                                            <CTableHeaderCell>Action</CTableHeaderCell>
+                                            <CTableHeaderCell >Action</CTableHeaderCell>
                                         </CTableRow>
                                     </CTableHead>
 
-                                    <CTableBody>
+                                    <CTableBody className="pink-table">
+
+                                        {/* 🔁 EXISTING DOCTORS LIST */}
                                         {(formData.doctorsList || []).map((doctor, i) => (
-                                            <CTableRow key={i}>
+                                            <CTableRow key={i} className="text-center">
                                                 <CTableDataCell>{i + 1}</CTableDataCell>
 
-                                                {/* ⭐ IF EDITING SHOW INPUTS ELSE SHOW TEXT */}
                                                 {editingIndex === i ? (
                                                     <>
                                                         <CTableDataCell>
                                                             <input
                                                                 className={`form-control ${doctorErrors.doctorName ? "is-invalid" : ""}`}
                                                                 value={editDoctor.doctorName}
-                                                                onChange={(e) =>
-                                                                    setEditDoctor({ ...editDoctor, doctorName: e.target.value })
-                                                                }
+                                                                onChange={(e) => setEditDoctor({ ...editDoctor, doctorName: e.target.value })}
                                                             />
                                                             {doctorErrors.doctorName && <small className="text-danger">{doctorErrors.doctorName}</small>}
                                                         </CTableDataCell>
@@ -826,44 +751,40 @@ const ClinicDetails = () => {
                                                             <input
                                                                 className={`form-control ${doctorErrors.registrationNumber ? "is-invalid" : ""}`}
                                                                 value={editDoctor.registrationNumber}
-                                                                onChange={(e) =>
-                                                                    setEditDoctor({ ...editDoctor, registrationNumber: e.target.value })
-                                                                }
+                                                                onChange={(e) => setEditDoctor({ ...editDoctor, registrationNumber: e.target.value })}
                                                             />
-                                                            {doctorErrors.registrationNumber && <small className="text-danger">{doctorErrors.registrationNumber}</small>}
+                                                            {doctorErrors.registrationNumber && (
+                                                                <small className="text-danger">{doctorErrors.registrationNumber}</small>
+                                                            )}
                                                         </CTableDataCell>
 
                                                         <CTableDataCell>
                                                             <input
                                                                 className={`form-control ${doctorErrors.specialization ? "is-invalid" : ""}`}
                                                                 value={editDoctor.specialization}
-                                                                onChange={(e) =>
-                                                                    setEditDoctor({ ...editDoctor, specialization: e.target.value })
-                                                                }
+                                                                onChange={(e) => setEditDoctor({ ...editDoctor, specialization: e.target.value })}
                                                             />
-                                                            {doctorErrors.specialization && <small className="text-danger">{doctorErrors.specialization}</small>}
+                                                            {doctorErrors.specialization && (
+                                                                <small className="text-danger">{doctorErrors.specialization}</small>
+                                                            )}
                                                         </CTableDataCell>
 
-                                                        {/* ⭐ Save / Cancel Buttons */}
                                                         <CTableDataCell>
                                                             <CButton
                                                                 size="sm"
                                                                 color="success"
                                                                 onClick={async () => {
-                                                                    if (!validateDoctor()) return;
-
+                                                                    if (!validateDoctorOnly()) return;
                                                                     const updated = [...formData.doctorsList];
                                                                     updated[i] = editDoctor;
-
                                                                     await updateClinic(clinicId, { doctorsList: updated });
                                                                     setFormData({ ...formData, doctorsList: updated });
                                                                     setEditingIndex(null);
-                                                                    toast.success("✔ Doctor updated");
+                                                                    toast.success(" Doctor updated");
                                                                 }}
                                                             >
                                                                 Save
                                                             </CButton>
-
                                                             <CButton
                                                                 size="sm"
                                                                 color="secondary"
@@ -876,13 +797,10 @@ const ClinicDetails = () => {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        {/* ⭐ NORMAL VIEW MODE */}
-                                                        <CTableDataCell>{doctor.doctorName}</CTableDataCell>
+                                                        <CTableDataCell>{capitalizeWords(doctor.doctorName)}</CTableDataCell>
                                                         <CTableDataCell>{doctor.registrationNumber}</CTableDataCell>
-                                                        <CTableDataCell>{doctor.specialization}</CTableDataCell>
+                                                        <CTableDataCell>{capitalizeWords(doctor.specialization)}</CTableDataCell>
                                                         <CTableDataCell className="d-flex gap-1">
-
-                                                            {/* EDIT BUTTON */}
                                                             <CButton
                                                                 size="sm"
                                                                 color="warning"
@@ -894,19 +812,12 @@ const ClinicDetails = () => {
                                                                 ✏ Edit
                                                             </CButton>
 
-                                                            {/* DELETE BUTTON */}
                                                             <CButton
                                                                 size="sm"
                                                                 color="danger"
                                                                 onClick={() => {
-                                                                    if (!window.confirm("Delete this doctor?")) return;
-
-                                                                    const updated = [...formData.doctorsList];
-                                                                    updated.splice(i, 1);
-                                                                    updateClinic(clinicId, { doctorsList: updated });
-                                                                    setFormData({ ...formData, doctorsList: updated });
-
-                                                                    toast.success("🗑 Doctor removed");
+                                                                    setDoctorIndexToDelete(i);
+                                                                    setShowDeleteDoctorModal(true);
                                                                 }}
                                                             >
                                                                 🗑 Delete
@@ -916,11 +827,101 @@ const ClinicDetails = () => {
                                                 )}
                                             </CTableRow>
                                         ))}
-                                    </CTableBody>
 
+                                        {/* ⭐➕ NEW DOCTOR ADD ROW — INSIDE THIS TAB ONLY */}
+                                        {showAddDoctorRow && (
+                                            <CTableRow className="bg-light">
+                                                <CTableDataCell>New</CTableDataCell>
+
+                                                <CTableDataCell>
+                                                    <input
+                                                        className={`form-control ${newDoctorErrors.doctorName ? "is-invalid" : ""}`}
+                                                        placeholder="Doctor Name"
+                                                        value={newDoctor.doctorName}
+                                                        onChange={(e) => setNewDoctor({ ...newDoctor, doctorName: e.target.value })}
+                                                    />
+                                                    {newDoctorErrors.doctorName && <small className="text-danger">{newDoctorErrors.doctorName}</small>}
+                                                </CTableDataCell>
+
+                                                <CTableDataCell>
+                                                    <input
+                                                        className={`form-control ${newDoctorErrors.registrationNumber ? "is-invalid" : ""}`}
+                                                        placeholder="Registration No"
+                                                        value={newDoctor.registrationNumber}
+                                                        onChange={(e) => setNewDoctor({ ...newDoctor, registrationNumber: e.target.value })}
+                                                    />
+                                                    {newDoctorErrors.registrationNumber && (
+                                                        <small className="text-danger">{newDoctorErrors.registrationNumber}</small>
+                                                    )}
+                                                </CTableDataCell>
+
+                                                <CTableDataCell>
+                                                    <input
+                                                        className={`form-control ${newDoctorErrors.specialization ? "is-invalid" : ""}`}
+                                                        placeholder="Specialization"
+                                                        value={newDoctor.specialization}
+                                                        onChange={(e) => setNewDoctor({ ...newDoctor, specialization: e.target.value })}
+                                                    />
+                                                    {newDoctorErrors.specialization && (
+                                                        <small className="text-danger">{newDoctorErrors.specialization}</small>
+                                                    )}
+                                                </CTableDataCell>
+
+                                                <CTableDataCell className="d-flex gap-1">
+                                                    <CButton
+                                                        size="sm"
+                                                        color="success"
+                                                        onClick={async () => {
+                                                            if (!validateNewDoctor()) return;
+                                                            const updated = [...(formData.doctorsList || []), newDoctor];
+                                                            await updateClinic(clinicId, { doctorsList: updated });
+                                                            setFormData({ ...formData, doctorsList: updated });
+                                                            toast.success("➕ Doctor Added Successfully!");
+                                                            setShowAddDoctorRow(false);
+                                                            setNewDoctor({ doctorName: "", registrationNumber: "", specialization: "" });
+                                                        }}
+                                                    >
+                                                        Save
+                                                    </CButton>
+
+                                                    <CButton size="sm" color="secondary" onClick={() => setShowAddDoctorRow(false)}>
+                                                        Cancel
+                                                    </CButton>
+                                                </CTableDataCell>
+                                            </CTableRow>
+                                        )}
+
+                                    </CTableBody>
                                 </CTable>
+                                <ConfirmationModal
+                                    isVisible={showDeleteDoctorModal}
+                                    title="Delete Doctor"
+                                    message="Are you sure you want to delete this doctor? This action cannot be undone."
+                                    confirmText="Yes, Delete"
+                                    cancelText="Cancel"
+                                    confirmColor="danger"
+                                    cancelColor="secondary"
+                                    onConfirm={async () => {
+                                        const updated = [...formData.doctorsList];
+                                        updated.splice(doctorIndexToDelete, 1);
+
+                                        await updateClinic(clinicId, { doctorsList: updated });
+                                        setFormData({ ...formData, doctorsList: updated });
+
+                                        toast.success("🗑 Doctor removed successfully!");
+                                        setShowDeleteDoctorModal(false);
+                                        setDoctorIndexToDelete(null);
+                                    }}
+                                    onCancel={() => {
+                                        setShowDeleteDoctorModal(false);
+                                        setDoctorIndexToDelete(null);
+                                    }}
+                                />
+
+
                             </div>
                         </CTabPane>
+
 
                         {/* ⭐ TAB 6 - SOCIAL */}
                         <CTabPane visible={activeTab === 6}>
@@ -1012,19 +1013,7 @@ const ClinicDetails = () => {
 
                                                     {editMode.other && (
                                                         <div className="d-flex gap-2 mt-2">
-                                                            {formData.hospitalLogo && (
-                                                                <CButton
-                                                                    color="danger"
-                                                                    size="sm"
-                                                                    className="flex-fill"
-                                                                    onClick={() => {
-                                                                        setFileKeyToDelete("hospitalLogo");
-                                                                        setShowFileDeleteModal(true);
-                                                                    }}
-                                                                >
-                                                                    🗑 Delete
-                                                                </CButton>
-                                                            )}
+
 
                                                             <label className={`btn ${logoUploaded ? "btn-success" : "btn-warning"} btn-sm flex-fill`}>
                                                                 {logoUploaded ? "✔ Uploaded" : "📤 Upload"}

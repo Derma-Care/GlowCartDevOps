@@ -128,6 +128,7 @@ public class ClinicMapper {
 
         dto.setWhatsappNumber(clinic.getWhatsappNumber());
         dto.setEmail(clinic.getEmail());
+        dto.setUsername(clinic.getUsername());
         dto.setHospitalOverallRating(clinic.getHospitalOverallRating());
         dto.setContactNumber(clinic.getContactNumber());
         dto.setOpeningTime(clinic.getOpeningTime());

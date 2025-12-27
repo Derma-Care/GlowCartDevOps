@@ -1999,7 +1999,14 @@ const ClinicRegistration = () => {
               </CCol>
             </CRow>
 
-            <CButton color="primary" className="mb-3" onClick={handleAddDoctor}>
+            <CButton
+              color="primary"
+              className="mb-3"
+              onClick={(e) => {
+                e.preventDefault();  // ⛔ Prevent form submit
+                handleAddDoctor();
+              }}
+            >
               {editDoctorIndex !== null ? 'Update Doctor' : '+ Add Doctor'}
             </CButton>
 
@@ -2036,41 +2043,28 @@ const ClinicRegistration = () => {
                         <CTableDataCell className="text-center">
                           <div className="d-flex justify-content-center align-items-center gap-2">
                             <button
+                              type="button"     // ⛔ Prevent submit
                               className="actionBtn edit"
                               onClick={() => handleEditDoctor(index)}
-                              title="Edit"
                             >
                               <Edit2 size={18} />
                             </button>
+
                             <button
+                              type="button"     // ⛔ VERY IMPORTANT
                               className="actionBtn delete"
                               onClick={() => {
-                                setDoctorIndexToDelete(index); // store which doctor to delete
-                                setIsModalVisible(true);        // show confirmation modal
+                                setDoctorIndexToDelete(index);
+                                setIsModalVisible(true);
                               }}
-                              title="Delete"
                             >
                               <Trash2 size={18} />
                             </button>
 
 
+
                           </div>
-                          <CModal visible={isModalVisible} onClose={() => setIsModalVisible(false)}>
-                            <CModalHeader>
-                              <CModalTitle>Confirm Delete</CModalTitle>
-                            </CModalHeader>
-                            <CModalBody>
-                              Are you sure you want to delete this doctor?
-                            </CModalBody>
-                            <CModalFooter>
-                              <CButton color="danger" onClick={confirmDeleteDoctor}>
-                                Delete
-                              </CButton>
-                              <CButton color="secondary" onClick={() => setIsModalVisible(false)}>
-                                Cancel
-                              </CButton>
-                            </CModalFooter>
-                          </CModal>
+
 
                         </CTableDataCell>
 
@@ -2080,7 +2074,22 @@ const ClinicRegistration = () => {
                 </CTable>
               </div>
             )}
-
+            <CModal visible={isModalVisible} onClose={() => setIsModalVisible(false)}>
+              <CModalHeader>
+                <CModalTitle>Confirm Delete</CModalTitle>
+              </CModalHeader>
+              <CModalBody>
+                Are you sure you want to delete this doctor?
+              </CModalBody>
+              <CModalFooter>
+                <CButton color="danger" onClick={confirmDeleteDoctor}>
+                  Delete
+                </CButton>
+                <CButton color="secondary" onClick={() => setIsModalVisible(false)}>
+                  Cancel
+                </CButton>
+              </CModalFooter>
+            </CModal>
 
             <CModal visible={showNabhModal} onClose={() => setShowNabhModal(false)} size="lg" className="custom-modal"
               backdrop="static">
