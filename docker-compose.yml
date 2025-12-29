@@ -64,6 +64,20 @@ services:
       - eureka-server
     networks:
       - app-network
+    
+  booking-service:
+    build: ./booking-service
+    container_name: booking_service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/bookingdb
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - mongodb
+      - eureka-server
+    networks:
+      - app-network
 
   # Customer Service
   customer-service:
