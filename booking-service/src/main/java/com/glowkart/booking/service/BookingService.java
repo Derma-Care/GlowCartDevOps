@@ -1,0 +1,16 @@
+package com.glowkart.booking.service;
+
+import com.glowkart.booking.dto.*;
+
+import java.util.List;
+
+public interface BookingService {
+
+    BookingResponseDTO createBooking(BookingRequestDTO request);
+
+    BookingResponseDTO cancelBooking(CancelBookingDTO request);
+
+    BookingResponseDTO rescheduleBooking(RescheduleBookingDTO request);
+
+    List<BookingResponseDTO> getCustomerBookings(String customerId);
+}

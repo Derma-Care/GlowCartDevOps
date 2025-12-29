@@ -49,6 +49,11 @@ spring:
           uri: lb://procedure-service
           predicates:
             - Path=/procedures/**
+        
+        - id: booking-service
+          uri: lb://booking-service
+          predicates:
+            - Path=/booking/**
 
       # ---- IMPORTANT: CORS ----
       globalcors:

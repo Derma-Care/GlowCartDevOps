@@ -519,5 +519,11 @@ public class CustomerService {
             }
         }
     }
+	public ApiResponse<Customer> getCustomerById(String customerId) {
+		Customer customer = customerRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+        return new ApiResponse<>(true, "Customer retrieved successfully", customer);
+	}
 
+	
 }

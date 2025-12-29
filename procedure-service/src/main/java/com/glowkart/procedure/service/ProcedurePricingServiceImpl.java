@@ -1,13 +1,13 @@
 package com.glowkart.procedure.service;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,312 +35,285 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     private final ProcedurePricingMapper mapper;
     private final ClinicFeignClient clinicFeignClient;
 
-    // ======================================================
-    //                     CREATE
-    // ======================================================
+    private final ZoneId istZone = ZoneId.of("Asia/Kolkata");
+
+    // ========================= CREATE =========================
     @Override
     @Transactional
     public ProcedurePricingDTO create(ProcedurePricingDTO dto) {
-
-        // Validate discounts and clinic
-        validateDiscountAndOffer(dto);
+        validateDiscountAndOffer(dto, null);
         validateClinic(dto.getClinicId());
 
-        // Fetch procedure
         Procedure procedure = procedureRepository.findById(dto.getProcedureId())
                 .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
                         "Procedure not found with ID: " + dto.getProcedureId()));
 
-        // Check for duplicate pricing
         if (pricingRepository.existsByProcedureIdAndClinicId(dto.getProcedureId(), dto.getClinicId())) {
             throw new DuplicateResourceException("DUPLICATE_PRICING",
                     "Pricing already exists for this procedure and clinic.");
         }
 
-        // Map DTO to entity
         ProcedurePricing entity = mapper.toEntity(dto);
         entity.setProcedureName(procedure.getProcedureName());
-        entity.setCreatedAt(Instant.now());
-        entity.setUpdatedAt(Instant.now());
+        Instant now = Instant.now();
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
 
-        // Set offer status
-        setOfferActive(entity);
+        normalizeOfferDates(entity);
+        processOfferAndPricing(entity);
 
-        // Calculate all pricing fields including total discount
-        calculatePricing(entity);
-
-        // Map entity to DTO BEFORE saving to include calculated fields in response
-        ProcedurePricingDTO responseDto = mapper.toDto(entity);
-
-        // Save entity
         pricingRepository.save(entity);
-
-        // Return DTO with all fields
-        return responseDto;
+        return formatOfferDatesForResponse(entity);
     }
 
-
-
-    // ======================================================
-    //                     GET BY CLINIC
-    // ======================================================
-    @Override
-    public List<ProcedurePricingDTO> getByClinic(String clinicId) {
-        validateClinic(clinicId);
-
-        return pricingRepository.findByClinicId(clinicId).stream()
-                .map(this::setOfferActive)
-                .map(this::calculatePricing)
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    // ======================================================
-    //           GET BY PROCEDURE + CLINIC
-    // ======================================================
-    @Override
-    public ProcedurePricingDTO getByProcedureAndClinic(String procedureId, String clinicId) {
-        validateClinic(clinicId);
-
-        List<ProcedurePricing> pricings = pricingRepository.findByClinicId(clinicId).stream()
-                .filter(p -> p.getProcedureId().equals(procedureId))
-                .toList();
-
-        if (pricings.isEmpty()) {
-            throw new ResourceNotFoundException("PRICING_NOT_FOUND",
-                    "No pricing found for procedure ID " + procedureId + " in clinic " + clinicId);
-        }
-
-        ProcedurePricing best = pricings.stream()
-                .map(this::setOfferActive)
-                .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
-                .orElse(pricings.get(0));
-
-        calculatePricing(best);
-
-        return mapper.toDto(best);
-    }
-
-    // ======================================================
-    //                     UPDATE (PUT)
-    // ======================================================
- // ======================================================
-//  UPDATE (PUT)
-//======================================================
-@Override
-@Transactional
-public ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto) {
-
-validateClinic(clinicId);
-
-ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
-.orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
- "Procedure pricing not found for procedure ID " + procedureId));
-
-// Change procedure only if different
-if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
-Procedure procedure = procedureRepository.findById(dto.getProcedureId())
-.orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
-     "Procedure not found with ID: " + dto.getProcedureId()));
-
-existing.setProcedureId(procedure.getId());
-existing.setProcedureName(procedure.getProcedureName());
-}
-
-// Update all other fields using mapper (INCLUDING NGK)
-mapper.updateEntity(existing, dto);
-
-existing.setUpdatedAt(Instant.now());
-
-setOfferActive(existing);
-calculatePricing(existing);
-
-return mapper.toDto(pricingRepository.save(existing));
-}
-
-
-    // ======================================================
-    //                     DELETE
-    // ======================================================
+    // ========================= UPDATE =========================
     @Override
     @Transactional
-    public void delete(String procedureId, String clinicId) {
+    public ProcedurePricingDTO update(String procedureId, String clinicId, ProcedurePricingDTO dto) {
         validateClinic(clinicId);
 
         ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
                 .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND",
                         "Procedure pricing not found for procedure ID " + procedureId));
 
-        pricingRepository.delete(existing);
-    }
-
-    // ======================================================
-    //                     GET ALL
-    // ======================================================
-    @Override
-    public List<ProcedurePricingDTO> getAll() {
-        return pricingRepository.findAll().stream()
-                .map(this::setOfferActive)
-                .map(this::calculatePricing)
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    // ======================================================
-    //                     VALIDATIONS
-    // ======================================================
-    private void validateClinic(String clinicId) {
-        try {
-            clinicFeignClient.getClinicById(clinicId);
-        } catch (Exception e) {
-            throw new ResourceNotFoundException("CLINIC_NOT_FOUND",
-                    "Clinic not found with ID: " + clinicId);
-        }
-    }
-
-    private void validateDiscountAndOffer(ProcedurePricingDTO dto) {
-
-        Double discount = dto.getDiscountPercentage();
-        String offerStart = dto.getOfferStart();
-
-        boolean hasDiscount = discount != null && discount > 0;
-        boolean hasOfferStart = offerStart != null && !offerStart.isBlank();
-
-        if (hasOfferStart && !hasDiscount) {
-            throw new IllegalArgumentException("discountPercentage is required when offerStart is provided");
+        if (dto.getProcedureId() != null && !dto.getProcedureId().equals(existing.getProcedureId())) {
+            Procedure procedure = procedureRepository.findById(dto.getProcedureId())
+                    .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
+                            "Procedure not found with ID: " + dto.getProcedureId()));
+            existing.setProcedureId(procedure.getId());
+            existing.setProcedureName(procedure.getProcedureName());
         }
 
-        if (hasDiscount && !hasOfferStart) {
-            throw new IllegalArgumentException("offerStart is required when discountPercentage > 0");
-        }
+        validateDiscountAndOffer(dto, existing);
 
-        // NGK discount has no validation requirement
+        mapper.updateEntity(existing, dto);
+        existing.setUpdatedAt(Instant.now());
+
+        normalizeOfferDates(existing);
+        processOfferAndPricing(existing);
+
+        pricingRepository.save(existing);
+        return formatOfferDatesForResponse(existing);
     }
 
-    // ======================================================
-    //                     OFFER LOGIC
-    // ======================================================
-    private ProcedurePricing setOfferActive(ProcedurePricing p) {
+    // ========================= SCHEDULED TASK TO EXPIRE OFFERS =========================
+    @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Kolkata")
+    @Transactional
+    public void expireOffers() {
+        LocalDate today = LocalDate.now(istZone);
 
-        Instant now = Instant.now();
+        // Fetch all pricings that have a valid offerEnd date (ignore null/endless offers)
+        List<ProcedurePricing> pricings = pricingRepository.findAll();
 
-        try {
-            if (p.getOfferStart() == null || p.getOfferStart().isBlank()) {
-                p.setOfferActive(false);
-                return p;
+        pricings.forEach(p -> {
+            // Skip processing if no offerValidDate (open-ended offers)
+            if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
+                processOfferAndPricing(p); // ensures pricing is recalculated
+                return;
             }
 
-            Instant start = Instant.parse(p.getOfferStart());
+            LocalDate endDate;
+            try {
+                endDate = LocalDate.parse(p.getOfferValidDate());
+            } catch (DateTimeParseException e) {
+                log.warn("Invalid offerValidDate for procedureId={}, clinicId={}", p.getProcedureId(), p.getClinicId());
+                return;
+            }
+
+            if (!today.isAfter(endDate)) {
+                // Offer still active
+                processOfferAndPricing(p);
+            } else {
+                // Offer expired
+                p.setOfferActive(false);
+                p.setDiscountPercentage(0.0);
+                p.setDiscountAmount(0.0);
+                calculatePricing(p);
+                p.setUpdatedAt(Instant.now());
+                pricingRepository.save(p);
+                log.info("Expired offer recalculated for procedureId={}, clinicId={}", p.getProcedureId(), p.getClinicId());
+            }
+        });
+    }
+
+
+    // ========================= OFFER DATE NORMALIZATION =========================
+    private void normalizeOfferDates(ProcedurePricing p) {
+        if (p.getOfferStart() != null) p.setOfferStart(p.getOfferStart().trim());
+        if (p.getOfferValidDate() != null) p.setOfferValidDate(p.getOfferValidDate().trim());
+    }
+
+    // ========================= OFFER + PRICING PROCESS =========================
+    private void processOfferAndPricing(ProcedurePricing p) {
+        LocalDate today = LocalDate.now(istZone);
+
+        boolean offerActive = false;
+
+        try {
+            if (p.getOfferStart() != null && !p.getOfferStart().isBlank()) {
+                LocalDate start = LocalDate.parse(p.getOfferStart());
+
+                if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
+                    // Open-ended offer: active if today >= start
+                    offerActive = !today.isBefore(start);
+                } else {
+                    LocalDate end = LocalDate.parse(p.getOfferValidDate());
+                    offerActive = !today.isBefore(start) && !today.isAfter(end);
+                }
+            }
+        } catch (DateTimeParseException e) {
+            log.error("Invalid offer date for procedureId={}, clinicId={}: {}", 
+                      p.getProcedureId(), p.getClinicId(), e.getMessage());
+            offerActive = false;
+        }
+
+        p.setOfferActive(offerActive);
+
+        // Reset discount only if offer has ended (not open-ended)
+        if (!offerActive && p.getOfferValidDate() != null) {
+            p.setDiscountPercentage(0.0);
+            p.setDiscountAmount(0.0);
+        }
+
+        // Always calculate pricing based on current offer status
+        calculatePricing(p);
+    }
+
+
+    private void processOfferStatus(ProcedurePricing p) {
+        LocalDate today = LocalDate.now(istZone);
+        try {
+            if (p.getOfferStart() == null) {
+                p.setOfferActive(false);
+                return;
+            }
+
+            LocalDate start = LocalDate.parse(p.getOfferStart());
 
             if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
-                p.setOfferActive(!now.isBefore(start));
-                return p;
+                // No end date provided, offer is active if today >= start
+                p.setOfferActive(!today.isBefore(start));
+            } else {
+                LocalDate end = LocalDate.parse(p.getOfferValidDate());
+                p.setOfferActive(!today.isBefore(start) && !today.isAfter(end));
             }
 
-            Instant end = Instant.parse(p.getOfferValidDate());
-            p.setOfferActive(!now.isBefore(start) && !now.isAfter(end));
-
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
+            log.error("Invalid offer date format: {}", e.getMessage());
             p.setOfferActive(false);
         }
-
-        return p;
     }
 
-    // ======================================================
-    //                  PRICING CALCULATION
-    // ======================================================
-    private ProcedurePricing calculatePricing(ProcedurePricing procedure) {
 
-        double price = procedure.getPrice(); // primitive, always has a value
+    private void resetDiscountIfExpired(ProcedurePricing p) {
+        // Only reset discount if offer is inactive AND offer has a valid end date
+        if (!p.isOfferActive() && p.getOfferValidDate() != null) {
+            if (p.getDiscountPercentage() > 0) {
+                p.setDiscountPercentage(0.0);
+                p.setDiscountAmount(0.0);
+            }
+        }
+        p.setTotalDiscountPercentage(p.getNgkDiscountPercentage());
+        p.setTotalDiscountAmount(0.0);
+    }
 
-        // Clinic discount
-        double discountPercent = procedure.isOfferActive() ? procedure.getDiscountPercentage() : 0.0;
-        double discountAmount = round(price * discountPercent / 100.0);
-        double discountedPrice = round(price - discountAmount);
 
-        // Taxes
-        double taxAmount = round(discountedPrice * procedure.getTaxPercentage() / 100.0);
-        double gstAmount = round(discountedPrice * procedure.getGst() / 100.0);
+    private void calculatePricing(ProcedurePricing p) {
+        double price = p.getPrice();
+        double discountPercent = (p.isOfferActive() ? p.getDiscountPercentage() : 0.0);
 
-        // Clinic pay before NGK
-        double clinicPay = round(discountedPrice + taxAmount + gstAmount + procedure.getConsultationFee());
-
-        // NGK discount
-        double ngkPercent = procedure.getNgkDiscountPercentage(); // primitive
-        double ngkAmount = round(clinicPay * ngkPercent / 100.0);
-
-        // Final cost after NGK discount
+        double discountedPrice = round(price - (price * discountPercent / 100.0));
+        double taxAmount = round(discountedPrice * p.getTaxPercentage() / 100.0);
+        double gstAmount = round(discountedPrice * p.getGst() / 100.0);
+        double clinicPay = round(discountedPrice + taxAmount + gstAmount + p.getConsultationFee());
+        double ngkAmount = round(clinicPay * p.getNgkDiscountPercentage() / 100.0);
         double finalCost = round(clinicPay - ngkAmount);
 
-        // Total discount for reporting (clinic + NGK)
+        double discountAmount = price - discountedPrice;
         double totalDiscountAmount = round(discountAmount + ngkAmount);
-        double totalDiscountPercent = discountPercent + ngkPercent;
+        double totalDiscountPercent = discountPercent + p.getNgkDiscountPercentage();
 
-        // Set values
-        procedure.setDiscountAmount(discountAmount);
-        procedure.setDiscountedCost(discountedPrice);
-        procedure.setTaxAmount(taxAmount);
-        procedure.setGstAmount(gstAmount);
-        procedure.setClinicPay(clinicPay);
+        p.setDiscountAmount(discountAmount);
+        p.setDiscountedCost(discountedPrice);
+        p.setTaxAmount(taxAmount);
+        p.setGstAmount(gstAmount);
+        p.setClinicPay(clinicPay);
+        p.setNgkDiscountAmount(ngkAmount);
+        p.setFinalCost(finalCost);
+        p.setTotalDiscountAmount(totalDiscountAmount);
+        p.setTotalDiscountPercentage(totalDiscountPercent);
 
-        procedure.setNgkDiscountAmount(ngkAmount);
-        procedure.setFinalCost(finalCost);
-
-        procedure.setTotalDiscountPercentage(totalDiscountPercent);
-        procedure.setTotalDiscountAmount(totalDiscountAmount);
-
-        return procedure;
+        p.setUpdatedAt(Instant.now());
     }
+
 
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
     }
 
-
-
-    // ======================================================
-    //               BEST PRICE BY PROCEDURE
-    // ======================================================
-    @Override
-    public ProcedurePricingDTO getByProcedureId(String procedureId) {
-
-        Procedure procedure = procedureRepository.findById(procedureId)
-                .orElseThrow(() -> new ResourceNotFoundException("PROC_NOT_FOUND",
-                        "Procedure not found with ID: " + procedureId));
-
-        List<ProcedurePricing> pricings = pricingRepository.findByProcedureId(procedureId);
-
-        if (pricings.isEmpty()) {
-            throw new ResourceNotFoundException("PRICING_NOT_FOUND",
-                    "No pricing found for procedure ID " + procedureId);
-        }
-
-        ProcedurePricing best = pricings.stream()
-                .map(this::setOfferActive)
-                .max(Comparator.comparingDouble(p -> p.isOfferActive() ? p.getDiscountPercentage() : 0))
-                .orElse(pricings.get(0));
-
-        calculatePricing(best);
-
-        return mapper.toDto(best);
+    // ========================= DTO FORMATTING =========================
+    private ProcedurePricingDTO formatOfferDatesForResponse(ProcedurePricing p) {
+        ProcedurePricingDTO dto = mapper.toDto(p);
+        dto.setOfferStart(p.getOfferStart());
+        dto.setOfferValidDate(p.getOfferValidDate());
+        return dto;
     }
-    
-    
+
+    // ========================= READ METHODS =========================
+    @Override
+    @Transactional
+    public List<ProcedurePricingDTO> getAll() {
+        return pricingRepository.findAll().stream()
+                .peek(this::processOfferAndPricing)
+                .map(this::formatOfferDatesForResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<ProcedurePricingDTO> getByClinic(String clinicId) {
+        validateClinic(clinicId);
+        return pricingRepository.findByClinicId(clinicId).stream()
+                .peek(this::processOfferAndPricing)
+                .map(this::formatOfferDatesForResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public ProcedurePricingDTO getByProcedureId(String procedureId) {
+        ProcedurePricing maxDiscountPricing = pricingRepository.findByProcedureId(procedureId).stream()
+                .peek(this::processOfferAndPricing)
+                .max(Comparator.comparingDouble(ProcedurePricing::getTotalDiscountPercentage))
+                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND", "No pricing found"));
+
+        return formatOfferDatesForResponse(maxDiscountPricing);
+    }
+
+    @Override
     public List<ProcedureOfferDTO> getProcedureOffers() {
-        // fetch all pricing from repository
-        List<ProcedurePricingDTO> allPricing = getAll();
-
-        // aggregate min/max per procedure
+        List<ProcedurePricing> allPricings = pricingRepository.findAll();
         Map<String, ProcedureOfferDTO> offerMap = new HashMap<>();
+        LocalDate today = LocalDate.now(istZone);
 
-        for (ProcedurePricingDTO pricing : allPricing) {
-            String id = pricing.getProcedureId();
-            String name = pricing.getProcedureName();
-            int discount = (int) pricing.getTotalDiscountPercentage();
+        for (ProcedurePricing p : allPricings) {
+            boolean offerActive = false;
+            if (p.getOfferStart() != null && p.getOfferValidDate() != null) {
+                try {
+                    LocalDate start = LocalDate.parse(p.getOfferStart());
+                    LocalDate end = LocalDate.parse(p.getOfferValidDate());
+                    offerActive = !today.isBefore(start) && !today.isAfter(end);
+                } catch (DateTimeParseException e) {
+                    log.warn("Invalid offer date for procedureId={}, clinicId={}", p.getProcedureId(), p.getClinicId());
+                }
+            }
 
-            offerMap.compute(id, (k, v) -> {
-                if (v == null) return new ProcedureOfferDTO(id, name, discount, discount);
+            double discountPercent = (offerActive ? p.getDiscountPercentage() : 0.0) + p.getNgkDiscountPercentage();
+            int discount = (int) discountPercent;
+
+            String procedureId = p.getProcedureId();
+            offerMap.compute(procedureId, (k, v) -> {
+                if (v == null) return new ProcedureOfferDTO(procedureId, p.getProcedureName(), discount, discount);
                 v.setMinOffer(Math.min(v.getMinOffer(), discount));
                 v.setMaxOffer(Math.max(v.getMaxOffer(), discount));
                 return v;
@@ -349,17 +322,89 @@ return mapper.toDto(pricingRepository.save(existing));
 
         return new ArrayList<>(offerMap.values());
     }
-    
-    
+
     @Override
     public List<String> getClinicIdsByProcedure(String procedureId) {
-
-        return pricingRepository.findByProcedureId(procedureId)
-                .stream()
+        return pricingRepository.findByProcedureId(procedureId).stream()
                 .map(ProcedurePricing::getClinicId)
                 .distinct()
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public void delete(String procedureId, String clinicId) {
+        validateClinic(clinicId);
+        ProcedurePricing existing = pricingRepository.findByProcedureIdAndClinicId(procedureId, clinicId)
+                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND", "Procedure pricing not found"));
+        pricingRepository.delete(existing);
+    }
 
+    @Override
+    public ProcedurePricingDTO getByProcedureAndClinic(String procedureId, String clinicId) {
+        validateClinic(clinicId);
+
+        ProcedurePricing maxDiscountPricing = pricingRepository.findByClinicId(clinicId).stream()
+                .filter(p -> p.getProcedureId().equals(procedureId))
+                .peek(this::processOfferAndPricing)
+                .max(Comparator.comparingDouble(ProcedurePricing::getTotalDiscountPercentage))
+                .orElseThrow(() -> new ResourceNotFoundException("PRICING_NOT_FOUND", "No pricing found"));
+
+        return formatOfferDatesForResponse(maxDiscountPricing);
+    }
+
+    // ========================= VALIDATIONS =========================
+    private void validateClinic(String clinicId) {
+        try {
+            clinicFeignClient.getClinicById(clinicId);
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("CLINIC_NOT_FOUND", "Clinic not found with ID: " + clinicId);
+        }
+    }
+
+    private void validateDiscountAndOffer(ProcedurePricingDTO dto, ProcedurePricing existing) {
+        validateDiscount(dto);
+        validateOfferDates(dto, existing);
+    }
+
+    private void validateDiscount(ProcedurePricingDTO dto) {
+        Double discount = dto.getDiscountPercentage();
+        String offerStart = dto.getOfferStart();
+
+        boolean hasDiscount = discount != null && discount > 0;
+        boolean hasOfferStart = offerStart != null && !offerStart.isBlank();
+
+        if (hasOfferStart && !hasDiscount)
+            throw new IllegalArgumentException("discountPercentage is required when offerStart is provided");
+        if (hasDiscount && !hasOfferStart)
+            throw new IllegalArgumentException("offerStart is required when discountPercentage > 0");
+    }
+
+    private void validateOfferDates(ProcedurePricingDTO dto, ProcedurePricing existing) {
+        LocalDate today = LocalDate.now(istZone);
+        try {
+            LocalDate startDate = parseDateOrExisting(dto.getOfferStart(), existing != null ? existing.getOfferStart() : null);
+            LocalDate validDate = parseDateOrExisting(dto.getOfferValidDate(), existing != null ? existing.getOfferValidDate() : null);
+
+            if (startDate != null && startDate.isBefore(today))
+                throw new IllegalArgumentException("offerStart cannot be in the past");
+
+            if (validDate != null && validDate.isBefore(today))
+                throw new IllegalArgumentException("offerValidDate cannot be in the past");
+
+            if (startDate != null && validDate != null && validDate.isBefore(startDate))
+                throw new IllegalArgumentException("offerValidDate cannot be before offerStart");
+
+            // No exception thrown if validDate is null — allows open-ended offers
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format for offerStart or offerValidDate. Expected yyyy-MM-dd");
+        }
+    }
+
+
+    private LocalDate parseDateOrExisting(String dtoDate, String existingDate) {
+        if (dtoDate != null && !dtoDate.isBlank()) return LocalDate.parse(dtoDate);
+        if (existingDate != null && !existingDate.isBlank()) return LocalDate.parse(existingDate);
+        return null;
+    }
 }

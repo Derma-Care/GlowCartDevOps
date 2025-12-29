@@ -87,6 +87,13 @@ public class CustomerController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     
+    @GetMapping("/customer/id/{customerId}")
+    public ResponseEntity<ApiResponse<Customer>> getCustomerId(@PathVariable String customerId) {
+        ApiResponse<Customer> response = customerService.getCustomerById(customerId);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    
     // ==================== GET Customer by Registration Code ====================
     @GetMapping("/customer/code/{registrationCode}")
     public ResponseEntity<ApiResponse<Customer>> getCustomerByCode(@PathVariable String registrationCode) {

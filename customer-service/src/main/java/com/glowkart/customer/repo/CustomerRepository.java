@@ -27,4 +27,7 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
 
 	Object findByReferId(String referId);
 
+
+	Optional<Customer> findByCustomerId(String customerId);
+
 }

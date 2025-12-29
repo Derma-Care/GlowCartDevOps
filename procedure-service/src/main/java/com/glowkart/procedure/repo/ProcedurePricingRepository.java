@@ -22,4 +22,7 @@ public interface ProcedurePricingRepository
 
     // ✅ THIS IS 
     List<ProcedurePricing> findByProcedureId(String procedureId);
+
+
+	List<ProcedurePricing> findByOfferValidDateBefore(String string);
 }
