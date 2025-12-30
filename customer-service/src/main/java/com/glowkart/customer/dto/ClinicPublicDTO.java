@@ -46,6 +46,8 @@ public class ClinicPublicDTO {
     private String branch;
     private String walkthrough;
 
+    private boolean online; // match field from admin-service response
+
     private String role;
 //    private Map<String, List<String>> permissions;
 

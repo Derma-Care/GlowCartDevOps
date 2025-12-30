@@ -43,6 +43,7 @@ public class Clinic {
     private byte[] hospitalDocuments;
     private boolean recommended;
 
+    private boolean online;  // <-- new field to track online/offline status
     // Registration Certificates
     private byte[] clinicalEstablishmentCertificate;
     private byte[] businessRegistrationCertificate;
@@ -106,4 +107,13 @@ public class Clinic {
 
  // Add THIS:
     private List<Doctor> doctorsList;
+    
+    // Explicit getter/setter (optional because of Lombok, but can help clarity)
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
+    }
 }

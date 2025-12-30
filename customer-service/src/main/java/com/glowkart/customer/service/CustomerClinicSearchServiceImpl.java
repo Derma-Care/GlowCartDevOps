@@ -31,9 +31,14 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
         // 2️⃣ Fetch clinics in that state
         List<ClinicPublicDTO> clinicsInState =
-                adminClinicClient.getClinicsByState(state).getData();
+                adminClinicClient.getClinicsByState(state,true).getData();
 
-        // 3️⃣ Fetch clinic IDs offering this procedure
+        // 3️⃣ Filter only online clinics
+        clinicsInState = clinicsInState.stream()
+                .filter(ClinicPublicDTO::isOnline)
+                .toList();
+
+        // 4️⃣ Fetch clinic IDs offering this procedure
         Set<String> clinicIds =
                 Set.copyOf(
                         procedureServiceClient
@@ -41,7 +46,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                                 .getData()
                 );
 
-        // 4️⃣ Map clinics with clinic-specific pricing safely
+        // 5️⃣ Map clinics with clinic-specific pricing safely
         return clinicsInState.stream()
                 .filter(c -> clinicIds.contains(c.getClinicId()))
                 .map(c -> {
@@ -54,13 +59,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                     double distanceKm = calculateDistanceInKm(latitude, longitude, c.getLatitude(), c.getLongitude());
 
                     // Format distance: meters if < 1km, km otherwise
-                    String distanceStr;
-                    if (distanceKm < 1) {
-                        int distanceMeters = (int) Math.round(distanceKm * 1000);
-                        distanceStr = distanceMeters + " M";
-                    } else {
-                        distanceStr = Math.round(distanceKm) + " KM";
-                    }
+                    String distanceStr = distanceKm < 1
+                            ? (int) Math.round(distanceKm * 1000) + " M"
+                            : Math.round(distanceKm) + " KM";
 
                     return ClinicProcedureLinkDTO.builder()
                             .clinicId(c.getClinicId())
@@ -70,6 +71,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .state(c.getState())
                             .latitude(c.getLatitude())
                             .longitude(c.getLongitude())
+                            .online(c.isOnline())
                             .contactNumber(c.getContactNumber())
                             .whatsappNumber(c.getWhatsappNumber())
                             .email(c.getEmail())
@@ -104,9 +106,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .role(c.getRole())
                             .build();
                 })
-
                 .toList();
     }
+
 
     /**
      * Calculate distance between two lat/lng points in kilometers

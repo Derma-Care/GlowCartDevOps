@@ -14,7 +14,7 @@ public interface AdminClinicClient {
 
     @GetMapping("/admin/public/clinics/by-state")
     ApiResponse<List<ClinicPublicDTO>> getClinicsByState(
-            @RequestParam String state
+            @RequestParam String state,
+            @RequestParam(required = false) Boolean online // ✅ new optional parameter
     );
 }
-

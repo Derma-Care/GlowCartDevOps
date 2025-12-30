@@ -33,6 +33,8 @@ public interface ClinicService {
     // NEW: Get Verified Clinics
     List<Clinic> getVerifiedClinics();
 
+    void updateOnlineStatus(String clinicId, boolean isOnline);
+    
     void changePassword(ChangePasswordDTO dto);
 
     ApiResponse<Void> forgotPassword(ForgotPasswordRequest request);  // UPDATED

@@ -15,15 +15,18 @@ public class ClinicPublicSearchController {
 
     private final ClinicSearchService clinicSearchService;
 
-    // 🔥 THIS IS CALLED BY CUSTOMER-SERVICE
+    // 🔥 Called by CUSTOMER-SERVICE
     @GetMapping("/public/clinics/by-state")
     public ApiResponse<List<ClinicPublicDTO>> getClinicsByState(
-            @RequestParam String state) {
+            @RequestParam String state,
+            @RequestParam(required = false) Boolean online) {
+
+        List<ClinicPublicDTO> clinics = clinicSearchService.getVerifiedClinicsByState(state, online);
 
         return new ApiResponse<>(
                 true,
                 "Clinics fetched by state",
-                clinicSearchService.getVerifiedClinicsByState(state)
+                clinics
         );
     }
 }

@@ -80,4 +80,12 @@ public class ClinicAuthController {
     public ResponseEntity<ApiResponse<Void>> payoutResendOtp(@RequestBody ForgotPasswordRequest request) {
         return authService.payoutResendOtp(request);
     }
+    
+    @PutMapping("/clinic/{clinicId}/online-status")
+    public ResponseEntity<ApiResponse<Void>> setOnlineStatus(
+            @PathVariable String clinicId,
+            @RequestBody OnlineStatusRequest request) {
+        return authService.setOnlineStatus(clinicId, request.isOnline());
+    }
+
 }

@@ -48,7 +48,7 @@ public class ClinicPublicDTO {
 
     private String role;
     private Map<String, List<String>> permissions;
-
+    private boolean online; // ✅ corrected field
     private String instagramHandle;
     private String twitterHandle;
     private String facebookHandle;
@@ -65,4 +65,13 @@ public class ClinicPublicDTO {
     private String panNumber;
 
     private List<DoctorDTO> doctorsList;  // NEW
+
+    // Explicit getter/setter for online (optional because of Lombok)
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
+    }
 }

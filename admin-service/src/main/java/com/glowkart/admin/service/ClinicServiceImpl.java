@@ -862,4 +862,13 @@ public class ClinicServiceImpl implements ClinicService {
             clinic.setDoctorsList(doctorList);
         }
     }
+    
+    @Override
+    public void updateOnlineStatus(String clinicId, boolean isOnline) {
+        Clinic clinic = repo.findById(clinicId)
+                .orElseThrow(() -> new ProcedureServiceException("Clinic not found", 404, null));
+        clinic.setOnline(isOnline);
+        repo.save(clinic);
+    }
+
 }

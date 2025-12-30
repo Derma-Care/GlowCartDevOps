@@ -50,7 +50,7 @@ public class ClinicMapper {
         dto.setSubscription(clinic.getSubscription());
         dto.setLatitude(clinic.getLatitude());
         dto.setLongitude(clinic.getLongitude());
-
+        dto.setOnline(clinic.isOnline()); // ✅ map online status
         // ✅ FIX: STATE MAPPING (THIS WAS MISSING)
         dto.setState(clinic.getState());
 

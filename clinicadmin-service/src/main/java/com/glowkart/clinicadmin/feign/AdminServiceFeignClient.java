@@ -15,6 +15,7 @@ import com.glowkart.clinicadmin.dto.ClinicLoginRequest;
 import com.glowkart.clinicadmin.dto.ClinicPublicDTO;
 import com.glowkart.clinicadmin.dto.ClinicResponse;
 import com.glowkart.clinicadmin.dto.ForgotPasswordRequest;
+import com.glowkart.clinicadmin.dto.OnlineStatusRequest;
 import com.glowkart.clinicadmin.dto.PayoutLoginRequest;
 import com.glowkart.clinicadmin.dto.ResetPasswordRequest;
 
@@ -88,4 +89,8 @@ public interface AdminServiceFeignClient {
     ResponseEntity<ApiResponse<Void>> payoutResendOtp(
             @RequestBody ForgotPasswordRequest request
     );
+    
+    @PutMapping("/admin/clinics/{clinicId}/online-status")
+    ResponseEntity<ApiResponse<Void>> updateOnlineStatus(@PathVariable("clinicId") String clinicId, @RequestBody OnlineStatusRequest request);
+
 }

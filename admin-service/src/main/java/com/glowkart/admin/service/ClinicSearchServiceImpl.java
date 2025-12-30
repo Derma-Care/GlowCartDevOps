@@ -16,12 +16,27 @@ public class ClinicSearchServiceImpl implements ClinicSearchService {
     private final ClinicRepository clinicRepository;
 
     @Override
-    public List<ClinicPublicDTO> getVerifiedClinicsByState(String state) {
+    public List<ClinicPublicDTO> getVerifiedClinicsByState(String state, Boolean online) {
+        List<Clinic> clinics;
 
-        return clinicRepository
-                .findByStateIgnoreCaseAndStatusIgnoreCase(state, "VERIFIED")
-                .stream()
-                .map(ClinicMapper::toPublicDTO)
-                .toList();
+        if (online != null) {
+            // Fetch clinics by state, status, and online flag directly from DB
+            clinics = clinicRepository.findByStateIgnoreCaseAndStatusIgnoreCaseAndOnline(
+                    state,
+                    "VERIFIED",
+                    online
+            );
+        } else {
+            // Fetch clinics by state and status only
+            clinics = clinicRepository.findByStateIgnoreCaseAndStatusIgnoreCase(
+                    state,
+                    "VERIFIED"
+            );
+        }
+
+        // Map to DTO
+        return clinics.stream()
+                      .map(ClinicMapper::toPublicDTO)
+                      .toList();
     }
 }

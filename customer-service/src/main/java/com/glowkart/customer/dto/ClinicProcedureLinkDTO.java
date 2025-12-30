@@ -48,7 +48,9 @@ public class ClinicProcedureLinkDTO {
 
 	    private double latitude;
 	    private double longitude;
+	    
 	    private String state;
+	    private boolean online; // match field from admin-service response
 	    private int nabhScore;
 	    private String branch;
 	    private String walkthrough;

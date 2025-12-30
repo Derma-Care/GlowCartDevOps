@@ -147,4 +147,11 @@ public class ClinicAuthService {
                 "Failed to resend payout OTP"
         );
     }
+    
+    public ResponseEntity<ApiResponse<Void>> setOnlineStatus(String clinicId, boolean isOnline) {
+        OnlineStatusRequest req = new OnlineStatusRequest();
+        req.setOnline(isOnline);
+        return handleFeignCall(() -> client.updateOnlineStatus(clinicId, req), "Failed to update online status");
+    }
+
 }

@@ -5,5 +5,7 @@ import java.util.List;
 
 public interface ClinicSearchService {
 
-    List<ClinicPublicDTO> getVerifiedClinicsByState(String state);
+//    List<ClinicPublicDTO> getVerifiedClinicsByState(String state);
+
+	List<ClinicPublicDTO> getVerifiedClinicsByState(String state, Boolean online);
 }

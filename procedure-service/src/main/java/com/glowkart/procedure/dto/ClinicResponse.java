@@ -8,4 +8,5 @@ public class ClinicResponse {
     private String name;
     private String address;
     private String status;  // optional, but useful
+
 }

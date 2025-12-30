@@ -23,6 +23,7 @@ import com.glowkart.admin.dto.ClinicRegistrationDTO;
 import com.glowkart.admin.dto.ClinicRejectionRequest;
 import com.glowkart.admin.dto.ClinicResponse;
 import com.glowkart.admin.dto.ForgotPasswordRequest;
+import com.glowkart.admin.dto.OnlineStatusRequest;
 import com.glowkart.admin.dto.PayoutLoginRequest;
 import com.glowkart.admin.dto.ResetPasswordRequest;
 import com.glowkart.admin.model.Clinic;
@@ -406,6 +407,15 @@ public class ClinicController {
      ApiResponse<Void> resp = clinicService.resendPayoutOtp(request);
      resp.setStatusCode(HttpStatus.OK.value());
      return ResponseEntity.ok(resp);
+ }
+
+ @PutMapping("/clinics/{clinicId}/online-status")
+ public ResponseEntity<ApiResponse<Void>> updateOnlineStatus(
+         @PathVariable String clinicId,
+         @RequestBody OnlineStatusRequest request) {
+
+     clinicService.updateOnlineStatus(clinicId, request.isOnline()); // ✅ still uses isOnline() from DTO
+     return ResponseEntity.ok(new ApiResponse<>(true, "Online status updated", null));
  }
 
 }
