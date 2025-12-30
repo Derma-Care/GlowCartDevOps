@@ -52,6 +52,8 @@ public class Booking {
     private double consultationFee;
     private double finalAmount;
 
+    private int redeemedPoints; // NEW: points redeemed for this booking
+
     // Booking status
     private String status;         // HOLD, CONFIRMED, CANCELLED, FAILED
     private String paymentStatus;  // PENDING, PAID, FAILED, NA

@@ -15,6 +15,14 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+    @PostMapping("/calculate-price")
+    public ResponseEntity<ApiResponse<BookingPriceResponseDTO>> calculatePriceWithPoints(
+            @RequestBody BookingPriceRequestDTO request) {
+        BookingPriceResponseDTO response = bookingService.calculateFinalAmountWithPoints(request);
+        return ResponseEntity.ok(ApiResponse.of(true, "Price calculated successfully", response, 200));
+    }
+
+    
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<BookingResponseDTO>> createBooking(
             @RequestBody BookingRequestDTO request) {
@@ -22,21 +30,21 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.of(true, "Booking created successfully", response, 200));
     }
 
-    @PostMapping("/bookings/cancel")
+    @PostMapping("/cancel")
     public ResponseEntity<ApiResponse<BookingResponseDTO>> cancelBooking(
             @RequestBody CancelBookingDTO request) {
         BookingResponseDTO response = bookingService.cancelBooking(request);
         return ResponseEntity.ok(ApiResponse.of(true, "Booking cancelled successfully", response, 200));
     }
 
-    @PostMapping("/bookings/reschedule")
+    @PostMapping("/reschedule")
     public ResponseEntity<ApiResponse<BookingResponseDTO>> rescheduleBooking(
             @RequestBody RescheduleBookingDTO request) {
         BookingResponseDTO response = bookingService.rescheduleBooking(request);
         return ResponseEntity.ok(ApiResponse.of(true, "Booking rescheduled successfully", response, 200));
     }
 
-    @GetMapping("/bookings/customer/{customerId}")
+    @GetMapping("/customer/{customerId}")
     public ResponseEntity<ApiResponse<List<BookingResponseDTO>>> getCustomerBookings(
             @PathVariable String customerId) {
         List<BookingResponseDTO> bookings = bookingService.getCustomerBookings(customerId);

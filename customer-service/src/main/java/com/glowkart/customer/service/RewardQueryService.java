@@ -9,8 +9,11 @@ import org.springframework.stereotype.Service;
 import com.glowkart.customer.dto.RewardTransactionDTO;
 import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.enums.RewardTransactionType;
+import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.model.RewardTransaction;
+import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.repo.RewardTransactionRepository;
+import com.glowkart.customer.exception.CustomerNotFoundException;
 
 @Service
 public class RewardQueryService {
@@ -18,7 +21,19 @@ public class RewardQueryService {
     @Autowired
     private RewardTransactionRepository rewardRepo;
 
+    @Autowired
+    private CustomerRepository customerRepo;
+
+    /**
+     * Get wallet summary for a customer by mobile number
+     */
     public WalletSummaryDTO getWalletSummary(String mobile) {
+        // Check if customer exists
+        Customer customer = customerRepo.findByMobile(mobile)
+                .orElseThrow(() -> new CustomerNotFoundException(
+                        "Customer not found with mobile: " + mobile
+                ));
+
         int totalCredits = rewardRepo.findByMobileAndType(mobile, RewardTransactionType.CREDIT)
                                      .stream().mapToInt(RewardTransaction::getPoints).sum();
 
@@ -30,14 +45,25 @@ public class RewardQueryService {
         return new WalletSummaryDTO(totalCredits, totalDebits, balance);
     }
 
+    /**
+     * Get reward transactions with optional filter
+     * @param mobile Customer mobile
+     * @param filter Optional query param: credit | debit | all
+     */
     public List<RewardTransactionDTO> getTransactions(String mobile, String filter) {
+        // Check if customer exists
+        Customer customer = customerRepo.findByMobile(mobile)
+                .orElseThrow(() -> new CustomerNotFoundException(
+                        "Customer not found with mobile: " + mobile
+                ));
+
         // Fetch all transactions for this mobile
         List<RewardTransaction> txs = rewardRepo.findByMobileOrderByCreatedAtDesc(mobile);
 
         // Normalize filter string
         String normalizedFilter = filter == null ? "all" : filter.trim().toLowerCase();
 
-        // Filter only if it's credit or debit
+        // Filter transactions if requested
         if ("credit".equals(normalizedFilter)) {
             txs = txs.stream()
                      .filter(t -> t.getType() == RewardTransactionType.CREDIT)

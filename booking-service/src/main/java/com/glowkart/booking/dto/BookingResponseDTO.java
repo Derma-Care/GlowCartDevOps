@@ -35,6 +35,9 @@ public class BookingResponseDTO {
     private double consultationFee;
     private double finalAmount;
 
+    // NEW FIELD for redeemed wallet points
+    private int redeemedPoints;
+    
     private String status;
     private String paymentStatus;
     private String mobileNumber;

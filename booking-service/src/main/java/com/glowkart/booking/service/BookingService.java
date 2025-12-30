@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface BookingService {
 
+	BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request);
+
     BookingResponseDTO createBooking(BookingRequestDTO request);
 
     BookingResponseDTO cancelBooking(CancelBookingDTO request);
