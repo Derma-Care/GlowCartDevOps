@@ -1,5 +1,7 @@
 package com.glowkart.admin.dto;
 
+import org.springframework.http.HttpStatus;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,5 +23,13 @@ public class ApiResponse<T> {
         this.success = success;
         this.message = message;
         this.data = data;
+    }
+    
+    // ✅ NEW constructor using HttpStatus
+    public ApiResponse(boolean success, String message, T data, HttpStatus status) {
+        this.success = success;
+        this.message = message;
+        this.data = data;
+        this.statusCode = status.value();
     }
 }

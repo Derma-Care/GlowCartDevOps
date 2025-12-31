@@ -414,8 +414,18 @@ public class ClinicController {
          @PathVariable String clinicId,
          @RequestBody OnlineStatusRequest request) {
 
-     clinicService.updateOnlineStatus(clinicId, request.isOnline()); // ✅ still uses isOnline() from DTO
-     return ResponseEntity.ok(new ApiResponse<>(true, "Online status updated", null));
+     clinicService.updateOnlineStatus(clinicId, request.isOnline());
+
+     String message = request.isOnline()
+             ? "Clinic is now online"
+             : "Clinic is now offline";
+
+     ApiResponse<Void> response =
+             new ApiResponse<>(true, message, null, HttpStatus.OK);
+
+     return ResponseEntity.ok(response);
  }
+
+
 
 }
