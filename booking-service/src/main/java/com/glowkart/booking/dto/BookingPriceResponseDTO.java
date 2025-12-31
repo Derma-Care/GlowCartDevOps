@@ -4,10 +4,13 @@ package com.glowkart.booking.dto;
 import lombok.Builder;
 import lombok.Data;
 
-@Data
 @Builder
+@Data
 public class BookingPriceResponseDTO {
-    private double originalFinalAmount; // final amount before coins applied
-    private int appliedPoints;           // points actually applied
-    private double finalAmount;          // final amount after points applied
+    private double originalFinalAmount;
+    private int appliedPoints;
+    private int maxRedeemablePoints;
+    private int availablePoints;
+    private double finalAmount;
 }
+

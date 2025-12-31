@@ -31,37 +31,42 @@ public class BookingServiceImpl implements BookingService {
     private final PaymentService paymentService;
     private final WalletService walletService;
 
-    // ================= Price Calculation API =================
+    // ================= PRICE CALCULATION =================
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
-        double originalAmount = fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
+
+        double originalAmount =
+                fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
+
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
 
-        int availablePoints = walletService.getWalletSummary(customer.getMobile()).getBalance();
+        int availablePoints =
+                walletService.getWalletSummary(customer.getMobile()).getBalance();
+
         int maxRedeemablePoints = availablePoints / 2;
         int pointsToApply = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
 
-        double discountedAmount = Math.max(originalAmount - pointsToApply, 0);
+        double finalAmount = Math.max(originalAmount - pointsToApply, 0);
 
         return BookingPriceResponseDTO.builder()
                 .originalFinalAmount(originalAmount)
+                .availablePoints(availablePoints)
+                .maxRedeemablePoints(maxRedeemablePoints)
                 .appliedPoints(pointsToApply)
-                .finalAmount(discountedAmount)
+                .finalAmount(finalAmount)
                 .build();
     }
 
-    // ================= Booking Creation API =================
+    // ================= BOOKING CREATION =================
     @Override
     public BookingResponseDTO createBooking(BookingRequestDTO request) {
-        log.info("Creating booking: customerId={}, serviceId={}, serviceType={}, paymentType={}, pointsToRedeem={}",
-                request.getCustomerId(), request.getServiceId(), request.getServiceType(),
-                request.getPaymentType(), request.getPointsToRedeem());
 
         validateAppointmentDate(request.getAppointmentDate());
+
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
         ClinicDTO clinic = fetchClinic(request.getClinicId());
-
-        PricingDetails pricing = fetchPricingDetails(request.getServiceType(), request.getServiceId());
+        PricingDetails pricing =
+                fetchPricingDetails(request.getServiceType(), request.getServiceId());
 
         Booking booking = Booking.builder()
                 .bookingId(UUID.randomUUID().toString())
@@ -96,14 +101,25 @@ public class BookingServiceImpl implements BookingService {
                 .updatedAt(Instant.now())
                 .build();
 
-
         bookingRepository.save(booking);
 
-        // ===== Redeem points if requested =====
-        applyWalletPoints(booking, customer.getCustomerId(), request.getPointsToRedeem());
+        // 1️⃣ Validate wallet points (NO deduction yet)
+        int pointsToRedeem =
+                validateWalletPoints(booking, request.getPointsToRedeem());
 
-        // ===== Payment Handling =====
-        processPayment(booking);
+        // 2️⃣ Process payment
+        boolean paymentSuccess = processPayment(booking);
+
+        // 3️⃣ Redeem points ONLY after payment success
+        if (paymentSuccess && pointsToRedeem > 0) {
+            walletService.redeemPoints(customer.getCustomerId(), pointsToRedeem);
+
+            double updatedAmount =
+                    Math.max(booking.getFinalAmount() - pointsToRedeem, 0);
+
+            booking.setRedeemedPoints(pointsToRedeem);
+            booking.setFinalAmount(updatedAmount);
+        }
 
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
@@ -111,16 +127,69 @@ public class BookingServiceImpl implements BookingService {
         return mapToDTO(booking);
     }
 
-    // ================= Helpers =================
+    // ================= WALLET VALIDATION =================
+    private int validateWalletPoints(Booking booking, int requestedPoints) {
+
+        if (requestedPoints <= 0) return 0;
+
+        int availablePoints =
+                walletService.getWalletSummary(booking.getMobileNumber()).getBalance();
+
+        int maxRedeemablePoints = availablePoints / 2;
+
+        if (requestedPoints > maxRedeemablePoints) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Requested points exceed maximum redeemable points"
+            );
+        }
+        return requestedPoints;
+    }
+
+    // ================= PAYMENT =================
+    private boolean processPayment(Booking booking) {
+
+        if ("ONLINE".equalsIgnoreCase(booking.getPaymentType())) {
+            boolean success =
+                    paymentService.pay(booking.getBookingId(), booking.getFinalAmount());
+
+            if (success) {
+                booking.setStatus("CONFIRMED");
+                booking.setPaymentStatus("PAID");
+                return true;
+            } else {
+                booking.setStatus("FAILED");
+                booking.setPaymentStatus("FAILED");
+                return false;
+            }
+        }
+
+        if ("CASH".equalsIgnoreCase(booking.getPaymentType())) {
+            booking.setStatus("CONFIRMED");
+            booking.setPaymentStatus("PENDING");
+            return true;
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid paymentType");
+    }
+
+    // ================= HELPERS =================
     private void validateAppointmentDate(String date) {
-        LocalDate appointmentDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+        LocalDate appointmentDate =
+                LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+
         if (appointmentDate.isBefore(LocalDate.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment date cannot be in the past");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Appointment date cannot be in the past"
+            );
         }
     }
 
     private CustomerDTO fetchCustomer(String customerId) {
-        ApiResponse<CustomerDTO> response = customerInfoClient.getCustomerId(customerId);
+        ApiResponse<CustomerDTO> response =
+                customerInfoClient.getCustomerId(customerId);
+
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
         }
@@ -128,7 +197,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private ClinicDTO fetchClinic(String clinicId) {
-        ApiResponse<ClinicDTO> response = clinicClient.getClinicById(clinicId);
+        ApiResponse<ClinicDTO> response =
+                clinicClient.getClinicById(clinicId);
+
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found");
         }
@@ -137,72 +208,49 @@ public class BookingServiceImpl implements BookingService {
 
     private double fetchServiceFinalCost(String serviceType, String serviceId) {
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePricingDTO> resp = procedureClient.getPricingByProcedure(serviceId);
-            ProcedurePricingDTO p = resp != null ? resp.getData() : null;
-            if (p == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
-            return p.getFinalCost();
-        } else if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePackageDTO> resp = procedureClient.getPricingByPackage(serviceId);
-            ProcedurePackageDTO p = resp != null ? resp.getData() : null;
-            if (p == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
-            return p.getFinalCost();
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
+            ApiResponse<ProcedurePricingDTO> resp =
+                    procedureClient.getPricingByProcedure(serviceId);
+            if (resp == null || resp.getData() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
+            }
+            return resp.getData().getFinalCost();
         }
+
+        if ("PACKAGE".equalsIgnoreCase(serviceType)) {
+            ApiResponse<ProcedurePackageDTO> resp =
+                    procedureClient.getPricingByPackage(serviceId);
+            if (resp == null || resp.getData() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
+            }
+            return resp.getData().getFinalCost();
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
 
     private PricingDetails fetchPricingDetails(String serviceType, String serviceId) {
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePricingDTO> resp = procedureClient.getPricingByProcedure(serviceId);
-            ProcedurePricingDTO p = resp != null ? resp.getData() : null;
-            if (p == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
-
-            return PricingDetails.fromProcedurePricing(p);
-
-        } else if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePackageDTO> resp = procedureClient.getPricingByPackage(serviceId);
-            ProcedurePackageDTO p = resp != null ? resp.getData() : null;
-            if (p == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
-
-            return PricingDetails.fromPackagePricing(p);
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
-        }
-    }
-
-    private void applyWalletPoints(Booking booking, String customerId, int requestedPoints) {
-        int availablePoints = walletService.getWalletSummary(booking.getMobileNumber()).getBalance();
-        int maxRedeemablePoints = availablePoints / 2;
-        int pointsToApply = Math.min(requestedPoints, maxRedeemablePoints);
-
-        if (pointsToApply > 0) {
-            walletService.redeemPoints(customerId, pointsToApply);
-            double updatedAmount = Math.max(booking.getFinalAmount() - pointsToApply, 0);
-            booking.setRedeemedPoints(pointsToApply);
-            booking.setFinalAmount(updatedAmount);
-            bookingRepository.save(booking);
-        }
-    }
-
-    private void processPayment(Booking booking) {
-        if ("ONLINE".equalsIgnoreCase(booking.getPaymentType())) {
-            boolean success = paymentService.pay(booking.getBookingId(), booking.getFinalAmount());
-            if (success) {
-                booking.setStatus("CONFIRMED");
-                booking.setPaymentStatus("PAID");
-            } else {
-                booking.setStatus("FAILED");
-                booking.setPaymentStatus("FAILED");
+            ApiResponse<ProcedurePricingDTO> resp =
+                    procedureClient.getPricingByProcedure(serviceId);
+            if (resp == null || resp.getData() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
             }
-        } else if ("CASH".equalsIgnoreCase(booking.getPaymentType())) {
-            booking.setStatus("CONFIRMED");
-            booking.setPaymentStatus("PENDING");
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid paymentType");
+            return PricingDetails.fromProcedurePricing(resp.getData());
         }
+
+        if ("PACKAGE".equalsIgnoreCase(serviceType)) {
+            ApiResponse<ProcedurePackageDTO> resp =
+                    procedureClient.getPricingByPackage(serviceId);
+            if (resp == null || resp.getData() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
+            }
+            return PricingDetails.fromPackagePricing(resp.getData());
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
 
-    // ================= Map Booking to DTO =================
+    // ================= MAP TO DTO =================
     private BookingResponseDTO mapToDTO(Booking booking) {
         return BookingResponseDTO.builder()
                 .bookingId(booking.getBookingId())
@@ -233,6 +281,9 @@ public class BookingServiceImpl implements BookingService {
                 .mobileNumber(booking.getMobileNumber())
                 .build();
     }
+
+  
+
 
     // ================= Cancel / Reschedule / List =================
     @Override
