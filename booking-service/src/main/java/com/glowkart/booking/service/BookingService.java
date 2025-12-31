@@ -15,4 +15,6 @@ public interface BookingService {
     BookingResponseDTO rescheduleBooking(RescheduleBookingDTO request);
 
     List<BookingResponseDTO> getCustomerBookings(String customerId);
+
+	List<BookingResponseDTO> getClinicBookings(String clinicId);
 }

@@ -326,4 +326,17 @@ public class BookingServiceImpl implements BookingService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+    
+ 
+    @Override
+    public List<BookingResponseDTO> getClinicBookings(String clinicId) {
+        return bookingRepository.findByClinicIdOrderByCreatedAtDesc(clinicId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
+
+
 }

@@ -50,4 +50,12 @@ public class BookingController {
         List<BookingResponseDTO> bookings = bookingService.getCustomerBookings(customerId);
         return ResponseEntity.ok(ApiResponse.of(true, "Customer bookings fetched successfully", bookings, 200));
     }
+    
+    @GetMapping("/clinic/{clinicId}")
+    public ResponseEntity<ApiResponse<List<BookingResponseDTO>>> getClinicBookings(
+            @PathVariable String clinicId) {
+        List<BookingResponseDTO> bookings = bookingService.getClinicBookings(clinicId);
+        return ResponseEntity.ok(ApiResponse.of(true, "Clinic bookings fetched successfully", bookings, 200));
+    }
+
 }
