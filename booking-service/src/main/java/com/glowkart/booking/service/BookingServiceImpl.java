@@ -79,6 +79,7 @@ public class BookingServiceImpl implements BookingService {
                 .clinicId(clinic.getClinicId())
                 .clinicName(clinic.getName())
                 .clinicAddress(clinic.getAddress())
+                
                 .serviceId(request.getServiceId())
                 .serviceName(pricing.getServiceName())
                 .serviceType(request.getServiceType())
@@ -253,12 +254,14 @@ public class BookingServiceImpl implements BookingService {
         LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
         int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
 
+        ClinicDTO clinic = fetchClinic(booking.getClinicId()); // ✅ fetch logo
+
         return BookingResponseDTO.builder()
                 .bookingId(booking.getBookingId())
                 .clinicId(booking.getClinicId())
                 .clinicName(booking.getClinicName())
                 .clinicAddress(booking.getClinicAddress())
-                
+                .hospitalLogo(clinic.getHospitalLogo()) // ✅ SET LOGO
                 .customerId(booking.getCustomerId())
                 .fullName(booking.getFullName())
                 .city(booking.getCity())
@@ -296,14 +299,14 @@ public class BookingServiceImpl implements BookingService {
         LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
         int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
 
-        ClinicDTO clinic = fetchClinic(booking.getClinicId()); // ✅ fetch logo
+//        ClinicDTO clinic = fetchClinic(booking.getClinicId()); // ✅ fetch logo
 
         return BookingRatingResponseDTO.builder()
                 .bookingId(booking.getBookingId())
                 .clinicId(booking.getClinicId())
                 .clinicName(booking.getClinicName())
                 .clinicAddress(booking.getClinicAddress())
-                .hospitalLogo(clinic.getHospitalLogo())
+//                .hospitalLogo(clinic.getHospitalLogo())
                 .customerId(booking.getCustomerId())
                 .fullName(booking.getFullName())
                 .city(booking.getCity())
