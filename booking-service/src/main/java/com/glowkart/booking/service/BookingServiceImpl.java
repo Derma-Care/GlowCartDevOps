@@ -40,7 +40,6 @@ public class BookingServiceImpl implements BookingService {
     // ================= PRICE CALCULATION =================
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
-
         double originalAmount = fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
 
@@ -256,8 +255,10 @@ public class BookingServiceImpl implements BookingService {
 
         return BookingResponseDTO.builder()
                 .bookingId(booking.getBookingId())
+                .clinicId(booking.getClinicId())
                 .clinicName(booking.getClinicName())
                 .clinicAddress(booking.getClinicAddress())
+                
                 .customerId(booking.getCustomerId())
                 .fullName(booking.getFullName())
                 .city(booking.getCity())
@@ -287,7 +288,34 @@ public class BookingServiceImpl implements BookingService {
                 .status(booking.getStatus())
                 .paymentStatus(booking.getPaymentStatus())
                 .mobileNumber(booking.getMobileNumber())
-                .isRated(booking.isRated()) // use booking field
+                .isRated(booking.isRated()) // use only isRated
+                .build();
+    }
+
+    private BookingRatingResponseDTO mapToRatingResponseDTO(Booking booking) {
+        LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
+        int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
+
+        ClinicDTO clinic = fetchClinic(booking.getClinicId()); // ✅ fetch logo
+
+        return BookingRatingResponseDTO.builder()
+                .bookingId(booking.getBookingId())
+                .clinicId(booking.getClinicId())
+                .clinicName(booking.getClinicName())
+                .clinicAddress(booking.getClinicAddress())
+                .hospitalLogo(clinic.getHospitalLogo())
+                .customerId(booking.getCustomerId())
+                .fullName(booking.getFullName())
+                .city(booking.getCity())
+                .dob(booking.getDob())
+                .ageLabel(formatAge(age))
+                .gender(booking.getGender())
+                .serviceId(booking.getServiceId())
+                .serviceName(booking.getServiceName())
+                .serviceType(booking.getServiceType())
+                .appointmentDate(booking.getAppointmentDate())
+                .mobileNumber(booking.getMobileNumber())
+                .isRated(booking.isRated())
                 .build();
     }
 
@@ -389,34 +417,10 @@ public class BookingServiceImpl implements BookingService {
 
         bookingRatingRepository.save(rating);
 
-        booking.setRated(true);
+        booking.setRated(true); // set isRated
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
 
         return mapToRatingResponseDTO(booking);
-    }
-
-    private BookingRatingResponseDTO mapToRatingResponseDTO(Booking booking) {
-        LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
-        int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
-
-        return BookingRatingResponseDTO.builder()
-                .bookingId(booking.getBookingId())
-                .clinicId(booking.getClinicId())
-                .clinicName(booking.getClinicName())
-                .clinicAddress(booking.getClinicAddress())
-                .customerId(booking.getCustomerId())
-                .fullName(booking.getFullName())
-                .city(booking.getCity())
-                .dob(booking.getDob())
-                .ageLabel(formatAge(age))
-                .gender(booking.getGender())
-                .serviceId(booking.getServiceId())
-                .serviceName(booking.getServiceName())
-                .serviceType(booking.getServiceType())
-                .appointmentDate(booking.getAppointmentDate())
-                .mobileNumber(booking.getMobileNumber())
-                .isRated(booking.isRated()) // consistent with booking
-                .build();
     }
 }

@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -72,7 +74,6 @@ public class Booking {
     private Instant createdAt;
     private Instant updatedAt;
     
-    // ✅ NEW FIELD: track if booking has been rated
-    @Builder.Default
-    private boolean isRated = false; // default false
+    @JsonProperty("isRated") // ensures JSON serialization as isRated
+    private boolean isRated;
 }

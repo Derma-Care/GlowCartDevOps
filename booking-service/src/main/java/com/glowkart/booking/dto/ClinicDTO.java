@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ClinicDTO {
+	private String hospitalLogo;
     private String clinicId;
     private String name;
     private String address;

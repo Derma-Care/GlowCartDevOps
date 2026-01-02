@@ -12,11 +12,11 @@ import lombok.Data;
 public class BookingRatingResponseDTO {
 
     private String bookingId;
-
+    
     private String clinicId;
     private String clinicName;
     private String clinicAddress;
-
+    private String hospitalLogo;
     private String customerId;
     private String fullName;
     private String city;

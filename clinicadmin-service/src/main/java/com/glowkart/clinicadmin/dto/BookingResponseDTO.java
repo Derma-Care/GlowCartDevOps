@@ -10,6 +10,7 @@ import lombok.Data;
 public class BookingResponseDTO {
 
     private String bookingId;
+    private String clinicId;
 
     private String clinicName;
     private String clinicAddress;
