@@ -57,5 +57,20 @@ public class BookingController {
         List<BookingResponseDTO> bookings = bookingService.getClinicBookings(clinicId);
         return ResponseEntity.ok(ApiResponse.of(true, "Clinic bookings fetched successfully", bookings, 200));
     }
+    
+    @PutMapping("/update-status")
+    public ResponseEntity<ApiResponse<BookingResponseDTO>> updateBookingStatus(
+            @RequestBody UpdateBookingStatusDTO request) {
+        BookingResponseDTO response = bookingService.updateBookingStatus(request);
+        return ResponseEntity.ok(ApiResponse.of(true, "Booking status updated successfully", response, 200));
+    }
+
+
+    @PostMapping("/rate")
+    public ResponseEntity<ApiResponse<BookingRatingResponseDTO>> rateBooking(@RequestBody RatingDTO request) {
+        BookingRatingResponseDTO response = bookingService.rateBooking(request);
+        return ResponseEntity.ok(ApiResponse.of(true, "Booking rated successfully", response, 200));
+    }
+
 
 }

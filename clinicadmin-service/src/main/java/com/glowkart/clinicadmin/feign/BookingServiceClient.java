@@ -1,10 +1,13 @@
 package com.glowkart.clinicadmin.feign;
 
 import com.glowkart.clinicadmin.dto.BookingResponseDTO;
+import com.glowkart.clinicadmin.dto.UpdateBookingStatusDTO;
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -18,4 +21,8 @@ public interface BookingServiceClient {
     // If booking-service supports fetching by clinic
     @GetMapping("/booking/clinic/{clinicId}")
     ApiResponse<List<BookingResponseDTO>> getBookingsByClinic(@PathVariable("clinicId") String clinicId);
+
+    // ✅ Add this for updating status
+    @PutMapping("/booking/update-status")
+    ApiResponse<BookingResponseDTO> updateBookingStatus(@RequestBody UpdateBookingStatusDTO request);
 }

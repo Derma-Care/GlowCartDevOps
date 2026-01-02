@@ -1,10 +1,15 @@
 package com.glowkart.booking.model;
 
-import lombok.*;
+import java.time.Instant;
+import java.time.LocalDate;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Document(collection = "bookings")
 @Data
@@ -20,6 +25,12 @@ public class Booking {
 
     private String customerId;
     private String mobileNumber;
+
+    private String fullName;
+    private String city;
+    private LocalDate dob;
+//    private int age;
+    private String gender;
 
     private String clinicId;
     private String clinicName;
@@ -60,4 +71,8 @@ public class Booking {
 
     private Instant createdAt;
     private Instant updatedAt;
+    
+    // ✅ NEW FIELD: track if booking has been rated
+    @Builder.Default
+    private boolean isRated = false; // default false
 }

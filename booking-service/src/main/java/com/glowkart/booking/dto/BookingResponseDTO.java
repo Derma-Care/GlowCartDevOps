@@ -1,5 +1,9 @@
 package com.glowkart.booking.dto;
 
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +15,13 @@ public class BookingResponseDTO {
 
     private String clinicName;
     private String clinicAddress;
+    private String customerId;
+    private String fullName;
+    private String city;
+    private LocalDate dob;
+//    private int age;
+    private String ageLabel; // ✅ NEW
+    private String gender;
 
     private String serviceId;
     private String serviceName;
@@ -41,5 +52,11 @@ public class BookingResponseDTO {
     private String status;
     private String paymentStatus;
     private String mobileNumber;
+    
+    // ✅ New field
+    
+    @JsonProperty("isRated")
+    private boolean isRated;
+  // default false
 }
 

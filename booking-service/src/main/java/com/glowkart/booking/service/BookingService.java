@@ -17,4 +17,11 @@ public interface BookingService {
     List<BookingResponseDTO> getCustomerBookings(String customerId);
 
 	List<BookingResponseDTO> getClinicBookings(String clinicId);
+
+	BookingResponseDTO updateBookingStatus(UpdateBookingStatusDTO request);
+
+	BookingRatingResponseDTO rateBooking(RatingDTO request);
+
+	
+
 }

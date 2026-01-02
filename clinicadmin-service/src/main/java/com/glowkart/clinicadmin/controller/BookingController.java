@@ -2,6 +2,7 @@ package com.glowkart.clinicadmin.controller;
 
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.dto.BookingResponseDTO;
+import com.glowkart.clinicadmin.dto.UpdateBookingStatusDTO;
 import com.glowkart.clinicadmin.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -53,4 +54,23 @@ public class BookingController {
 
         return ResponseEntity.ok(response);
     }
+    
+    @PutMapping("/bookings/update-status")
+    public ResponseEntity<ApiResponse<BookingResponseDTO>> updateBookingStatus(
+            @RequestBody UpdateBookingStatusDTO request) {
+
+        BookingResponseDTO updatedBooking = bookingService.updateBookingStatus(
+                request.getBookingId(), request.getStatus());
+
+        ApiResponse<BookingResponseDTO> response = new ApiResponse<>(
+                true,
+                "Booking status updated successfully",
+                updatedBooking,
+                200
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+
 }

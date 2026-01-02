@@ -2,6 +2,7 @@ package com.glowkart.clinicadmin.service;
 
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.dto.BookingResponseDTO;
+import com.glowkart.clinicadmin.dto.UpdateBookingStatusDTO;
 import com.glowkart.clinicadmin.feign.BookingServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,27 @@ public class BookingService {
             return response.getData();
         } else {
             throw new RuntimeException("Failed to fetch customer bookings: " + response.getMessage());
+        }
+    }
+
+    /**
+     * Update booking status for a given bookingId
+     */
+    public BookingResponseDTO updateBookingStatus(String bookingId, String status) {
+        UpdateBookingStatusDTO request = new UpdateBookingStatusDTO();
+        request.setBookingId(bookingId);
+        request.setStatus(status);
+
+        ApiResponse<BookingResponseDTO> response = bookingServiceClient.updateBookingStatus(request);
+
+        if (response == null) {
+            throw new RuntimeException("Booking service did not respond");
+        }
+
+        if (response.isSuccess() && response.getData() != null) {
+            return response.getData();
+        } else {
+            throw new RuntimeException("Failed to update booking status: " + response.getMessage());
         }
     }
 }

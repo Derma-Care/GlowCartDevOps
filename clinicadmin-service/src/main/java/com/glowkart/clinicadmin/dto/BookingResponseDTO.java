@@ -1,5 +1,7 @@
 package com.glowkart.clinicadmin.dto;
 
+import java.time.LocalDate;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,7 +13,13 @@ public class BookingResponseDTO {
 
     private String clinicName;
     private String clinicAddress;
-
+    private String customerId;
+    private String fullName;
+    private String city;
+    private LocalDate dob;
+//    private int age;
+    private String ageLabel; // ✅ NEW
+    private String gender;
     private String serviceId;
     private String serviceName;
     private String serviceType;   // PROCEDURE or PACKAGE
