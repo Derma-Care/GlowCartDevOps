@@ -14,29 +14,31 @@ import java.util.List;
 public class ClinicSearchServiceImpl implements ClinicSearchService {
 
     private final ClinicRepository clinicRepository;
+    private final ClinicService clinicService; // inject ClinicService to reuse rating logic
 
     @Override
     public List<ClinicPublicDTO> getVerifiedClinicsByState(String state, Boolean online) {
         List<Clinic> clinics;
 
         if (online != null) {
-            // Fetch clinics by state, status, and online flag directly from DB
             clinics = clinicRepository.findByStateIgnoreCaseAndStatusIgnoreCaseAndOnline(
-                    state,
-                    "VERIFIED",
-                    online
+                    state, "VERIFIED", online
             );
         } else {
-            // Fetch clinics by state and status only
             clinics = clinicRepository.findByStateIgnoreCaseAndStatusIgnoreCase(
-                    state,
-                    "VERIFIED"
+                    state, "VERIFIED"
             );
         }
 
-        // Map to DTO
+        // Map to DTO without rating
         return clinics.stream()
                       .map(ClinicMapper::toPublicDTO)
                       .toList();
     }
+
+    @Override
+    public double getClinicAverageRating(String clinicId) {
+        return clinicService.getClinicAverageRating(clinicId);
+    }
 }
+

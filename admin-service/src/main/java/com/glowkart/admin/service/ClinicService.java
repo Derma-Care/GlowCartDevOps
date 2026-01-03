@@ -23,6 +23,7 @@ public interface ClinicService {
     List<Clinic> getAll();
 
     Clinic getById(String clinicId);
+    double getClinicAverageRating(String clinicId); // ✅ NEW
 
     Clinic updateClinic(String clinicId, ClinicRegistrationDTO dto);
 

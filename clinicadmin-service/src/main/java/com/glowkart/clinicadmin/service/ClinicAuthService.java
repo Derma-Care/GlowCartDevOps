@@ -148,9 +148,9 @@ public class ClinicAuthService {
         );
     }
     
-    public ResponseEntity<ApiResponse<Void>> setOnlineStatus(String clinicId, boolean isOnline) {
+    public ResponseEntity<ApiResponse<Void>> setOnlineStatus(String clinicId, boolean online) {
         OnlineStatusRequest req = new OnlineStatusRequest();
-        req.setOnline(isOnline);
+        req.setOnline(online);
         return handleFeignCall(() -> client.updateOnlineStatus(clinicId, req), "Failed to update online status");
     }
 

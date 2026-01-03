@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class OnlineStatusRequest {
-    private boolean isOnline;
+    private boolean online;
 }

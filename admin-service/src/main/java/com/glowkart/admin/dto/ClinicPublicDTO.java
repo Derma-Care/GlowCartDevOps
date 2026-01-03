@@ -18,7 +18,7 @@ public class ClinicPublicDTO {
 
     private String status;
     private String username;
-
+ // ⭐ Dynamic value
     private double hospitalOverallRating;
     private String contactNumber;
     private String openingTime;

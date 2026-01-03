@@ -8,4 +8,6 @@ public interface ClinicSearchService {
 //    List<ClinicPublicDTO> getVerifiedClinicsByState(String state);
 
 	List<ClinicPublicDTO> getVerifiedClinicsByState(String state, Boolean online);
+    double getClinicAverageRating(String clinicId);
+
 }

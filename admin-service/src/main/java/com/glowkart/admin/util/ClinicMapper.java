@@ -11,6 +11,9 @@ import com.glowkart.admin.model.Clinic;
 
 public class ClinicMapper {
 
+    // =====================================================
+    // PUBLIC DTO (NO RATING HERE)
+    // =====================================================
     public static ClinicPublicDTO toPublicDTO(Clinic clinic) {
         ClinicPublicDTO dto = new ClinicPublicDTO();
 
@@ -25,6 +28,7 @@ public class ClinicMapper {
         dto.setStatus(clinic.getStatus());
         dto.setUsername(clinic.getUsername());
 
+        // ✅ Include hospitalOverallRating
         dto.setHospitalOverallRating(clinic.getHospitalOverallRating());
         dto.setContactNumber(clinic.getContactNumber());
         dto.setOpeningTime(clinic.getOpeningTime());
@@ -50,8 +54,7 @@ public class ClinicMapper {
         dto.setSubscription(clinic.getSubscription());
         dto.setLatitude(clinic.getLatitude());
         dto.setLongitude(clinic.getLongitude());
-        dto.setOnline(clinic.isOnline()); // ✅ map online status
-        // ✅ FIX: STATE MAPPING (THIS WAS MISSING)
+        dto.setOnline(clinic.isOnline());
         dto.setState(clinic.getState());
 
         dto.setNabhScore(clinic.getNabhScore());
@@ -99,9 +102,9 @@ public class ClinicMapper {
         return dto;
     }
 
-    // -------------------------------
-    // Map Clinic to ClinicResponse
-    // -------------------------------
+    // =====================================================
+    // CLINIC RESPONSE
+    // =====================================================
     public static ClinicResponse toClinicResponse(Clinic clinic) {
         if (clinic == null) return null;
 
@@ -114,6 +117,9 @@ public class ClinicMapper {
         return response;
     }
 
+    // =====================================================
+    // REGISTRATION DTO (NO RATING HERE)
+    // =====================================================
     public static ClinicRegistrationDTO toClinicRegistrationDTO(Clinic clinic) {
         if (clinic == null) return null;
 
@@ -124,19 +130,23 @@ public class ClinicMapper {
         dto.setAddress(clinic.getAddress());
         dto.setCity(clinic.getCity());
         dto.setState(clinic.getState());
-        dto.setToken(clinic.getOnboardingToken()); // maps onboardingToken
+        dto.setToken(clinic.getOnboardingToken());
 
         dto.setWhatsappNumber(clinic.getWhatsappNumber());
         dto.setEmail(clinic.getEmail());
         dto.setUsername(clinic.getUsername());
+
+     // ✅ Include hospitalOverallRating
         dto.setHospitalOverallRating(clinic.getHospitalOverallRating());
         dto.setContactNumber(clinic.getContactNumber());
         dto.setOpeningTime(clinic.getOpeningTime());
         dto.setClosingTime(clinic.getClosingTime());
 
         if (clinic.getHospitalLogo() != null) {
-            dto.setHospitalLogo("data:image/png;base64," +
-                Base64.getEncoder().encodeToString(clinic.getHospitalLogo()));
+            dto.setHospitalLogo(
+                "data:image/png;base64," +
+                Base64.getEncoder().encodeToString(clinic.getHospitalLogo())
+            );
         }
 
         dto.setWebsite(clinic.getWebsite());
@@ -153,48 +163,57 @@ public class ClinicMapper {
         dto.setRecommended(clinic.isRecommended());
 
         if (clinic.getClinicalEstablishmentCertificate() != null) {
-            dto.setClinicalEstablishmentCertificate(Base64.getEncoder().encodeToString(clinic.getClinicalEstablishmentCertificate()));
+            dto.setClinicalEstablishmentCertificate(
+                Base64.getEncoder().encodeToString(clinic.getClinicalEstablishmentCertificate()));
         }
         if (clinic.getBusinessRegistrationCertificate() != null) {
-            dto.setBusinessRegistrationCertificate(Base64.getEncoder().encodeToString(clinic.getBusinessRegistrationCertificate()));
+            dto.setBusinessRegistrationCertificate(
+                Base64.getEncoder().encodeToString(clinic.getBusinessRegistrationCertificate()));
         }
 
         dto.setClinicType(clinic.getClinicType());
         dto.setMedicinesSoldOnSite(clinic.getMedicinesSoldOnSite());
 
         if (clinic.getDrugLicenseCertificate() != null) {
-            dto.setDrugLicenseCertificate(Base64.getEncoder().encodeToString(clinic.getDrugLicenseCertificate()));
+            dto.setDrugLicenseCertificate(
+                Base64.getEncoder().encodeToString(clinic.getDrugLicenseCertificate()));
         }
         dto.setDrugLicenseFormType(clinic.getDrugLicenseFormType());
 
         dto.setHasPharmacist(clinic.getHasPharmacist());
         if (clinic.getPharmacistCertificate() != null) {
-            dto.setPharmacistCertificate(Base64.getEncoder().encodeToString(clinic.getPharmacistCertificate()));
+            dto.setPharmacistCertificate(
+                Base64.getEncoder().encodeToString(clinic.getPharmacistCertificate()));
         }
 
         if (clinic.getBiomedicalWasteManagementAuth() != null) {
-            dto.setBiomedicalWasteManagementAuth(Base64.getEncoder().encodeToString(clinic.getBiomedicalWasteManagementAuth()));
+            dto.setBiomedicalWasteManagementAuth(
+                Base64.getEncoder().encodeToString(clinic.getBiomedicalWasteManagementAuth()));
         }
         if (clinic.getTradeLicense() != null) {
             dto.setTradeLicense(Base64.getEncoder().encodeToString(clinic.getTradeLicense()));
         }
         if (clinic.getFireSafetyCertificate() != null) {
-            dto.setFireSafetyCertificate(Base64.getEncoder().encodeToString(clinic.getFireSafetyCertificate()));
+            dto.setFireSafetyCertificate(
+                Base64.getEncoder().encodeToString(clinic.getFireSafetyCertificate()));
         }
         if (clinic.getProfessionalIndemnityInsurance() != null) {
-            dto.setProfessionalIndemnityInsurance(Base64.getEncoder().encodeToString(clinic.getProfessionalIndemnityInsurance()));
+            dto.setProfessionalIndemnityInsurance(
+                Base64.getEncoder().encodeToString(clinic.getProfessionalIndemnityInsurance()));
         }
         if (clinic.getGstRegistrationCertificate() != null) {
-            dto.setGstRegistrationCertificate(Base64.getEncoder().encodeToString(clinic.getGstRegistrationCertificate()));
+            dto.setGstRegistrationCertificate(
+                Base64.getEncoder().encodeToString(clinic.getGstRegistrationCertificate()));
         }
 
         dto.setSubscription(clinic.getSubscription());
 
         if (clinic.getOthers() != null) {
-            List<String> encodedOthers = clinic.getOthers().stream()
-                .map(doc -> Base64.getEncoder().encodeToString(doc))
-                .toList();
-            dto.setOthers(encodedOthers);
+            dto.setOthers(
+                clinic.getOthers().stream()
+                    .map(Base64.getEncoder()::encodeToString)
+                    .toList()
+            );
         }
 
         dto.setLatitude(clinic.getLatitude());

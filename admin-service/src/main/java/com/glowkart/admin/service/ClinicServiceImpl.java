@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.glowkart.admin.client.BookingRatingClient;
 import com.glowkart.admin.client.OnboardingClient;
 import com.glowkart.admin.dto.*;
 import com.glowkart.admin.exception.ProcedureServiceException;
@@ -26,6 +27,7 @@ public class ClinicServiceImpl implements ClinicService {
     private final OnboardingClient onboardingClient;
     private final AsyncVerificationService asyncVerificationService;
     private final ReverseGeoService reverseGeoService;
+    private final BookingRatingClient bookingRatingClient;
 
 
     private static final String CLINIC_PASSWORD_RESET = "CLINIC_PASSWORD_RESET";
@@ -35,12 +37,14 @@ public class ClinicServiceImpl implements ClinicService {
             ClinicRepository repo,
             OnboardingClient onboardingClient,
             AsyncVerificationService asyncVerificationService,
-            ReverseGeoService reverseGeoService) {
+            ReverseGeoService reverseGeoService,
+            BookingRatingClient bookingRatingClient) {
 
         this.repo = repo;
         this.onboardingClient = onboardingClient;
         this.asyncVerificationService = asyncVerificationService;
         this.reverseGeoService = reverseGeoService;
+        this.bookingRatingClient = bookingRatingClient;
     }
 
 
@@ -149,6 +153,20 @@ public class ClinicServiceImpl implements ClinicService {
         return findClinic(clinicId);
     }
 
+    @Override
+    public double getClinicAverageRating(String clinicId) {
+
+        ApiResponse<ClinicRatingsResponseDTO> response =
+                bookingRatingClient.getClinicRatings(clinicId);
+
+        if (response != null && response.isSuccess()
+                && response.getData() != null) {
+            return response.getData().getAverageRating();
+        }
+
+        return 0.0;
+    }
+    
     @Override
     public void deleteClinic(String clinicId) {
         if (!repo.existsById(clinicId)) {

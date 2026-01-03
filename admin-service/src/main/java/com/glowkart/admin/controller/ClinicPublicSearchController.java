@@ -23,6 +23,12 @@ public class ClinicPublicSearchController {
 
         List<ClinicPublicDTO> clinics = clinicSearchService.getVerifiedClinicsByState(state, online);
 
+        // ⭐ Inject dynamic hospitalOverallRating for each clinic
+        clinics.forEach(dto -> {
+            double rating = clinicSearchService.getClinicAverageRating(dto.getClinicId());
+            dto.setHospitalOverallRating(rating);
+        });
+
         return new ApiResponse<>(
                 true,
                 "Clinics fetched by state",
@@ -30,3 +36,4 @@ public class ClinicPublicSearchController {
         );
     }
 }
+

@@ -128,23 +128,36 @@ public class ClinicController {
         );
     }
 
-    // ---------------------------------------------------
-    // 5. GET ALL CLINICS
-    // ---------------------------------------------------
-    @GetMapping("/clinics")
-    public ResponseEntity<ApiResponse<?>> getAll() {
+ // ---------------------------------------------------
+ // 5. GET ALL CLINICS (Optimized with parallel stream)
+ // ---------------------------------------------------
+ @GetMapping("/clinics")
+ public ResponseEntity<ApiResponse<List<ClinicPublicDTO>>> getAll() {
 
-        List<Clinic> clinics = clinicService.getAll();
+     List<Clinic> clinics = clinicService.getAll();
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Fetched clinics successfully",
-                        clinics,
-                        HttpStatus.OK.value()
-                )
-        );
-    }
+     // Use parallel stream to fetch ratings concurrently
+     List<ClinicPublicDTO> clinicDTOs = clinics.parallelStream().map(clinic -> {
+         ClinicPublicDTO dto = ClinicMapper.toPublicDTO(clinic);
+
+         // ⭐ Fetch rating dynamically
+         double rating = clinicService.getClinicAverageRating(clinic.getClinicId());
+         dto.setHospitalOverallRating(rating);
+
+         return dto;
+     }).toList();
+
+     return ResponseEntity.ok(
+         new ApiResponse<>(
+             true,
+             "Fetched clinics successfully",
+             clinicDTOs,
+             HttpStatus.OK.value()
+         )
+     );
+ }
+
+
 
     // ---------------------------------------------------
     // 6. GET CLINIC BY ID
@@ -160,14 +173,24 @@ public class ClinicController {
     }
 
     @GetMapping("/clinics/get/{clinicId}")
-    public ResponseEntity<ApiResponse<ClinicRegistrationDTO>> getClinicsById(@PathVariable String clinicId) {
+    public ResponseEntity<ApiResponse<ClinicRegistrationDTO>> getClinicsById(
+            @PathVariable String clinicId) {
+
         Clinic clinic = clinicService.getById(clinicId);
-        ClinicRegistrationDTO response = ClinicMapper.toClinicRegistrationDTO(clinic);
+
+        ClinicRegistrationDTO response =
+                ClinicMapper.toClinicRegistrationDTO(clinic);
+
+        // ⭐ Inject rating dynamically
+        double rating = clinicService.getClinicAverageRating(clinicId);
+        response.setHospitalOverallRating(rating);
 
         return ResponseEntity.ok(
-            new ApiResponse<>(true, "Clinic fetched successfully", response, HttpStatus.OK.value())
+            new ApiResponse<>(true, "Clinic fetched successfully",
+                    response, HttpStatus.OK.value())
         );
     }
+
 
     // ---------------------------------------------------
     // 7. UPDATE CLINIC
@@ -207,58 +230,76 @@ public class ClinicController {
         );
     }
 
-    // ---------------------------------------------------
-    // 9. GET VERIFIED CLINICS
-    // ---------------------------------------------------
-    @GetMapping("/clinics/verified")
-    public ResponseEntity<ApiResponse<?>> getVerifiedClinics() {
+ // ---------------------------------------------------
+ // 9. GET VERIFIED CLINICS (Optimized with parallel stream)
+ // ---------------------------------------------------
+ @GetMapping("/clinics/verified")
+ public ResponseEntity<ApiResponse<?>> getVerifiedClinics() {
 
-        List<Clinic> verified = clinicService.getVerifiedClinics();
+     List<Clinic> verified = clinicService.getVerifiedClinics();
 
-        String message = verified.isEmpty()
-                ? "No verified clinics found"
-                : "Fetched verified clinics successfully";
+     // Use parallel stream to fetch ratings concurrently
+     List<ClinicPublicDTO> clinicDTOs = verified.parallelStream().map(clinic -> {
+         ClinicPublicDTO dto = ClinicMapper.toPublicDTO(clinic);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        message,
-                        verified,
-                        HttpStatus.OK.value()
-                )
-        );
-    }
+         // ⭐ Fetch rating dynamically
+         double rating = clinicService.getClinicAverageRating(clinic.getClinicId());
+         dto.setHospitalOverallRating(rating);
 
-    // ---------------------------------------------------
-    // 10. LOGIN
-    // ---------------------------------------------------
-    @PostMapping("/clinics/login")
-    public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(
-            @Valid @RequestBody ClinicLoginRequest request) {
+         return dto;
+     }).toList();
 
-        Clinic clinic = clinicService.login(request.getUsername(), request.getPassword());
+     String message = clinicDTOs.isEmpty()
+             ? "No verified clinics found"
+             : "Fetched verified clinics successfully";
 
-        if (clinic == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>(
-                            false,
-                            "Invalid username or password",
-                            null,
-                            HttpStatus.UNAUTHORIZED.value()
-                    ));
-        }
+     return ResponseEntity.ok(
+         new ApiResponse<>(
+                 true,
+                 message,
+                 clinicDTOs,   // Return DTOs instead of raw Clinic
+                 HttpStatus.OK.value()
+         )
+     );
+ }
 
-        ClinicPublicDTO dto = ClinicMapper.toPublicDTO(clinic);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Login successful",
-                        dto,
-                        HttpStatus.OK.value()
-                )
-        );
-    }
+//---------------------------------------------------
+//10. LOGIN
+//---------------------------------------------------
+@PostMapping("/clinics/login")
+public ResponseEntity<ApiResponse<ClinicPublicDTO>> login(
+      @Valid @RequestBody ClinicLoginRequest request) {
+
+  Clinic clinic = clinicService.login(request.getUsername(), request.getPassword());
+
+  if (clinic == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+              .body(new ApiResponse<>(
+                      false,
+                      "Invalid username or password",
+                      null,
+                      HttpStatus.UNAUTHORIZED.value()
+              ));
+  }
+
+  // Map to DTO
+  ClinicPublicDTO dto = ClinicMapper.toPublicDTO(clinic);
+
+  // ⭐ Dynamically fetch rating
+  double rating = clinicService.getClinicAverageRating(clinic.getClinicId());
+  dto.setHospitalOverallRating(rating);
+
+  return ResponseEntity.ok(
+          new ApiResponse<>(
+                  true,
+                  "Login successful",
+                  dto,
+                  HttpStatus.OK.value()
+          )
+  );
+}
+
 
     // ---------------------------------------------------
     // 11. UPDATE PASSWORD

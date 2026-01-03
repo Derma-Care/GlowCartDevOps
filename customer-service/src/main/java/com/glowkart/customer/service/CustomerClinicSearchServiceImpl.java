@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
-
 @Service
 @RequiredArgsConstructor
 public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchService {
@@ -29,39 +28,43 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         // 1️⃣ Resolve state from lat/lng
         String state = reverseGeoService.resolveState(latitude, longitude);
 
-        // 2️⃣ Fetch clinics in that state
+        // 2️⃣ Fetch verified clinics in that state, ignore offline flag in Feign
         List<ClinicPublicDTO> clinicsInState =
-                adminClinicClient.getClinicsByState(state,true).getData();
+                adminClinicClient.getClinicsByState(state, null).getData();
+
+        if (clinicsInState == null || clinicsInState.isEmpty()) return List.of();
 
         // 3️⃣ Filter only online clinics
         clinicsInState = clinicsInState.stream()
                 .filter(ClinicPublicDTO::isOnline)
                 .toList();
 
-        // 4️⃣ Fetch clinic IDs offering this procedure
-        Set<String> clinicIds =
-                Set.copyOf(
-                        procedureServiceClient
-                                .getClinicIdsByProcedure(procedureId)
-                                .getData()
-                );
+        if (clinicsInState.isEmpty()) return List.of();
 
-        // 5️⃣ Map clinics with clinic-specific pricing safely
+        // 4️⃣ Fetch clinic IDs offering this procedure
+        Set<String> clinicIdsOfferingProcedure = Set.copyOf(
+                procedureServiceClient.getClinicIdsByProcedure(procedureId).getData()
+        );
+
+        // 5️⃣ Map clinics with procedure pricing and calculate distance
         return clinicsInState.stream()
-                .filter(c -> clinicIds.contains(c.getClinicId()))
+                .filter(c -> clinicIdsOfferingProcedure.contains(c.getClinicId()))
                 .map(c -> {
                     // Fetch clinic-specific procedure pricing
-                    ProcedurePricingDTO pricing = procedureServiceClient
+                    var pricing = procedureServiceClient
                             .getPricingByProcedureForClinic(procedureId, c.getClinicId())
                             .getData();
 
-                    // Calculate distance in km
-                    double distanceKm = calculateDistanceInKm(latitude, longitude, c.getLatitude(), c.getLongitude());
+                    // Calculate distance in KM
+                    double distanceKm = calculateDistanceInKm(latitude, longitude,
+                            c.getLatitude(), c.getLongitude());
 
-                    // Format distance: meters if < 1km, km otherwise
                     String distanceStr = distanceKm < 1
                             ? (int) Math.round(distanceKm * 1000) + " M"
                             : Math.round(distanceKm) + " KM";
+
+                    // Inject hospital rating dynamically
+                    double rating = c.getHospitalOverallRating(); // already set from admin-service
 
                     return ClinicProcedureLinkDTO.builder()
                             .clinicId(c.getClinicId())
@@ -78,7 +81,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .openingTime(c.getOpeningTime())
                             .closingTime(c.getClosingTime())
                             .hospitalLogo(c.getHospitalLogo())
-                            .hospitalOverallRating(c.getHospitalOverallRating())
+                            .hospitalOverallRating(rating)
                             .website(c.getWebsite())
                             .licenseNumber(c.getLicenseNumber())
                             .issuingAuthority(c.getIssuingAuthority())
@@ -99,32 +102,41 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .clinicManagementSoftwareUsage(c.getClinicManagementSoftwareUsage())
                             .doctorsList(c.getDoctorsList())
                             .procedurePricing(pricing)
-                            .distanceInKm(distanceStr) // ✅ formatted distance
+                            .distanceInKm(distanceStr)
                             .createdAt(c.getCreatedAt())
                             .status(c.getStatus())
                             .username(c.getUsername())
                             .role(c.getRole())
                             .build();
                 })
+                // 6️⃣ Sort clinics by distance
+                .sorted((c1, c2) -> {
+                    double d1 = parseDistance(c1.getDistanceInKm());
+                    double d2 = parseDistance(c2.getDistanceInKm());
+                    return Double.compare(d1, d2);
+                })
                 .toList();
     }
 
+    /** Convert distance string like "500 M" or "2 KM" to KM as double */
+    private double parseDistance(String distanceStr) {
+        if (distanceStr.endsWith("M")) {
+            return Double.parseDouble(distanceStr.replace(" M", "")) / 1000.0;
+        } else if (distanceStr.endsWith("KM")) {
+            return Double.parseDouble(distanceStr.replace(" KM", ""));
+        }
+        return Double.MAX_VALUE;
+    }
 
-    /**
-     * Calculate distance between two lat/lng points in kilometers
-     */
+    /** Calculate distance between two lat/lng points in KM */
     private double calculateDistanceInKm(double lat1, double lon1, double lat2, double lon2) {
-        final int EARTH_RADIUS_KM = 6371; // Radius of the earth
-
+        final int R = 6371; // Earth radius
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
-
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return EARTH_RADIUS_KM * c;
+        return R * c;
     }
 }
