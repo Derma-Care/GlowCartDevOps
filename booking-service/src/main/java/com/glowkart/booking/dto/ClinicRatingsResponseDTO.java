@@ -10,7 +10,7 @@ import java.util.List;
 public class ClinicRatingsResponseDTO {
 
     private String clinicId;
-    private double averageRating;
+    private Double averageRating;   // ✅ wrapper
     private int totalRatings;
     private List<RatingResponseDTO> ratings;
 }

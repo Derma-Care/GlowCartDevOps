@@ -6,8 +6,7 @@ import java.util.List;
 @Data
 public class ClinicRatingsResponseDTO {
     private String clinicId;
-    private double averageRating;
+    private Double averageRating;   // ✅ FIX
     private int totalRatings;
     private List<RatingResponseDTO> ratings;
 }
-

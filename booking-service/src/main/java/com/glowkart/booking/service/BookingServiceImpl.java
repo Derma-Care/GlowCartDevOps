@@ -492,8 +492,11 @@ public class BookingServiceImpl implements BookingService {
                 .map(this::mapToRatingDTO)
                 .toList();
 
-        double average = bookingRatingRepository.getAverageRatingByClinicId(clinicId);
-        average = ratings.isEmpty() ? 0.0 : Math.round(average * 10.0) / 10.0;
+        Double avgFromDb = bookingRatingRepository.getAverageRatingByClinicId(clinicId);
+
+        double average = (avgFromDb == null)
+                ? 0.0
+                : Math.round(avgFromDb * 10.0) / 10.0;
 
         return ClinicRatingsResponseDTO.builder()
                 .clinicId(clinicId)
@@ -502,6 +505,7 @@ public class BookingServiceImpl implements BookingService {
                 .ratings(ratings)
                 .build();
     }
+
 
 
 }

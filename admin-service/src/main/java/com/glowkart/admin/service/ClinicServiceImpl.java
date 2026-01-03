@@ -20,6 +20,8 @@ import com.glowkart.admin.repo.ClinicRepository;
 import com.glowkart.admin.util.CredentialGenerator;
 import com.glowkart.admin.util.PermissionsUtil;
 
+import feign.FeignException;
+
 @Service
 public class ClinicServiceImpl implements ClinicService {
 
@@ -155,17 +157,23 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     public double getClinicAverageRating(String clinicId) {
+        try {
+            ApiResponse<ClinicRatingsResponseDTO> response =
+                    bookingRatingClient.getClinicRatings(clinicId);
 
-        ApiResponse<ClinicRatingsResponseDTO> response =
-                bookingRatingClient.getClinicRatings(clinicId);
+            if (response != null
+                    && response.isSuccess()
+                    && response.getData() != null
+                    && response.getData().getAverageRating() != null) {
 
-        if (response != null && response.isSuccess()
-                && response.getData() != null) {
-            return response.getData().getAverageRating();
+                return response.getData().getAverageRating();
+            }
+        } catch (FeignException e) {
+            // log.warn("Rating service failed for clinic {}", clinicId);
         }
-
         return 0.0;
     }
+
     
     @Override
     public void deleteClinic(String clinicId) {
