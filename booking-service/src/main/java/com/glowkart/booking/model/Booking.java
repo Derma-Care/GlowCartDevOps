@@ -71,8 +71,8 @@ public class Booking {
     private String status;         // HOLD, CONFIRMED, CANCELLED, FAILED
     private String paymentStatus;  // PENDING, PAID, FAILED, NA
 
-    private Instant createdAt;
-    private Instant updatedAt;
+    private String createdAt;
+    private String updatedAt;
     
     @JsonProperty("isRated") // ensures JSON serialization as isRated
     private boolean isRated;

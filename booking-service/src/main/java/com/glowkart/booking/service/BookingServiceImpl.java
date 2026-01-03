@@ -103,8 +103,8 @@ public class BookingServiceImpl implements BookingService {
                 .status("HOLD")
                 .paymentStatus("PENDING")
                 .isRated(false) // default false
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(LocalDate.now().toString())
+                .updatedAt(LocalDate.now().toString())
                 .build();
 
         bookingRepository.save(booking);
@@ -124,7 +124,7 @@ public class BookingServiceImpl implements BookingService {
             booking.setFinalAmount(updatedAmount);
         }
 
-        booking.setUpdatedAt(Instant.now());
+        booking.setUpdatedAt(LocalDate.now().toString());
         bookingRepository.save(booking);
 
         return mapToDTO(booking);
@@ -294,33 +294,33 @@ public class BookingServiceImpl implements BookingService {
                 .isRated(booking.isRated()) // use only isRated
                 .build();
     }
-
-    private BookingRatingResponseDTO mapToRatingResponseDTO(Booking booking) {
-        LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
-        int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
-
-//        ClinicDTO clinic = fetchClinic(booking.getClinicId()); // ✅ fetch logo
-
-        return BookingRatingResponseDTO.builder()
-                .bookingId(booking.getBookingId())
-                .clinicId(booking.getClinicId())
-                .clinicName(booking.getClinicName())
-                .clinicAddress(booking.getClinicAddress())
-//                .hospitalLogo(clinic.getHospitalLogo())
-                .customerId(booking.getCustomerId())
-                .fullName(booking.getFullName())
-                .city(booking.getCity())
-                .dob(booking.getDob())
-                .ageLabel(formatAge(age))
-                .gender(booking.getGender())
-                .serviceId(booking.getServiceId())
-                .serviceName(booking.getServiceName())
-                .serviceType(booking.getServiceType())
-                .appointmentDate(booking.getAppointmentDate())
-                .mobileNumber(booking.getMobileNumber())
-                .isRated(booking.isRated())
-                .build();
-    }
+//
+//    private BookingRatingResponseDTO mapToRatingResponseDTO(Booking booking) {
+//        LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
+//        int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
+//
+////        ClinicDTO clinic = fetchClinic(booking.getClinicId()); // ✅ fetch logo
+//
+//        return BookingRatingResponseDTO.builder()
+//                .bookingId(booking.getBookingId())
+//                .clinicId(booking.getClinicId())
+//                .clinicName(booking.getClinicName())
+//                .clinicAddress(booking.getClinicAddress())
+////                .hospitalLogo(clinic.getHospitalLogo())
+//                .customerId(booking.getCustomerId())
+//                .fullName(booking.getFullName())
+//                .city(booking.getCity())
+//                .dob(booking.getDob())
+//                .ageLabel(formatAge(age))
+//                .gender(booking.getGender())
+//                .serviceId(booking.getServiceId())
+//                .serviceName(booking.getServiceName())
+//                .serviceType(booking.getServiceType())
+//                .appointmentDate(booking.getAppointmentDate())
+//                .mobileNumber(booking.getMobileNumber())
+//                .isRated(booking.isRated())
+//                .build();
+//    }
 
     // ================= CANCEL / RESCHEDULE / LIST =================
     @Override
@@ -333,7 +333,7 @@ public class BookingServiceImpl implements BookingService {
             paymentService.refund(booking.getBookingId(), booking.getFinalAmount());
         }
         booking.setPaymentStatus("NA");
-        booking.setUpdatedAt(Instant.now());
+        booking.setUpdatedAt(LocalDate.now().toString());
         bookingRepository.save(booking);
 
         return mapToDTO(booking);
@@ -350,7 +350,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
 
         booking.setAppointmentDate(request.getNewAppointmentDate());
-        booking.setUpdatedAt(Instant.now());
+        booking.setUpdatedAt(LocalDate.now().toString());
         bookingRepository.save(booking);
 
         return mapToDTO(booking);
@@ -383,7 +383,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(newStatus);
-        booking.setUpdatedAt(Instant.now());
+        booking.setUpdatedAt(LocalDate.now().toString());
         bookingRepository.save(booking);
 
         return mapToDTO(booking);
@@ -391,39 +391,117 @@ public class BookingServiceImpl implements BookingService {
 
     // ================= RATE BOOKING =================
     @Override
-    public BookingRatingResponseDTO rateBooking(RatingDTO request) {
+    public RatingResponseDTO rateBooking(RatingDTO request) {
 
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Booking not found"));
 
         if (!"COMPLETED".equalsIgnoreCase(booking.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking is not completed yet");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Booking is not completed yet");
         }
 
         if (request.getRating() < 1 || request.getRating() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5");
         }
 
         if (booking.isRated()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking has already been rated");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Booking has already been rated");
         }
 
         BookingRating rating = BookingRating.builder()
                 .bookingId(booking.getBookingId())
                 .customerId(booking.getCustomerId())
+                .fullName(booking.getFullName())
+                .mobileNumber(booking.getMobileNumber())
+
                 .clinicId(booking.getClinicId())
+                .clinicName(booking.getClinicName())           // ✅
+                .clinicAddress(booking.getClinicAddress())     // ✅
+
                 .serviceId(booking.getServiceId())
+                .serviceName(booking.getServiceName())         // ✅
+                .serviceType(booking.getServiceType())         // ✅
+
                 .rating(request.getRating())
                 .review(request.getReview())
-                .createdAt(Instant.now())
+                .createdAt(LocalDate.now().toString()) // ✅ store as "2026-01-02"
                 .build();
+
 
         bookingRatingRepository.save(rating);
 
-        booking.setRated(true); // set isRated
-        booking.setUpdatedAt(Instant.now());
+        booking.setRated(true);
+        booking.setUpdatedAt(LocalDate.now().toString());
         bookingRepository.save(booking);
 
-        return mapToRatingResponseDTO(booking);
+        // ✅ Return rating response
+        return mapToRatingDTO(rating);
     }
+
+    
+    
+    @Override
+    public List<RatingResponseDTO> getClinicRatings(String clinicId) {
+        return bookingRatingRepository.findByClinicId(clinicId)
+                .stream()
+                .map(this::mapToRatingDTO)
+                .toList();
+    }
+
+    @Override
+    public RatingResponseDTO getBookingRating(String bookingId) {
+        BookingRating rating = bookingRatingRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Rating not found"));
+
+        return mapToRatingDTO(rating);
+    }
+
+    private RatingResponseDTO mapToRatingDTO(BookingRating rating) {
+        return RatingResponseDTO.builder()
+                .bookingId(rating.getBookingId())
+                .customerId(rating.getCustomerId())
+                .fullName(rating.getFullName())
+                .mobileNumber(rating.getMobileNumber())
+
+                .clinicId(rating.getClinicId())
+                .clinicName(rating.getClinicName())           // ✅
+                .clinicAddress(rating.getClinicAddress())     // ✅
+
+                .serviceId(rating.getServiceId())
+                .serviceName(rating.getServiceName())         // ✅
+                .serviceType(rating.getServiceType())         // ✅
+
+                .rating(rating.getRating())
+                .review(rating.getReview())
+                .createdAt(rating.getCreatedAt()) // ✅ FIXED
+
+                .build();
+    }
+
+    @Override
+    public ClinicRatingsResponseDTO getClinicRatingsWithAverage(String clinicId) {
+
+        List<RatingResponseDTO> ratings = bookingRatingRepository
+                .findByClinicId(clinicId)
+                .stream()
+                .map(this::mapToRatingDTO)
+                .toList();
+
+        double average = bookingRatingRepository.getAverageRatingByClinicId(clinicId);
+        average = ratings.isEmpty() ? 0.0 : Math.round(average * 10.0) / 10.0;
+
+        return ClinicRatingsResponseDTO.builder()
+                .clinicId(clinicId)
+                .averageRating(average)
+                .totalRatings(ratings.size())
+                .ratings(ratings)
+                .build();
+    }
+
+
 }

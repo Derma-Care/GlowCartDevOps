@@ -2,6 +2,7 @@ package com.glowkart.clinicadmin.service;
 
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.dto.BookingResponseDTO;
+import com.glowkart.clinicadmin.dto.ClinicRatingsResponseDTO;
 import com.glowkart.clinicadmin.dto.UpdateBookingStatusDTO;
 import com.glowkart.clinicadmin.feign.BookingServiceClient;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +69,17 @@ public class BookingService {
         } else {
             throw new RuntimeException("Failed to update booking status: " + response.getMessage());
         }
+    }
+    
+    public ClinicRatingsResponseDTO getClinicRatings(String clinicId) {
+
+        ApiResponse<ClinicRatingsResponseDTO> response =
+                bookingServiceClient.getClinicRatings(clinicId);
+
+        if (response == null || !response.isSuccess() || response.getData() == null) {
+            throw new RuntimeException("Unable to fetch clinic ratings");
+        }
+
+        return response.getData();
     }
 }

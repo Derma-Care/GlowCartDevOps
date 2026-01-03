@@ -20,8 +20,12 @@ public interface BookingService {
 
 	BookingResponseDTO updateBookingStatus(UpdateBookingStatusDTO request);
 
-	BookingRatingResponseDTO rateBooking(RatingDTO request);
+	RatingResponseDTO rateBooking(RatingDTO request);
 
-	
+	List<RatingResponseDTO> getClinicRatings(String clinicId);
+
+	RatingResponseDTO getBookingRating(String bookingId);
+
+	ClinicRatingsResponseDTO getClinicRatingsWithAverage(String clinicId);
 
 }

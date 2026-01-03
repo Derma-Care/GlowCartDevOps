@@ -1,6 +1,7 @@
 package com.glowkart.clinicadmin.feign;
 
 import com.glowkart.clinicadmin.dto.BookingResponseDTO;
+import com.glowkart.clinicadmin.dto.ClinicRatingsResponseDTO;
 import com.glowkart.clinicadmin.dto.UpdateBookingStatusDTO;
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -25,4 +26,9 @@ public interface BookingServiceClient {
     // ✅ Add this for updating status
     @PutMapping("/booking/update-status")
     ApiResponse<BookingResponseDTO> updateBookingStatus(@RequestBody UpdateBookingStatusDTO request);
+
+    // ⭐ NEW — get clinic ratings with average
+    @GetMapping("/booking/ratings/clinic/{clinicId}")
+    ApiResponse<ClinicRatingsResponseDTO> getClinicRatings(
+            @PathVariable("clinicId") String clinicId);
 }

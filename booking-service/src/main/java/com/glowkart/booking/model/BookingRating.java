@@ -1,6 +1,6 @@
 package com.glowkart.booking.model;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -25,11 +25,18 @@ public class BookingRating {
     private String bookingId;
 
     private String customerId;
+    private String fullName;        // ✅ add
+    private String mobileNumber;    // ✅ add
     private String clinicId;
+    private String clinicName;       // ✅
+    private String clinicAddress;    // ✅
+
     private String serviceId;
+    private String serviceName;      // ✅
+    private String serviceType;      // ✅
 
     private int rating;       // 1 to 5
     private String review;    // optional text
 
-    private Instant createdAt;
+    private String createdAt; // store "2026-01-02" exactly
 }

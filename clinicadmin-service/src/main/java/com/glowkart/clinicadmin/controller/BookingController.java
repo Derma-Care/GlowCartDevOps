@@ -1,14 +1,22 @@
 package com.glowkart.clinicadmin.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.dto.BookingResponseDTO;
+import com.glowkart.clinicadmin.dto.ClinicRatingsResponseDTO;
 import com.glowkart.clinicadmin.dto.UpdateBookingStatusDTO;
 import com.glowkart.clinicadmin.service.BookingService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/clinic-admin")
@@ -72,5 +80,21 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+
+    @GetMapping("/ratings/{clinicId}")
+    public ResponseEntity<ApiResponse<ClinicRatingsResponseDTO>> getClinicRatings(
+            @PathVariable String clinicId) {
+
+        ClinicRatingsResponseDTO data = bookingService.getClinicRatings(clinicId);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Clinic ratings fetched successfully",
+                        data,
+                        200
+                )
+        );
+    }
 
 }

@@ -67,10 +67,48 @@ public class BookingController {
 
 
     @PostMapping("/rate")
-    public ResponseEntity<ApiResponse<BookingRatingResponseDTO>> rateBooking(@RequestBody RatingDTO request) {
-        BookingRatingResponseDTO response = bookingService.rateBooking(request);
-        return ResponseEntity.ok(ApiResponse.of(true, "Booking rated successfully", response, 200));
+    public ResponseEntity<ApiResponse<RatingResponseDTO>> rateBooking(
+            @RequestBody RatingDTO request) {
+
+        RatingResponseDTO response = bookingService.rateBooking(request);
+        return ResponseEntity.ok(
+                ApiResponse.of(true, "Booking rated successfully", response, 200)
+        );
     }
 
+
+//    @GetMapping("/ratings/clinic/{clinicId}")
+//    public ResponseEntity<ApiResponse<List<RatingResponseDTO>>> getClinicRatings(
+//            @PathVariable String clinicId) {
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.of(true, "Clinic ratings fetched",
+//                        bookingService.getClinicRatings(clinicId), 200)
+//        );
+//    }
+
+    @GetMapping("/ratings/clinic/{clinicId}")
+    public ResponseEntity<ApiResponse<ClinicRatingsResponseDTO>> getClinicRatings(
+            @PathVariable String clinicId) {
+
+        return ResponseEntity.ok(
+                ApiResponse.of(
+                        true,
+                        "Clinic ratings fetched",
+                        bookingService.getClinicRatingsWithAverage(clinicId),
+                        200
+                )
+        );
+    }
+
+    @GetMapping("/ratings/booking/{bookingId}")
+    public ResponseEntity<ApiResponse<RatingResponseDTO>> getBookingRating(
+            @PathVariable String bookingId) {
+
+        return ResponseEntity.ok(
+                ApiResponse.of(true, "Booking rating fetched",
+                        bookingService.getBookingRating(bookingId), 200)
+        );
+    }
 
 }
