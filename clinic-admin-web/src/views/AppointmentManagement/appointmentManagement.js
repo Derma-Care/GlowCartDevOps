@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-undef */
 import React, { useEffect, useState } from 'react'
 import {
   CButton,
@@ -30,7 +31,6 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { GetBookingByClinicIdData } from './appointmentAPI'
 import { GetBookingBy_ClinicId } from '../../baseUrl'
- 
 
 import { COLORS } from '../../Constant/Themes'
 import { useGlobalSearch } from '../Usecontext/GlobalSearchContext'
@@ -59,9 +59,7 @@ const appointmentManagement = () => {
   const itemsPerPage = 7
   const navigate = useNavigate()
   const [sortOrder, setSortOrder] = useState('asc')
-  const role = localStorage.getItem('role') // or from context/state
-
-
+  const role = localStorage.getItem('role')
   const fetchAppointments = async () => {
     try {
       const hospitalId = localStorage.getItem('HospitalId')
@@ -365,19 +363,18 @@ const appointmentManagement = () => {
               checked={statusFilters.includes('Rejected')}
             /> */}
           </div>
-         {(role == 'admin' || role == 'receptionist') && (
-  <CButton
-    style={{
-      backgroundColor: 'var(--color-black)',
-      color: 'white',
-      marginLeft: '325px',
-    }}
-    onClick={() => setVisible(true)} // open modal
-  >
-    Book Appointment
-  </CButton>
-)}
-
+          {(role == 'admin' || role == 'receptionist') && (
+            <CButton
+              style={{
+                backgroundColor: 'var(--color-black)',
+                color: 'white',
+                marginLeft: '325px',
+              }}
+              onClick={() => setVisible(true)} // open modal
+            >
+              Book Appointment
+            </CButton>
+          )}
 
           {/* Modal imported from separate file */}
           <BookAppointmentModal visible={visible} onClose={() => setVisible(false)} />

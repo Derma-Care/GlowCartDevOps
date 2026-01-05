@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React from 'react'
 import { CButton, CFormSelect } from '@coreui/react'
 
@@ -32,6 +33,7 @@ const Pagination = ({ currentPage, totalPages, pageSize, onPageChange, onPageSiz
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
           style={{ width: '100px' }}
         >
+          {/* <option value={1}>1</option> */}
           <option value={5}>5</option>
           <option value={10}>10</option>
           <option value={15}>15</option>

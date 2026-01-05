@@ -350,7 +350,7 @@ const ClinicDetails = () => {
             <CCard className="shadow-lg">
 
                 {/* ⭐ HEADER */}
-                <div div className="text-white p-3 d-flex justify-content-between align-items-center rounded" style={{ background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))' }}>
+                <div className="text-white p-3 d-flex justify-content-between align-items-center rounded" style={{ background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))' }}>
                     <h5 className="mb-1" style={{ color: 'white' }}>
                         {formData?.name} — Clinic Details
                     </h5>

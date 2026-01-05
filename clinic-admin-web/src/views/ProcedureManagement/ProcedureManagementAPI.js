@@ -7,16 +7,12 @@ import {
   AddSubService,
   updateService,
   deleteService,
- 
-  
- 
   getservice,
 } from '../../baseUrl'
 import { toast } from 'react-toastify'
 import { http } from '../../Utils/Interceptors'
 import { showCustomToast } from '../../Utils/Toaster'
 
- 
 export const serviceDataH = async () => {
   console.log('Serviceid response:')
   try {
@@ -55,6 +51,7 @@ export const serviceData = async (id) => {
 export const getSubServiceById = async (hospitalId, subServiceId) => {
   try {
     const response = await http.get(`/getSubService/${hospitalId}/${subServiceId}`)
+    console.log(response)
     return response.data?.data // return only the useful data part
   } catch (error) {
     console.error('Error fetching sub-service data:', error)

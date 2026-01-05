@@ -20,6 +20,7 @@ export const getAllProcedures = async () => {
 export const getProcedurePricingByClinicId = async (clinicId) => {
   try {
     const res = await http.get(`/${getProcedures}/${clinicId}`)
+    console.log(res.data)
     return res.data
   } catch (err) {
     console.error('API Error:', err)

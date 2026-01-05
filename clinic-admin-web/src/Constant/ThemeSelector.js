@@ -43,8 +43,6 @@ const ThemeSelector = () => {
     localStorage.setItem('selectedTheme', themeKey) // ✅ Save to localStorage
   }
 
-
-
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle caret={false}>

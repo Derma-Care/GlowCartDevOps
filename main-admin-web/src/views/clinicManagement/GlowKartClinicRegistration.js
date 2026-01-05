@@ -2060,14 +2060,8 @@ const ClinicRegistration = () => {
                             >
                               <Trash2 size={18} />
                             </button>
-
-
-
                           </div>
-
-
                         </CTableDataCell>
-
                       </CTableRow>
                     ))}
                   </CTableBody>

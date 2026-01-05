@@ -13,11 +13,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { NGK_COLORS } from "../../Constant/Themes";
 import PackageManagement from "../PackageManagement/PackageManagement";
 
-// Lazy-load Service Management component
+// Lazy-load Procedures component
 const ServiceManagement = React.lazy(() =>
   import("../MainProcedureManagement/ProcedureManagement")
 );
-
 
 const Package_ProcedureManagement_Tabs = () => {
   const [activeTab, setActiveTab] = useState(1);
@@ -25,8 +24,21 @@ const Package_ProcedureManagement_Tabs = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Clinic data received from navigate(..., {state: clinic})
-  const clinic = location.state;
+  // Get clinic data from route state
+  const clinic = location.state || null;
+
+  // ❗ If no clinic data, show fallback message
+  if (!clinic) {
+    return (
+      <CCard className="p-4 mt-3 text-center">
+        <h4 className="text-danger">⚠ No Clinic Data Found!</h4>
+        <p>Please go back and select a clinic from the list.</p>
+        <CButton onClick={() => navigate(-1)} color="primary">
+          Go Back
+        </CButton>
+      </CCard>
+    );
+  }
 
   return (
     <CCard>
@@ -34,9 +46,12 @@ const Package_ProcedureManagement_Tabs = () => {
       {/* ---------- HEADER ---------- */}
       <div
         className="text-white p-3 d-flex justify-content-between align-items-center rounded"
-        style={{  background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))',color: 'white'}}
+        style={{
+          background: "linear-gradient(135deg, var(--color-black), var(--color-bgcolor))",
+          color: "white"
+        }}
       >
-        <h5 className="mb-1" style={{color: 'white'}}>
+        <h5 className="mb-1" style={{ color: "white" }}>
           {clinic?.name || "Clinic"} — Procedures & Packages
         </h5>
 
@@ -97,10 +112,9 @@ const Package_ProcedureManagement_Tabs = () => {
 
           {/* ===================== PACKAGES TAB ========================= */}
           <CTabPane visible={activeTab === 2}>
-            <Suspense fallback={<p>Loading Procedures...</p>}>
+            <Suspense fallback={<p>Loading Packages...</p>}>
               <PackageManagement clinic={clinic} />
             </Suspense>
-            
           </CTabPane>
 
         </CTabContent>

@@ -26,38 +26,38 @@ export const HospitalProvider = ({ children }) => {
   const [hydrated, setHydrated] = useState(false) // Track data readiness
 
   // ✅ Fetch Permissions by Clinic, Branch, and User
-  const fetchPermissions = useCallback(async () => {
-    console.log('fetchPermissions calling')
-    try {
-      const hospitalId = localStorage.getItem('HospitalId')
-      const branchId = localStorage.getItem('branchId')
-      const staffId = localStorage.getItem('staffId')
+  // const fetchPermissions = useCallback(async () => {
+  //   console.log('fetchPermissions calling')
+  //   try {
+  //     const hospitalId = localStorage.getItem('HospitalId')
+  //     const branchId = localStorage.getItem('branchId')
+  //     const staffId = localStorage.getItem('staffId')
 
-      if (!hospitalId || !branchId || !staffId) {
-        console.warn('Missing IDs for permissions fetch')
-        return
-      }
+  //     if (!hospitalId || !branchId || !staffId) {
+  //       console.warn('Missing IDs for permissions fetch')
+  //       return
+  //     }
 
-      const url = `${BASE_URL}/getPermissionsByClinicIdBranchIdUserId/${hospitalId}/${branchId}/${staffId}`
-      console.log(url)
+  //     const url = `${BASE_URL}/getPermissionsByClinicIdBranchIdUserId/${hospitalId}/${branchId}/${staffId}`
+  //     console.log(url)
 
-      const res = await http.get(url)
+  //     const res = await http.get(url)
 
-      console.log(res)
-      if (res.status === 200 && res.data) {
-        const permissions = res.data.data.permissions
+  //     console.log(res)
+  //     if (res.status === 200 && res.data) {
+  //       const permissions = res.data.data.permissions
 
-        // ✅ Update user in state and localStorage
-        const updatedUser = { ...user, permissions }
-        localStorage.setItem('hospitalUser', JSON.stringify(updatedUser))
-        setUser(updatedUser)
+  //       // ✅ Update user in state and localStorage
+  //       const updatedUser = { ...user, permissions }
+  //       localStorage.setItem('hospitalUser', JSON.stringify(updatedUser))
+  //       setUser(updatedUser)
 
-        console.log('✅ Permissions updated:', permissions)
-      }
-    } catch (err) {
-      console.error('Error fetching permissions:', err)
-    }
-  }, [])
+  //       console.log('✅ Permissions updated:', permissions)
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching permissions:', err)
+  //   }
+  // }, [])
 
   // Persist user & hospital to localStorage
   useEffect(() => {
@@ -126,12 +126,12 @@ export const HospitalProvider = ({ children }) => {
   useEffect(() => {
     if (hospitalId) {
       fetchAllData()
-      fetchPermissions()
+      // fetchPermissions()
       console.log('fetchPermissions calling') // ✅ also update permissions on refresh or hospital change
     } else {
       setHydrated(true)
     }
-  }, [hospitalId, fetchAllData, fetchPermissions])
+  }, [hospitalId, fetchAllData])
 
   return (
     <HospitalContext.Provider
@@ -157,7 +157,7 @@ export const HospitalProvider = ({ children }) => {
    
       
         // fetchSubServices,
-        fetchPermissions, // expose for manual calls (like after login)
+        // fetchPermissions, // expose for manual calls (like after login)
       }}
     >
       {children}

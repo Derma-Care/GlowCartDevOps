@@ -14,7 +14,6 @@ import {
 import { cilLockLocked, cilAccountLogout, cilSettings } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
- 
 import DermaCareLogo from '../../assets/images/logoP.png'
 import axios from 'axios'
 import { MainAdmin_URL, updatePassword } from '../../baseUrl'
@@ -67,7 +66,7 @@ const AppHeaderDropdown = () => {
 
   return (
     <>
-      <CDropdown variant="nav-item" style={{cursor:"pointer"}}>
+      <CDropdown variant="nav-item" style={{ cursor: 'pointer' }}>
         <CDropdownToggle caret={false}>
           <img src={DermaCareLogo} alt="Logo" style={{ width: '50px' }} />
         </CDropdownToggle>
@@ -99,6 +98,7 @@ const AppHeaderDropdown = () => {
         size="lg"
         onClose={() => setShowResetModal(false)}
         backdrop="static"
+        className="custom-modal"
       >
         <CModalHeader>
           <CModalTitle>Change Password</CModalTitle>

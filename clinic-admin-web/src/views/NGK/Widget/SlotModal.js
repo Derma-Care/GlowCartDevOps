@@ -5,8 +5,6 @@ import { showCustomToast } from '../../../Utils/Toaster'
 import { BASE_URL } from '../../../baseUrl'
 import LoadingIndicator from '../../../Utils/loader'
 
-const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
 export default function ClinicSlotManager({ show, setShow, clinicId }) {
   const [days, setDays] = useState([])
   const [loading, setLoading] = useState(false)
@@ -25,17 +23,23 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
       })
 
       const { dates, slots } = res.data.data
+      // Create map for fast lookup
+      const slotMap = {}
+      slots.forEach((s) => {
+        slotMap[s.date] = s
+      })
 
-      const mapped = dates.map((dateStr) => {
-        const d = new Date(dateStr)
-        const existing = slots.find((s) => s.date === dateStr)
+      const mapped = dates.map((dObj) => {
+        const existing = slotMap[dObj.date]
 
         return {
-          date: d,
-          dateStr,
-          week: weekdays[d.getDay()],
-          isWorking: existing ? existing.workingHours === true : null, // 🔥 FIX
-          reason: existing?.reason,
+          date: new Date(dObj.date),
+          dateStr: dObj.date,
+          week: dObj.dayOfWeek,
+
+          hasSlot: !!existing, // ✅ NEW
+          isWorking: existing?.workingHours ?? true,
+          reason: existing?.reason || '',
           error: '',
         }
       })
@@ -53,13 +57,24 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
     const updated = [...days]
     const day = updated[index]
 
+    // 🩶 Case 1: Slot not configured (GRAY → BLUE)
+    if (!day.hasSlot) {
+      day.hasSlot = true
+      day.isWorking = true
+      day.reason = 'Working Day'
+      day.error = ''
+      setDays(updated)
+      return
+    }
+
+    // 🔵 Case 2: Working → Unavailable
     if (day.isWorking === true) {
-      // working → mark unavailable
       day.isWorking = false
       day.reason = ''
       day.error = 'Reason required'
-    } else {
-      // null OR false → mark working
+    }
+    // 🌸 Case 3: Unavailable → Working
+    else {
       day.isWorking = true
       day.reason = 'Working Day'
       day.error = ''
@@ -93,13 +108,17 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
     let hasError = false
 
     const exceptions = []
-
     days.forEach((d) => {
+      // ⛔ Skip gray (not configured) dates completely
+      if (!d.hasSlot) return
+
+      // ❌ Unavailable but no reason
       if (!d.isWorking && !d.reason) {
         d.error = 'Reason required'
         hasError = true
       }
 
+      // ❌ Collect only unavailable slots
       if (!d.isWorking) {
         exceptions.push({
           date: d.dateStr,
@@ -133,23 +152,30 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
 
   return (
     <>
-      <CModal visible={show} size="lg" onClose={() => setShow(false)} backdrop="static" className='custom-modal'>
+      <CModal
+        visible={show}
+        size="lg"
+        onClose={() => setShow(false)}
+        backdrop="static"
+        className="custom-modal"
+      >
         <CModalHeader>
           <strong>Manage Clinic Slots (Next 30 Days)</strong>
         </CModalHeader>
 
         <CModalBody>
           {loading ? (
-              <div className="d-flex justify-content-center align-items-center">
-                   <LoadingIndicator message="Generating Slots..." />  
-                    </div>
-            
+            <div className="d-flex justify-content-center align-items-center">
+              <LoadingIndicator message="Generating Slots..." />
+            </div>
           ) : (
             <div className="d-flex flex-wrap gap-3">
               {days.map((day, idx) => (
                 <div
                   key={day.dateStr}
-                  onClick={() => toggleDay(idx)}
+                  onClick={() => {
+                    toggleDay(idx)
+                  }}
                   style={{
                     width: 110,
                     padding: 10,
@@ -157,12 +183,11 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
                     textAlign: 'center',
                     cursor: 'pointer',
 
-                    background:
-                      day.isWorking === true
-                        ? 'var(--color-bgcolor)' // working
-                        : day.isWorking === false
-                          ? '#ffd6d6' // 🌸 light pink when reason open
-                          : '#e0e0e0', // gray for null
+                    background: !day.hasSlot
+                      ? '#e0e0e0' // ⚠️ Slot NOT configured (GRAY)
+                      : day.isWorking
+                        ? 'var(--color-bgcolor)' // ✅ Working (BLUE)
+                        : '#ffd6d6', // ❌ Unavailable (PINK)
 
                     border:
                       day.isWorking === false && day.error ? '1px solid red' : '1px solid #ccc',

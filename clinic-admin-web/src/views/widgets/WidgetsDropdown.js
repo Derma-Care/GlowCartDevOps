@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   CRow,
   CCol,
@@ -37,6 +37,11 @@ import ClinicSlotManager from '../NGK/Widget/SlotModal'
 import AdCarousel from './AdCarousel'
 import { useGlobalSearch } from '../Usecontext/GlobalSearchContext'
 import DermaCareLogo from '../../assets/images/logoP.png'
+import axios from 'axios'
+import { BASE_URL } from '../../baseUrl'
+import { showCustomToast } from '../../Utils/Toaster'
+import ConfirmationModal from '../../components/ConfirmationModal'
+import { ToastContainer } from 'react-toastify'
 const WidgetsDropdown = () => {
   const navigate = useNavigate()
   const today = new Date().toISOString().split('T')[0]
@@ -50,6 +55,11 @@ const WidgetsDropdown = () => {
   const { searchQuery } = useGlobalSearch()
   const [showDoctorsModal, setShowDoctorsModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [appointments, setAppointments] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [pendingStatusChange, setPendingStatusChange] = useState(null)
+  // { bookingId, newStatus }
 
   // Toggle filter (Pending / Completed)
   const toggleFilter = (status) => {
@@ -61,7 +71,6 @@ const WidgetsDropdown = () => {
 
     return isDateMatch && isStatusMatch
   })
-
   const filteredDoctors = selectedHospital?.data?.doctorsList?.filter(
     (doctor) =>
       doctor.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,40 +86,95 @@ const WidgetsDropdown = () => {
   //   return filterTypes.includes(item.status)
   // })
   const pendingCount = aptData.filter((item) => item.status.toLowerCase() === 'pending').length
+  const confirmedCount = appointments.filter((item) => item.status === 'CONFIRMED').length
 
   const finalFiltered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim()
 
-    return aptData.filter((item) => {
-      // Search filter
+    return appointments.filter((item) => {
       const matchesSearch =
         !q || Object.values(item).some((val) => String(val).toLowerCase().includes(q))
 
-      // Date filter
-      const matchesDate = selectedDate ? item.serviceDate === selectedDate : true
+      const matchesDate = selectedDate ? item.appointmentDate === selectedDate : true
 
-      // Status filter
       const matchesStatus = filterTypes.length === 0 ? true : filterTypes.includes(item.status)
 
       return matchesSearch && matchesDate && matchesStatus
     })
-  }, [searchQuery, selectedDate, filterTypes])
+  }, [appointments, searchQuery, selectedDate, filterTypes])
 
   const displayData = useMemo(
     () => finalFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
     [finalFiltered, currentPage, pageSize],
   )
 
+  useEffect(() => {
+    if (!selectedHospital?.data?.clinicId) return
+
+    const fetchBookings = async () => {
+      setLoading(true)
+      try {
+        const res = await axios.get(`${BASE_URL}/bookings/${selectedHospital.data.clinicId}`)
+
+        setAppointments(res.data?.data || [])
+      } catch (error) {
+        console.error('Failed to fetch bookings', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBookings()
+  }, [selectedHospital])
+
+  const updateBookingStatus = async (bookingId, newStatus) => {
+    try {
+      const res = await axios.put(`${BASE_URL}/bookings/update-status`, {
+        bookingId: bookingId,
+        status: newStatus,
+      })
+
+      // Update UI after success
+      setAppointments((prev) =>
+        prev.map((item) => (item.bookingId === bookingId ? { ...item, status: newStatus } : item)),
+      )
+      showCustomToast(`${res.data.message || 'Status updated successfully'}`)
+    } catch (error) {
+      console.error('Failed to update status', error)
+      showCustomToast('Status update failed')
+    }
+  }
+  const handleStatusChange = (bookingId, newStatus) => {
+    setPendingStatusChange({ bookingId, newStatus })
+    setIsModalVisible(true)
+  }
+  const handleConfirmStatusChange = async () => {
+    if (!pendingStatusChange) return
+
+    const { bookingId, newStatus } = pendingStatusChange
+
+    await updateBookingStatus(bookingId, newStatus)
+
+    setIsModalVisible(false)
+    setPendingStatusChange(null)
+  }
+
+  const handleCancelStatusChange = () => {
+    setIsModalVisible(false)
+    setPendingStatusChange(null)
+  }
+
   return (
     <>
+      <ToastContainer />
       {/* ----------------------  TOP CARDS ---------------------- */}
       <CRow className="d-flex justify-content-between align-items-start  align-content-center">
         <CCol sm={3} className="mb-2">
-          <CWidgetStatsA color="info" value={aptData.length} title="Total Appointments" />
+          <CWidgetStatsA color="info" value={appointments.length} title="Total Appointments" />
         </CCol>
 
         <CCol sm={3} className="mb-2">
-          <CWidgetStatsA color="success" value={pendingCount} title="Pending Appointments" />
+          <CWidgetStatsA color="success" value={confirmedCount} title="Confirmed Appointments" />
         </CCol>
 
         <CCol sm={3} className="mb-2">
@@ -132,7 +196,11 @@ const WidgetsDropdown = () => {
             style={{ cursor: 'pointer' }}
           />
 
-          <ClinicSlotManager show={showModal} setShow={setShowModal} clinicId={selectedHospital?.data.clinicId}/>
+          <ClinicSlotManager
+            show={showModal}
+            setShow={setShowModal}
+            clinicId={selectedHospital?.data.clinicId}
+          />
         </CCol>
       </CRow>
 
@@ -163,16 +231,18 @@ const WidgetsDropdown = () => {
             </CButton>
 
             <button
-              onClick={() => toggleFilter('Pending')}
-              className={`btn ${filterTypes.includes('Pending') ? 'btn-selected' : 'btn-unselected'}`}
+              onClick={() => toggleFilter('CONFIRMED')}
+              className={`btn ${
+                filterTypes.includes('CONFIRMED') ? 'btn-selected' : 'btn-unselected'
+              }`}
             >
-              Pending
+              Confirmed
             </button>
 
             <button
-              onClick={() => toggleFilter('Completed')}
+              onClick={() => toggleFilter('COMPLETED')}
               className={`btn ${
-                filterTypes.includes('Completed') ? 'btn-selected' : 'btn-unselected'
+                filterTypes.includes('COMPLETED') ? 'btn-selected' : 'btn-unselected'
               }`}
             >
               Completed
@@ -182,7 +252,7 @@ const WidgetsDropdown = () => {
           {/* RIGHT SIDE → RESULTS + DATE */}
           <div className="d-flex align-items-center gap-3">
             <p className="m-0  " style={{ color: 'var(--color-black)' }}>
-              Showing {filteredAppointments.length} results
+              Showing {displayData.length} results
             </p>
 
             <CFormInput
@@ -305,48 +375,62 @@ const WidgetsDropdown = () => {
             </CTableHead>
 
             <CTableBody>
-              {displayData
-                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-                .map((item, index) => (
-                  <CTableRow key={item.bookingId}>
-                    <CTableDataCell>{(currentPage - 1) * pageSize + index + 1}</CTableDataCell>
-                    <CTableDataCell>{item.patientName}</CTableDataCell>
-                    <CTableDataCell>{item.patientAge} Yrs</CTableDataCell>
-                    <CTableDataCell>{item.service.type}</CTableDataCell>
-                    <CTableDataCell>{item.service.serviceName}</CTableDataCell>
-                    <CTableDataCell>{item.serviceDate}</CTableDataCell>
+              {displayData.map((item, index) => (
+                <CTableRow key={item.bookingId}>
+                  <CTableDataCell>{(currentPage - 1) * pageSize + index + 1}</CTableDataCell>
 
-                    <CTableDataCell>
+                  <CTableDataCell>{item.fullName}</CTableDataCell>
+                  <CTableDataCell>{item.ageLabel}</CTableDataCell>
+
+                  <CTableDataCell>{item.serviceType}</CTableDataCell>
+                  <CTableDataCell>{item.serviceName}</CTableDataCell>
+                  <CTableDataCell>{item.appointmentDate}</CTableDataCell>
+
+                  <CTableDataCell>
+                    {item.status === 'CONFIRMED' ? (
                       <CFormSelect
                         size="sm"
                         value={item.status}
-                        onChange={(e) => {
-                          item.status = e.target.value
-                          // If you want re-render: update state
-                        }}
+                        className="status-inline status-confirmed"
+                        onChange={(e) => handleStatusChange(item.bookingId, e.target.value)}
                       >
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
+                        <option value="CONFIRMED">CONFIRMED</option>
+                        <option value="COMPLETED">COMPLETED</option>
                       </CFormSelect>
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <CButton
-                        style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/appointment-details/${item.bookingId}`, {
-                            state: { appointment: item },
-                          })
-                        }
-                      >
-                        View
-                      </CButton>
-                    </CTableDataCell>
-                  </CTableRow>
-                ))}
+                    ) : (
+                      <span className="status-badge status-completed">COMPLETED</span>
+                    )}
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+                    <CButton
+                      size="sm"
+                      style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+                      onClick={() =>
+                        navigate(`/appointment-details/${item.bookingId}`, {
+                          state: { appointment: item },
+                        })
+                      }
+                    >
+                      View
+                    </CButton>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
             </CTableBody>
           </CTable>
         )}
+        <ConfirmationModal
+          isVisible={isModalVisible}
+          title="Confirm Status Change"
+          message="Are you sure you want to mark this appointment as COMPLETED?"
+          confirmText="Yes, Mark as Completed"
+          cancelText="Cancel"
+          confirmColor="success"
+          cancelColor="secondary"
+          onConfirm={handleConfirmStatusChange}
+          onCancel={handleCancelStatusChange}
+        />
 
         <Pagination
           currentPage={currentPage}

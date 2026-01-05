@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // PackageTablData.jsx
 import React from 'react'
 import {

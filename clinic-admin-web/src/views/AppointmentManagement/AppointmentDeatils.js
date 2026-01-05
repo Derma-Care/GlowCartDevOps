@@ -91,7 +91,6 @@ const AppointmentDetails = () => {
 
   useEffect(() => {
     if (['confirmed', 'active', 'completed'].includes(normalizedStatus)) {
-      fetchVitals()
     }
   }, [appointment?.bookingId, appointment?.patientId, normalizedStatus])
 
@@ -108,19 +107,6 @@ const AppointmentDetails = () => {
   //     fetchVitals()
   //   }
   // }, [appointment?.bookingId, appointment?.patientId, appointment?.status])
-
-  const fetchVitals = async () => {
-    try {
-      const data = await VitalsDataById(appointment.bookingId, appointment.patientId)
-      if (Array.isArray(data) && data.length === 0) {
-        setVitals(null)
-      } else {
-        setVitals(data)
-      }
-    } catch (error) {
-      console.error('Error fetching vitals:', error)
-    }
-  }
 
   // Handle vitals form input
   const handleChange = (e) => {
@@ -178,7 +164,6 @@ const AppointmentDetails = () => {
 
       setShowModal(false)
       setFormData({ height: '', weight: '', bloodPressure: '', temperature: '', bmi: '' })
-      fetchVitals()
     } catch (error) {
       showCustomToast('Failed to add vitals', 'error')
     } finally {
@@ -191,7 +176,6 @@ const AppointmentDetails = () => {
       showCustomToast('Vitals updated successfully!', 'success')
 
       setShowModal(false)
-      fetchVitals()
     } catch (error) {
       showCustomToast('Failed to update vitals', 'error')
     }
@@ -349,28 +333,7 @@ const AppointmentDetails = () => {
         className="p-3 d-flex justify-content-between align-items-center rounded"
         style={{ backgroundColor: 'var(--color-bgcolor)' }}
       >
-        <h5 className="mb-0">Patient File Name: {appointment.patientId}</h5>
-        <div className="d-flex gap-2">
-          {showConfirmed && !vitals && (
-            <CButton
-              style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-              onClick={() => {
-                setFormData({ height: '', weight: '', bloodPressure: '', temperature: '', bmi: '' })
-                setShowModal(true)
-              }}
-            >
-              Add Vitals
-            </CButton>
-          )}
-          {/* <CButton
-            color="secondary"
-            size="sm"
-            onClick={() => navigate(-1)}
-            style={{ backgroundColor: 'var(--color-black)' }}
-          >
-            Back
-          </CButton> */}
-        </div>
+        <h5 className="mb-0">Patient File Name: {appointment.customerId}</h5>
       </div>
 
       <div
@@ -391,24 +354,22 @@ const AppointmentDetails = () => {
           </div>
         </div>
 
- 
-
         {/* Patient Info */}
         <div className="row mb-3">
           <div className="col-md-4 mb-2">
-            <strong>Patient Name:</strong> {appointment?.patientName}
+            <strong>Patient Name:</strong> {appointment?.fullName}
           </div>
           <div className="col-md-4">
-            <strong>Mobile Number:</strong> {appointment?.customermobileNumber}
+            <strong>Mobile Number:</strong> {appointment?.mobileNumber}
           </div>
           <div className="col-md-4">
-            <strong>Booking Type:</strong> {appointment?.service.type}
+            <strong>Booking Type:</strong> {appointment?.serviceType}
           </div>
           <div className="col-md-4">
             <strong>Date Of Birth:</strong> {appointment?.dob}
           </div>
-           <div className="col-md-4">
-            <strong>Age:</strong> {appointment?.patientAge} Yrs
+          <div className="col-md-4">
+            <strong>Age:</strong> {appointment?.ageLabel}
           </div>
           <div className="col-md-4">
             <strong>Gender:</strong> {appointment?.gender}
@@ -427,19 +388,19 @@ const AppointmentDetails = () => {
         </h6> */}
         <div className="row">
           <div className="col-md-4 mb-2">
-            <strong>Date:</strong> {appointment?.serviceDate}
+            <strong>Date:</strong> {appointment.appointmentDate}
           </div>
           {/* <div className="col-md-4">
-            <strong>Time:</strong> {appointment?.servicetime}
+            <strong>Time:</strong> {appointment?.servicetime.serviceType}
           </div> */}
           <div className="col-md-4">
-            <strong>Paid Amount:</strong> ₹{appointment?.paidAmount}
+            <strong>Paid Amount:</strong> ₹{appointment.finalAmount}
           </div>
           <div className="col-md-4">
-            <strong>Consultation Fee:</strong> ₹{appointment?.consultationFee}
+            <strong>Consultation Fee:</strong> ₹{appointment.consultationFee}
           </div>
           <div className="col-md-12">
-            <strong>Service Name:</strong> {appointment?.service.serviceName}
+            <strong>Service Name:</strong> {appointment.serviceName}
           </div>
         </div>
 

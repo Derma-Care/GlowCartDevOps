@@ -193,3 +193,38 @@ a {
     transform: scale(0.95);
   }
 }
+.status-inline {
+ 
+  font-weight: 600;
+  font-size: 12px;
+  text-align: center;
+  padding: 6px 28px 6px 12px;
+ 
+  border: 1px solid #b7e1c2;
+  background-color: #e6f4ea;
+  color: #198754;
+   cursor: pointer; 
+}
+
+.status-inline:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 14px;
+ 
+  font-weight: 600;
+  font-size: 12px;
+  min-width: 110px;
+  text-align: center;
+}
+
+/* COMPLETED */
+.status-completed {
+  width: 100%;
+  background-color: #f1f3f5;
+  color: #6c757d;
+}
+

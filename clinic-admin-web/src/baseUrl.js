@@ -66,12 +66,12 @@ export const resetPassword = 'clinics/reset-password'
 export const updatePassword = 'clinics/updatePassword'
 
 //payout login
-export const payoutlogin = 'payout-login' //done
+export const payoutlogin = 'payout-login'
 
 export const sendPayoutOtp = 'payout-forgot-password'
 export const resendPayoutOTP = 'payout-resend-otp'
 export const resetPayoutPassword = 'payout-reset-password'
-export const payoutsupdatePassword = 'updatePayoutPassword'  //done
+export const payoutsupdatePassword = 'updatePayoutPassword'
 
 //unwanted
 export const Booking_service_Url = `${wifiUrl}/api/booking`

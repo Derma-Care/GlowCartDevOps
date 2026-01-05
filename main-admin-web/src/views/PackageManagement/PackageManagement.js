@@ -655,10 +655,10 @@ const PackageManagement = () => {
 
       {/* Top Right "Add" Button (if needed) */}
       <div>
-        <CForm className="d-flex justify-content-end mb-3">
+      
 
           <div className="w-100 mb-3">
-            <CForm className="d-flex justify-content-between align-items-center">
+            <div className="d-flex justify-content-between align-items-center">
 
               {/* 🔍 SEARCH FIELD */}
               <input
@@ -683,9 +683,9 @@ const PackageManagement = () => {
               >
                 Add Package Details
               </CButton>
-            </CForm>
+            </div>
           </div>
-        </CForm>
+    
       </div>
 
       {/* View Modal */}
