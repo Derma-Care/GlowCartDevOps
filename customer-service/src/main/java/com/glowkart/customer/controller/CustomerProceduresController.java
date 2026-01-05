@@ -48,12 +48,12 @@ public class CustomerProceduresController {
         );
     }
 
-    // 4️⃣ Get all packages (across all clinics)
-    @GetMapping("/customer/procedures/packages")
-    public ResponseEntity<ApiResponse<List<ProcedurePackageDTO>>> getAllPackages() {
-        List<ProcedurePackageDTO> packages = procedureIntegrationService.getAllPackages();
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, "All procedure packages fetched successfully", packages)
-        );
-    }
+//    // 4️⃣ Get all packages (across all clinics)
+//    @GetMapping("/customer/procedures/packages")
+//    public ResponseEntity<ApiResponse<List<ProcedurePackageDTO>>> getAllPackages() {
+//        List<ProcedurePackageDTO> packages = procedureIntegrationService.getAllPackages();
+//        return ResponseEntity.ok(
+//                new ApiResponse<>(true, "All procedure packages fetched successfully", packages)
+//        );
+//    }
 }

@@ -86,4 +86,17 @@ public class ProcedurePackageController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Procedure package deleted successfully", null));
     }
 
+    @GetMapping("/packages/clinics/{packageId}")
+    public ResponseEntity<ApiResponse<List<String>>> getClinicIdsByPackage(
+            @PathVariable String packageId) {
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Clinics fetched for package",
+                        service.getClinicIdsByPackage(packageId)
+                )
+        );
+    }
+
 }

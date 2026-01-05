@@ -352,4 +352,14 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
     }
+
+    @Override
+    public List<String> getClinicIdsByPackage(String packageId) {
+        return repo.findById(packageId)
+                .map(pkg -> List.of(pkg.getClinicId()))
+                .orElseThrow(() -> new ResourceNotFoundException("PACKAGE_NOT_FOUND", "Package not found"));
+    }
+
+
+
 }

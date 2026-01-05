@@ -19,4 +19,6 @@ public interface ProcedurePackageService {
     List<ProcedurePackageDTO> getAll();
 
 	ProcedurePackageDTO getByClinicAndPackage(String clinicId, String packageId);
+
+	List<String> getClinicIdsByPackage(String packageId);
 }

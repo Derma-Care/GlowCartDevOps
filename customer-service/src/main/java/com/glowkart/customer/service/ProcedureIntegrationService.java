@@ -3,6 +3,7 @@ package com.glowkart.customer.service;
 import com.glowkart.customer.dto.CustomerProcedureOfferDTO;
 import com.glowkart.customer.dto.ProcedureDTO;
 import com.glowkart.customer.dto.ProcedurePackageDTO;
+import com.glowkart.customer.dto.ProcedurePackageWithClinicsDTO;
 import com.glowkart.customer.dto.ProcedurePricingDTO;
 import com.glowkart.customer.feign.ProcedureServiceClient;
 import lombok.RequiredArgsConstructor;
@@ -37,4 +38,9 @@ public class ProcedureIntegrationService {
     public List<CustomerProcedureOfferDTO> getProcedureOffers() {
         return procedureServiceClient.getProcedureOffers().getData();
     }
+
+	public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(double latitude, double longitude) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

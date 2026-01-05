@@ -42,4 +42,18 @@ public interface ProcedureServiceClient {
     ApiResponse<List<String>> getClinicIdsByProcedure(
             @PathVariable String procedureId
     );
+    
+ // 🔥 NEW: get clinic IDs offering this package
+    @GetMapping("/procedures/packages/clinics/{packageId}")
+    ApiResponse<List<String>> getClinicIdsByPackage(
+            @PathVariable String packageId
+    );
+
+    // 🔥 NEW: get pricing for a package at a specific clinic
+    @GetMapping("/procedures/packages/clinic/{clinicId}/{packageId}")
+    ApiResponse<ProcedurePricingDTO> getPackagePricingForClinic(
+            @PathVariable String clinicId,
+            @PathVariable String packageId
+    );
+
 }

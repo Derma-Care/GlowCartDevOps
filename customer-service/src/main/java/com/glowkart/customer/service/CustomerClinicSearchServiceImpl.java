@@ -2,6 +2,8 @@ package com.glowkart.customer.service;
 
 import com.glowkart.customer.dto.ClinicProcedureLinkDTO;
 import com.glowkart.customer.dto.ClinicPublicDTO;
+import com.glowkart.customer.dto.ProcedurePackageDTO;
+import com.glowkart.customer.dto.ProcedurePackageWithClinicsDTO;
 import com.glowkart.customer.dto.ProcedurePricingDTO;
 import com.glowkart.customer.feign.AdminClinicClient;
 import com.glowkart.customer.feign.ProcedureServiceClient;
@@ -9,8 +11,10 @@ import com.glowkart.customer.geo.ReverseGeoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchService {
@@ -19,106 +23,166 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     private final AdminClinicClient adminClinicClient;
     private final ProcedureServiceClient procedureServiceClient;
 
+    // ============================
+    // Find clinics offering a procedure
+    // ============================
     @Override
-    public List<ClinicProcedureLinkDTO> findClinicsForProcedure(
-            double latitude,
-            double longitude,
-            String procedureId) {
+    public List<ClinicProcedureLinkDTO> findClinicsForProcedure(double latitude, double longitude, String procedureId) {
 
-        // 1️⃣ Resolve state from lat/lng
         String state = reverseGeoService.resolveState(latitude, longitude);
+        List<ClinicPublicDTO> clinicsInState = adminClinicClient.getClinicsByState(state, null).getData();
 
-        // 2️⃣ Fetch verified clinics in that state, ignore offline flag in Feign
-        List<ClinicPublicDTO> clinicsInState =
-                adminClinicClient.getClinicsByState(state, null).getData();
+        if (clinicsInState == null || clinicsInState.isEmpty()) return Collections.emptyList();
 
-        if (clinicsInState == null || clinicsInState.isEmpty()) return List.of();
-
-        // 3️⃣ Filter only online clinics
         clinicsInState = clinicsInState.stream()
                 .filter(ClinicPublicDTO::isOnline)
                 .toList();
 
-        if (clinicsInState.isEmpty()) return List.of();
+        if (clinicsInState.isEmpty()) return Collections.emptyList();
 
-        // 4️⃣ Fetch clinic IDs offering this procedure
-        Set<String> clinicIdsOfferingProcedure = Set.copyOf(
-                procedureServiceClient.getClinicIdsByProcedure(procedureId).getData()
-        );
+        List<String> clinicIds = procedureServiceClient.getClinicIdsByProcedure(procedureId).getData();
+        if (clinicIds == null || clinicIds.isEmpty()) return Collections.emptyList();
 
-        // 5️⃣ Map clinics with procedure pricing and calculate distance
+        Set<String> clinicIdsOfferingProcedure = Set.copyOf(clinicIds);
+
         return clinicsInState.stream()
                 .filter(c -> clinicIdsOfferingProcedure.contains(c.getClinicId()))
-                .map(c -> {
-                    // Fetch clinic-specific procedure pricing
-                    var pricing = procedureServiceClient
-                            .getPricingByProcedureForClinic(procedureId, c.getClinicId())
-                            .getData();
-
-                    // Calculate distance in KM
-                    double distanceKm = calculateDistanceInKm(latitude, longitude,
-                            c.getLatitude(), c.getLongitude());
-
-                    String distanceStr = distanceKm < 1
-                            ? (int) Math.round(distanceKm * 1000) + " M"
-                            : Math.round(distanceKm) + " KM";
-
-                    // Inject hospital rating dynamically
-                    double rating = c.getHospitalOverallRating(); // already set from admin-service
-
-                    return ClinicProcedureLinkDTO.builder()
-                            .clinicId(c.getClinicId())
-                            .name(c.getName())
-                            .address(c.getAddress())
-                            .city(c.getCity())
-                            .state(c.getState())
-                            .latitude(c.getLatitude())
-                            .longitude(c.getLongitude())
-                            .online(c.isOnline())
-                            .contactNumber(c.getContactNumber())
-                            .whatsappNumber(c.getWhatsappNumber())
-                            .email(c.getEmail())
-                            .openingTime(c.getOpeningTime())
-                            .closingTime(c.getClosingTime())
-                            .hospitalLogo(c.getHospitalLogo())
-                            .hospitalOverallRating(rating)
-                            .website(c.getWebsite())
-                            .licenseNumber(c.getLicenseNumber())
-                            .issuingAuthority(c.getIssuingAuthority())
-                            .clinicType(c.getClinicType())
-                            .medicinesSoldOnSite(c.getMedicinesSoldOnSite())
-                            .drugLicenseFormType(c.getDrugLicenseFormType())
-                            .hasPharmacist(c.getHasPharmacist())
-                            .recommended(c.isRecommended())
-                            .subscription(c.getSubscription())
-                            .nabhScore(c.getNabhScore())
-                            .branch(c.getBranch())
-                            .walkthrough(c.getWalkthrough())
-                            .instagramHandle(c.getInstagramHandle())
-                            .twitterHandle(c.getTwitterHandle())
-                            .facebookHandle(c.getFacebookHandle())
-                            .primaryContactPerson(c.getPrimaryContactPerson())
-                            .designation(c.getDesignation())
-                            .clinicManagementSoftwareUsage(c.getClinicManagementSoftwareUsage())
-                            .doctorsList(c.getDoctorsList())
-                            .procedurePricing(pricing)
-                            .distanceInKm(distanceStr)
-                            .createdAt(c.getCreatedAt())
-                            .status(c.getStatus())
-                            .username(c.getUsername())
-                            .role(c.getRole())
-                            .build();
-                })
-                // 6️⃣ Sort clinics by distance
-                .sorted((c1, c2) -> {
-                    double d1 = parseDistance(c1.getDistanceInKm());
-                    double d2 = parseDistance(c2.getDistanceInKm());
-                    return Double.compare(d1, d2);
-                })
+                .map(c -> mapClinicWithPricing(c, latitude, longitude, procedureId, true))
+                .sorted((c1, c2) -> Double.compare(parseDistance(c1.getDistanceInKm()), parseDistance(c2.getDistanceInKm())))
                 .toList();
     }
 
-    /** Convert distance string like "500 M" or "2 KM" to KM as double */
+    // ============================
+    // Find clinics offering a package
+    // ============================
+    @Override
+    public List<ClinicProcedureLinkDTO> findClinicsForPackage(double latitude, double longitude, String packageId) {
+
+        String state = reverseGeoService.resolveState(latitude, longitude);
+        List<ClinicPublicDTO> clinicsInState = adminClinicClient.getClinicsByState(state, null).getData();
+
+        if (clinicsInState == null || clinicsInState.isEmpty()) return Collections.emptyList();
+
+        clinicsInState = clinicsInState.stream()
+                .filter(ClinicPublicDTO::isOnline)
+                .toList();
+
+        if (clinicsInState.isEmpty()) return Collections.emptyList();
+
+        List<String> clinicIds = procedureServiceClient.getClinicIdsByPackage(packageId).getData();
+        if (clinicIds == null || clinicIds.isEmpty()) return Collections.emptyList();
+
+        Set<String> clinicIdsOfferingPackage = Set.copyOf(clinicIds);
+
+        return clinicsInState.stream()
+                .filter(c -> clinicIdsOfferingPackage.contains(c.getClinicId()))
+                .map(c -> mapClinicWithPricing(c, latitude, longitude, packageId, false))
+                .sorted((c1, c2) -> Double.compare(parseDistance(c1.getDistanceInKm()), parseDistance(c2.getDistanceInKm())))
+                .toList();
+    }
+
+    // ============================
+    // Get all packages with clinics
+    // ============================
+    @Override
+    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(double latitude, double longitude) {
+
+        List<ProcedurePackageDTO> packages = procedureServiceClient.getAllPackages().getData();
+        if (packages == null || packages.isEmpty()) return Collections.emptyList();
+
+        final List<ClinicPublicDTO> clinicsFromAdmin = adminClinicClient.getAllClinics().getData();
+        final List<ClinicPublicDTO> allClinics = clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
+
+        return packages.stream().map(pkg -> {
+            List<String> clinicIdsForPackage;
+            try {
+                clinicIdsForPackage = procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData();
+            } catch (Exception e) {
+                clinicIdsForPackage = Collections.emptyList();
+            }
+            if (clinicIdsForPackage == null) clinicIdsForPackage = Collections.emptyList();
+            Set<String> clinicIdSet = Set.copyOf(clinicIdsForPackage);
+
+            List<ClinicProcedureLinkDTO> clinics = allClinics.stream()
+                    .filter(c -> clinicIdSet.contains(c.getClinicId()))
+                    .map(c -> mapClinicWithPricing(c, latitude, longitude, pkg.getPackageId(), false))
+                    .toList();
+
+            ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+            dto.setPackageInfo(pkg);
+            dto.setClinics(clinics);
+            return dto;
+        }).toList();
+    }
+
+    // ============================
+    // Map Clinic + Pricing safely
+    // ============================
+    private ClinicProcedureLinkDTO mapClinicWithPricing(ClinicPublicDTO clinic, double latitude, double longitude,
+                                                        String procedureOrPackageId, boolean isProcedure) {
+        ProcedurePricingDTO pricing = null;
+        try {
+            pricing = isProcedure
+                    ? procedureServiceClient.getPricingByProcedureForClinic(procedureOrPackageId, clinic.getClinicId()).getData()
+                    : procedureServiceClient.getPackagePricingForClinic(procedureOrPackageId, clinic.getClinicId()).getData();
+        } catch (Exception ignored) {
+        }
+        return mapClinicToDTO(clinic, latitude, longitude, pricing);
+    }
+
+    // ============================
+    // Map ClinicPublicDTO -> ClinicProcedureLinkDTO
+    // ============================
+    private ClinicProcedureLinkDTO mapClinicToDTO(ClinicPublicDTO clinic, double latitude, double longitude,
+                                                  ProcedurePricingDTO pricing) {
+
+        double distanceKm = calculateDistanceInKm(latitude, longitude, clinic.getLatitude(), clinic.getLongitude());
+        String distanceStr = distanceKm < 1 ? (int) Math.round(distanceKm * 1000) + " M" : Math.round(distanceKm) + " KM";
+
+        return ClinicProcedureLinkDTO.builder()
+                .clinicId(clinic.getClinicId())
+                .name(clinic.getName())
+                .address(clinic.getAddress())
+                .city(clinic.getCity())
+                .state(clinic.getState())
+                .latitude(clinic.getLatitude())
+                .longitude(clinic.getLongitude())
+                .online(clinic.isOnline())
+                .contactNumber(clinic.getContactNumber())
+                .whatsappNumber(clinic.getWhatsappNumber())
+                .email(clinic.getEmail())
+                .openingTime(clinic.getOpeningTime())
+                .closingTime(clinic.getClosingTime())
+                .hospitalLogo(clinic.getHospitalLogo())
+                .hospitalOverallRating(clinic.getHospitalOverallRating())
+                .website(clinic.getWebsite())
+                .licenseNumber(clinic.getLicenseNumber())
+                .issuingAuthority(clinic.getIssuingAuthority())
+                .clinicType(clinic.getClinicType())
+                .medicinesSoldOnSite(clinic.getMedicinesSoldOnSite())
+                .drugLicenseFormType(clinic.getDrugLicenseFormType())
+                .hasPharmacist(clinic.getHasPharmacist())
+                .recommended(clinic.isRecommended())
+                .subscription(clinic.getSubscription())
+                .nabhScore(clinic.getNabhScore())
+                .branch(clinic.getBranch())
+                .walkthrough(clinic.getWalkthrough())
+                .instagramHandle(clinic.getInstagramHandle())
+                .twitterHandle(clinic.getTwitterHandle())
+                .facebookHandle(clinic.getFacebookHandle())
+                .primaryContactPerson(clinic.getPrimaryContactPerson())
+                .designation(clinic.getDesignation())
+                .clinicManagementSoftwareUsage(clinic.getClinicManagementSoftwareUsage())
+                .doctorsList(clinic.getDoctorsList())
+                .procedurePricing(pricing)
+                .distanceInKm(distanceStr)
+                .createdAt(clinic.getCreatedAt())
+                .status(clinic.getStatus())
+                .username(clinic.getUsername())
+                .role(clinic.getRole())
+                .build();
+    }
+
     private double parseDistance(String distanceStr) {
         if (distanceStr.endsWith("M")) {
             return Double.parseDouble(distanceStr.replace(" M", "")) / 1000.0;
@@ -128,9 +192,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         return Double.MAX_VALUE;
     }
 
-    /** Calculate distance between two lat/lng points in KM */
     private double calculateDistanceInKm(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371; // Earth radius
+        final int R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)

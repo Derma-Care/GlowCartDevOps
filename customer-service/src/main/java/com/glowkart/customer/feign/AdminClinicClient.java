@@ -17,4 +17,7 @@ public interface AdminClinicClient {
             @RequestParam String state,
             @RequestParam(required = false) Boolean online // ✅ new optional parameter
     );
+    // ✅ New endpoint to fetch all clinics
+    @GetMapping("/admin/clinics")
+    ApiResponse<List<ClinicPublicDTO>> getAllClinics();
 }
