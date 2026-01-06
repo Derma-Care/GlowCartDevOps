@@ -52,6 +52,7 @@ public class ProcedurePackageMapper {
         entity.setNgkDiscountAmount(dto.getNgkDiscountAmount());
         entity.setTotalDiscountPercentage(dto.getTotalDiscountPercentage());
         entity.setTotalDiscountAmount(dto.getTotalDiscountAmount());
+        entity.setTotalDiscountedAmount(dto.getTotalDiscountedAmount()); // ✅ added
 
         return entity;
     }
@@ -103,6 +104,7 @@ public class ProcedurePackageMapper {
         dto.setNgkDiscountAmount(entity.getNgkDiscountAmount());
         dto.setTotalDiscountPercentage(entity.getTotalDiscountPercentage());
         dto.setTotalDiscountAmount(entity.getTotalDiscountAmount());
+        dto.setTotalDiscountedAmount(entity.getTotalDiscountedAmount()); // ✅ added
 
         return dto;
     }
