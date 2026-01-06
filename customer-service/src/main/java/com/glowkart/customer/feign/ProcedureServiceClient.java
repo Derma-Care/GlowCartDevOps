@@ -56,4 +56,10 @@ public interface ProcedureServiceClient {
             @PathVariable String packageId
     );
 
+    @GetMapping("/procedures/packages/clinic/{clinicId}")
+    ApiResponse<List<ProcedurePackageDTO>> getPackagesByClinic(@PathVariable("clinicId") String clinicId);
+
+    @GetMapping("/procedures/pricing/all/{clinicId}")
+    ApiResponse<List<ProcedurePricingDTO>> getProceduresByClinic(@PathVariable("clinicId") String clinicId);
+
 }

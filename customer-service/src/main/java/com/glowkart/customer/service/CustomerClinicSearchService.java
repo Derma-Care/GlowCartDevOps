@@ -1,5 +1,6 @@
 package com.glowkart.customer.service;
 
+import com.glowkart.customer.dto.ClinicDetailsDTO;
 import com.glowkart.customer.dto.ClinicProcedureLinkDTO;
 import com.glowkart.customer.dto.ProcedurePackageWithClinicsDTO;
 
@@ -44,4 +45,8 @@ public interface CustomerClinicSearchService {
             double latitude,
             double longitude
     );
+
+	List<ClinicProcedureLinkDTO> findNearbyClinics(double latitude, double longitude);
+
+	ClinicDetailsDTO getClinicDetails(String clinicId);
 }

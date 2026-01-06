@@ -1,5 +1,6 @@
 package com.glowkart.customer.service;
 
+import com.glowkart.customer.dto.ClinicDetailsDTO;
 import com.glowkart.customer.dto.ClinicProcedureLinkDTO;
 import com.glowkart.customer.dto.ClinicPublicDTO;
 import com.glowkart.customer.dto.ProcedurePackageDTO;
@@ -202,4 +203,46 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     }
+
+    @Override
+    public List<ClinicProcedureLinkDTO> findNearbyClinics(double latitude, double longitude) {
+
+        // 1. Resolve state by geo
+        String state = reverseGeoService.resolveState(latitude, longitude);
+
+        // 2. Get all clinics in state (only online clinics)
+        List<ClinicPublicDTO> clinicsInState = adminClinicClient.getClinicsByState(state, true).getData();
+
+        if (clinicsInState == null || clinicsInState.isEmpty()) return Collections.emptyList();
+
+        // 3. Map all clinics to DTO with distance but no procedure filter
+        return clinicsInState.stream()
+                .map(c -> mapClinicToDTO(c, latitude, longitude, null))  // no pricing here
+                .sorted((c1, c2) -> Double.compare(parseDistance(c1.getDistanceInKm()), parseDistance(c2.getDistanceInKm())))
+                .toList();
+    }
+
+    @Override
+    public ClinicDetailsDTO getClinicDetails(String clinicId) {
+        // Fetch clinic info from Admin service
+        ClinicPublicDTO clinic = adminClinicClient.getClinicById(clinicId).getData();
+
+        // Fetch procedure packages offered by clinic
+        List<ProcedurePackageDTO> packages = Collections.emptyList();
+        try {
+            packages = procedureServiceClient.getPackagesByClinic(clinicId).getData();
+        } catch (Exception ignored) {
+        }
+
+        // Fetch procedures/pricing offered by clinic
+        List<ProcedurePricingDTO> procedures = Collections.emptyList();
+        try {
+            procedures = procedureServiceClient.getProceduresByClinic(clinicId).getData();
+        } catch (Exception ignored) {
+        }
+
+        return new ClinicDetailsDTO(clinic, packages, procedures);
+    }
+
+
 }

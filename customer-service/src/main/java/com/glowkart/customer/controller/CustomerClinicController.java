@@ -1,6 +1,7 @@
 package com.glowkart.customer.controller;
 
 import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.ClinicDetailsDTO;
 import com.glowkart.customer.dto.ClinicProcedureLinkDTO;
 import com.glowkart.customer.dto.ProcedurePackageWithClinicsDTO;
 import com.glowkart.customer.service.CustomerClinicSearchService;
@@ -63,5 +64,35 @@ public class CustomerClinicController {
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "All procedure packages fetched successfully", packagesWithClinics)
         );
+    }
+    
+    
+    /**
+     * Get all clinics near user location
+     * Sorted by distance
+     */
+    @GetMapping("/customer/clinics/nearby")
+    public ResponseEntity<ApiResponse<List<ClinicProcedureLinkDTO>>> getNearbyClinics(
+            @RequestParam double latitude,
+            @RequestParam double longitude
+    ) {
+        List<ClinicProcedureLinkDTO> clinics = customerClinicSearchService.findNearbyClinics(latitude, longitude);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Nearby clinics fetched successfully", clinics)
+        );
+    }
+    
+    
+    /**
+     * Get details of a clinic including procedures and packages it offers
+     */
+    @GetMapping("/customer/clinics/{clinicId}/details")
+    public ResponseEntity<ApiResponse<ClinicDetailsDTO>> getClinicDetails(
+            @PathVariable String clinicId) {
+
+        ClinicDetailsDTO clinicDetails = customerClinicSearchService.getClinicDetails(clinicId);
+
+        return ResponseEntity.ok(new ApiResponse<>(true, "Clinic details fetched successfully", clinicDetails));
     }
 }
