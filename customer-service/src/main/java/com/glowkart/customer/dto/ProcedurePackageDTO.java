@@ -44,5 +44,6 @@ public class ProcedurePackageDTO {
     
     private double totalDiscountPercentage; // clinic + NGK
     private double totalDiscountAmount;     // clinic + NGK
+    private double totalDiscountedAmount;
 
 }
