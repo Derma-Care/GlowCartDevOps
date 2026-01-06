@@ -68,6 +68,12 @@ public class BookingServiceImpl implements BookingService {
         ClinicDTO clinic = fetchClinic(request.getClinicId());
         PricingDetails pricing = fetchPricingDetails(request.getServiceType(), request.getServiceId());
 
+        // ⭐ FETCH PROCEDURES ONLY IF PACKAGE
+        List<BookingProcedureDTO> bookingProcedures = fetchBookingProcedures(
+                request.getServiceType(),
+                request.getServiceId()
+        );
+        
         Booking booking = Booking.builder()
                 .bookingId(UUID.randomUUID().toString())
                 .customerId(customer.getCustomerId())
@@ -85,6 +91,8 @@ public class BookingServiceImpl implements BookingService {
                 .serviceType(request.getServiceType())
                 .paymentType(request.getPaymentType())
                 .appointmentDate(request.getAppointmentDate())
+                // ✅ NEW
+                .procedures(bookingProcedures)
                 .price(pricing.getPrice())
                 .discount(pricing.getDiscountPercentage())
                 .discountAmount(pricing.getDiscountAmount())
@@ -214,6 +222,29 @@ public class BookingServiceImpl implements BookingService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
 
+ // ================= ⭐ NEW METHOD =================
+    private List<BookingProcedureDTO> fetchBookingProcedures(String serviceType, String serviceId) {
+
+        if (!"PACKAGE".equalsIgnoreCase(serviceType)) {
+            return List.of(); // procedures only for packages
+        }
+
+        ApiResponse<ProcedurePackageDTO> resp =
+                procedureClient.getPricingByPackage(serviceId);
+
+        if (resp == null || resp.getData() == null || resp.getData().getProcedures() == null) {
+            return List.of();
+        }
+
+        return resp.getData().getProcedures()
+                .stream()
+                .map(p -> new BookingProcedureDTO(
+                        p.getProcedureName(),
+                        p.getNoOfSittings()
+                ))
+                .collect(Collectors.toList());
+    }
+    
     private PricingDetails fetchPricingDetails(String serviceType, String serviceId) {
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
             ApiResponse<ProcedurePricingDTO> resp = procedureClient.getPricingByProcedure(serviceId);
@@ -234,6 +265,7 @@ public class BookingServiceImpl implements BookingService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
 
+    
     private LocalDate parseDate(String dateStr) {
         if (dateStr == null || dateStr.isEmpty()) return null;
         return LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
@@ -271,6 +303,7 @@ public class BookingServiceImpl implements BookingService {
                 .serviceId(booking.getServiceId())
                 .serviceName(booking.getServiceName())
                 .serviceType(booking.getServiceType())
+                .procedures(booking.getProcedures())
                 .paymentType(booking.getPaymentType())
                 .appointmentDate(booking.getAppointmentDate())
                 .price(booking.getPrice())

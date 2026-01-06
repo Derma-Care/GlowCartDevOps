@@ -54,13 +54,13 @@ public class PricingDetails {
         return PricingDetails.builder()
                 .serviceName(dto.getPackageName())
                 .price(dto.getPrice())
-                .discountAmount(0)
-                .discountPercentage(0)
-                .discountedCost(dto.getPrice())
+                .discountAmount(dto.getDiscountAmount()) // ✅ use actual value
+                .discountPercentage(dto.getDiscountPercentage()) // ✅ use actual value
+                .discountedCost(dto.getDiscountedCost()) // ✅ use actual value
                 .totalDiscountAmount(dto.getTotalDiscountAmount())
                 .totalDiscountPercentage(dto.getTotalDiscountPercentage())
-                .ngkDiscountAmount(0)
-                .ngkDiscountPercentage(0)
+                .ngkDiscountAmount(dto.getNgkDiscountAmount()) // ✅ use actual value
+                .ngkDiscountPercentage(dto.getNgkDiscountPercentage()) // ✅ use actual value
                 .taxPercentage(dto.getTaxPercentage())
                 .taxAmount(dto.getTaxAmount())
                 .gst(dto.getGst())
@@ -69,5 +69,6 @@ public class PricingDetails {
                 .finalAmount(dto.getFinalCost())
                 .build();
     }
+
 }
 

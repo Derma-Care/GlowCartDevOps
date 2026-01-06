@@ -1,6 +1,7 @@
 package com.glowkart.booking.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -27,6 +28,7 @@ public class BookingResponseDTO {
     private String serviceId;
     private String serviceName;
     private String serviceType;   // PROCEDURE or PACKAGE
+    private List<BookingProcedureDTO> procedures;
     private String paymentType;   // ONLINE or CASH
 
     private String appointmentDate;

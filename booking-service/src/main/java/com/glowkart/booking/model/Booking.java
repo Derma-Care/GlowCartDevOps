@@ -1,12 +1,13 @@
 package com.glowkart.booking.model;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.glowkart.booking.dto.BookingProcedureDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +42,8 @@ public class Booking {
     private String serviceId;
     private String serviceName;
     private String serviceType;   // PROCEDURE or PACKAGE
+    // ✅ NEW — snapshot of package procedures
+    private List<BookingProcedureDTO> procedures;
     private String paymentType;   // ONLINE or CASH
     private String appointmentDate;
 
