@@ -63,11 +63,11 @@ const ServiceFormModal = ({
                 Procedure Name <span className="text-danger">*</span>
               </h6>
 
-
               <Select
                 options={procedureOptions}
                 isSearchable
                 placeholder="Select Procedure"
+                isDisabled={isEdit}   // ✅ DISABLE IN EDIT MODE
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 value={
@@ -80,6 +80,8 @@ const ServiceFormModal = ({
                   control: (base) => ({
                     ...base,
                     minHeight: '38px',
+                    backgroundColor: isEdit ? '#e9ecef' : base.backgroundColor, // optional UI hint
+                    cursor: isEdit ? 'not-allowed' : 'pointer',
                   }),
                   menuPortal: (base) => ({
                     ...base,
@@ -87,6 +89,7 @@ const ServiceFormModal = ({
                   }),
                 }}
               />
+
 
               {errors.subServiceName && (
                 <CFormText className="text-danger">{errors.subServiceName}</CFormText>
@@ -281,7 +284,7 @@ const ServiceFormModal = ({
               )}
             </CCol>
 
-           <CCol md={4} className="mb-4">
+            <CCol md={4} className="mb-4">
               <h6>
                 Procedure Image <span className="text-danger">*</span>
               </h6>

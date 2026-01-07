@@ -79,6 +79,7 @@ public class ClinicProcedureLinkDTO {
 
 	 // ✅ New field for procedure pricing
 	    private ProcedurePricingDTO procedurePricing;
+	    private Double maxOfferPercentage; // For "Upto X% OFF"
 
 	 // After
 	    private String distanceInKm;

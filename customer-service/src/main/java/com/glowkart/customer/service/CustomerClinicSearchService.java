@@ -49,4 +49,8 @@ public interface CustomerClinicSearchService {
 	List<ClinicProcedureLinkDTO> findNearbyClinics(double latitude, double longitude);
 
 	ClinicDetailsDTO getClinicDetails(String clinicId);
+
+	List<ClinicProcedureLinkDTO> findNearbyClinicsWithOffers(double latitude, double longitude);
+
+	ClinicDetailsDTO getClinicOffers(String clinicId);
 }

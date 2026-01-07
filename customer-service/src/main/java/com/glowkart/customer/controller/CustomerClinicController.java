@@ -95,4 +95,34 @@ public class CustomerClinicController {
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Clinic details fetched successfully", clinicDetails));
     }
+    
+//    Used for Offers → Clinics list
+    
+    @GetMapping("/customer/offers/clinics/nearby")
+    public ResponseEntity<ApiResponse<List<ClinicProcedureLinkDTO>>> getNearbyClinicsWithOffers(
+            @RequestParam double latitude,
+            @RequestParam double longitude
+    ) {
+        List<ClinicProcedureLinkDTO> clinics =
+                customerClinicSearchService.findNearbyClinicsWithOffers(latitude, longitude);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Nearby clinics with offers fetched", clinics)
+        );
+    }
+
+//    Used when user taps a clinic from Offers screen
+    
+    @GetMapping("/customer/offers/clinics/{clinicId}")
+    public ResponseEntity<ApiResponse<ClinicDetailsDTO>> getClinicOffers(
+            @PathVariable String clinicId
+    ) {
+        ClinicDetailsDTO dto =
+                customerClinicSearchService.getClinicOffers(clinicId);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Clinic offers fetched", dto)
+        );
+    }
+
 }

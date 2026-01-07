@@ -26,7 +26,7 @@ const ServiceTable = ({
           <CTableHeaderCell style={{ paddingLeft: '40px' }}>S.No</CTableHeaderCell>
           <CTableHeaderCell>Procedure Name</CTableHeaderCell>
           <CTableHeaderCell>Discount %</CTableHeaderCell>
-          <CTableHeaderCell>Offer Satrt Date</CTableHeaderCell>
+          <CTableHeaderCell>Offer Start Date</CTableHeaderCell>
           <CTableHeaderCell>Offer End Date</CTableHeaderCell>
           <CTableHeaderCell>Price</CTableHeaderCell>
           <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>

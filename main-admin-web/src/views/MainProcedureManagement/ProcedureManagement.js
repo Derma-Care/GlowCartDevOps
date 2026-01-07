@@ -445,21 +445,24 @@ const ServiceManagement = () => {
         ngkDiscountPercentage: newService.ngkDiscountAmount
       }
 
-      const response = await postServiceData(payload) // imported from ProcedureManagementAPI
-      if (response.data.success || response.status === 200) {
-        showCustomToast(response.data.message, 'success')
-        handleCloseFormModal()
-        fetchProcedurePricing()
-      } else {
-        showCustomToast(response.data.message, 'error')
-      }
-    } catch (error) {
-      console.error('Error in handleAddService:', error?.response || error)
-      showCustomToast(error?.response?.data?.message || 'Something went wrong', 'error')
-    } finally {
-      setSaveLoading(false)
+      const response = await postServiceData(payload)
+
+    if (response?.data?.success) {
+      showCustomToast(response.data.message, 'success')
+      handleCloseFormModal()
+      fetchProcedurePricing()
     }
+  } catch (error) {
+    console.error('Error in handleAddService:', error?.response || error)
+
+    const backendMessage = error?.response?.data?.message
+    if (backendMessage) {
+      showCustomToast(backendMessage, 'error')
+    }
+  } finally {
+    setSaveLoading(false)
   }
+}
 
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
@@ -469,65 +472,72 @@ const ServiceManagement = () => {
       reader.onerror = (error) => reject(error)
     })
 
-  const handleUpdateService = async () => {
-    try {
-      setSaveLoading(true)
+const handleUpdateService = async () => {
+  try {
+    setSaveLoading(true)
 
-      const hospitalId = clinicId;
+    const hospitalId = clinicId
 
-
-      let base64ImageToSend = ''
-      if (newService.serviceImageFile) {
-        const fullBase64String = await toBase64(newService.serviceImageFile)
-        base64ImageToSend = fullBase64String.split(',')[1]
-      } else if (newService.serviceImage?.startsWith('data:')) {
-        base64ImageToSend = newService.serviceImage.split(',')[1]
-      } else {
-        base64ImageToSend = newService.serviceImage || ''
-      }
-
-      const updatedService = {
-        clinicId: hospitalId,
-        procedureName: newService.subServiceName || '',
-        procedureId: newService.subServiceId || '',
-        description: newService.viewDescription || '',
-        sittings: Number(newService.sittings || 0),
-        minTime: newService.minTimeValue
-          ? `${newService.minTimeValue} ${newService.minTimeUnit}`
-          : '',
-        offerStart: newService.offerValidDate || '',
-        offerValidDate:newService.offerEndDate || '',
-        procedureQA: newService.procedureQA,
-        preProcedureQA: newService.preProcedureQA,
-        postProcedureQA: newService.postProcedureQA,
-        price: Number(newService.price || 0),
-        discountPercentage: Number(newService.discount || 0),
-        taxPercentage: Number(newService.taxPercentage || 0),
-        procedureImage: base64ImageToSend,
-        gst: Number(newService.gst || 0),
-        consultationFee: Number(newService.consultationFee || 0),
-        procedureLink: newService.procedureLink,
-        ngkDiscountPercentage: newService.ngkDiscountPercentage,
-        ngkDiscountPercentage: newService.ngkDiscountAmount,
-      }
-
-     const response = await updateServiceData(newService.subServiceId, hospitalId, updatedService) // imported from ProcedureManagementAPI
-
-      if (response.success) {
-        showCustomToast(`${response.message}` || 'Procedure updated successfully!', 'success')
-        handleCloseFormModal()
-
-        fetchProcedurePricing()
-      } else {
-        showCustomToast(`${response.message}`, 'error')
-      }
-    } catch (error) {
-      console.error('Update failed:', error)
-      showCustomToast(error?.response?.data?.message || 'Error updating service.', 'error')
-    } finally {
-      setSaveLoading(false)
+    let base64ImageToSend = ''
+    if (newService.serviceImageFile) {
+      const fullBase64String = await toBase64(newService.serviceImageFile)
+      base64ImageToSend = fullBase64String.split(',')[1]
+    } else if (newService.serviceImage?.startsWith('data:')) {
+      base64ImageToSend = newService.serviceImage.split(',')[1]
+    } else {
+      base64ImageToSend = newService.serviceImage || ''
     }
+
+    const updatedService = {
+      clinicId: hospitalId,
+      procedureName: newService.subServiceName || '',
+      procedureId: newService.subServiceId || '',
+      description: newService.viewDescription || '',
+      sittings: Number(newService.sittings || 0),
+      minTime: newService.minTimeValue
+        ? `${newService.minTimeValue} ${newService.minTimeUnit}`
+        : '',
+      price: Number(newService.price || 0),
+      discountPercentage: Number(newService.discount || 0),
+      taxPercentage: Number(newService.taxPercentage || 0),
+      gst: Number(newService.gst || 0),
+      consultationFee: Number(newService.consultationFee || 0),
+      procedureImage: base64ImageToSend,
+      procedureQA: newService.procedureQA,
+      preProcedureQA: newService.preProcedureQA,
+      postProcedureQA: newService.postProcedureQA,
+      procedureLink: newService.procedureLink,
+      ngkDiscountPercentage: Number(newService.ngkDiscountAmount || 0),
+    }
+
+    // ❗ Send offer dates ALWAYS (backend will validate)
+    updatedService.offerStart = newService.offerValidDate || null
+    updatedService.offerValidDate = newService.offerEndDate || null
+
+    const response = await updateServiceData(
+      newService.subServiceId,
+      hospitalId,
+      updatedService
+    )
+
+    if (response?.success) {
+      showCustomToast(response.message, 'success')
+      handleCloseFormModal()
+      fetchProcedurePricing()
+    }
+
+  } catch (error) {
+    // ✅ SHOW ONLY BACKEND MESSAGE
+    const backendMessage = error?.response?.data?.message
+    if (backendMessage) {
+      showCustomToast(backendMessage, 'error')
+    }
+  } finally {
+    setSaveLoading(false)
   }
+}
+
+
 
   const handleServiceDelete = (item) => {
     setServiceIdToDelete(item.procedureId)

@@ -726,7 +726,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
                   <CCol sm={4}><strong>GST:</strong> ₹ {viewService.gst ? Math.round(viewService.gst) : '—'}</CCol>
                   <CCol sm={4}><strong>Consultation Fee:</strong> ₹ {viewService.consultationFee ?? '—'}</CCol>
                   <CCol sm={4}><strong>Final Cost:</strong> ₹ {viewService.finalCost ? Math.round(viewService.finalCost) : '—'}</CCol>
-                  <CCol sm={4}><strong>Service Time:</strong> {viewService.minTime ? formatMinutes(viewService.minTime) : '—'}</CCol>
+                  <CCol sm={4}><strong>Service Time:</strong> {viewService.minTime ?(viewService.minTime) : '—'}</CCol>
                   <CCol sm={4}><strong>Sittings:</strong> {viewService.sittings ?? 0}</CCol>
                   <CCol sm={4}><strong>Procedure Link:</strong> {viewService.procedureLink || 'N/A'}</CCol>
 

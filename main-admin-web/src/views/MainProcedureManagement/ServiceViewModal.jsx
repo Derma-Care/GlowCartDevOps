@@ -61,11 +61,11 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
           <h6 className="fw-bold border-bottom pb-2 mb-3">Pricing Details</h6>
           <CRow className="gy-2">
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Offer End Date: </span>
+              <span className="mb-1 fw-semibold">Price: </span>
               <span className="text-muted"> ₹ {Math.round(data.price || 0)}</span>
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Discount: </span>
+              <span className="mb-1 fw-semibold">Discount Percentage: </span>
               <span className="text-muted"> {Math.round(data.discountPercentage || 0)}%</span>
               {/* <strong>Discount:</strong> {Math.round(data.discountPercentage || 0)}% */}
             </CCol>
@@ -80,7 +80,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               {/* <strong>Discounted Cost:</strong> ₹ {Math.round(data.discountedCost || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Tax: </span>
+              <span className="mb-1 fw-semibold">Tax Percentage: </span>
               <span className="text-muted"> {Math.round(data.taxPercentage || 0)}%</span>
               {/* <strong>Tax:</strong> {Math.round(data.taxPercentage || 0)}% */}
             </CCol>
@@ -112,7 +112,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Service Time: </span>
               <span className="text-muted">
-                {data.minTime ? formatMinutes(data.minTime) : 'N/A'}
+                {data.minTime ? (data.minTime) : 'N/A'}
               </span>
               {/* <strong>Service Time:</strong> {data.minTime ? formatMinutes(data.minTime) : 'N/A'} */}
             </CCol>
@@ -214,7 +214,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
           <h6 className="fw-bold border-bottom pb-2 mb-3">Additional Details</h6>
           <CRow>
             <CCol sm={6}>
-              <p className="fw-semibold">Service Image:</p>
+              <p className="fw-semibold">Procedure Image:</p>
               {data.procedureImage ? (
                 <img
                   src={`data:image/png;base64,${data.procedureImage}`}
