@@ -217,24 +217,45 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         p.setTotalDiscountAmount(0.0);
     }
 
-
     private void calculatePricing(ProcedurePricing p) {
         double price = p.getPrice();
-        double discountPercent = (p.isOfferActive() ? p.getDiscountPercentage() : 0.0);
 
-        double discountedPrice = round(price - (price * discountPercent / 100.0));
-        double taxAmount = round(discountedPrice * p.getTaxPercentage() / 100.0);
-        double gstAmount = round(discountedPrice * p.getGst() / 100.0);
-        double clinicPay = round(discountedPrice + taxAmount + gstAmount + p.getConsultationFee());
-        double ngkAmount = round(clinicPay * p.getNgkDiscountPercentage() / 100.0);
+        double clinicDiscountPercent = p.getDiscountPercentage();
+        double ngkDiscountPercent = p.getNgkDiscountPercentage();
+
+        // Informational discount amount (always shown)
+        double discountAmount = round(price * clinicDiscountPercent / 100.0);
+
+        // Apply discount only if offer is active
+        double discountedCost = p.isOfferActive()
+                ? round(price - discountAmount)
+                : price;
+
+        // Tax & GST always on payable amount
+        double taxAmount = round(discountedCost * p.getTaxPercentage() / 100.0);
+        double gstAmount = round(discountedCost * p.getGst() / 100.0);
+
+        double clinicPay = round(discountedCost + taxAmount + gstAmount + p.getConsultationFee());
+
+        // NGK discount applies ONLY when offer is active AND > 0
+        double ngkAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
+                ? round(clinicPay * ngkDiscountPercent / 100.0)
+                : 0.0;
+
         double finalCost = round(clinicPay - ngkAmount);
 
-        double discountAmount = price - discountedPrice;
-        double totalDiscountAmount = round(discountAmount + ngkAmount);
-        double totalDiscountPercent = discountPercent + p.getNgkDiscountPercentage();
+        // Totals
+        double totalDiscountAmount = round(
+                (p.isOfferActive() ? discountAmount : 0.0) + ngkAmount
+        );
 
+        double totalDiscountPercent = p.isOfferActive()
+                ? clinicDiscountPercent + ngkDiscountPercent
+                : 0.0;
+
+        // Set values
         p.setDiscountAmount(discountAmount);
-        p.setDiscountedCost(discountedPrice);
+        p.setDiscountedCost(discountedCost);
         p.setTaxAmount(taxAmount);
         p.setGstAmount(gstAmount);
         p.setClinicPay(clinicPay);
@@ -245,6 +266,35 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         p.setUpdatedAt(Instant.now());
     }
+
+
+//    private void calculatePricing(ProcedurePricing p) {
+//        double price = p.getPrice();
+//        double discountPercent = (p.isOfferActive() ? p.getDiscountPercentage() : 0.0);
+//
+//        double discountedPrice = round(price - (price * discountPercent / 100.0));
+//        double taxAmount = round(discountedPrice * p.getTaxPercentage() / 100.0);
+//        double gstAmount = round(discountedPrice * p.getGst() / 100.0);
+//        double clinicPay = round(discountedPrice + taxAmount + gstAmount + p.getConsultationFee());
+//        double ngkAmount = round(clinicPay * p.getNgkDiscountPercentage() / 100.0);
+//        double finalCost = round(clinicPay - ngkAmount);
+//
+//        double discountAmount = price - discountedPrice;
+//        double totalDiscountAmount = round(discountAmount + ngkAmount);
+//        double totalDiscountPercent = discountPercent + p.getNgkDiscountPercentage();
+//
+//        p.setDiscountAmount(discountAmount);
+//        p.setDiscountedCost(discountedPrice);
+//        p.setTaxAmount(taxAmount);
+//        p.setGstAmount(gstAmount);
+//        p.setClinicPay(clinicPay);
+//        p.setNgkDiscountAmount(ngkAmount);
+//        p.setFinalCost(finalCost);
+//        p.setTotalDiscountAmount(totalDiscountAmount);
+//        p.setTotalDiscountPercentage(totalDiscountPercent);
+//
+//        p.setUpdatedAt(Instant.now());
+//    }
 
 
     private double round(double value) {

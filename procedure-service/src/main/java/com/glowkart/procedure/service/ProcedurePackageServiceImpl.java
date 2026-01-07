@@ -202,37 +202,58 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
         double price = dto.getPrice();
 
-        double clinicDiscountPercent = dto.isOfferActive() ? dto.getDiscountPercentage() : 0.0;
-        double clinicDiscountAmount = round(price * clinicDiscountPercent / 100);
+        double clinicDiscountPercent = dto.getDiscountPercentage();
+        double ngkDiscountPercent = dto.getNgkDiscountPercentage();
 
-        double ngkDiscountAmount = round(price * dto.getNgkDiscountPercentage() / 100);
+        // Informational clinic discount (always visible)
+        double clinicDiscountAmount = round(price * clinicDiscountPercent / 100.0);
 
-        double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
+        // Apply clinic discount ONLY if offer is active
+        double discountedCost = dto.isOfferActive()
+                ? round(price - clinicDiscountAmount)
+                : price;
 
-        double discountedCost = round(price - clinicDiscountAmount);
-        double totalDiscountedAmount = round(price - totalDiscountAmount);
+        // Tax & GST on payable amount
+        double taxAmount = round(discountedCost * dto.getTaxPercentage() / 100.0);
+        double gstAmount = round(discountedCost * dto.getGst() / 100.0);
 
-        double taxAmount = round(discountedCost * dto.getTaxPercentage() / 100);
-        double gstAmount = round(discountedCost * dto.getGst() / 100);
+        double consultationFee = dto.getConsultationFee() != null
+                ? dto.getConsultationFee()
+                : 0.0;
 
-        double consultationFee = dto.getConsultationFee() != null ? dto.getConsultationFee() : 0;
         double clinicPay = round(discountedCost + taxAmount + gstAmount + consultationFee);
+
+        // NGK discount ONLY when offer is active AND > 0
+        double ngkDiscountAmount = (dto.isOfferActive() && ngkDiscountPercent > 0)
+                ? round(clinicPay * ngkDiscountPercent / 100.0)
+                : 0.0;
 
         double finalCost = round(clinicPay - ngkDiscountAmount);
 
+        // Totals
+        double totalDiscountAmount = round(
+                (dto.isOfferActive() ? clinicDiscountAmount : 0.0) + ngkDiscountAmount
+        );
+
+        double totalDiscountPercent = dto.isOfferActive()
+                ? clinicDiscountPercent + ngkDiscountPercent
+                : 0.0;
+
+        // Set values
         dto.setDiscountAmount(clinicDiscountAmount);
         dto.setNgkDiscountAmount(ngkDiscountAmount);
         dto.setTotalDiscountAmount(totalDiscountAmount);
-        dto.setTotalDiscountPercentage(dto.getDiscountPercentage() + dto.getNgkDiscountPercentage());
+        dto.setTotalDiscountPercentage(totalDiscountPercent);
 
         dto.setDiscountedCost(discountedCost);
-        dto.setTotalDiscountedAmount(totalDiscountedAmount);
-
         dto.setTaxAmount(taxAmount);
         dto.setGstAmount(gstAmount);
         dto.setClinicPay(clinicPay);
         dto.setFinalCost(finalCost);
+
+        dto.setTotalDiscountedAmount(round(price - totalDiscountAmount));
     }
+
 
     private void recalculatePricing(ProcedurePackage pkg) {
 
