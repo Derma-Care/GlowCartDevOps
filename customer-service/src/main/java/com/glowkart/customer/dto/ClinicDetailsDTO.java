@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClinicDetailsDTO {
 
-    private ClinicPublicDTO clinic;
+//    private ClinicPublicDTO clinic;
     private List<ProcedurePackageDTO> packages;
     private List<ProcedurePricingDTO> procedures;
 

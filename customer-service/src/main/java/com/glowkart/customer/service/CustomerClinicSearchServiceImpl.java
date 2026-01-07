@@ -241,7 +241,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         } catch (Exception ignored) {
         }
 
-        return new ClinicDetailsDTO(clinic, packages, procedures);
+        return new ClinicDetailsDTO( packages, procedures);
     }
 
 
