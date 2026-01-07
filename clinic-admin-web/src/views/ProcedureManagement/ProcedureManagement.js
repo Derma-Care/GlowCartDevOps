@@ -429,8 +429,8 @@ const ServiceManagement = () => {
         gstAmount,
         consultationFee,
         minTime: formattedMinTime,
-        offerStart: toInstant(newService.offerValidDate),
-        offerValidDate: toInstant(newService.offerEndDate),
+        offerStart: (newService.offerValidDate),
+        offerValidDate: (newService.offerEndDate),
         procedureImage: base64ImageToSend,
         procedureQA: newService.procedureQA,
         preProcedureQA: newService.preProcedureQA,
@@ -488,8 +488,8 @@ const ServiceManagement = () => {
         minTime: newService.minTimeValue
           ? `${newService.minTimeValue} ${newService.minTimeUnit}`
           : '',
-        offerStart: toInstant(newService.offerValidDate || ''),
-        offerValidDate: toInstant(newService.offerEndDate || ''),
+        offerStart: (newService.offerValidDate || ''),
+        offerValidDate: (newService.offerEndDate || ''),
         procedureQA: newService.procedureQA,
         preProcedureQA: newService.preProcedureQA,
         postProcedureQA: newService.postProcedureQA,

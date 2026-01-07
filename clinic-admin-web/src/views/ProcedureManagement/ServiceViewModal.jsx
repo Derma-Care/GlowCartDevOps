@@ -95,8 +95,8 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               {/* <strong>Clinic Pay:</strong> ₹ {Math.round(data.clinicPay || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">GST %:</span>
-              <span className="text-muted"> {Math.round(data.gst || 0)}</span>
+              <span className="mb-1 fw-semibold">GST :</span>
+              <span className="text-muted"> {Math.round(data.gst || 0)}%</span>
               {/* <strong>GST %:</strong> {Math.round(data.gst || 0)} */}
             </CCol>
             <CCol sm={4}>
@@ -112,7 +112,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Service Time: </span>
               <span className="text-muted">
-                {data.minTime ? formatMinutes(data.minTime) : 'N/A'}
+             {data.minTime ? data.minTime : 'N/A'}
               </span>
               {/* <strong>Service Time:</strong> {data.minTime ? formatMinutes(data.minTime) : 'N/A'} */}
             </CCol>

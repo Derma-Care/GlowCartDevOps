@@ -98,8 +98,8 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               {/* <strong>Clinic Pay:</strong> ₹ {Math.round(data.clinicPay || 0)} */}
             </CCol>
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">GST %:</span>
-              <span className="text-muted"> {Math.round(data.gst || 0)}</span>
+              <span className="mb-1 fw-semibold">GST :</span>
+              <span className="text-muted"> {Math.round(data.gst || 0)}%</span>
               {/* <strong>GST %:</strong> {Math.round(data.gst || 0)} */}
             </CCol>
             <CCol sm={4}>

@@ -232,18 +232,16 @@ const WidgetsDropdown = () => {
 
             <button
               onClick={() => toggleFilter('CONFIRMED')}
-              className={`btn ${
-                filterTypes.includes('CONFIRMED') ? 'btn-selected' : 'btn-unselected'
-              }`}
+              className={`btn ${filterTypes.includes('CONFIRMED') ? 'btn-selected' : 'btn-unselected'
+                }`}
             >
               Confirmed
             </button>
 
             <button
               onClick={() => toggleFilter('COMPLETED')}
-              className={`btn ${
-                filterTypes.includes('COMPLETED') ? 'btn-selected' : 'btn-unselected'
-              }`}
+              className={`btn ${filterTypes.includes('COMPLETED') ? 'btn-selected' : 'btn-unselected'
+                }`}
             >
               Completed
             </button>
@@ -294,7 +292,7 @@ const WidgetsDropdown = () => {
           backdrop="static"
           className="custom-modal"
         >
-          <CModalHeader>
+          <CModalHeader closeButton>
             <CModalTitle>Doctors List</CModalTitle>
           </CModalHeader>
 
@@ -434,11 +432,15 @@ const WidgetsDropdown = () => {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={Math.ceil(displayData.length / pageSize)}
+          totalPages={Math.ceil(finalFiltered.length / pageSize)}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1) // reset page on size change
+          }}
         />
+
       </div>
     </>
   )

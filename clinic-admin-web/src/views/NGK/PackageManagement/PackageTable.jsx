@@ -20,7 +20,7 @@ const PackageTableData = ({ data, canRead, canUpdate, canDelete, onView, onEdit,
           <CTableHeaderCell style={{ paddingLeft: '40px' }}>S.No</CTableHeaderCell>
           <CTableHeaderCell>Package Name</CTableHeaderCell>
           <CTableHeaderCell>Discount %</CTableHeaderCell>
-          <CTableHeaderCell>Offer Satrt Date</CTableHeaderCell>
+          <CTableHeaderCell>Offer Start Date</CTableHeaderCell>
           <CTableHeaderCell>Offer End Date</CTableHeaderCell>
           <CTableHeaderCell>Price</CTableHeaderCell>
           <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>

@@ -1,11 +1,15 @@
 package com.glowkart.clinicadmin.exception;
 
-import com.glowkart.clinicadmin.dto.ApiResponse;
-import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.glowkart.clinicadmin.dto.ApiResponse;
+
+import feign.FeignException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -34,14 +38,33 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<ApiResponse<Object>> handleFeignException(FeignException ex) {
         HttpStatus status = HttpStatus.resolve(ex.status());
-        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
 
-        ApiResponse<Object> response = new ApiResponse<>(false,
-                "Error calling remote service: " + ex.getMessage(),
+        // Try to extract original response body
+        try {
+            String responseBody = ex.contentUTF8();
+            if (responseBody != null && !responseBody.isEmpty()) {
+                ObjectMapper mapper = new ObjectMapper();
+                ApiResponse<Object> apiResponse =
+                        mapper.readValue(responseBody, new TypeReference<ApiResponse<Object>>() {});
+                return ResponseEntity.status(status).body(apiResponse);
+            }
+        } catch (Exception ignored) {
+            // fallback below
+        }
+
+        // Fallback if body parsing fails
+        ApiResponse<Object> response = new ApiResponse<>(
+                false,
+                "Error calling remote service",
                 null,
-                status.value());
+                status.value()
+        );
         return ResponseEntity.status(status).body(response);
     }
+
 
     // Handle all generic exceptions
     @ExceptionHandler(Exception.class)
