@@ -390,8 +390,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .map(c -> mapClinicWithPricing(
                                     c, latitude, longitude,
                                     pkg.getPackageId(), false))
-                            .sorted(this::sortByDistance)
+                            .sorted((a, b) -> sortByDistance(a, b))
                             .toList();
+
 
             ProcedurePackageWithClinicsDTO dto =
                     new ProcedurePackageWithClinicsDTO();
