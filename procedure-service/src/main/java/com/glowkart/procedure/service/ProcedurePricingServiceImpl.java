@@ -102,13 +102,13 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     public void expireOffers() {
         LocalDate today = LocalDate.now(istZone);
 
-        // Fetch all pricings that have a valid offerEnd date (ignore null/endless offers)
         List<ProcedurePricing> pricings = pricingRepository.findAll();
 
         pricings.forEach(p -> {
-            // Skip processing if no offerValidDate (open-ended offers)
+            // Treat null or blank offerValidDate as open-ended
             if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
-                processOfferAndPricing(p); // ensures pricing is recalculated
+                // Open-ended offer, recalc pricing
+                processOfferAndPricing(p);
                 return;
             }
 
@@ -126,8 +126,13 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
             } else {
                 // Offer expired
                 p.setOfferActive(false);
-                p.setDiscountPercentage(0.0);
-                p.setDiscountAmount(0.0);
+
+                // Only reset discount if offerValidDate is not blank (open-ended)
+                if (!p.getOfferValidDate().isBlank()) {
+                    p.setDiscountPercentage(0.0);
+                    p.setDiscountAmount(0.0);
+                }
+
                 calculatePricing(p);
                 p.setUpdatedAt(Instant.now());
                 pricingRepository.save(p);
@@ -169,8 +174,8 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         p.setOfferActive(offerActive);
 
-        // Reset discount only if offer has ended (not open-ended)
-        if (!offerActive && p.getOfferValidDate() != null) {
+        // <-- UPDATE THIS BLOCK -->
+        if (!offerActive && p.getOfferValidDate() != null && !p.getOfferValidDate().isBlank()) {
             p.setDiscountPercentage(0.0);
             p.setDiscountAmount(0.0);
         }
@@ -178,6 +183,7 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         // Always calculate pricing based on current offer status
         calculatePricing(p);
     }
+
 
 
     private void processOfferStatus(ProcedurePricing p) {
