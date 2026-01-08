@@ -1,6 +1,10 @@
 package com.glowkart.customer.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -308,9 +312,19 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 && !isExpired(p.getOfferValidDate());
     }
 
+
     private boolean isExpired(String date) {
-        return date != null &&
-                Instant.now().isAfter(Instant.parse(date + "T23:59:59Z"));
+        if (date == null || date.isBlank()) return false;
+
+        try {
+            LocalDate localDate = LocalDate.parse(date); // yyyy-MM-dd
+            LocalDateTime endOfDay = localDate.atTime(23, 59, 59);
+            Instant offerInstant = endOfDay.toInstant(ZoneOffset.UTC);
+            return Instant.now().isAfter(offerInstant);
+        } catch (DateTimeParseException e) {
+            // If parsing fails, assume expired to be safe
+            return true;
+        }
     }
 
     // =========================================================
