@@ -224,54 +224,56 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     }
 
     private void calculatePricing(ProcedurePricing p) {
+
         double price = p.getPrice();
 
         double clinicDiscountPercent = p.getDiscountPercentage();
         double ngkDiscountPercent = p.getNgkDiscountPercentage();
 
-        // Informational discount amount (always shown)
-        double discountAmount = round(price * clinicDiscountPercent / 100.0);
+        double clinicDiscountAmount = round(price * clinicDiscountPercent / 100.0);
 
-        // Apply discount only if offer is active
         double discountedCost = p.isOfferActive()
-                ? round(price - discountAmount)
+                ? round(price - clinicDiscountAmount)
                 : price;
 
-        // Tax & GST always on payable amount
         double taxAmount = round(discountedCost * p.getTaxPercentage() / 100.0);
         double gstAmount = round(discountedCost * p.getGst() / 100.0);
 
-        double clinicPay = round(discountedCost + taxAmount + gstAmount + p.getConsultationFee());
+        double consultationFee = p.getConsultationFee();
+        double clinicPay = round(discountedCost + taxAmount + gstAmount + consultationFee);
 
-        // NGK discount applies ONLY when offer is active AND > 0
-        double ngkAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
+        double ngkDiscountAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
                 ? round(clinicPay * ngkDiscountPercent / 100.0)
                 : 0.0;
 
-        double finalCost = round(clinicPay - ngkAmount);
+        double finalCost = round(clinicPay - ngkDiscountAmount);
 
-        // Totals
         double totalDiscountAmount = round(
-                (p.isOfferActive() ? discountAmount : 0.0) + ngkAmount
+                (p.isOfferActive() ? clinicDiscountAmount : 0.0) + ngkDiscountAmount
         );
 
         double totalDiscountPercent = p.isOfferActive()
                 ? clinicDiscountPercent + ngkDiscountPercent
                 : 0.0;
 
-        // Set values
-        p.setDiscountAmount(discountAmount);
+        // ✅ SET VALUES
+        p.setDiscountAmount(clinicDiscountAmount);
         p.setDiscountedCost(discountedCost);
         p.setTaxAmount(taxAmount);
         p.setGstAmount(gstAmount);
         p.setClinicPay(clinicPay);
-        p.setNgkDiscountAmount(ngkAmount);
+        p.setNgkDiscountAmount(ngkDiscountAmount);
         p.setFinalCost(finalCost);
+
         p.setTotalDiscountAmount(totalDiscountAmount);
         p.setTotalDiscountPercentage(totalDiscountPercent);
 
+        // ✅ NEW FIELD
+        p.setTotalDiscountedAmount(round(price - totalDiscountAmount));
+
         p.setUpdatedAt(Instant.now());
     }
+
 
 
 //    private void calculatePricing(ProcedurePricing p) {

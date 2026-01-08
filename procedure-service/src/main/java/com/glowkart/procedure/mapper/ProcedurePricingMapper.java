@@ -56,7 +56,7 @@ public class ProcedurePricingMapper {
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
         entity.setProcedureImage(dto.getProcedureImage());
-        entity.setProcedureLink(dto.getProcedureLink()); // NEW
+        entity.setProcedureLink(dto.getProcedureLink());
 
         // SANITIZE QA
         entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? sanitizeQAList(dto.getPreProcedureQA()) : List.of());
@@ -74,9 +74,15 @@ public class ProcedurePricingMapper {
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
 
-        // NGK fields
+        // NGK fields (admin only)
         entity.setNgkDiscountPercentage(dto.getNgkDiscountPercentage());
         entity.setNgkDiscountAmount(dto.getNgkDiscountAmount());
+
+        // ❌ DO NOT set:
+        // totalDiscountAmount
+        // totalDiscountPercentage
+        // totalDiscountedAmount
+        // (these are calculated in service)
 
         return entity;
     }
@@ -92,7 +98,7 @@ public class ProcedurePricingMapper {
         dto.setClinicId(entity.getClinicId());
         dto.setDescription(entity.getDescription());
         dto.setProcedureImage(entity.getProcedureImage());
-        dto.setProcedureLink(entity.getProcedureLink()); // NEW
+        dto.setProcedureLink(entity.getProcedureLink());
 
         dto.setPreProcedureQA(entity.getPreProcedureQA() != null ? restoreQAList(entity.getPreProcedureQA()) : List.of());
         dto.setProcedureQA(entity.getProcedureQA() != null ? restoreQAList(entity.getProcedureQA()) : List.of());
@@ -102,6 +108,7 @@ public class ProcedurePricingMapper {
         dto.setMinTime(entity.getMinTime());
         dto.setOfferStart(entity.getOfferStart());
         dto.setOfferValidDate(entity.getOfferValidDate());
+        dto.setOfferActive(entity.isOfferActive());
 
         dto.setPrice(entity.getPrice());
         dto.setDiscountPercentage(entity.getDiscountPercentage());
@@ -113,6 +120,9 @@ public class ProcedurePricingMapper {
         dto.setTotalDiscountPercentage(entity.getTotalDiscountPercentage());
         dto.setTotalDiscountAmount(entity.getTotalDiscountAmount());
 
+        // ✅ NEW — exposed to UI
+        dto.setTotalDiscountedAmount(entity.getTotalDiscountedAmount());
+
         dto.setTaxPercentage(entity.getTaxPercentage());
         dto.setTaxAmount(entity.getTaxAmount());
         dto.setGst(entity.getGst());
@@ -121,7 +131,6 @@ public class ProcedurePricingMapper {
         dto.setDiscountedCost(entity.getDiscountedCost());
         dto.setClinicPay(entity.getClinicPay());
         dto.setFinalCost(entity.getFinalCost());
-        dto.setOfferActive(entity.isOfferActive());
 
         return dto;
     }
@@ -134,7 +143,7 @@ public class ProcedurePricingMapper {
         entity.setClinicId(dto.getClinicId());
         entity.setDescription(dto.getDescription());
         entity.setProcedureImage(dto.getProcedureImage());
-        entity.setProcedureLink(dto.getProcedureLink()); // NEW
+        entity.setProcedureLink(dto.getProcedureLink());
 
         entity.setPreProcedureQA(dto.getPreProcedureQA() != null ? sanitizeQAList(dto.getPreProcedureQA()) : List.of());
         entity.setProcedureQA(dto.getProcedureQA() != null ? sanitizeQAList(dto.getProcedureQA()) : List.of());
@@ -151,7 +160,7 @@ public class ProcedurePricingMapper {
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
 
-        // NGK only
+        // NGK only (admin controlled)
         if (dto.getNgkDiscountPercentage() > 0) {
             entity.setNgkDiscountPercentage(dto.getNgkDiscountPercentage());
         }
@@ -159,5 +168,7 @@ public class ProcedurePricingMapper {
         if (dto.getNgkDiscountAmount() > 0) {
             entity.setNgkDiscountAmount(dto.getNgkDiscountAmount());
         }
+
+        // ❌ NEVER update calculated fields here
     }
 }

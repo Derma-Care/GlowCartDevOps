@@ -45,4 +45,7 @@ public class ProcedurePricingDTO {
     
     private double totalDiscountPercentage;
     private double totalDiscountAmount;
+    
+ // ✅ NEW
+    private double totalDiscountedAmount;
 }

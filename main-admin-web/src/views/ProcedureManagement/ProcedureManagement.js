@@ -80,21 +80,25 @@ const ProcedureManagement = () => {
      =========================== */
   const handleAddToTemp = () => {
     const trimmed = procedureInput.trim()
+
     if (!trimmed) {
       setErrors({ procedure: 'Procedure name is required' })
       return
     }
-    // Regex validation
+
     if (!PROCEDURE_REGEX.test(trimmed)) {
       setErrors({
         procedure:
-          'Only letters, spaces, -, /, + and () are allowed. Numbers & special characters are not allowed.',
-      });
-      return;
+          'Only letters, spaces, -, /, + and () are allowed.',
+      })
+      return
     }
 
-    if (tempProcedures.map(p => p.toLowerCase()).includes(trimmed.toLowerCase())) {
-      setErrors({ procedure: 'Procedure already added in the list' })
+    // ❗ In EDIT MODE → do NOT use temp list
+    if (editMode) return
+
+    if (tempProcedures.some(p => p.toLowerCase() === trimmed.toLowerCase())) {
+      setErrors({ procedure: 'Procedure already added' })
       return
     }
 
@@ -103,47 +107,82 @@ const ProcedureManagement = () => {
     setErrors({ procedure: '' })
   }
 
+const handleUpdateProcedure = async () => {
+  if (!procedureInput.trim()) {
+    setErrors({ procedure: 'Procedure name is required' })
+    return
+  }
+
+  try {
+    const res = await updateProcedure(editProcedureId, {
+      procedureName: procedureInput.trim(),
+    })
+
+    // ✅ Use backend success message
+    if (res?.success === false) {
+      toast.error(res.message || 'Failed to update procedure')
+      return
+    }
+
+    toast.success(res?.message || 'Procedure updated successfully')
+
+    fetchProcedures()
+    setShowModal(false)
+    setEditMode(false)
+    setProcedureInput('')
+  } catch (err) {
+    // ✅ Use backend error message
+    toast.error(
+      err?.response?.data?.message || 'Failed to update procedure'
+    )
+  }
+}
+
+
   /* ===========================
       SUBMIT ALL TEMP PROCEDURES
      =========================== */
-  const handleSubmitAll = async () => {
-    let successCount = 0;
-    let failCount = 0;
-    let failedItems = [];
+ const handleSubmitAll = async () => {
+  let successCount = 0
+  let failCount = 0
+  let failedMessages = []
 
-    for (const name of tempProcedures) {
-      try {
-        const res = await createProcedure({ procedureName: name });
+  for (const name of tempProcedures) {
+    try {
+      const res = await createProcedure({ procedureName: name })
 
-        if (res && res.success !== false) {
-          successCount++;
-        } else {
-          failCount++;
-          failedItems.push(name);
-        }
-      } catch (err) {
-        failCount++;
-        failedItems.push(name);
+      if (res?.success === false) {
+        failCount++
+        failedMessages.push(res.message || `${name} failed`)
+      } else {
+        successCount++
       }
+    } catch (err) {
+      failCount++
+      failedMessages.push(
+        err?.response?.data?.message || `Failed to add ${name}`
+      )
     }
+  }
 
-    // Show ONLY ONE toast message
-    if (successCount > 0 && failCount === 0) {
-      toast.success(`${successCount} procedures added successfully`);
-    }
-    else if (successCount > 0 && failCount > 0) {
-      toast.warn(
-        `${successCount} added successfully, ${failCount} failed: ${failedItems.join(", ")}`
-      );
-    }
-    else {
-      toast.error(`Failed to add procedures: ${failedItems.join(", ")}`);
-    }
+  // ✅ Show ONLY backend messages
+  if (successCount > 0 && failCount === 0) {
+    toast.success(`${successCount} procedures added successfully`)
+  } 
+  else if (successCount > 0 && failCount > 0) {
+    toast.warn(
+      `${successCount} added successfully. Errors: ${failedMessages.join(', ')}`
+    )
+  } 
+  else {
+    toast.error(failedMessages.join(', '))
+  }
 
-    fetchProcedures();
-    setTempProcedures([]);
-    setShowModal(false);
-  };
+  fetchProcedures()
+  setTempProcedures([])
+  setShowModal(false)
+}
+
 
   const handleView = (procedure) => {
     setSelectedProcedure(procedure)
@@ -341,7 +380,22 @@ const ProcedureManagement = () => {
           />
           {errors.procedure && <p className="text-danger mt-1">{errors.procedure}</p>}<br />
 
-          <CButton color="primary" onClick={handleAddToTemp}>Add</CButton>
+          <CButton
+            color="primary"
+            onClick={handleAddToTemp}
+            disabled={editMode}
+            style={{
+              backgroundColor: editMode ? '#bdbdbd' : '#0d6efd',
+              borderColor: editMode ? '#bdbdbd' : '#0d6efd',
+              cursor: editMode ? 'not-allowed' : 'pointer',
+              opacity: editMode ? 0.7 : 1,
+            }}
+            title={editMode ? 'Add is disabled in edit mode' : ''}
+          >
+            Add
+          </CButton>
+
+
 
           {tempProcedures.length > 0 && (
             <div className="mt-3">
@@ -351,10 +405,28 @@ const ProcedureManagement = () => {
           )}
         </CModalBody>
 
+
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowModal(false)}>Cancel</CButton>
-          <CButton color="primary" onClick={handleSubmitAll} disabled={tempProcedures.length === 0}>Submit All</CButton>
+          <CButton color="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </CButton>
+
+          {editMode ? (
+            <CButton color="primary" onClick={handleUpdateProcedure}>
+              Update
+            </CButton>
+          ) : (
+            <CButton
+              color="primary"
+              onClick={handleSubmitAll}
+              disabled={tempProcedures.length === 0}
+            >
+              Submit All
+            </CButton>
+          )}
         </CModalFooter>
+
+
       </CModal>
 
       {/* View Modal */}

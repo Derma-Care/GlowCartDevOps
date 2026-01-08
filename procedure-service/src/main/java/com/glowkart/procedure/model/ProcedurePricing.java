@@ -52,7 +52,8 @@ public class ProcedurePricing {
     
     private double totalDiscountPercentage; // clinic + NGK
     private double totalDiscountAmount;     // clinic + NGK
-
+ // ✅ NEW
+    private double totalDiscountedAmount;
 
     private Instant createdAt;
     private Instant updatedAt;
