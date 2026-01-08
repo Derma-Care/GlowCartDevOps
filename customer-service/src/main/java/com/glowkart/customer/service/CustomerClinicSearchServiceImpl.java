@@ -322,10 +322,20 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     }
 
     private double parseDistance(String distance) {
-        if (distance.endsWith("M"))
+
+        distance = distance.trim();
+
+        if (distance.endsWith(" KM")) {
+            return Double.parseDouble(distance.replace(" KM", ""));
+        }
+
+        if (distance.endsWith(" M")) {
             return Double.parseDouble(distance.replace(" M", "")) / 1000;
-        return Double.parseDouble(distance.replace(" KM", ""));
+        }
+
+        return Double.MAX_VALUE; // fallback safety
     }
+
 
     private double calculateDistanceInKm(
             double lat1, double lon1, double lat2, double lon2) {
