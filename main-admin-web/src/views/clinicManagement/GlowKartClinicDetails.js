@@ -220,36 +220,46 @@ const ClinicDetails = () => {
     const replaceFile = (key, file) => {
         if (!file) return;
 
-        const allowedTypes = [
+        // ⭐ Allowed types
+        let allowedTypes = [
             "application/pdf",
             "image/jpeg",
             "image/png"
         ];
 
+        // ⭐ Logo must be only images (no PDF)
+        if (key === "hospitalLogo") {
+            allowedTypes = ["image/jpeg", "image/png"];
+        }
+
         if (!allowedTypes.includes(file.type)) {
-            toast.error("Only PDF, JPG, JPEG, PNG files are allowed");
+            toast.error(key === "hospitalLogo"
+                ? "Only JPG or PNG images are allowed for logo"
+                : "Only PDF, JPG, JPEG, PNG files are allowed"
+            );
+            return;
+        }
+
+        // ⭐ File size validation (max 500KB)
+        const maxSize = 500 * 1024; // 500 KB
+        if (file.size > maxSize) {
+            toast.error("File must be less than 500 KB");
             return;
         }
 
         const reader = new FileReader();
-
         reader.onload = async () => {
             try {
-                // ✅ STRIP data:image/...;base64,
                 const base64 = reader.result.split(",")[1];
-
                 await updateClinic(clinicId, { [key]: base64 });
                 await fetchClinicDetails();
-                toast.success("📄 Document replaced successfully");
+                toast.success(`${key === "hospitalLogo" ? "Logo" : "Document"} updated successfully`);
             } catch {
-                toast.error("❌ Failed to replace document");
+                toast.error("Update failed");
             }
         };
-
         reader.readAsDataURL(file);
     };
-
-
 
 
     // ✅ Extract mime type safely from base64
@@ -537,7 +547,7 @@ const ClinicDetails = () => {
                                                         // ⭐ Email Disabled (Requested)
                                                     ) : key === "email" ? (
                                                         <input
-                                                            className="form-control bg-light"
+                                                            className="form-control"
                                                             value={formData.email || ""}
                                                             disabled
                                                             title="Email cannot be edited"
@@ -545,7 +555,7 @@ const ClinicDetails = () => {
 
                                                     ) : key === "state" ? (
                                                         <input
-                                                            className="form-control bg-light"
+                                                            className="form-control"
                                                             value={formData.state || ""}
                                                             disabled
                                                             title="State cannot be edited"
@@ -595,9 +605,6 @@ const ClinicDetails = () => {
                                 />
                             </div>
                         </CTabPane>
-
-
-
 
                         {/* ⭐ TAB 3 - DOCUMENTS */}
                         <CTabPane visible={activeTab === 3}>

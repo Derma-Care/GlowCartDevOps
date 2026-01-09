@@ -58,7 +58,8 @@ const ProcedureManagement = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [delloading, setDelLoading] = useState(false)
 
-  const PROCEDURE_REGEX = /^[A-Za-z]+([A-Za-z\s\-\/\+\(\)]*)$/;
+  const PROCEDURE_REGEX = /^[A-Za-z0-9]+([A-Za-z0-9\s\-\&\/\+\(\)\.\,\:\%\']*)$/;
+
   useEffect(() => {
     fetchProcedures()
   }, [])
@@ -107,81 +108,91 @@ const ProcedureManagement = () => {
     setErrors({ procedure: '' })
   }
 
-const handleUpdateProcedure = async () => {
-  if (!procedureInput.trim()) {
-    setErrors({ procedure: 'Procedure name is required' })
-    return
-  }
-
-  try {
-    const res = await updateProcedure(editProcedureId, {
-      procedureName: procedureInput.trim(),
-    })
-
-    // ✅ Use backend success message
-    if (res?.success === false) {
-      toast.error(res.message || 'Failed to update procedure')
+  const handleUpdateProcedure = async () => {
+    if (!procedureInput.trim()) {
+      setErrors({ procedure: 'Procedure name is required' })
       return
     }
 
-    toast.success(res?.message || 'Procedure updated successfully')
+    try {
+      const res = await updateProcedure(editProcedureId, {
+        procedureName: procedureInput.trim(),
+      })
 
-    fetchProcedures()
-    setShowModal(false)
-    setEditMode(false)
-    setProcedureInput('')
-  } catch (err) {
-    // ✅ Use backend error message
-    toast.error(
-      err?.response?.data?.message || 'Failed to update procedure'
-    )
+      // ✅ Use backend success message
+      if (res?.success === false) {
+        toast.error(res.message || 'Failed to update procedure')
+        return
+      }
+
+      toast.success(res?.message || 'Procedure updated successfully')
+
+      fetchProcedures()
+      setShowModal(false)
+      setEditMode(false)
+      setProcedureInput('')
+    } catch (err) {
+      // ✅ Use backend error message
+      toast.error(
+        err?.response?.data?.message || 'Failed to update procedure'
+      )
+    }
   }
-}
 
 
   /* ===========================
       SUBMIT ALL TEMP PROCEDURES
      =========================== */
- const handleSubmitAll = async () => {
-  let successCount = 0
-  let failCount = 0
-  let failedMessages = []
+  const handleSubmitAll = async () => {
+    if (tempProcedures.length === 1) {
+      try {
+        const name = tempProcedures[0];
+        const res = await createProcedure({ procedureName: name });
 
-  for (const name of tempProcedures) {
-    try {
-      const res = await createProcedure({ procedureName: name })
-
-      if (res?.success === false) {
-        failCount++
-        failedMessages.push(res.message || `${name} failed`)
-      } else {
-        successCount++
+        if (res?.success === false) {
+          toast.error(res.message || `${name} failed`);
+        } else {
+          toast.success(res?.message || 'Procedure added successfully');
+        }
+      } catch (err) {
+        toast.error(err?.response?.data?.message || `Failed to add ${name}`);
       }
-    } catch (err) {
-      failCount++
-      failedMessages.push(
-        err?.response?.data?.message || `Failed to add ${name}`
-      )
+    } else {
+      // multiple add (same code you already wrote)
+      let successCount = 0;
+      let failCount = 0;
+      let failedMessages = [];
+
+      for (const name of tempProcedures) {
+        try {
+          const res = await createProcedure({ procedureName: name });
+
+          if (res?.success === false) {
+            failCount++;
+            failedMessages.push(res.message || `${name} failed`);
+          } else {
+            successCount++;
+          }
+        } catch (err) {
+          failCount++;
+          failedMessages.push(err?.response?.data?.message || `Failed to add ${name}`);
+        }
+      }
+
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`${successCount} procedures added successfully`);
+      } else if (successCount > 0) {
+        toast.warn(`${successCount} added, errors: ${failedMessages.join(', ')}`);
+      } else {
+        toast.error(failedMessages.join(', '));
+      }
     }
-  }
 
-  // ✅ Show ONLY backend messages
-  if (successCount > 0 && failCount === 0) {
-    toast.success(`${successCount} procedures added successfully`)
-  } 
-  else if (successCount > 0 && failCount > 0) {
-    toast.warn(
-      `${successCount} added successfully. Errors: ${failedMessages.join(', ')}`
-    )
-  } 
-  else {
-    toast.error(failedMessages.join(', '))
-  }
+    fetchProcedures();
+    setTempProcedures([]);
+    setShowModal(false);
+  };
 
-  fetchProcedures()
-  setTempProcedures([])
-  setShowModal(false)
-}
 
 
   const handleView = (procedure) => {
@@ -416,14 +427,20 @@ const handleUpdateProcedure = async () => {
               Update
             </CButton>
           ) : (
-            <CButton
-              color="primary"
-              onClick={handleSubmitAll}
-              disabled={tempProcedures.length === 0}
-            >
-              Submit All
-            </CButton>
+            <>
+              {tempProcedures.length > 0 && (
+                <CButton
+                  color="primary"
+                  onClick={handleSubmitAll}
+                  disabled={tempProcedures.length === 0}
+                >
+                  {tempProcedures.length === 1 ? 'Submit' : 'Submit All'}
+                </CButton>
+              )}
+            </>
           )}
+
+
         </CModalFooter>
 
 

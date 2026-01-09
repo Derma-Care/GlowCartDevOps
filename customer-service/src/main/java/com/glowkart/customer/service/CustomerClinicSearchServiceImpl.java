@@ -382,14 +382,17 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
             double latitude, double longitude) {
 
+        String state = reverseGeoService.resolveState(latitude, longitude);
+
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
-        if (packages == null || packages.isEmpty())
+        if (packages == null || packages.isEmpty()) {
             return Collections.emptyList();
+        }
 
         List<ClinicPublicDTO> clinicsFromAdmin =
-                adminClinicClient.getAllClinics().getData();
+                adminClinicClient.getClinicsByState(state, true).getData();
 
         final List<ClinicPublicDTO> clinics =
                 clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
@@ -409,21 +412,26 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                     clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
             List<ClinicProcedureLinkDTO> clinicDtos =
-                    clinics.parallelStream()
+                    clinics.stream()
+                            .filter(ClinicPublicDTO::isOnline)
                             .filter(c -> clinicSet.contains(c.getClinicId()))
                             .map(c -> mapClinicWithPricing(
-                                    c, latitude, longitude,
-                                    pkg.getPackageId(), false))
-                            .sorted((a, b) -> sortByDistance(a, b))
+                                    c,
+                                    latitude,
+                                    longitude,
+                                    pkg.getPackageId(),
+                                    false))
+                            .sorted(this::sortByDistance)
                             .toList();
-
 
             ProcedurePackageWithClinicsDTO dto =
                     new ProcedurePackageWithClinicsDTO();
             dto.setPackageInfo(pkg);
             dto.setClinics(clinicDtos);
             return dto;
+
         }).toList();
     }
+
 
 }

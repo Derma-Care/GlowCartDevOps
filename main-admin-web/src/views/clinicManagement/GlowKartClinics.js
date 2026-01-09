@@ -208,41 +208,44 @@ const ClinicManagement = ({ service }) => {
   const currentItems = filteredClinics.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
 
-  const sendNGKRegistrationLink = async (email) => {
-    if (nameError || emailError || !nameInput.trim() || !email.trim()) {
-      toast.error("Please fix validation errors")
+const sendNGKRegistrationLink = async (email) => {
+  if (nameError || emailError || !nameInput.trim() || !email.trim()) {
+    toast.error("Please fix validation errors")
+    return
+  }
+
+  setLoadingLink(true)
+
+  try {
+    const res = await fetch(NGkRegistrationLink, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, name: nameInput.trim() })
+    })
+
+    const data = await res.json()
+
+    if (!res.ok || !data.success) {
+      toast.error(data?.message ?? "Failed to send link")
       return
     }
 
-    setLoadingLink(true)
+    toast.success(data?.message ?? "Link sent successfully!")
 
-    try {
-      const response = await fetch(`${NGkRegistrationLink}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name: nameInput.trim() })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || data.success === false) {
-        toast.error(data?.message || "Failed to send link")
-        return
-      }
-
-      toast.success(data?.message || "Link sent successfully!")
-
-      setIsLink(false)
-      setLinkInputValue("")
-      setNameInput("")
-      setNameError("")
-      setEmailError("")
-    } catch {
-      toast.error("Something went wrong")
-    } finally {
-      setLoadingLink(false)
-    }
+    // success case reset
+    setIsLink(false)
+    setLinkInputValue("")
+    setNameInput("")
+    setNameError("")
+    setEmailError("")
+    
+  } catch (err) {
+    toast.error("Something went wrong")
+  } finally {
+    setLoadingLink(false)
   }
+}
+
 
 
 

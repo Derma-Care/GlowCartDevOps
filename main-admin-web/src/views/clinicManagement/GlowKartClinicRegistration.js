@@ -838,7 +838,7 @@ const ClinicRegistration = () => {
     <div className="container mt-4">
       <ToastContainer />
       <CCard className="shadow-sm border-0 rounded-3">
-        <CCardHeader className="text-center text-white" style={{ backgroundColor: NGK_COLORS.primary }}>
+        <CCardHeader className="text-center" style={{ backgroundColor: NGK_COLORS.primary, color:COLORS.white }}>
           <h3 className="mb-0">Clinic Registration</h3>
         </CCardHeader>
 
@@ -2000,7 +2000,8 @@ const ClinicRegistration = () => {
             </CRow>
 
             <CButton
-              color="primary"
+            style={{backgroundColor:NGK_COLORS.primary,color:"white"}}
+              // color="primary"
               className="mb-3"
               onClick={(e) => {
                 e.preventDefault();  // ⛔ Prevent form submit

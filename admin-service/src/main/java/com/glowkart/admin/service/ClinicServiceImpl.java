@@ -86,6 +86,7 @@ public class ClinicServiceImpl implements ClinicService {
 
         
         clinic.setStatus("PENDING");
+        clinic.setOnline(false);   // ✅ explicitly offline
         clinic.setCreatedAt(Instant.now());
 
         Clinic saved = repo.save(clinic);
@@ -112,7 +113,7 @@ public class ClinicServiceImpl implements ClinicService {
     public Clinic verifyClinic(String clinicId) {
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("VERIFIED");
-
+        clinic.setOnline(true);   // ✅ now visible/active
         // Generate login credentials if missing
         if (clinic.getUsername() == null || clinic.getPassword() == null) {
             Map<String, String> creds = CredentialGenerator.generateLoginCredentials();
@@ -137,6 +138,7 @@ public class ClinicServiceImpl implements ClinicService {
     public Clinic rejectClinic(String clinicId, String reason) {
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("REJECTED");
+        clinic.setOnline(false);  // ❌ never online
         repo.save(clinic);
         asyncVerificationService.sendRejectionNotificationAsync(clinic, reason);
         return clinic;

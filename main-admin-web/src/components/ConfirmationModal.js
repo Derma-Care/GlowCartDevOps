@@ -33,7 +33,7 @@ const ConfirmationModal = ({
           onClick={onConfirm}
           style={{
             minWidth: '100px',
-            color: 'red',
+            color: 'white',
             backgroundColor: 'var(--color-black)',
           }}
         >
