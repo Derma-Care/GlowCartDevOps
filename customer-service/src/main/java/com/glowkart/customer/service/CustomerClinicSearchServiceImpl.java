@@ -145,24 +145,17 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // =========================================================
     @Override
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(double latitude, double longitude) {
-        // 1️⃣ Resolve state from coordinates
         String state = reverseGeoService.resolveState(latitude, longitude);
 
-        // 2️⃣ Fetch all procedure packages safely
         List<ProcedurePackageDTO> packages = safeGetFromClient(() ->
                 procedureServiceClient.getAllPackages().getData());
-
         if (packages.isEmpty()) return Collections.emptyList();
 
-        // 3️⃣ Fetch all clinics in the state safely
         List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
 
-        // 4️⃣ Map each package to its clinics, skipping packages with no online clinics
         return packages.stream()
                 .map(pkg -> {
-                    List<String> clinicIds = safeGetClinicIdsByPackage(pkg.getPackageId());
-                    Set<String> allowedClinicIds = clinicIds.isEmpty() ? Set.of() : Set.copyOf(clinicIds);
-
+                    Set<String> allowedClinicIds = Set.copyOf(safeGetClinicIdsByPackage(pkg.getPackageId()));
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(ClinicPublicDTO::isOnline)
                             .filter(c -> allowedClinicIds.contains(c.getClinicId()))
@@ -170,17 +163,14 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    if (clinicDtos.isEmpty()) {
-                        return null; // skip packages with no online clinics
-                    }
+                    if (clinicDtos.isEmpty()) return null;
 
                     ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
-
                     return dto;
                 })
-                .filter(dto -> dto != null) // remove nulls
+                .filter(dto -> dto != null)
                 .toList();
     }
 
@@ -233,7 +223,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     }
 
     // =========================================================
-    // Mapping utility
+    // Mapping utilities
     // =========================================================
     private ClinicProcedureLinkDTO mapClinicWithPricing(
             ClinicPublicDTO clinic,
@@ -245,13 +235,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         ProcedurePricingDTO pricing = null;
         try {
             if (isProcedure) {
-                pricing = safeGetFromClient(() -> List.of(
-                        procedureServiceClient.getPricingByProcedureForClinic(id, clinic.getClinicId()).getData()))
-                        .stream().findFirst().orElse(null);
+                pricing = procedureServiceClient.getPricingByProcedureForClinic(id, clinic.getClinicId()).getData();
             } else {
-                pricing = safeGetFromClient(() -> List.of(
-                        procedureServiceClient.getPackagePricingForClinic(id, clinic.getClinicId()).getData()))
-                        .stream().findFirst().orElse(null);
+                pricing = procedureServiceClient.getPackagePricingForClinic(id, clinic.getClinicId()).getData();
             }
         } catch (Exception ignored) {}
 
@@ -264,12 +250,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             double longitude,
             ProcedurePricingDTO pricing) {
 
-        double distanceKm = calculateDistanceInKm(latitude, longitude,
-                clinic.getLatitude(), clinic.getLongitude());
-
-        String distanceStr = distanceKm < 1
-                ? Math.round(distanceKm * 1000) + " M"
-                : Math.round(distanceKm) + " KM";
+        double distanceKm = calculateDistanceInKm(latitude, longitude, clinic.getLatitude(), clinic.getLongitude());
+        String distanceStr = distanceKm < 1 ? Math.round(distanceKm * 1000) + " M" : Math.round(distanceKm) + " KM";
 
         return ClinicProcedureLinkDTO.builder()
                 .clinicId(clinic.getClinicId())
