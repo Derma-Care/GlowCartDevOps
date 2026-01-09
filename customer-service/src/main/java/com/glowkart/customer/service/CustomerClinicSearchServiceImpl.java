@@ -55,8 +55,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
         return clinics.stream()
                 .filter(ClinicPublicDTO::isOnline)
-                .filter(c -> allowedIds.contains(c.getClinicId()))
-                .map(c -> mapClinicWithPricing(c, latitude, longitude, procedureId, true))
+                .filter((ClinicPublicDTO c) -> allowedIds.contains(c.getClinicId()))
+                .map((ClinicPublicDTO c) -> mapClinicWithPricing(c, latitude, longitude, procedureId, true))
                 .sorted(this::sortByDistance)
                 .toList();
     }
@@ -81,8 +81,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
         return clinics.stream()
                 .filter(ClinicPublicDTO::isOnline)
-                .filter(c -> allowedIds.contains(c.getClinicId()))
-                .map(c -> mapClinicWithPricing(c, latitude, longitude, packageId, false))
+                .filter((ClinicPublicDTO c) -> allowedIds.contains(c.getClinicId()))
+                .map((ClinicPublicDTO c) -> mapClinicWithPricing(c, latitude, longitude, packageId, false))
                 .sorted(this::sortByDistance)
                 .toList();
     }
@@ -97,10 +97,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         String state = reverseGeoService.resolveState(latitude, longitude);
         List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
 
-        if (clinics.isEmpty()) return Collections.emptyList();
-
         return clinics.stream()
-                .map(c -> mapClinicToDTO(c, latitude, longitude, null))
+                .map((ClinicPublicDTO c) -> mapClinicToDTO(c, latitude, longitude, null))
                 .sorted(this::sortByDistance)
                 .toList();
     }
@@ -115,11 +113,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         String state = reverseGeoService.resolveState(latitude, longitude);
         List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
 
-        if (clinics.isEmpty()) return Collections.emptyList();
-
         return clinics.stream()
-                .filter(c -> hasAnyActiveOffer(c.getClinicId()))
-                .map(c -> mapClinicToDTO(c, latitude, longitude, null))
+                .filter((ClinicPublicDTO c) -> hasAnyActiveOffer(c.getClinicId()))
+                .map((ClinicPublicDTO c) -> mapClinicToDTO(c, latitude, longitude, null))
                 .sorted(this::sortByDistance)
                 .toList();
     }
@@ -129,8 +125,13 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // =========================================================
     @Override
     public ClinicDetailsDTO getClinicDetails(String clinicId) {
-        List<ProcedurePackageDTO> packages = safeGetPackages(clinicId);
-        List<ProcedurePricingDTO> procedures = safeGetProcedures(clinicId);
+
+        List<ProcedurePackageDTO> packages =
+                safeGet(() -> procedureServiceClient.getPackagesByClinic(clinicId).getData());
+
+        List<ProcedurePricingDTO> procedures =
+                safeGet(() -> procedureServiceClient.getProceduresByClinic(clinicId).getData());
+
         return new ClinicDetailsDTO(packages, procedures);
     }
 
@@ -139,51 +140,26 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // =========================================================
     @Override
     public ClinicDetailsDTO getClinicOffers(String clinicId) {
-        List<ProcedurePricingDTO> procedures = safeGetProcedures(clinicId).stream()
-                .filter(this::isOfferActive)
-                .toList();
-        List<ProcedurePackageDTO> packages = safeGetPackages(clinicId).stream()
-                .filter(this::isOfferActive)
-                .toList();
+
+        List<ProcedurePricingDTO> procedures =
+                safeGet(() -> procedureServiceClient.getProceduresByClinic(clinicId).getData())
+                        .stream()
+                        .filter(this::isOfferActive)
+                        .toList();
+
+        List<ProcedurePackageDTO> packages =
+                safeGet(() -> procedureServiceClient.getPackagesByClinic(clinicId).getData())
+                        .stream()
+                        .filter(this::isOfferActive)
+                        .toList();
+
         return new ClinicDetailsDTO(packages, procedures);
-    }
-
-    // =========================================================
-    // Packages with clinics
-    // =========================================================
-    @Override
-    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
-            double latitude, double longitude) {
-
-        String state = reverseGeoService.resolveState(latitude, longitude);
-        List<ProcedurePackageDTO> packages = safeGetAllPackages();
-        List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
-
-        if (packages.isEmpty() || clinics.isEmpty()) return Collections.emptyList();
-
-        return packages.stream()
-                .map(pkg -> {
-                    List<String> clinicIds = safeGetClinicIdsByPackage(pkg.getPackageId());
-                    Set<String> allowedClinicIds = clinicIds.isEmpty() ? Set.of() : Set.copyOf(clinicIds);
-
-                    List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
-                            .filter(ClinicPublicDTO::isOnline)
-                            .filter(c -> allowedClinicIds.contains(c.getClinicId()))
-                            .map(c -> mapClinicWithPricing(c, latitude, longitude, pkg.getPackageId(), false))
-                            .sorted(this::sortByDistance)
-                            .toList();
-
-                    ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
-                    dto.setPackageInfo(pkg);
-                    dto.setClinics(clinicDtos);
-                    return dto;
-                })
-                .toList();
     }
 
     // =========================================================
     // Helpers
     // =========================================================
+
     private ClinicProcedureLinkDTO mapClinicWithPricing(
             ClinicPublicDTO clinic,
             double latitude,
@@ -207,8 +183,12 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             double longitude,
             ProcedurePricingDTO pricing) {
 
-        double distanceKm = calculateDistanceInKm(latitude, longitude, clinic.getLatitude(), clinic.getLongitude());
-        String distanceStr = distanceKm < 1 ? Math.round(distanceKm * 1000) + " M" : Math.round(distanceKm) + " KM";
+        double distanceKm = calculateDistanceInKm(latitude, longitude,
+                clinic.getLatitude(), clinic.getLongitude());
+
+        String distanceStr = distanceKm < 1
+                ? Math.round(distanceKm * 1000) + " M"
+                : Math.round(distanceKm) + " KM";
 
         return ClinicProcedureLinkDTO.builder()
                 .clinicId(clinic.getClinicId())
@@ -255,21 +235,71 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .distanceInKm(distanceStr)
                 .build();
     }
+    
+    @Override
+    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
+            double latitude, double longitude) {
 
+        // 1️⃣ Resolve state from coordinates
+        String state = reverseGeoService.resolveState(latitude, longitude);
+
+        // 2️⃣ Fetch all procedure packages safely
+        List<ProcedurePackageDTO> packages = safeGet(() ->
+                procedureServiceClient.getAllPackages().getData());
+
+        if (packages.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 3️⃣ Fetch all clinics in the state safely
+        List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
+
+        // 4️⃣ Map each package to its clinics
+        return packages.stream()
+                .map((ProcedurePackageDTO pkg) -> {
+
+                    // 4a️⃣ Fetch clinic IDs offering this package safely
+                    List<String> clinicIds = safeGetClinicIdsByPackage(pkg.getPackageId());
+                    Set<String> allowedClinicIds = clinicIds.isEmpty() ? Set.of() : Set.copyOf(clinicIds);
+
+                    // 4b️⃣ Map clinics to DTOs with pricing and explicit types
+                    List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
+                            .filter(ClinicPublicDTO::isOnline)
+                            .filter((ClinicPublicDTO c) -> allowedClinicIds.contains(c.getClinicId()))
+                            .map((ClinicPublicDTO c) -> mapClinicWithPricing(
+                                    c, latitude, longitude, pkg.getPackageId(), false))
+                            .sorted(this::sortByDistance)
+                            .toList();
+
+                    // 4c️⃣ Build package-with-clinics DTO
+                    ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+                    dto.setPackageInfo(pkg);
+                    dto.setClinics(clinicDtos);
+
+                    return dto;
+                })
+                .toList();
+    }
+
+
+    // =========================================================
+    // Offer logic
+    // =========================================================
     private boolean hasAnyActiveOffer(String clinicId) {
         return calculateMaxOfferForClinic(clinicId) != null;
     }
 
     private Double calculateMaxOfferForClinic(String clinicId) {
-
         return offerCache.computeIfAbsent(clinicId, id -> {
             double max = 0;
 
-            for (ProcedurePricingDTO p : safeGetProcedures(id)) {
+            for (ProcedurePricingDTO p :
+                    safeGet(() -> procedureServiceClient.getProceduresByClinic(id).getData())) {
                 if (isOfferActive(p)) max = Math.max(max, p.getTotalDiscountPercentage());
             }
 
-            for (ProcedurePackageDTO p : safeGetPackages(id)) {
+            for (ProcedurePackageDTO p :
+                    safeGet(() -> procedureServiceClient.getPackagesByClinic(id).getData())) {
                 if (isOfferActive(p)) max = Math.max(max, p.getTotalDiscountPercentage());
             }
 
@@ -278,11 +308,13 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     }
 
     private boolean isOfferActive(ProcedurePricingDTO p) {
-        return p.isOfferActive() && p.getTotalDiscountPercentage() > 0 && !isExpired(p.getOfferValidDate());
+        return p != null && p.isOfferActive() && p.getTotalDiscountPercentage() > 0
+                && !isExpired(p.getOfferValidDate());
     }
 
     private boolean isOfferActive(ProcedurePackageDTO p) {
-        return p.isOfferActive() && p.getTotalDiscountPercentage() > 0 && !isExpired(p.getOfferValidDate());
+        return p != null && p.isOfferActive() && p.getTotalDiscountPercentage() > 0
+                && !isExpired(p.getOfferValidDate());
     }
 
     private boolean isExpired(String date) {
@@ -290,12 +322,16 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         try {
             LocalDate localDate = LocalDate.parse(date);
             LocalDateTime endOfDay = localDate.atTime(23, 59, 59);
-            return Instant.now().isAfter(endOfDay.toInstant(ZoneOffset.UTC));
+            Instant offerInstant = endOfDay.toInstant(ZoneOffset.UTC);
+            return Instant.now().isAfter(offerInstant);
         } catch (DateTimeParseException e) {
             return true;
         }
     }
 
+    // =========================================================
+    // Utility
+    // =========================================================
     private int sortByDistance(ClinicProcedureLinkDTO a, ClinicProcedureLinkDTO b) {
         return Double.compare(parseDistance(a.getDistanceInKm()), parseDistance(b.getDistanceInKm()));
     }
@@ -318,60 +354,29 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
-    // =========================================================
-    // Type-safe safe getters
-    // =========================================================
-    private List<ProcedurePricingDTO> safeGetProcedures(String clinicId) {
+    private <T> List<T> safeGet(SupplierWithException<List<T>> supplier) {
         try {
-            List<ProcedurePricingDTO> data = procedureServiceClient.getProceduresByClinic(clinicId).getData();
+            List<T> data = supplier.get();
             return data != null ? data : Collections.emptyList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
     }
 
-    private List<ProcedurePackageDTO> safeGetPackages(String clinicId) {
-        try {
-            List<ProcedurePackageDTO> data = procedureServiceClient.getPackagesByClinic(clinicId).getData();
-            return data != null ? data : Collections.emptyList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
-    }
-
-    private List<ProcedurePackageDTO> safeGetAllPackages() {
-        try {
-            List<ProcedurePackageDTO> data = procedureServiceClient.getAllPackages().getData();
-            return data != null ? data : Collections.emptyList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+    @FunctionalInterface
+    private interface SupplierWithException<T> {
+        T get() throws Exception;
     }
 
     private List<ClinicPublicDTO> safeGetClinics(String state, Boolean onlyOnline) {
-        try {
-            List<ClinicPublicDTO> data = adminClinicClient.getClinicsByState(state, onlyOnline).getData();
-            return data != null ? data : Collections.emptyList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return safeGet(() -> adminClinicClient.getClinicsByState(state, onlyOnline).getData());
     }
 
     private List<String> safeGetClinicIdsByProcedure(String procedureId) {
-        try {
-            List<String> data = procedureServiceClient.getClinicIdsByProcedure(procedureId).getData();
-            return data != null ? data : Collections.emptyList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return safeGet(() -> procedureServiceClient.getClinicIdsByProcedure(procedureId).getData());
     }
 
     private List<String> safeGetClinicIdsByPackage(String packageId) {
-        try {
-            List<String> data = procedureServiceClient.getClinicIdsByPackage(packageId).getData();
-            return data != null ? data : Collections.emptyList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        return safeGet(() -> procedureServiceClient.getClinicIdsByPackage(packageId).getData());
     }
 }
