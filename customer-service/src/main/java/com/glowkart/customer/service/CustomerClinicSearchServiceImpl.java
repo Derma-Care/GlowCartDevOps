@@ -382,37 +382,34 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
             double latitude, double longitude) {
 
+        // 1️⃣ Resolve state from coordinates
         String state = reverseGeoService.resolveState(latitude, longitude);
 
+        // 2️⃣ Fetch all procedure packages (typed)
         List<ProcedurePackageDTO> packages =
-                procedureServiceClient.getAllPackages().getData();
+                safeGet(() -> procedureServiceClient.getAllPackages().getData());
 
-        if (packages == null || packages.isEmpty()) {
+        if (packages.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<ClinicPublicDTO> clinicsFromAdmin =
-                adminClinicClient.getClinicsByState(state, true).getData();
+        // 3️⃣ Fetch all clinics in the state (typed)
+        List<ClinicPublicDTO> clinics =
+                safeGet(() -> adminClinicClient.getClinicsByState(state, true).getData());
 
-        final List<ClinicPublicDTO> clinics =
-                clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
+        // 4️⃣ Map each package to its clinics
+        return packages.stream()
+                .map(pkg -> {
 
-        return packages.stream().map(pkg -> {
+                    // 4a️⃣ Fetch clinic IDs offering this package (typed)
+                    List<String> clinicIds = safeGet(() ->
+                            procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData()
+                    );
 
-            List<String> clinicIds;
-            try {
-                clinicIds = procedureServiceClient
-                        .getClinicIdsByPackage(pkg.getPackageId())
-                        .getData();
-            } catch (Exception e) {
-                clinicIds = Collections.emptyList();
-            }
+                    Set<String> clinicSet = clinicIds.isEmpty() ? Set.of() : Set.copyOf(clinicIds);
 
-            Set<String> clinicSet =
-                    clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
-
-            List<ClinicProcedureLinkDTO> clinicDtos =
-                    clinics.stream()
+                    // 4b️⃣ Map clinics to DTOs with pricing, sorted by distance
+                    List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(ClinicPublicDTO::isOnline)
                             .filter(c -> clinicSet.contains(c.getClinicId()))
                             .map(c -> mapClinicWithPricing(
@@ -420,17 +417,19 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                                     latitude,
                                     longitude,
                                     pkg.getPackageId(),
-                                    false))
-                            .sorted(this::sortByDistance)
+                                    false
+                            ))
+                            .sorted(this::sortByDistance) // ✅ type-safe now
                             .toList();
 
-            ProcedurePackageWithClinicsDTO dto =
-                    new ProcedurePackageWithClinicsDTO();
-            dto.setPackageInfo(pkg);
-            dto.setClinics(clinicDtos);
-            return dto;
+                    // 4c️⃣ Build package-with-clinics DTO
+                    ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+                    dto.setPackageInfo(pkg);
+                    dto.setClinics(clinicDtos);
 
-        }).toList();
+                    return dto;
+                })
+                .toList();
     }
 
 
