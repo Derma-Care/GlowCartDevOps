@@ -383,31 +383,23 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
             double latitude, double longitude) {
 
-        // =========================================================
         // Resolve state from user's coordinates
-        // =========================================================
         String state = reverseGeoService.resolveState(latitude, longitude);
 
-        // =========================================================
         // Fetch only clinics in this state that are online
-        // =========================================================
         List<ClinicPublicDTO> clinicsFromAdmin =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
         final List<ClinicPublicDTO> clinics =
                 clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
 
-        // =========================================================
         // Fetch all procedure packages
-        // =========================================================
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
         if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
-        // =========================================================
         // Map each package to the clinics offering it
-        // =========================================================
         return packages.stream()
                 .map(pkg -> {
                     // Get clinic IDs that offer this package
@@ -426,9 +418,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                     // Map clinics in the current state that offer this package
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
-                            .map(c -> mapClinicWithPricing(
-                                    c, latitude, longitude,
-                                    pkg.getPackageId(), false))
+                            .map(c -> (ClinicProcedureLinkDTO) mapClinicWithPricing(
+                                    c, latitude, longitude, pkg.getPackageId(), false))
                             .sorted(this::sortByDistance)
                             .toList();
 
