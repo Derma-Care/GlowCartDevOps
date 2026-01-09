@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -402,44 +403,47 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
-        if (packages == null || packages.isEmpty())
-            return Collections.emptyList();
+        if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
         // =========================================================
         // Map each package to the clinics offering it
         // =========================================================
-        return packages.stream().map(pkg -> {
+        return packages.stream()
+                .map(pkg -> {
+                    // Get clinic IDs that offer this package
+                    List<String> clinicIds;
+                    try {
+                        clinicIds = procedureServiceClient
+                                .getClinicIdsByPackage(pkg.getPackageId())
+                                .getData();
+                    } catch (Exception e) {
+                        clinicIds = Collections.emptyList();
+                    }
 
-            // Get clinic IDs that offer this package
-            List<String> clinicIds;
-            try {
-                clinicIds = procedureServiceClient
-                        .getClinicIdsByPackage(pkg.getPackageId())
-                        .getData();
-            } catch (Exception e) {
-                clinicIds = Collections.emptyList();
-            }
+                    Set<String> clinicSet =
+                            clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
-            Set<String> clinicSet =
-                    clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
-
-            // Map clinics that offer this package
-            List<ClinicProcedureLinkDTO> clinicDtos =
-                    clinics.parallelStream()
+                    // Map clinics in the current state that offer this package
+                    List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
                             .map(c -> mapClinicWithPricing(
                                     c, latitude, longitude,
                                     pkg.getPackageId(), false))
-                            .sorted((a, b) -> sortByDistance(a, b))
+                            .sorted(this::sortByDistance)
                             .toList();
 
-            // Build DTO
-            ProcedurePackageWithClinicsDTO dto =
-                    new ProcedurePackageWithClinicsDTO();
-            dto.setPackageInfo(pkg);
-            dto.setClinics(clinicDtos);
-            return dto;
-        }).toList();
+                    // Skip package if no clinics in this state
+                    if (clinicDtos.isEmpty()) return null;
+
+                    // Build DTO
+                    ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+                    dto.setPackageInfo(pkg);
+                    dto.setClinics(clinicDtos);
+                    return dto;
+                })
+                .filter(Objects::nonNull) // remove packages with no clinics in state
+                .toList();
     }
+
 
 }
