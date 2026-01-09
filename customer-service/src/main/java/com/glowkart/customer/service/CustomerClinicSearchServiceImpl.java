@@ -155,26 +155,27 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
 
         return packages.stream()
-                .flatMap(pkg -> {
+                .map(pkg -> {
                     Set<String> allowedClinicIds = Set.copyOf(safeGetClinicIdsByPackage(pkg.getPackageId()));
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(ClinicPublicDTO::isOnline)
                             .filter(c -> allowedClinicIds.contains(c.getClinicId()))
                             .map(c -> mapClinicWithPricing(c, latitude, longitude, pkg.getPackageId(), false))
+                            .filter(c -> c != null) // ✅ prevent Object inference
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    if (clinicDtos.isEmpty()) {
-                        return Stream.<ProcedurePackageWithClinicsDTO>empty(); // ✅ explicitly typed
-                    }
+                    if (clinicDtos.isEmpty()) return null;
 
                     ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
-                    return Stream.<ProcedurePackageWithClinicsDTO>of(dto); // ✅ explicitly typed
+                    return dto;
                 })
+                .filter(dto -> dto != null) // ✅ remove nulls
                 .toList();
     }
+
 
 
     // =========================================================
