@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -44,9 +45,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics = safeGetClinics(state, null);
         if (clinics.isEmpty()) return Collections.emptyList();
 
-        List<String> clinicIds = safeGetClinicIdsByProcedure(procedureId);
-        if (clinicIds.isEmpty()) return Collections.emptyList();
-        Set<String> allowedIds = Set.copyOf(clinicIds);
+        Set<String> allowedIds = Set.copyOf(safeGetClinicIdsByProcedure(procedureId));
+        if (allowedIds.isEmpty()) return Collections.emptyList();
 
         return clinics.stream()
                 .filter(ClinicPublicDTO::isOnline)
@@ -65,9 +65,8 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics = safeGetClinics(state, null);
         if (clinics.isEmpty()) return Collections.emptyList();
 
-        List<String> clinicIds = safeGetClinicIdsByPackage(packageId);
-        if (clinicIds.isEmpty()) return Collections.emptyList();
-        Set<String> allowedIds = Set.copyOf(clinicIds);
+        Set<String> allowedIds = Set.copyOf(safeGetClinicIdsByPackage(packageId));
+        if (allowedIds.isEmpty()) return Collections.emptyList();
 
         return clinics.stream()
                 .filter(ClinicPublicDTO::isOnline)
@@ -154,7 +153,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics = safeGetClinics(state, true);
 
         return packages.stream()
-                .map(pkg -> {
+                .flatMap(pkg -> {
                     Set<String> allowedClinicIds = Set.copyOf(safeGetClinicIdsByPackage(pkg.getPackageId()));
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(ClinicPublicDTO::isOnline)
@@ -163,17 +162,15 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    if (clinicDtos.isEmpty()) return null;
+                    if (clinicDtos.isEmpty()) return Stream.empty();
 
                     ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
-                    return dto;
+                    return Stream.of(dto);
                 })
-                .filter(dto -> dto != null)
                 .toList();
     }
-
 
     // =========================================================
     // Offer logic
