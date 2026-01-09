@@ -164,15 +164,18 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    if (clinicDtos.isEmpty()) return Stream.<ProcedurePackageWithClinicsDTO>empty();
+                    if (clinicDtos.isEmpty()) {
+                        return Stream.<ProcedurePackageWithClinicsDTO>empty(); // ✅ explicitly typed
+                    }
 
                     ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
-                    return Stream.<ProcedurePackageWithClinicsDTO>of(dto);
+                    return Stream.<ProcedurePackageWithClinicsDTO>of(dto); // ✅ explicitly typed
                 })
                 .toList();
     }
+
 
     // =========================================================
     // Offer logic
