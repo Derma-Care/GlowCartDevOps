@@ -382,20 +382,35 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
             double latitude, double longitude) {
 
+        // =========================================================
+        // Resolve state from user's coordinates
+        // =========================================================
+        String state = reverseGeoService.resolveState(latitude, longitude);
+
+        // =========================================================
+        // Fetch only clinics in this state that are online
+        // =========================================================
+        List<ClinicPublicDTO> clinicsFromAdmin =
+                adminClinicClient.getClinicsByState(state, true).getData();
+
+        final List<ClinicPublicDTO> clinics =
+                clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
+
+        // =========================================================
+        // Fetch all procedure packages
+        // =========================================================
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
         if (packages == null || packages.isEmpty())
             return Collections.emptyList();
 
-        List<ClinicPublicDTO> clinicsFromAdmin =
-                adminClinicClient.getAllClinics().getData();
-
-        final List<ClinicPublicDTO> clinics =
-                clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
-
+        // =========================================================
+        // Map each package to the clinics offering it
+        // =========================================================
         return packages.stream().map(pkg -> {
 
+            // Get clinic IDs that offer this package
             List<String> clinicIds;
             try {
                 clinicIds = procedureServiceClient
@@ -408,6 +423,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             Set<String> clinicSet =
                     clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
+            // Map clinics that offer this package
             List<ClinicProcedureLinkDTO> clinicDtos =
                     clinics.parallelStream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
@@ -417,7 +433,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .sorted((a, b) -> sortByDistance(a, b))
                             .toList();
 
-
+            // Build DTO
             ProcedurePackageWithClinicsDTO dto =
                     new ProcedurePackageWithClinicsDTO();
             dto.setPackageInfo(pkg);
