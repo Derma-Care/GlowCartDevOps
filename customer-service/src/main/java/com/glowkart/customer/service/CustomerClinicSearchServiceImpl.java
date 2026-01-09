@@ -45,8 +45,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics = safeGetClinics(state, null);
         if (clinics.isEmpty()) return Collections.emptyList();
 
-        Set<String> allowedIds = Set.copyOf(safeGetClinicIdsByProcedure(procedureId));
-        if (allowedIds.isEmpty()) return Collections.emptyList();
+        List<String> clinicIds = safeGetClinicIdsByProcedure(procedureId);
+        if (clinicIds.isEmpty()) return Collections.emptyList();
+        Set<String> allowedIds = Set.copyOf(clinicIds);
 
         return clinics.stream()
                 .filter(ClinicPublicDTO::isOnline)
@@ -65,8 +66,9 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics = safeGetClinics(state, null);
         if (clinics.isEmpty()) return Collections.emptyList();
 
-        Set<String> allowedIds = Set.copyOf(safeGetClinicIdsByPackage(packageId));
-        if (allowedIds.isEmpty()) return Collections.emptyList();
+        List<String> clinicIds = safeGetClinicIdsByPackage(packageId);
+        if (clinicIds.isEmpty()) return Collections.emptyList();
+        Set<String> allowedIds = Set.copyOf(clinicIds);
 
         return clinics.stream()
                 .filter(ClinicPublicDTO::isOnline)
@@ -162,12 +164,12 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    if (clinicDtos.isEmpty()) return Stream.empty();
+                    if (clinicDtos.isEmpty()) return Stream.<ProcedurePackageWithClinicsDTO>empty();
 
                     ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
-                    return Stream.of(dto);
+                    return Stream.<ProcedurePackageWithClinicsDTO>of(dto);
                 })
                 .toList();
     }
@@ -214,7 +216,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             LocalDateTime endOfDay = localDate.atTime(23, 59, 59);
             Instant offerInstant = endOfDay.toInstant(ZoneOffset.UTC);
             return Instant.now().isAfter(offerInstant);
-        } catch (DateTimeParseException e) {
+        } catch (Exception e) {
             return true;
         }
     }
