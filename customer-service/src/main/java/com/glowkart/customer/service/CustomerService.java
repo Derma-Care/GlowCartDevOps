@@ -114,14 +114,26 @@ public class CustomerService {
 
     // Generate and set referId to customer
     private void generateAndSetReferId(Customer customer) {
-        String referId;
+        final int MAX_ATTEMPTS = 20; // extra attempts for safety
+        String referId = null;
+        int attempts = 0;
+
         do {
-            // Generate referId in the format "NGK-" followed by a random 6-character string
-            referId = "NGK-" + generateRandomString(6);
-        } while (customerRepository.findByReferId(referId) != null);  // Ensure it's unique by checking DB
-        
-        customer.setReferId(referId);  // Set the unique referId for the customer
+            // Generate a random 6-character string
+            String randomPart = generateRandomString(6);
+            referId = "NGK-" + randomPart;
+            attempts++;
+
+            if (attempts > MAX_ATTEMPTS) {
+                // Fallback: append timestamp to guarantee uniqueness
+                referId = "NGK-" + System.currentTimeMillis();
+                break;
+            }
+        } while (customerRepository.findByReferId(referId).isPresent());
+
+        customer.setReferId(referId);
     }
+
 
     // Helper method to generate a random alphanumeric string of the specified length
     private String generateRandomString(int length) {
@@ -218,37 +230,70 @@ public class CustomerService {
             String mobile,
             CompleteRegistrationDTO dto) {
 
+        // 1️⃣ Fetch customer
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
-        if (!customer.isSpinWheelCompleted()) {
-            return new ApiResponse<>(false, "Complete Spin Wheel first!", null);
-        }
-
+        // 2️⃣ Block second-time registration
         if (customer.isRegistrationCompleted()) {
             return new ApiResponse<>(false, "Registration already completed", null);
         }
 
-        // Save address and mark registration complete
+        // 3️⃣ Ensure spin wheel completed
+        if (!customer.isSpinWheelCompleted()) {
+            return new ApiResponse<>(false, "Complete Spin Wheel first!", null);
+        }
+
+        // 4️⃣ First-time registration: update address & mark complete
         customer.setAddress(dto.getAddress());
         customer.setRegistrationCompleted(true);
 
-        // 🎁 Apply registration reward
+        // 5️⃣ Apply registration reward to new user (once)
         rewardService.applyRegistrationReward(customer);
 
+        // 6️⃣ Apply referral reward (once) if referId entered
+        if (!customer.isReferralRewardGiven()
+                && customer.getReferBy() != null
+                && !customer.getReferBy().isBlank()) {
+
+            customerRepository.findByReferId(customer.getReferBy())
+                    .ifPresent(referrer -> {
+
+                        // ❌ Prevent self-referral
+                        if (!referrer.getMobile().equals(customer.getMobile())) {
+
+                            rewardService.applyReferralReward(referrer);
+
+                            // 🔒 lock referral reward to prevent duplicates
+                            customer.setReferralRewardGiven(true);
+                        }
+                    });
+        }
+
+        // 7️⃣ Save updated customer
         customerRepository.save(customer);
 
-        // Mark registration code as used
+        // 8️⃣ Mark registration code as used
         try {
             registrationService.markCodeUsed(customer.getRegistrationCode());
         } catch (Exception e) {
             log.error("Failed to mark code as used: {}", e.getMessage());
         }
 
-        // Fetch wallet summary
-        WalletSummaryDTO walletSummary = rewardQueryService.getWalletSummary(customer.getMobile());
+        // 9️⃣ Fetch wallet summary from service
+        WalletSummaryDTO walletSummaryFromService =
+                rewardQueryService.getWalletSummary(customer.getMobile());
 
-        // Prepare combined response
+        // 10️⃣ Build response wallet summary with reward flags
+        WalletSummaryDTO walletSummary = WalletSummaryDTO.builder()
+                .totalCredits(walletSummaryFromService.getTotalCredits())
+                .totalDebits(walletSummaryFromService.getTotalDebits())
+                .balance(walletSummaryFromService.getBalance())
+                .registrationRewardGiven(customer.isRegistrationRewardGiven())
+                .referralRewardGiven(customer.isReferralRewardGiven())
+                .build();
+
+        // 11️⃣ Prepare response
         Map<String, Object> responseData = Map.of(
                 "customer", customer,
                 "walletSummary", walletSummary
@@ -260,6 +305,7 @@ public class CustomerService {
                 responseData
         );
     }
+
 
 
 

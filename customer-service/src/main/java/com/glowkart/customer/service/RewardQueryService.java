@@ -28,22 +28,37 @@ public class RewardQueryService {
      * Get wallet summary for a customer by mobile number
      */
     public WalletSummaryDTO getWalletSummary(String mobile) {
-        // Check if customer exists
+        // 1️⃣ Check if customer exists
         Customer customer = customerRepo.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException(
                         "Customer not found with mobile: " + mobile
                 ));
 
+        // 2️⃣ Calculate total credits
         int totalCredits = rewardRepo.findByMobileAndType(mobile, RewardTransactionType.CREDIT)
-                                     .stream().mapToInt(RewardTransaction::getPoints).sum();
+                                     .stream()
+                                     .mapToInt(RewardTransaction::getPoints)
+                                     .sum();
 
+        // 3️⃣ Calculate total debits
         int totalDebits = rewardRepo.findByMobileAndType(mobile, RewardTransactionType.DEBIT)
-                                    .stream().mapToInt(RewardTransaction::getPoints).sum();
+                                    .stream()
+                                    .mapToInt(RewardTransaction::getPoints)
+                                    .sum();
 
+        // 4️⃣ Calculate balance
         int balance = totalCredits - totalDebits;
 
-        return new WalletSummaryDTO(totalCredits, totalDebits, balance);
+        // 5️⃣ Build WalletSummaryDTO including reward flags
+        return WalletSummaryDTO.builder()
+                .totalCredits(totalCredits)
+                .totalDebits(totalDebits)
+                .balance(balance)
+                .registrationRewardGiven(customer.isRegistrationRewardGiven())
+                .referralRewardGiven(customer.isReferralRewardGiven())  // or referralRewardReceived if you track referrer
+                .build();
     }
+
 
     /**
      * Get reward transactions with optional filter

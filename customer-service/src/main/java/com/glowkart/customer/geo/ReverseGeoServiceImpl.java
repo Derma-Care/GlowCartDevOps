@@ -14,17 +14,20 @@ public class ReverseGeoServiceImpl implements ReverseGeoService {
     public String resolveState(double latitude, double longitude) {
 
         String url =
-            "https://nominatim.openstreetmap.org/reverse" +
-            "?lat=" + latitude +
-            "&lon=" + longitude +
-            "&format=json&addressdetails=1";
+                "https://nominatim.openstreetmap.org/reverse" +
+                "?lat=" + latitude +
+                "&lon=" + longitude +
+                "&format=json&addressdetails=1";
 
-        Map<String, Object> response =
-                restTemplate.getForObject(url, Map.class);
+        Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+        if (response == null) return null;
 
-        Map<String, Object> address =
-                (Map<String, Object>) response.get("address");
+        Object addressObj = response.get("address");
+        if (!(addressObj instanceof Map<?, ?> addressMap)) {
+            return null;
+        }
 
-        return (String) address.get("state");
+        Object stateObj = addressMap.get("state");
+        return stateObj != null ? stateObj.toString() : null;
     }
 }

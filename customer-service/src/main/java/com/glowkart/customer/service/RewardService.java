@@ -72,5 +72,25 @@ public class RewardService {
         rewardRepo.save(tx);
     }
     
-    
+    @Transactional
+    public void applyReferralReward(Customer referrer) {
+        if (referrer == null) return;
+
+        int points = RewardReason.REFERRAL_BONUS.getDefaultPoints();
+        int updatedBalance = referrer.getRewardPoints() + points;
+
+        referrer.setRewardPoints(updatedBalance);
+        customerRepo.save(referrer);
+
+        RewardTransaction tx = new RewardTransaction();
+        tx.setCustomerId(referrer.getCustomerId());
+        tx.setMobile(referrer.getMobile());
+        tx.setPoints(points);
+        tx.setType(RewardTransactionType.CREDIT);
+        tx.setReason(RewardReason.REFERRAL_BONUS);
+        tx.setBalanceAfter(updatedBalance);
+
+        rewardRepo.save(tx);
+    }
+
 }

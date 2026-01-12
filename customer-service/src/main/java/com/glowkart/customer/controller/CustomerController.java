@@ -19,6 +19,7 @@ import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.model.Customer;
+import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.service.CustomerService;
 
 import jakarta.validation.Valid;
@@ -30,6 +31,10 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+    
+    @Autowired
+    private CustomerRepository customerRepository;
+
 
     // ==================== STEP 1 ====================
     @PostMapping("/customer/step1")
@@ -116,5 +121,11 @@ public class CustomerController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     
-    
+    @GetMapping("/customer/referral/{referId}/validate")
+    public ApiResponse<String> validateReferral(@PathVariable String referId) {
+        return customerRepository.findByReferId(referId)
+            .map(c -> new ApiResponse<>(true, "Valid referral ID", c.getFullName()))
+            .orElse(new ApiResponse<>(false, "Invalid referral ID", null));
+    }
+
 }
