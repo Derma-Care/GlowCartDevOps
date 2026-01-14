@@ -14,7 +14,7 @@ import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CustomerDetailsDTO {
+public class CustomerRegisterDTO {
 
     @NotBlank(message = "fullName is required")
     private String fullName;
@@ -64,8 +64,8 @@ public class CustomerDetailsDTO {
     @AssertTrue(message = "Privacy consent is required")
     private Boolean privacyConsent;
     
-//    @NotBlank(message = "Address is required")
-//    @Pattern(regexp = ".*\\b\\d{6}\\b.*", message = "Address must include a valid 6-digit PIN code")
-//    private String address;
+    @NotBlank(message = "Address is required")
+    @Pattern(regexp = ".*\\b\\d{6}\\b.*", message = "Address must include a valid 6-digit PIN code")
+    private String address;
 
 }

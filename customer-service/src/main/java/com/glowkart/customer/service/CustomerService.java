@@ -20,6 +20,7 @@ import com.glowkart.customer.dto.CityRequestDTO;
 import com.glowkart.customer.dto.CityResponseDTO;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.CustomerRegisterDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.dto.WheelSliceDto;
@@ -571,5 +572,58 @@ public class CustomerService {
         return new ApiResponse<>(true, "Customer retrieved successfully", customer);
 	}
 
-	
+//	@Transactional
+//	public ApiResponse<Map<String, Object>> registerAndComplete(CustomerRegisterDTO dto) {
+//
+//	    // 1️⃣ Fetch existing customer by mobile or create new
+//	    Customer customer = customerRepository.findByMobile(dto.getMobile())
+//	            .orElseGet(Customer::new);
+//
+//	    // 2️⃣ Copy Step1 fields (profile fields + consents + Aadhaar)
+////	    copyStep1Fields(dto, customer);
+//
+//	    // 3️⃣ Generate referId if not present
+//	    if (customer.getReferId() == null || customer.getReferId().isBlank()) {
+//	        generateAndSetReferId(customer);
+//	    }
+//
+//	    // 4️⃣ Complete registration fields
+//	    customer.setRegistrationCode(dto.getRegistrationCode());
+//	    customer.setReferBy(dto.getReferBy());
+//	    customer.setRegistrationCompleted(true);
+//	    customer.setAddress(dto.getAddress());  // make sure DTO has address field
+//
+//	    // 5️⃣ Apply referral reward if valid
+//	    if (dto.getReferBy() != null && !dto.getReferBy().isBlank()
+//	            && !customer.isReferralRewardGiven()) {
+//
+//	        customerRepository.findByReferId(dto.getReferBy())
+//	                .ifPresent(referrer -> {
+//	                    if (!referrer.getMobile().equals(customer.getMobile())) {
+//	                        rewardService.applyReferralReward(referrer);
+//	                        customer.setReferralRewardGiven(true);
+//	                    }
+//	                });
+//	    }
+//
+//	    // 6️⃣ Save customer
+//	    customerRepository.save(customer);
+//
+//	    // 7️⃣ Prepare wallet summary (referral reward may have updated it)
+//	    WalletSummaryDTO walletSummary = rewardQueryService.getWalletSummary(customer.getMobile());
+//	    customer.setWalletSummary(walletSummary);
+//
+//	    // 8️⃣ Build response
+//	    Map<String, Object> response = Map.of(
+//	            "customer", customer,
+//	            "walletSummary", walletSummary
+//	    );
+//
+//	    return new ApiResponse<>(
+//	            true,
+//	            "Step1 + Complete processed successfully (Referral reward applied if valid)",
+//	            response
+//	    );
+//	}
+
 }

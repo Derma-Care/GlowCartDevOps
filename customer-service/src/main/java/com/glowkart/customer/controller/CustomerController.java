@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.CustomerRegisterDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
@@ -127,5 +128,15 @@ public class CustomerController {
             .map(c -> new ApiResponse<>(true, "Valid referral ID", c.getFullName()))
             .orElse(new ApiResponse<>(false, "Invalid referral ID", null));
     }
+
+ // ==================== REGISTER & COMPLETE IN ONE GO ====================
+//    @PostMapping("/customer/register-and-complete")
+//    public ResponseEntity<ApiResponse<Map<String, Object>>> registerAndComplete(
+//            @RequestBody @Valid CustomerRegisterDTO dto) {
+//
+//        ApiResponse<Map<String, Object>> response = customerService.registerAndComplete(dto);
+//        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+//                .body(response);
+//    }
 
 }

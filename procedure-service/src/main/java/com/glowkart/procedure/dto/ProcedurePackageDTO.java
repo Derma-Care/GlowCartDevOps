@@ -45,5 +45,9 @@ public class ProcedurePackageDTO {
     private double totalDiscountPercentage; // clinic + NGK
     private double totalDiscountAmount;     // clinic + NGK
     private double totalDiscountedAmount;
+    private String paymentType; // FULL_PAYMENT, PARTIAL_PAYMENT
+    private double partialPaymentPercentage;
+    private double partialAmount;
+    private double dueAmount;
 
 }

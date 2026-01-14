@@ -33,6 +33,8 @@ public class ProcedurePricingDTO {
     private double gst;
     private double gstAmount;
     private double consultationFee;
+    private double platformFee; // ✅ NEW — editable from UI
+
     private double discountedCost;
     private double clinicPay;
     private double finalCost;
@@ -50,4 +52,8 @@ public class ProcedurePricingDTO {
 
  // ✅ NEW
     private double totalDiscountedAmount;
+    private String paymentType; //FULL_PAYMENT,PARTIAL_PAYMENT
+    private double partialPaymentPercentage;
+    private double dueAmount;
+    private double partialAmount;
 }

@@ -37,6 +37,8 @@ public class ProcedurePricing {
     private double gst;
     private double gstAmount;
     private double consultationFee;
+    private double platformFee; // ✅ NEW — editable from UI
+
     private double discountedCost;
     private double clinicPay;
     private double finalCost;
@@ -57,4 +59,9 @@ public class ProcedurePricing {
 
     private Instant createdAt;
     private Instant updatedAt;
+    private String paymentType; //FULL_PAYMENT,PARTIAL_PAYMENT
+    private double partialPaymentPercentage;
+    private double dueAmount;
+    private double partialAmount;
+	
 }
