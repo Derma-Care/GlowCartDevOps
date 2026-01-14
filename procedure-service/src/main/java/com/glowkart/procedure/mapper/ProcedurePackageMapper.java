@@ -53,6 +53,10 @@ public class ProcedurePackageMapper {
         entity.setTotalDiscountPercentage(dto.getTotalDiscountPercentage());
         entity.setTotalDiscountAmount(dto.getTotalDiscountAmount());
         entity.setTotalDiscountedAmount(dto.getTotalDiscountedAmount()); // ✅ added
+        entity.setPaymentType(dto.getPaymentType());
+        entity.setDueAmount(dto.getDueAmount());
+        entity.setPartialPaymentPercentage(dto.getPartialPaymentPercentage());
+        entity.setPartialAmount(dto.getPartialAmount());
 
         return entity;
     }
@@ -105,6 +109,10 @@ public class ProcedurePackageMapper {
         dto.setTotalDiscountPercentage(entity.getTotalDiscountPercentage());
         dto.setTotalDiscountAmount(entity.getTotalDiscountAmount());
         dto.setTotalDiscountedAmount(entity.getTotalDiscountedAmount()); // ✅ added
+        dto.setPaymentType(entity.getPaymentType());
+        dto.setDueAmount(entity.getDueAmount());
+        dto.setPartialPaymentPercentage(entity.getPartialPaymentPercentage());
+        dto.setPartialAmount(entity.getPartialAmount());
 
         return dto;
     }
