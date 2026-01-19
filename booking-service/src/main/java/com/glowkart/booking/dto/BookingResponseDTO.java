@@ -58,6 +58,9 @@ public class BookingResponseDTO {
 
     private double consultationFee;
 
+    private double platformFeePercentage;
+    private double platformFeeAmount;
+
     private double finalAmount;
 
     // 🔥 PARTIAL PAYMENT BREAKUP
