@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ClinicRatingsResponseDTO;
 
-@FeignClient(name = "booking-service")
+@FeignClient(name = "booking-service" , contextId = "bookingRatingClient")
 public interface BookingRatingClient {
 
     @GetMapping("/booking/ratings/clinic/{clinicId}")

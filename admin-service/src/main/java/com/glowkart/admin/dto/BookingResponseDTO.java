@@ -1,4 +1,5 @@
-package com.glowkart.clinicadmin.dto;
+package com.glowkart.admin.dto;
+
 
 import java.time.LocalDate;
 
@@ -46,16 +47,16 @@ public class BookingResponseDTO {
     private double consultationFee;
     private double finalAmount;
 
+    // 🔥 PARTIAL PAYMENT BREAKUP
+    private double partialPaymentPercentage;
+    private double partialAmount;
+    private double dueAmount;
+
     // NEW FIELD for redeemed wallet points
     private int redeemedPoints;
     
     private String status;
     private String paymentStatus;
     private String mobileNumber;
-    
-    
-    private double partialPaymentPercentage;
-    private double partialAmount;
-    private double dueAmount;
 }
 
