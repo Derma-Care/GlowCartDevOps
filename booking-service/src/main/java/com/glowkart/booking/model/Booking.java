@@ -32,7 +32,6 @@ public class Booking {
     private String fullName;
     private String city;
     private LocalDate dob;
-//    private int age;
     private String gender;
 
     private String clinicId;
@@ -42,22 +41,29 @@ public class Booking {
     private String serviceId;
     private String serviceName;
     private String serviceType;   // PROCEDURE or PACKAGE
-    // ✅ NEW — snapshot of package procedures
+
+    // ✅ Snapshot of package procedures
     private List<BookingProcedureDTO> procedures;
-    private String paymentType;   // ONLINE or CASH
+
+    // 🔥 PAYMENT MODE (HOW user pays)
+    private String paymentMode;   // ONLINE / CASH
+
+    // 🔥 PAYMENT TYPE (HOW MUCH user pays)
+    private String paymentType;   // FULL_PAYMENT / PARTIAL_PAYMENT
+
     private String appointmentDate;
 
-    // Pricing fields
+    // ================= PRICING =================
     private double price;
 
- // Discount fields
-    private double discount;                  // Optional: Offer discount %
-    private double discountAmount;            // Offer discount amount
-    private double discountedCost;            // Price after offer discount
-    private double totalDiscountAmount;       // Total discount applied
-    private double totalDiscountPercentage;   // Total discount %
-    private double ngkDiscountAmount;         // NGK discount
-    private double ngkDiscountPercentage;     // NGK discount %
+    // Discounts
+    private double discount;                  
+    private double discountAmount;            
+    private double discountedCost;            
+    private double totalDiscountAmount;       
+    private double totalDiscountPercentage;   
+    private double ngkDiscountAmount;         
+    private double ngkDiscountPercentage;     
 
     // Tax & GST
     private double taxPercentage;
@@ -68,15 +74,21 @@ public class Booking {
     private double consultationFee;
     private double finalAmount;
 
-    private int redeemedPoints; // NEW: points redeemed for this booking
+    // 🔥 PARTIAL PAYMENT BREAKUP
+    private double partialPaymentPercentage;
+    private double partialAmount;
+    private double dueAmount;
 
-    // Booking status
+    // Wallet
+    private int redeemedPoints;
+
+    // Status
     private String status;         // HOLD, CONFIRMED, CANCELLED, FAILED
-    private String paymentStatus;  // PENDING, PAID, FAILED, NA
+    private String paymentStatus;  // PENDING, PAID, PARTIALLY_PAID, FAILED, NA
 
     private String createdAt;
     private String updatedAt;
-    
-    @JsonProperty("isRated") // ensures JSON serialization as isRated
+
+    @JsonProperty("isRated")
     private boolean isRated;
 }

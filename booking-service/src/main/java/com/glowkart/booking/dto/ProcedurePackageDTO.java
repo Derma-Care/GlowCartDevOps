@@ -33,4 +33,11 @@ public class ProcedurePackageDTO {
     private double gstAmount;
     private double consultationFee;
     private double finalCost;
+
+
+ // 🔥 NEW PAYMENT FIELDS
+    private String paymentType; // FULL_PAYMENT / PARTIAL_PAYMENT
+    private double partialPaymentPercentage;
+    private double partialAmount;
+    private double dueAmount;
 }
