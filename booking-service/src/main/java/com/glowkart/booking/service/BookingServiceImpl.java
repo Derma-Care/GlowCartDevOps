@@ -216,25 +216,34 @@ public class BookingServiceImpl implements BookingService {
     private double fetchServiceFinalCost(String serviceType, String serviceId) {
 
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePricingDTO> resp =
-                    procedureClient.getPricingByProcedure(serviceId);
+            ApiResponse<ProcedurePricingDTO> resp = procedureClient.getPricingByProcedure(serviceId);
             if (resp == null || resp.getData() == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
             }
-            return resp.getData().getFinalCost();
+            ProcedurePricingDTO pricing = resp.getData();
+            double finalCost = pricing.getFinalCost();
+            if (pricing.getPlatformFee() > 0) {
+                finalCost += pricing.getPlatformFee();
+            }
+            return finalCost;
         }
 
         if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePackageDTO> resp =
-                    procedureClient.getPricingByPackage(serviceId);
+            ApiResponse<ProcedurePackageDTO> resp = procedureClient.getPricingByPackage(serviceId);
             if (resp == null || resp.getData() == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
             }
-            return resp.getData().getFinalCost();
+            ProcedurePackageDTO pricing = resp.getData();
+            double finalCost = pricing.getFinalCost();
+            if (pricing.getPlatformFee() > 0) {
+                finalCost += pricing.getPlatformFee();
+            }
+            return finalCost;
         }
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
+
 
     private PricingDetails fetchPricingDetails(String serviceType, String serviceId) {
 
