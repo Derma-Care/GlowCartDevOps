@@ -179,10 +179,19 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                         .getPricingByProcedureForClinic(id, clinic.getClinicId()).getData()
                     : procedureServiceClient
                         .getPackagePricingForClinic(id, clinic.getClinicId()).getData();
+
+            // ✅ ADD PLATFORM FEE INTO FINAL COST
+            if (pricing != null && pricing.getPlatformFee() > 0) {
+                pricing.setFinalCost(
+                        pricing.getFinalCost() + pricing.getPlatformFee()
+                );
+            }
+
         } catch (Exception ignored) {}
 
         return mapClinicToDTO(clinic, latitude, longitude, pricing);
     }
+
 
     private ClinicProcedureLinkDTO mapClinicToDTO(
             ClinicPublicDTO clinic,

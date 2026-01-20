@@ -39,8 +39,9 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     private final ZoneId istZone = ZoneId.of("Asia/Kolkata");
 
     // ---------------- Dynamic Platform Fee ----------------
-    @Value("${glowkart.platform.fee-percentage:2.0}")
+    @Value("${glowkart.platform.fee-percentage}")
     private double platformFeePercentage;
+
 
     // ========================= CREATE =========================
     @Override
