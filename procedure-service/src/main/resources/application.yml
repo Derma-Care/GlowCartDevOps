@@ -50,3 +50,8 @@ services:
 notification:
   default-from-email: ${NOTIFICATION_FROM_EMAIL:no-reply@glowkart.com}
 #//For Feign + Eureka, you don’t need the full URL in base-url. You can use the Eureka service name like http://admin-service.
+
+# ==================== PLATFORM FEE ====================
+glowkart:
+  platform:
+    fee-percentage: 2.0   # Dynamic platform fee (%)
