@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
 public class ProcedurePricingDTO {
     private String procedureId;
     private String procedureName;
+
     @NotBlank(message = "Clinic ID is required")
     private String clinicId;
 
@@ -33,7 +33,10 @@ public class ProcedurePricingDTO {
     private double gst;
     private double gstAmount;
     private double consultationFee;
-    private double platformFee; // ✅ NEW — editable from UI
+
+    private double platformFeePercentage; // e.g., 2.5%
+
+    private double platformFee; // ✅ dynamically calculated, not persisted in DB
 
     private double discountedCost;
     private double clinicPay;
@@ -43,16 +46,14 @@ public class ProcedurePricingDTO {
     private String offerValidDate;
     private boolean offerActive;
     
-    // NEW — NGK admin only
     private double ngkDiscountPercentage;
     private double ngkDiscountAmount;
-    
+
     private double totalDiscountPercentage;
     private double totalDiscountAmount;
-
- // ✅ NEW
     private double totalDiscountedAmount;
-    private String paymentType; //FULL_PAYMENT,PARTIAL_PAYMENT
+
+    private String paymentType; // FULL_PAYMENT or PARTIAL_PAYMENT
     private double partialPaymentPercentage;
     private double dueAmount;
     private double partialAmount;

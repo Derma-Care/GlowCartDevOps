@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,10 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     private final ClinicFeignClient clinicFeignClient;
 
     private final ZoneId istZone = ZoneId.of("Asia/Kolkata");
+
+    // ---------------- Dynamic Platform Fee ----------------
+    @Value("${glowkart.platform.fee-percentage:2.0}")
+    private double platformFeePercentage;
 
     // ========================= CREATE =========================
     @Override
@@ -104,43 +109,29 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
 
         List<ProcedurePricing> pricings = pricingRepository.findAll();
 
-        pricings.forEach(p -> {
-            // Treat null or blank offerValidDate as open-ended
-            if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
-                // Open-ended offer, recalc pricing
-                processOfferAndPricing(p);
-                return;
-            }
+        for (ProcedurePricing p : pricings) {
+            boolean offerExpired = false;
 
-            LocalDate endDate;
-            try {
-                endDate = LocalDate.parse(p.getOfferValidDate());
-            } catch (DateTimeParseException e) {
-                log.warn("Invalid offerValidDate for procedureId={}, clinicId={}", p.getProcedureId(), p.getClinicId());
-                return;
-            }
-
-            if (!today.isAfter(endDate)) {
-                // Offer still active
-                processOfferAndPricing(p);
-            } else {
-                // Offer expired
-                p.setOfferActive(false);
-
-                // Only reset discount if offerValidDate is not blank (open-ended)
-                if (!p.getOfferValidDate().isBlank()) {
-                    p.setDiscountPercentage(0.0);
-                    p.setDiscountAmount(0.0);
+            if (p.getOfferValidDate() != null && !p.getOfferValidDate().isBlank()) {
+                try {
+                    LocalDate endDate = LocalDate.parse(p.getOfferValidDate());
+                    if (today.isAfter(endDate)) offerExpired = true;
+                } catch (DateTimeParseException e) {
+                    log.warn("Invalid offerValidDate for procedureId={}, clinicId={}", p.getProcedureId(), p.getClinicId());
                 }
-
-                calculatePricing(p);
-                p.setUpdatedAt(Instant.now());
-                pricingRepository.save(p);
-                log.info("Expired offer recalculated for procedureId={}, clinicId={}", p.getProcedureId(), p.getClinicId());
             }
-        });
-    }
 
+            if (offerExpired) {
+                p.setOfferActive(false);
+                p.setDiscountPercentage(0.0);
+                p.setDiscountAmount(0.0);
+            }
+
+            processOfferAndPricing(p);
+            p.setUpdatedAt(Instant.now());
+            pricingRepository.save(p);
+        }
+    }
 
     // ========================= OFFER DATE NORMALIZATION =========================
     private void normalizeOfferDates(ProcedurePricing p) {
@@ -153,13 +144,11 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         LocalDate today = LocalDate.now(istZone);
 
         boolean offerActive = false;
-
         try {
             if (p.getOfferStart() != null && !p.getOfferStart().isBlank()) {
                 LocalDate start = LocalDate.parse(p.getOfferStart());
 
                 if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
-                    // Open-ended offer: active if today >= start
                     offerActive = !today.isBefore(start);
                 } else {
                     LocalDate end = LocalDate.parse(p.getOfferValidDate());
@@ -169,67 +158,25 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         } catch (DateTimeParseException e) {
             log.error("Invalid offer date for procedureId={}, clinicId={}: {}", 
                       p.getProcedureId(), p.getClinicId(), e.getMessage());
-            offerActive = false;
         }
 
         p.setOfferActive(offerActive);
 
-        // <-- UPDATE THIS BLOCK -->
         if (!offerActive && p.getOfferValidDate() != null && !p.getOfferValidDate().isBlank()) {
             p.setDiscountPercentage(0.0);
             p.setDiscountAmount(0.0);
         }
 
-        // Always calculate pricing based on current offer status
         calculatePricing(p);
     }
 
-
-
-    private void processOfferStatus(ProcedurePricing p) {
-        LocalDate today = LocalDate.now(istZone);
-        try {
-            if (p.getOfferStart() == null) {
-                p.setOfferActive(false);
-                return;
-            }
-
-            LocalDate start = LocalDate.parse(p.getOfferStart());
-
-            if (p.getOfferValidDate() == null || p.getOfferValidDate().isBlank()) {
-                // No end date provided, offer is active if today >= start
-                p.setOfferActive(!today.isBefore(start));
-            } else {
-                LocalDate end = LocalDate.parse(p.getOfferValidDate());
-                p.setOfferActive(!today.isBefore(start) && !today.isAfter(end));
-            }
-
-        } catch (DateTimeParseException e) {
-            log.error("Invalid offer date format: {}", e.getMessage());
-            p.setOfferActive(false);
-        }
-    }
-
-
-    private void resetDiscountIfExpired(ProcedurePricing p) {
-        // Only reset discount if offer is inactive AND offer has a valid end date
-        if (!p.isOfferActive() && p.getOfferValidDate() != null) {
-            if (p.getDiscountPercentage() > 0) {
-                p.setDiscountPercentage(0.0);
-                p.setDiscountAmount(0.0);
-            }
-        }
-        p.setTotalDiscountPercentage(p.getNgkDiscountPercentage());
-        p.setTotalDiscountAmount(0.0);
-    }
+    // ========================= PRICING CALCULATION =========================
     private void calculatePricing(ProcedurePricing p) {
-
         double price = p.getPrice();
-
         double clinicDiscountPercent = p.getDiscountPercentage();
         double ngkDiscountPercent = p.getNgkDiscountPercentage();
 
-        // ================= CLINIC DISCOUNT =================
+        // ---------------- CLINIC DISCOUNT ----------------
         double clinicDiscountAmount = p.isOfferActive()
                 ? round(price * clinicDiscountPercent / 100.0)
                 : 0.0;
@@ -238,32 +185,25 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 ? round(price - clinicDiscountAmount)
                 : round(price);
 
-        // ================= TAX & GST =================
+        // ---------------- TAX & GST ----------------
         double taxAmount = round(discountedCost * p.getTaxPercentage() / 100.0);
         double gstAmount = round(discountedCost * p.getGst() / 100.0);
 
-        // ================= CLINIC PAY =================
         double consultationFee = p.getConsultationFee();
         double clinicPay = round(discountedCost + taxAmount + gstAmount + consultationFee);
 
-        // ================= NGK DISCOUNT =================
+        // ---------------- NGK DISCOUNT ----------------
         double ngkDiscountAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
                 ? round(clinicPay * ngkDiscountPercent / 100.0)
                 : 0.0;
 
-        // ================= FINAL COST =================
+        // ---------------- FINAL COST ----------------
         double finalCost = round(clinicPay - ngkDiscountAmount);
 
-        // ================= TOTAL DISCOUNT =================
-        double totalDiscountAmount = round(
-                clinicDiscountAmount + ngkDiscountAmount
-        );
+        // ---------------- TOTAL DISCOUNT ----------------
+        double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
+        double totalDiscountPercent = p.isOfferActive() ? clinicDiscountPercent + ngkDiscountPercent : 0.0;
 
-        double totalDiscountPercentage = p.isOfferActive()
-                ? clinicDiscountPercent + ngkDiscountPercent
-                : 0.0;
-
-        // ================= SET PRICING VALUES =================
         p.setDiscountAmount(clinicDiscountAmount);
         p.setDiscountedCost(discountedCost);
         p.setTaxAmount(taxAmount);
@@ -271,152 +211,43 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         p.setClinicPay(clinicPay);
         p.setNgkDiscountAmount(ngkDiscountAmount);
         p.setFinalCost(finalCost);
-
         p.setTotalDiscountAmount(totalDiscountAmount);
-        p.setTotalDiscountPercentage(totalDiscountPercentage);
-
-        // New field
+        p.setTotalDiscountPercentage(totalDiscountPercent);
         p.setTotalDiscountedAmount(round(price - totalDiscountAmount));
 
-        // ================= PAYMENT CALCULATION =================
         calculatePaymentAmounts(p);
 
         p.setUpdatedAt(Instant.now());
     }
-    
-//-------------------------Payment type------------------------------
-    private void calculatePaymentAmounts(ProcedurePricing p) {
 
+
+    private double calculatePlatformFee(double price) {
+        return round(price * platformFeePercentage / 100.0);
+    }
+
+    private void calculatePaymentAmounts(ProcedurePricing p) {
         double finalCost = p.getFinalCost();
         String paymentType = p.getPaymentType();
 
-        // Default: FULL PAYMENT
-        if (paymentType == null || paymentType.isBlank()) {
+        if (paymentType == null || paymentType.isBlank() || paymentType.equalsIgnoreCase("FULL_PAYMENT")) {
             p.setPartialAmount(round(finalCost));
             p.setDueAmount(0.0);
-            return;
-        }
+        } else if (paymentType.equalsIgnoreCase("PARTIAL_PAYMENT")) {
+            double percentage = p.getPartialPaymentPercentage();
+            if (percentage <= 0 || percentage > 100) throw new IllegalArgumentException("partialPaymentPercentage must be between 1 and 100");
 
-        switch (paymentType.toUpperCase()) {
+            double partialAmount = round(finalCost * percentage / 100.0);
+            double dueAmount = round(finalCost - partialAmount);
 
-            case "FULL_PAYMENT":
-                p.setPartialAmount(round(finalCost));
-                p.setDueAmount(0.0);
-                break;
-
-            case "PARTIAL_PAYMENT":
-                double percentage = p.getPartialPaymentPercentage();
-
-                if (percentage <= 0 || percentage > 100) {
-                    throw new IllegalArgumentException(
-                            "partialPaymentPercentage must be between 1 and 100");
-                }
-
-                double partialAmount = round(finalCost * percentage / 100.0);
-                double dueAmount = round(finalCost - partialAmount);
-
-                p.setPartialAmount(partialAmount);
-                p.setDueAmount(dueAmount);
-                break;
-
-            default:
-                throw new IllegalArgumentException("Invalid paymentType: " + paymentType);
+            p.setPartialAmount(partialAmount);
+            p.setDueAmount(dueAmount);
+        } else {
+            throw new IllegalArgumentException("Invalid paymentType: " + paymentType);
         }
     }
-
-
-//    private void calculatePricing(ProcedurePricing p) {
-//
-//        double price = p.getPrice();
-//
-//        double clinicDiscountPercent = p.getDiscountPercentage();
-//        double ngkDiscountPercent = p.getNgkDiscountPercentage();
-//
-//        double clinicDiscountAmount = round(price * clinicDiscountPercent / 100.0);
-//
-//        double discountedCost = p.isOfferActive()
-//                ? round(price - clinicDiscountAmount)
-//                : price;
-//
-//        double taxAmount = round(discountedCost * p.getTaxPercentage() / 100.0);
-//        double gstAmount = round(discountedCost * p.getGst() / 100.0);
-//
-//        double consultationFee = p.getConsultationFee();
-//        double clinicPay = round(discountedCost + taxAmount + gstAmount + consultationFee);
-//
-//        double ngkDiscountAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
-//                ? round(clinicPay * ngkDiscountPercent / 100.0)
-//                : 0.0;
-//
-//        double finalCost = round(clinicPay - ngkDiscountAmount);
-//
-//        double totalDiscountAmount = round(
-//                (p.isOfferActive() ? clinicDiscountAmount : 0.0) + ngkDiscountAmount
-//        );
-//
-//        double totalDiscountPercent = p.isOfferActive()
-//                ? clinicDiscountPercent + ngkDiscountPercent
-//                : 0.0;
-//
-//        // ✅ SET VALUES
-//        p.setDiscountAmount(clinicDiscountAmount);
-//        p.setDiscountedCost(discountedCost);
-//        p.setTaxAmount(taxAmount);
-//        p.setGstAmount(gstAmount);
-//        p.setClinicPay(clinicPay);
-//        p.setNgkDiscountAmount(ngkDiscountAmount);
-//        p.setFinalCost(finalCost);
-//
-//        p.setTotalDiscountAmount(totalDiscountAmount);
-//        p.setTotalDiscountPercentage(totalDiscountPercent);
-//
-//        // ✅ NEW FIELD
-//        p.setTotalDiscountedAmount(round(price - totalDiscountAmount));
-//
-//        p.setUpdatedAt(Instant.now());
-//    }
-
-
-
-//    private void calculatePricing(ProcedurePricing p) {
-//        double price = p.getPrice();
-//        double discountPercent = (p.isOfferActive() ? p.getDiscountPercentage() : 0.0);
-//
-//        double discountedPrice = round(price - (price * discountPercent / 100.0));
-//        double taxAmount = round(discountedPrice * p.getTaxPercentage() / 100.0);
-//        double gstAmount = round(discountedPrice * p.getGst() / 100.0);
-//        double clinicPay = round(discountedPrice + taxAmount + gstAmount + p.getConsultationFee());
-//        double ngkAmount = round(clinicPay * p.getNgkDiscountPercentage() / 100.0);
-//        double finalCost = round(clinicPay - ngkAmount);
-//
-//        double discountAmount = price - discountedPrice;
-//        double totalDiscountAmount = round(discountAmount + ngkAmount);
-//        double totalDiscountPercent = discountPercent + p.getNgkDiscountPercentage();
-//
-//        p.setDiscountAmount(discountAmount);
-//        p.setDiscountedCost(discountedPrice);
-//        p.setTaxAmount(taxAmount);
-//        p.setGstAmount(gstAmount);
-//        p.setClinicPay(clinicPay);
-//        p.setNgkDiscountAmount(ngkAmount);
-//        p.setFinalCost(finalCost);
-//        p.setTotalDiscountAmount(totalDiscountAmount);
-//        p.setTotalDiscountPercentage(totalDiscountPercent);
-//
-//        p.setUpdatedAt(Instant.now());
-//    }
-
 
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
-    }
-
-    // ========================= DTO FORMATTING =========================
-    private ProcedurePricingDTO formatOfferDatesForResponse(ProcedurePricing p) {
-        ProcedurePricingDTO dto = mapper.toDto(p);
-        dto.setOfferStart(p.getOfferStart());
-        dto.setOfferValidDate(p.getOfferValidDate());
-        return dto;
     }
 
     // ========================= READ METHODS =========================
@@ -555,16 +386,32 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
             if (startDate != null && validDate != null && validDate.isBefore(startDate))
                 throw new IllegalArgumentException("offerValidDate cannot be before offerStart");
 
-            // No exception thrown if validDate is null — allows open-ended offers
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("Invalid date format for offerStart or offerValidDate. Expected yyyy-MM-dd");
         }
     }
-
 
     private LocalDate parseDateOrExisting(String dtoDate, String existingDate) {
         if (dtoDate != null && !dtoDate.isBlank()) return LocalDate.parse(dtoDate);
         if (existingDate != null && !existingDate.isBlank()) return LocalDate.parse(existingDate);
         return null;
     }
+
+    private ProcedurePricingDTO formatOfferDatesForResponse(ProcedurePricing p) {
+        ProcedurePricingDTO dto = mapper.toDto(p);
+
+        dto.setOfferStart(p.getOfferStart());
+        dto.setOfferValidDate(p.getOfferValidDate());
+
+        // dynamically calculate platform fee
+        double platformFee = round(p.getPrice() * platformFeePercentage / 100.0);
+        dto.setPlatformFee(platformFee);
+
+        // include the percentage itself
+        dto.setPlatformFeePercentage(platformFeePercentage);
+
+        return dto;
+    }
+
+
 }

@@ -1,8 +1,5 @@
 package com.glowkart.booking.dto;
 
-import java.time.Instant;
-import java.time.LocalDate;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,14 +13,15 @@ public class RatingResponseDTO {
     private String mobileNumber;
 
     private String clinicId;
-    private String clinicName;       // ✅
-    private String clinicAddress;    // ✅
+    private String clinicName;
+    private String clinicAddress;
 
     private String serviceId;
-    private String serviceName;      // ✅
-    private String serviceType;      // ✅
+    private String serviceName;
+    private String serviceType;
+
     private int rating;
     private String review;
 
-    private String createdAt; // ✅ store "2026-01-02"
+    private String createdAt; // "2026-01-20T14:42:30Z"
 }

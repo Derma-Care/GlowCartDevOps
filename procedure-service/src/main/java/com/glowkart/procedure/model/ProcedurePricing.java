@@ -1,12 +1,14 @@
 package com.glowkart.procedure.model;
 
-import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import lombok.Data;
 
 @Data
 @Document(collection = "procedure_pricing")
@@ -15,12 +17,12 @@ public class ProcedurePricing {
     private String id;
 
     private String procedureId;
-    private String procedureName; // auto-fetched from Procedure master
+    private String procedureName;
     private String clinicId;
 
     private String description;
     private String procedureImage;
-    private String procedureLink; // NEW field
+    private String procedureLink;
 
     private List<Map<String, List<String>>> preProcedureQA;
     private List<Map<String, List<String>>> procedureQA;
@@ -37,7 +39,9 @@ public class ProcedurePricing {
     private double gst;
     private double gstAmount;
     private double consultationFee;
-    private double platformFee; // ✅ NEW — editable from UI
+
+//    @Transient
+//    private double platformFee; // dynamically calculated, not persisted
 
     private double discountedCost;
     private double clinicPay;
@@ -47,21 +51,17 @@ public class ProcedurePricing {
     private String offerValidDate;
     private boolean offerActive;
     
-
-    // NEW — NGK Only Fields
     private double ngkDiscountPercentage;
     private double ngkDiscountAmount;
     
-    private double totalDiscountPercentage; // clinic + NGK
-    private double totalDiscountAmount;     // clinic + NGK
- // ✅ NEW
+    private double totalDiscountPercentage;
+    private double totalDiscountAmount;
     private double totalDiscountedAmount;
 
     private Instant createdAt;
     private Instant updatedAt;
-    private String paymentType; //FULL_PAYMENT,PARTIAL_PAYMENT
+    private String paymentType;
     private double partialPaymentPercentage;
     private double dueAmount;
     private double partialAmount;
-	
 }

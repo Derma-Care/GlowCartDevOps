@@ -74,6 +74,8 @@ public class BookingResponseDTO {
 
     private String mobileNumber;
 
+    private String createdAt;
+    private String updatedAt;
     @JsonProperty("isRated")
     private boolean isRated;
 }
