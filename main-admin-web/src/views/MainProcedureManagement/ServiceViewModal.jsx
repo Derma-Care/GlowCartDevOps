@@ -109,6 +109,17 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
+             <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Payment Type:</span>
+              <span className="text-muted"> {data.paymentType ? data.paymentType : 'N/A'}</span>
+              {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
+            </CCol>
+            {data?.partialPaymentPercentage != null && (
+              <CCol sm={4}>
+                <span className="mb-1 fw-semibold">Partial Payment Percentage:</span>
+                <span className="text-muted"> {data.partialPaymentPercentage}%</span>
+              </CCol>
+            )}
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Service Time: </span>
               <span className="text-muted">

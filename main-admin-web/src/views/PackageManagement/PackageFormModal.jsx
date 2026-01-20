@@ -126,7 +126,47 @@ const PackageFormModal = ({
                 }}
               />
             </CCol>
+ <CCol md={3} className="mb-4">
+              <h6>
+                Payment Type <span className="text-danger">*</span>
+              </h6>
 
+              {/* Payment Type Dropdown */}
+              <CFormSelect
+                name="paymentType"
+                value={newService.paymentType || ''}
+                onChange={onChange}
+              >
+                <option value="">Select Payment Type</option>
+                <option value="FULL_PAYMENT">Full Payment</option>
+                <option value="PARTIAL_PAYMENT">Partial Payment</option>
+              </CFormSelect>
+
+              {errors.paymentType && (
+                <CFormText className="text-danger">{errors.paymentType}</CFormText>
+              )}
+            </CCol>
+            {newService.paymentType === 'PARTIAL_PAYMENT' && (
+              <CCol md={4} className="mb-4">
+                <h6>
+                  Partial Payment Percentage <span className="text-danger">*</span>
+                </h6>
+
+                <CFormInput
+                  type="number"
+                  name="partialPaymentPercentage"
+                  placeholder="Enter percentage (e.g. 30)"
+                  min={1}
+                  max={99}
+                  value={newService.partialPaymentPercentage || ''}
+                  onChange={onChange}
+                />
+
+                {errors.partialPaymentPercentage && (
+                  <CFormText className="text-danger">{errors.partialPaymentPercentage}</CFormText>
+                )}
+              </CCol>
+            )}
             <CCol md={3} className="mb-4">
               <h6>Offer Start Date</h6>
               <CFormInput

@@ -64,6 +64,8 @@ const PackageManagement = () => {
     packageName: '',
     packageId: '',
     ngkDiscountAmount: '',
+    paymentType: 'FULL_PAYMENT',
+    partialPaymentPercentage: '',
     // packageProcedures: [{ procedureId: '', sittings: '' }],
     packageProcedures: [],
   })
@@ -230,7 +232,18 @@ const PackageManagement = () => {
     if (!newService.packageProcedures || newService.packageProcedures.length < 2) {
       newErrors.packageProcedures = 'Please select at least two procedures.'
     }
+ if (!newService.paymentType) {
+      newErrors.paymentType = 'Payment type is required'
+    }
 
+    if (
+      newService.paymentType === 'PARTIAL_PAYMENT' &&
+      (!newService.partialPaymentPercentage ||
+        Number(newService.partialPaymentPercentage) < 1 ||
+        Number(newService.partialPaymentPercentage) > 99)
+    ) {
+      newErrors.partialPaymentPercentage = 'Enter valid percentage between 1 and 99'
+    }
     // Validate individual procedures
     newService.packageProcedures.forEach((p, idx) => {
       if (!p.procedureId) {
@@ -340,7 +353,7 @@ const PackageManagement = () => {
       'discount',
       'gst',
       'taxPercentage',
-      // 'sittings',
+  'partialPaymentPercentage',
     ]
 
     let newValue = value
@@ -368,7 +381,15 @@ const PackageManagement = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }))
     }
 
-    setNewService((prev) => ({ ...prev, [name]: newValue }))
+      // ---------- UPDATE STATE ----------
+    setNewService((prev) => ({
+      ...prev,
+      [name]: newValue,
+      // ✅ Reset percentage if FULL PAYMENT selected
+      ...(name === 'paymentType' && newValue === 'FULL_PAYMENT'
+        ? { partialPaymentPercentage: '' }
+        : {}),
+    }))
   }
 
   // const onChange = (e) => {
@@ -409,9 +430,8 @@ const PackageManagement = () => {
       procedureQA: [],
       preProcedureQA: [],
       postProcedureQA: [],
-
-      // ✅ ADD THIS LINE
-      // packageProcedures: [{ procedureId: '', sittings: '' }],
+   paymentType: 'FULL_PAYMENT',
+      partialPaymentPercentage: '',
       packageProcedures: [],
     })
 
@@ -470,8 +490,8 @@ const PackageManagement = () => {
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
       postProcedureQA: service.postProcedureQA || [],
-      // PackageName: '',
-      // packageProcedures: service.packageProcedures || [{ procedureId: '', sittings: '' }],
+ paymentType: service.paymentType || 'FULL_PAYMENT',
+      partialPaymentPercentage: service.partialPaymentPercentage || '',
       packageProcedures: mappedProcedures,
     })
 
@@ -530,7 +550,11 @@ const PackageManagement = () => {
         // minTime: formattedMinTime,
         offerStart: newService.offerValidDate || '',
         offerValidDate: newService.offerEndDate || '',
-        // procedureImage: base64ImageToSend,
+        paymentType: newService.paymentType || 'FULL_PAYMENT', // ✅
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0, // ✅
       }
 
       const response = await addPackageData(payload) // imported from ProcedureManagementAPI
@@ -599,6 +623,11 @@ const PackageManagement = () => {
         procedureImage: base64ImageToSend,
         gst: Number(newService.gst || 0),
         consultationFee: Number(newService.consultationFee || 0),
+         paymentType: newService.paymentType || 'FULL_PAYMENT',
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0,
       }
 
       const response = await updatePackageData(newService.packageId, clinicId, updatedService) // imported from ProcedureManagementAPI

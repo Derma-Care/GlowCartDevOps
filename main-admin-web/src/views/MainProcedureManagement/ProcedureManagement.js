@@ -61,6 +61,8 @@ const ServiceManagement = () => {
     postProcedureQA: [],
     ngkDiscountAmount: '',
     procedureLink: '',
+     paymentType: 'FULL_PAYMENT',
+    partialPaymentPercentage: '',
   })
 
   const [errors, setErrors] = useState({
@@ -216,7 +218,18 @@ const ServiceManagement = () => {
     if (newService.discount && Number(newService.discount) > 100) {
       newErrors.discount = 'Discount cannot exceed 100%.'
     }
+ if (!newService.paymentType) {
+      newErrors.paymentType = 'Payment type is required'
+    }
 
+    if (
+      newService.paymentType === 'PARTIAL_PAYMENT' &&
+      (!newService.partialPaymentPercentage ||
+        Number(newService.partialPaymentPercentage) < 1 ||
+        Number(newService.partialPaymentPercentage) > 99)
+    ) {
+      newErrors.partialPaymentPercentage = 'Enter valid percentage between 1 and 99'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -253,6 +266,7 @@ const ServiceManagement = () => {
       'gst',
       'taxPercentage',
       'sittings',
+      'partialPaymentPercentage',
     ]
 
     let newValue = value
@@ -280,7 +294,15 @@ const ServiceManagement = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }))
     }
 
-    setNewService((prev) => ({ ...prev, [name]: newValue }))
+      // ---------- UPDATE STATE ----------
+    setNewService((prev) => ({
+      ...prev,
+      [name]: newValue,
+      // ✅ Reset percentage if FULL PAYMENT selected
+      ...(name === 'paymentType' && newValue === 'FULL_PAYMENT'
+        ? { partialPaymentPercentage: '' }
+        : {}),
+    }))
   }
 
   const handleSubServiceChange = (selectedOption) => {
@@ -325,6 +347,8 @@ const ServiceManagement = () => {
       preProcedureQA: [],
       postProcedureQA: [],
       procedureLink: '',
+        paymentType: 'FULL_PAYMENT',
+      partialPaymentPercentage: '',
     })
     setErrors({})
   }
@@ -385,6 +409,8 @@ const ServiceManagement = () => {
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
       postProcedureQA: service.postProcedureQA || [],
+       paymentType: service.paymentType || 'FULL_PAYMENT',
+      partialPaymentPercentage: service.partialPaymentPercentage || '',
     })
 
     setErrors({})
@@ -442,7 +468,13 @@ const ServiceManagement = () => {
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
         procedureLink: newService.procedureLink,
-        ngkDiscountPercentage: newService.ngkDiscountAmount
+        
+        ngkDiscountPercentage: newService.ngkDiscountAmount, 
+        paymentType: newService.paymentType || 'FULL_PAYMENT', // ✅
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0, // ✅
       }
 
       const response = await postServiceData(payload)
@@ -507,6 +539,11 @@ const handleUpdateService = async () => {
       preProcedureQA: newService.preProcedureQA,
       postProcedureQA: newService.postProcedureQA,
       procedureLink: newService.procedureLink,
+       paymentType: newService.paymentType || 'FULL_PAYMENT',
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0,
       ngkDiscountPercentage: Number(newService.ngkDiscountAmount || 0),
     }
 

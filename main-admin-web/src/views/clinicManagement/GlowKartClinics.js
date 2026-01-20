@@ -296,8 +296,9 @@ const sendNGKRegistrationLink = async (email) => {
                       <CTableHeaderCell className="text-center">Contact Number</CTableHeaderCell>
                       <CTableHeaderCell className="text-center">Email</CTableHeaderCell>
                       <CTableHeaderCell className="text-center">City</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                       <CTableHeaderCell className="text-center">Status</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                      
                     </CTableRow>
                   </CTableHead>
 
@@ -310,13 +311,7 @@ const sendNGKRegistrationLink = async (email) => {
                           <CTableDataCell className="text-center">{clinic?.contactNumber}</CTableDataCell>
                           <CTableDataCell className="text-center">{clinic?.email}</CTableDataCell>
                           <CTableDataCell className="text-center">{capitalizeWords(clinic?.city || "N/A")}</CTableDataCell>
-                          <CTableDataCell className="text-center">
-                            <button className="actionBtn" title="View" onClick={() =>
-                              navigate(`/clinic-details/${clinic.clinicId}`, { state: clinic })
-                            }>View</button>
-                          </CTableDataCell>
-
-                          {/* FIXED STATUS DROPDOWN */}
+                           {/* FIXED STATUS DROPDOWN */}
                           <CTableDataCell className="text-center">
                             <CFormSelect
                               value={mapBackendStatusToUI(clinic?.status)}
@@ -335,6 +330,13 @@ const sendNGKRegistrationLink = async (email) => {
                             </CFormSelect>
 
                           </CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            <button className="actionBtn" title="View" onClick={() =>
+                              navigate(`/clinic-details/${clinic.clinicId}`, { state: clinic })
+                            }>View</button>
+                          </CTableDataCell>
+
+                         
                         </CTableRow>
                       ))
                     ) : (

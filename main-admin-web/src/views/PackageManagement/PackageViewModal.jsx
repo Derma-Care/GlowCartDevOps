@@ -121,6 +121,17 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               
             </CCol> */}
             <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Payment Type:</span>
+              <span className="text-muted"> {data.paymentType ? data.paymentType : 'N/A'}</span>
+              {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
+            </CCol>
+            {data?.partialPaymentPercentage != null && (
+              <CCol sm={4}>
+                <span className="mb-1 fw-semibold">Partial Payment Percentage:</span>
+                <span className="text-muted"> {data.partialPaymentPercentage}%</span>
+              </CCol>
+            )}
+            <CCol sm={4}>
               <span className="mb-1 fw-semibold">No. of Total Sittings: </span>
               <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
               {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}

@@ -72,11 +72,6 @@ public class Booking {
     private double gstAmount;
 
     private double consultationFee;
-   
-    // ✅ PLATFORM FEE
-    private double platformFeePercentage;
-    private double platformFeeAmount;
-    
     private double finalAmount;
 
     // 🔥 PARTIAL PAYMENT BREAKUP

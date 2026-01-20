@@ -1,6 +1,9 @@
 import { element } from 'prop-types'
 import React from 'react'
 import Package_ProcedureManagement_Tabs from './views/Package_ProcedureManagement/Package_ProcedureManagement_Tabs'
+import VerifiedClinic_getDetails from './views/Appointments/VerifiedClinic_getDetails'
+import Appointments_Tabs from './views/Appointments/Appointments_Tabs'
+import AppointmentDetails from './views/Appointments/AppointmentDetails'
 
 
 
@@ -27,7 +30,7 @@ const FCMNotification = React.lazy(() => import('./views/PushNotification/PushNo
 const RegistrationCodeManagement = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodes'))
 const RegistrationCodeManagementDev = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodesDev'))
 const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/GlowKartClinicDetails'))
-
+const Help = React.lazy(() => import('./views/Help/Help'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/Login', name: 'Login', element: Login },
@@ -39,7 +42,7 @@ const routes = [
   { path: '/Clinic-Management', name: 'Clinic Management', element: ClinicManagement },
   // { path: '/add-clinic', name: 'Add Clinic', element: AddClinic },
   { path: '/Clinic-Registration', name: 'Clinic Registration', element: ClinicRegistration }, // updated route
-   { path: '/Clinic-Registration/:clinicId', element: ClinicRegistration },   // EDIT
+  { path: '/Clinic-Registration/:clinicId', element: ClinicRegistration },   // EDIT
   { path: '/Patients-Management', name: 'Patient Management', element: PatientManagement },
   // { path: '/clinic-management/:hospitalId', name: 'Clinic Details', element: ClinicManagementDetails },
   // { path: '/branch-details/:branchId', name: 'Branch Details', element: BranchDetails },
@@ -54,8 +57,10 @@ const routes = [
   { path: '/Registration-Codes', name: 'Registration Codes ', element: RegistrationCodeManagement },
   { path: '/Clinic-Details/:clinicId', name: 'Clinic Details', element: ClinicManagementDetails },
   { path: "/Package_ProcedureManagement_Tabs/:clinicId", name: 'Package_ProcedureManagement_Tabs', element: Package_ProcedureManagement_Tabs },
-
-
+  { path: '/Verified-Clinics', name: 'Verified Clinics', element: VerifiedClinic_getDetails },
+  { path: "/Appointments_Tabs/:bookingId", name: 'Appointments_Tabs_Tabs', element: Appointments_Tabs },
+  { path: "/appointment-details/:id", element: AppointmentDetails },
+  { path: '/Help', name: 'Help', element: Help },
 ]
 
 export default routes

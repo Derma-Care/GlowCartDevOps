@@ -12,6 +12,7 @@ import {
   cilWallet,
   cilTask,
   cibGoogleAds,
+  cilCalendar,cilSettings
 } from '@coreui/icons'
 
 const _nav = [
@@ -26,6 +27,12 @@ const _nav = [
     name: 'Customer Management',
     to: '/Customer-Management',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Appointments',
+    to: '/Verified-Clinics',
+    icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
@@ -68,6 +75,12 @@ const _nav = [
     name: 'Push Notifications',
     to: '/Push-Notifications',
     icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+  },
+   {
+    component: CNavItem,
+    name: 'Help',
+    to: '/Help',
+    icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
   },
 ]
 
