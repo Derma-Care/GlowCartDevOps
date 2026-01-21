@@ -180,28 +180,31 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
         if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
-        return packages.stream()
-                .map(pkg -> {
-                    List<String> clinicIds = safeGet(() ->
-                            procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData());
+        List<ProcedurePackageWithClinicsDTO> result = new java.util.ArrayList<>();
 
-                    Set<String> clinicSet = clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
+        for (ProcedurePackageDTO pkg : packages) {
 
-                    List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
-                            .filter(c -> clinicSet.contains(c.getClinicId()))
-                            .map(c -> mapClinicWithPricing(c, latitude, longitude, pkg.getPackageId(), false))
-                            .sorted(this::sortByDistance)
-                            .toList();
+            List<String> clinicIds = safeGet(() ->
+                    procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData());
 
-                    if (clinicDtos.isEmpty()) return Optional.<ProcedurePackageWithClinicsDTO>empty();
+            Set<String> clinicSet = clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
-                    ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
-                    dto.setPackageInfo(pkg);
-                    dto.setClinics(clinicDtos);
-                    return Optional.of(dto);
-                })
-                .flatMap(Optional::stream)
-                .toList();
+            List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
+                    .filter(c -> clinicSet.contains(c.getClinicId()))
+                    .map(c -> mapClinicWithPricing(c, latitude, longitude, pkg.getPackageId(), false))
+                    .filter(java.util.Objects::nonNull)  // Remove nulls
+                    .sorted(this::sortByDistance)
+                    .toList();
+
+            if (!clinicDtos.isEmpty()) {
+                ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+                dto.setPackageInfo(pkg);
+                dto.setClinics(clinicDtos);
+                result.add(dto);
+            }
+        }
+
+        return result;
     }
 
 
