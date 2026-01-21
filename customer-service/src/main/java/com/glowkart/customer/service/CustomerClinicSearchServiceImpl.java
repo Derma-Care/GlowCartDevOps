@@ -8,10 +8,9 @@ import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -165,22 +164,27 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // Get all packages with clinics (fixed for Java 17)
     // =========================================================
     @Override
-    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(double latitude, double longitude) {
+    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
+            double latitude, double longitude) {
 
         String state = reverseGeoService.resolveState(latitude, longitude);
 
+        List<ClinicPublicDTO> clinicsFromAdmin =
+                adminClinicClient.getClinicsByState(state, true).getData();
+
         final List<ClinicPublicDTO> clinics =
-                safeGet(() -> adminClinicClient.getClinicsByState(state, true).getData());
+                clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
 
-        List<ProcedurePackageDTO> packages = safeGet(() ->
-                procedureServiceClient.getAllPackages().getData());
+        List<ProcedurePackageDTO> packages =
+                procedureServiceClient.getAllPackages().getData();
 
-        if (packages.isEmpty()) return Collections.emptyList();
+        if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
         return packages.stream()
                 .map(pkg -> {
                     List<String> clinicIds = safeGet(() ->
                             procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData());
+
                     Set<String> clinicSet = clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
@@ -189,16 +193,17 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    if (clinicDtos.isEmpty()) return null;
+                    if (clinicDtos.isEmpty()) return Optional.<ProcedurePackageWithClinicsDTO>empty();
 
                     ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
-                    return dto;
+                    return Optional.of(dto);
                 })
-                .filter(Objects::nonNull)
+                .flatMap(Optional::stream)
                 .toList();
     }
+
 
     // =========================================================
     // Mapping clinic to DTO with pricing
