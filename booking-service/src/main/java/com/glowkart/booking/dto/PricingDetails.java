@@ -30,6 +30,10 @@ public class PricingDetails {
 
     double consultationFee;
 
+    // 🔥 PLATFORM FEE (NEW)
+    double platformFeePercentage;
+    double platformFee;
+
     // 🔥 PAYMENT
     String paymentType; // FULL_PAYMENT / PARTIAL_PAYMENT
     double partialPaymentPercentage;
@@ -40,6 +44,9 @@ public class PricingDetails {
 
     // ================= PROCEDURE =================
     public static PricingDetails fromProcedurePricing(ProcedurePricingDTO dto) {
+
+        double platformFee = dto.getPlatformFee() > 0 ? dto.getPlatformFee() : 0;
+        double finalAmount = dto.getFinalCost() + platformFee;
 
         return PricingDetails.builder()
                 .serviceName(dto.getProcedureName())
@@ -63,18 +70,26 @@ public class PricingDetails {
 
                 .consultationFee(dto.getConsultationFee())
 
-                // 🔥 NEW
+                // 🔥 PLATFORM FEE
+                .platformFeePercentage(dto.getPlatformFeePercentage())
+                .platformFee(platformFee)
+
+                // 🔥 PAYMENT
                 .paymentType(dto.getPaymentType())
                 .partialPaymentPercentage(dto.getPartialPaymentPercentage())
                 .partialAmount(dto.getPartialAmount())
                 .dueAmount(dto.getDueAmount())
 
-                .finalAmount(dto.getFinalCost())
+                // 🔥 FINAL
+                .finalAmount(finalAmount)
                 .build();
     }
 
     // ================= PACKAGE =================
     public static PricingDetails fromPackagePricing(ProcedurePackageDTO dto) {
+
+        double platformFee = dto.getPlatformFee() > 0 ? dto.getPlatformFee() : 0;
+        double finalAmount = dto.getFinalCost() + platformFee;
 
         return PricingDetails.builder()
                 .serviceName(dto.getPackageName())
@@ -98,13 +113,18 @@ public class PricingDetails {
 
                 .consultationFee(dto.getConsultationFee())
 
-                // 🔥 NEW
+                // 🔥 PLATFORM FEE
+                .platformFeePercentage(dto.getPlatformFeePercentage())
+                .platformFee(platformFee)
+
+                // 🔥 PAYMENT
                 .paymentType(dto.getPaymentType())
                 .partialPaymentPercentage(dto.getPartialPaymentPercentage())
                 .partialAmount(dto.getPartialAmount())
                 .dueAmount(dto.getDueAmount())
 
-                .finalAmount(dto.getFinalCost())
+                // 🔥 FINAL
+                .finalAmount(finalAmount)
                 .build();
     }
 }

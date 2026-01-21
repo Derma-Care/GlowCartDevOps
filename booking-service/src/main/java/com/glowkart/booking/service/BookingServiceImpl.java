@@ -42,25 +42,32 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
 
-        double originalAmount = fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
+        double originalAmount = fetchServiceFinalCost(
+                request.getServiceType(),
+                request.getServiceId()
+        );
+
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
 
-        int availablePoints = walletService.getWalletSummary(customer.getMobile()).getBalance();
-        int maxRedeemablePoints = availablePoints / 2;
-        int pointsToApply = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
+        int availablePoints =
+                walletService.getWalletSummary(customer.getMobile()).getBalance();
 
-        double finalAmount = Math.max(originalAmount - pointsToApply, 0);
+        int maxRedeemablePoints = availablePoints / 2;
+        int appliedPoints =
+                Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
+
+        double finalAmount = Math.max(originalAmount - appliedPoints, 0);
 
         return BookingPriceResponseDTO.builder()
                 .originalFinalAmount(originalAmount)
                 .availablePoints(availablePoints)
                 .maxRedeemablePoints(maxRedeemablePoints)
-                .appliedPoints(pointsToApply)
+                .appliedPoints(appliedPoints)
                 .finalAmount(finalAmount)
                 .build();
     }
 
-    // ================= BOOKING CREATION =================
+    // ================= CREATE BOOKING =================
     @Override
     public BookingResponseDTO createBooking(BookingRequestDTO request) {
 
@@ -68,29 +75,40 @@ public class BookingServiceImpl implements BookingService {
 
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
         ClinicDTO clinic = fetchClinic(request.getClinicId());
-        PricingDetails pricing = fetchPricingDetails(request.getServiceType(), request.getServiceId());
+        PricingDetails pricing =
+                fetchPricingDetails(request.getServiceType(), request.getServiceId());
 
-        List<BookingProcedureDTO> bookingProcedures =
+        List<BookingProcedureDTO> procedures =
                 fetchBookingProcedures(request.getServiceType(), request.getServiceId());
 
         Booking booking = Booking.builder()
                 .bookingId(UUID.randomUUID().toString())
+
+                // Customer
                 .customerId(customer.getCustomerId())
                 .mobileNumber(customer.getMobile())
                 .fullName(customer.getFullName())
                 .city(customer.getCity())
                 .dob(customer.getDob())
                 .gender(customer.getGender())
+
+                // Clinic
                 .clinicId(clinic.getClinicId())
                 .clinicName(clinic.getName())
                 .clinicAddress(clinic.getAddress())
+
+                // Service
                 .serviceId(request.getServiceId())
                 .serviceName(pricing.getServiceName())
                 .serviceType(request.getServiceType())
+                .procedures(procedures)
+
+                // Appointment
+                .appointmentDate(request.getAppointmentDate())
                 .paymentMode(request.getPaymentMode())
                 .paymentType(request.getPaymentType())
-                .appointmentDate(request.getAppointmentDate())
-                .procedures(bookingProcedures)
+
+                // Pricing
                 .price(pricing.getPrice())
                 .discount(pricing.getDiscountPercentage())
                 .discountAmount(pricing.getDiscountAmount())
@@ -104,10 +122,18 @@ public class BookingServiceImpl implements BookingService {
                 .gst(pricing.getGst())
                 .gstAmount(pricing.getGstAmount())
                 .consultationFee(pricing.getConsultationFee())
+
+                // 🔥 PLATFORM FEE (SNAPSHOT)
+                .platformFeePercentage(pricing.getPlatformFeePercentage())
+                .platformFee(pricing.getPlatformFee())
+
+                // Payment breakup
                 .finalAmount(pricing.getFinalAmount())
                 .partialPaymentPercentage(pricing.getPartialPaymentPercentage())
                 .partialAmount(pricing.getPartialAmount())
                 .dueAmount(pricing.getDueAmount())
+
+                // Meta
                 .redeemedPoints(0)
                 .status("HOLD")
                 .paymentStatus("PENDING")
@@ -116,15 +142,29 @@ public class BookingServiceImpl implements BookingService {
                 .updatedAt(Instant.now().toString())
                 .build();
 
-        bookingRepository.save(booking);
+        // ================= WALLET =================
+        int pointsToRedeem =
+                validateWalletPoints(booking, request.getPointsToRedeem());
 
-        int pointsToRedeem = validateWalletPoints(booking, request.getPointsToRedeem());
+        if (pointsToRedeem > 0) {
+            booking.setRedeemedPoints(pointsToRedeem);
+
+            // 🔥 Wallet must NOT reduce platform fee
+            double serviceAmount =
+                    booking.getFinalAmount() - booking.getPlatformFee();
+
+            serviceAmount = Math.max(serviceAmount - pointsToRedeem, 0);
+
+            booking.setFinalAmount(
+                    serviceAmount + booking.getPlatformFee()
+            );
+        }
+
+        // ================= PAYMENT =================
         boolean paymentSuccess = processPayment(booking);
 
         if (paymentSuccess && pointsToRedeem > 0) {
             walletService.redeemPoints(customer.getCustomerId(), pointsToRedeem);
-            booking.setRedeemedPoints(pointsToRedeem);
-            booking.setFinalAmount(Math.max(booking.getFinalAmount() - pointsToRedeem, 0));
         }
 
         booking.setUpdatedAt(Instant.now().toString());
@@ -135,9 +175,12 @@ public class BookingServiceImpl implements BookingService {
 
     // ================= WALLET VALIDATION =================
     private int validateWalletPoints(Booking booking, int requestedPoints) {
+
         if (requestedPoints <= 0) return 0;
 
-        int availablePoints = walletService.getWalletSummary(booking.getMobileNumber()).getBalance();
+        int availablePoints =
+                walletService.getWalletSummary(booking.getMobileNumber()).getBalance();
+
         int maxRedeemablePoints = availablePoints / 2;
 
         if (requestedPoints > maxRedeemablePoints) {
@@ -155,20 +198,22 @@ public class BookingServiceImpl implements BookingService {
         if ("ONLINE".equalsIgnoreCase(booking.getPaymentMode())) {
 
             if ("FULL_PAYMENT".equalsIgnoreCase(booking.getPaymentType())) {
-                boolean success = paymentService.pay(
-                        booking.getBookingId(),
-                        booking.getFinalAmount()
-                );
+                boolean success =
+                        paymentService.pay(
+                                booking.getBookingId(),
+                                booking.getFinalAmount()
+                        );
                 booking.setStatus(success ? "CONFIRMED" : "FAILED");
                 booking.setPaymentStatus(success ? "PAID" : "FAILED");
                 return success;
             }
 
             if ("PARTIAL_PAYMENT".equalsIgnoreCase(booking.getPaymentType())) {
-                boolean success = paymentService.pay(
-                        booking.getBookingId(),
-                        booking.getPartialAmount()
-                );
+                boolean success =
+                        paymentService.pay(
+                                booking.getBookingId(),
+                                booking.getPartialAmount()
+                        );
                 booking.setStatus(success ? "CONFIRMED" : "FAILED");
                 booking.setPaymentStatus(success ? "DUE" : "FAILED");
                 return success;
@@ -178,7 +223,8 @@ public class BookingServiceImpl implements BookingService {
         if ("CASH".equalsIgnoreCase(booking.getPaymentMode())) {
             booking.setStatus("CONFIRMED");
             booking.setPaymentStatus(
-                    "FULL_PAYMENT".equalsIgnoreCase(booking.getPaymentType()) ? "PENDING" : "DUE"
+                    "FULL_PAYMENT".equalsIgnoreCase(booking.getPaymentType())
+                            ? "PENDING" : "DUE"
             );
             return true;
         }
@@ -188,7 +234,8 @@ public class BookingServiceImpl implements BookingService {
 
     // ================= HELPERS =================
     private void validateAppointmentDate(String date) {
-        LocalDate appointmentDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+        LocalDate appointmentDate =
+                LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
         if (appointmentDate.isBefore(LocalDate.now())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -198,7 +245,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private CustomerDTO fetchCustomer(String customerId) {
-        ApiResponse<CustomerDTO> response = customerInfoClient.getCustomerId(customerId);
+        ApiResponse<CustomerDTO> response =
+                customerInfoClient.getCustomerId(customerId);
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
         }
@@ -206,7 +254,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private ClinicDTO fetchClinic(String clinicId) {
-        ApiResponse<ClinicDTO> response = clinicClient.getClinicById(clinicId);
+        ApiResponse<ClinicDTO> response =
+                clinicClient.getClinicById(clinicId);
         if (response == null || !response.isSuccess() || response.getData() == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found");
         }
@@ -216,70 +265,50 @@ public class BookingServiceImpl implements BookingService {
     private double fetchServiceFinalCost(String serviceType, String serviceId) {
 
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePricingDTO> resp = procedureClient.getPricingByProcedure(serviceId);
-            if (resp == null || resp.getData() == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
-            }
-            ProcedurePricingDTO pricing = resp.getData();
-            double finalCost = pricing.getFinalCost();
-            if (pricing.getPlatformFee() > 0) {
-                finalCost += pricing.getPlatformFee();
-            }
-            return finalCost;
+            ProcedurePricingDTO p =
+                    procedureClient.getPricingByProcedure(serviceId).getData();
+            return p.getFinalCost() + Math.max(p.getPlatformFee(), 0);
         }
 
         if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePackageDTO> resp = procedureClient.getPricingByPackage(serviceId);
-            if (resp == null || resp.getData() == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
-            }
-            ProcedurePackageDTO pricing = resp.getData();
-            double finalCost = pricing.getFinalCost();
-            if (pricing.getPlatformFee() > 0) {
-                finalCost += pricing.getPlatformFee();
-            }
-            return finalCost;
+            ProcedurePackageDTO p =
+                    procedureClient.getPricingByPackage(serviceId).getData();
+            return p.getFinalCost() + Math.max(p.getPlatformFee(), 0);
         }
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
-
 
     private PricingDetails fetchPricingDetails(String serviceType, String serviceId) {
 
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePricingDTO> resp =
-                    procedureClient.getPricingByProcedure(serviceId);
-            if (resp == null || resp.getData() == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure not found");
-            }
-            return PricingDetails.fromProcedurePricing(resp.getData());
+            return PricingDetails.fromProcedurePricing(
+                    procedureClient.getPricingByProcedure(serviceId).getData()
+            );
         }
 
         if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ApiResponse<ProcedurePackageDTO> resp =
-                    procedureClient.getPricingByPackage(serviceId);
-            if (resp == null || resp.getData() == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found");
-            }
-            return PricingDetails.fromPackagePricing(resp.getData());
+            return PricingDetails.fromPackagePricing(
+                    procedureClient.getPricingByPackage(serviceId).getData()
+            );
         }
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
 
-    private List<BookingProcedureDTO> fetchBookingProcedures(String serviceType, String serviceId) {
+    private List<BookingProcedureDTO> fetchBookingProcedures(
+            String serviceType,
+            String serviceId
+    ) {
 
         if (!"PACKAGE".equalsIgnoreCase(serviceType)) return List.of();
 
-        ApiResponse<ProcedurePackageDTO> resp =
-                procedureClient.getPricingByPackage(serviceId);
+        ProcedurePackageDTO pkg =
+                procedureClient.getPricingByPackage(serviceId).getData();
 
-        if (resp == null || resp.getData() == null || resp.getData().getProcedures() == null) {
-            return List.of();
-        }
+        if (pkg == null || pkg.getProcedures() == null) return List.of();
 
-        return resp.getData().getProcedures().stream()
+        return pkg.getProcedures().stream()
                 .map(p -> new BookingProcedureDTO(
                         p.getProcedureName(),
                         p.getNoOfSittings()
@@ -298,8 +327,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String formatAge(int age) {
-        if (age <= 0) return "0 yrs";
-        return age == 1 ? "1 yr" : age + " yrs";
+        return age <= 1 ? age + " yr" : age + " yrs";
     }
 
     // ================= MAP TO DTO =================
@@ -307,7 +335,6 @@ public class BookingServiceImpl implements BookingService {
 
         LocalDate appointmentDate = parseDate(booking.getAppointmentDate());
         int age = calculateAgeAtDate(booking.getDob(), appointmentDate);
-
         ClinicDTO clinic = fetchClinic(booking.getClinicId());
 
         return BookingResponseDTO.builder()
@@ -316,19 +343,23 @@ public class BookingServiceImpl implements BookingService {
                 .clinicName(booking.getClinicName())
                 .clinicAddress(booking.getClinicAddress())
                 .hospitalLogo(clinic.getHospitalLogo())
+
                 .customerId(booking.getCustomerId())
                 .fullName(booking.getFullName())
                 .city(booking.getCity())
                 .dob(booking.getDob())
                 .ageLabel(formatAge(age))
                 .gender(booking.getGender())
+
                 .serviceId(booking.getServiceId())
                 .serviceName(booking.getServiceName())
                 .serviceType(booking.getServiceType())
                 .procedures(booking.getProcedures())
-                .paymentType(booking.getPaymentType())
+
                 .paymentMode(booking.getPaymentMode())
+                .paymentType(booking.getPaymentType())
                 .appointmentDate(booking.getAppointmentDate())
+
                 .price(booking.getPrice())
                 .discount(booking.getDiscount())
                 .discountAmount(booking.getDiscountAmount())
@@ -337,15 +368,21 @@ public class BookingServiceImpl implements BookingService {
                 .totalDiscountPercentage(booking.getTotalDiscountPercentage())
                 .ngkDiscount(booking.getNgkDiscountAmount())
                 .ngkDiscountPercentage(booking.getNgkDiscountPercentage())
-                .gst(booking.getGst())
-                .gstAmount(booking.getGstAmount())
                 .taxPercentage(booking.getTaxPercentage())
                 .taxAmount(booking.getTaxAmount())
+                .gst(booking.getGst())
+                .gstAmount(booking.getGstAmount())
                 .consultationFee(booking.getConsultationFee())
+
+                // 🔥 PLATFORM FEE
+                .platformFeePercentage(booking.getPlatformFeePercentage())
+                .platformFee(booking.getPlatformFee())
+
                 .finalAmount(booking.getFinalAmount())
                 .partialPaymentPercentage(booking.getPartialPaymentPercentage())
                 .partialAmount(booking.getPartialAmount())
                 .dueAmount(booking.getDueAmount())
+
                 .redeemedPoints(booking.getRedeemedPoints())
                 .status(booking.getStatus())
                 .paymentStatus(booking.getPaymentStatus())
@@ -354,7 +391,7 @@ public class BookingServiceImpl implements BookingService {
                 .build();
     }
 
-    // ================= CANCEL / RESCHEDULE / LIST =================
+    // ================= CANCEL / RESCHEDULE =================
     @Override
     public BookingResponseDTO cancelBooking(CancelBookingDTO request) {
 
@@ -363,8 +400,11 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus("CANCELLED");
 
+        // 🔥 Platform fee NOT refundable
         if ("PAID".equalsIgnoreCase(booking.getPaymentStatus())) {
-            paymentService.refund(booking.getBookingId(), booking.getFinalAmount());
+            double refundable =
+                    booking.getFinalAmount() - booking.getPlatformFee();
+            paymentService.refund(booking.getBookingId(), Math.max(refundable, 0));
         }
 
         booking.setPaymentStatus("NA");
@@ -374,6 +414,7 @@ public class BookingServiceImpl implements BookingService {
         return mapToDTO(booking);
     }
 
+    // ================= RESCHEDULE =================
     @Override
     public BookingResponseDTO rescheduleBooking(RescheduleBookingDTO request) {
 
@@ -407,6 +448,7 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
+
     @Override
     public List<BookingResponseDTO> getClinicBookings(String clinicId) {
         return bookingRepository.findByClinicIdOrderByCreatedAtDesc(clinicId)
@@ -415,17 +457,24 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
+
     @Override
     public BookingResponseDTO updateBookingStatus(UpdateBookingStatusDTO request) {
 
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found")
+                );
 
         String newStatus = request.getStatus().toUpperCase();
 
         if (!List.of(
-                "HOLD", "CONFIRMED", "IN_PROGRESS",
-                "COMPLETED", "CANCELLED", "FAILED"
+                "HOLD",
+                "CONFIRMED",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "CANCELLED",
+                "FAILED"
         ).contains(newStatus)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
         }
@@ -437,23 +486,34 @@ public class BookingServiceImpl implements BookingService {
         return mapToDTO(booking);
     }
 
-    // ================= RATE BOOKING =================
+
     @Override
     public RatingResponseDTO rateBooking(RatingDTO request) {
 
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found")
+                );
 
         if (!"COMPLETED".equalsIgnoreCase(booking.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking is not completed yet");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Booking is not completed yet"
+            );
         }
 
         if (booking.isRated()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking already rated");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Booking already rated"
+            );
         }
 
         if (request.getRating() < 1 || request.getRating() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Rating must be between 1 and 5"
+            );
         }
 
         BookingRating rating = BookingRating.builder()
@@ -481,58 +541,69 @@ public class BookingServiceImpl implements BookingService {
         return mapToRatingDTO(rating);
     }
 
+
     @Override
     public List<RatingResponseDTO> getClinicRatings(String clinicId) {
         return bookingRatingRepository.findByClinicId(clinicId)
                 .stream()
                 .map(this::mapToRatingDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public RatingResponseDTO getBookingRating(String bookingId) {
 
         BookingRating rating = bookingRatingRepository.findByBookingId(bookingId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rating not found"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Rating not found")
+                );
 
         return mapToRatingDTO(rating);
     }
 
-    private RatingResponseDTO mapToRatingDTO(BookingRating rating) {
-        return RatingResponseDTO.builder()
-                .bookingId(rating.getBookingId())
-                .customerId(rating.getCustomerId())
-                .fullName(rating.getFullName())
-                .mobileNumber(rating.getMobileNumber())
-                .clinicId(rating.getClinicId())
-                .clinicName(rating.getClinicName())
-                .clinicAddress(rating.getClinicAddress())
-                .serviceId(rating.getServiceId())
-                .serviceName(rating.getServiceName())
-                .serviceType(rating.getServiceType())
-                .rating(rating.getRating())
-                .review(rating.getReview())
-                .createdAt(rating.getCreatedAt())
-                .build();
-    }
 
-    @Override
-    public ClinicRatingsResponseDTO getClinicRatingsWithAverage(String clinicId) {
+	
 
-        List<RatingResponseDTO> ratings = bookingRatingRepository.findByClinicId(clinicId)
-                .stream()
-                .map(this::mapToRatingDTO)
-                .toList();
+	private RatingResponseDTO mapToRatingDTO(BookingRating rating) {
+	    return RatingResponseDTO.builder()
+	            .bookingId(rating.getBookingId())
+	            .customerId(rating.getCustomerId())
+	            .fullName(rating.getFullName())
+	            .mobileNumber(rating.getMobileNumber())
+	            .clinicId(rating.getClinicId())
+	            .clinicName(rating.getClinicName())
+	            .clinicAddress(rating.getClinicAddress())
+	            .serviceId(rating.getServiceId())
+	            .serviceName(rating.getServiceName())
+	            .serviceType(rating.getServiceType())
+	            .rating(rating.getRating())
+	            .review(rating.getReview())
+	            .createdAt(rating.getCreatedAt())
+	            .build();
+	}
 
-        double average = ratings.stream()
-                .mapToInt(RatingResponseDTO::getRating)
-                .average()
-                .orElse(0.0);
+	@Override
+	public ClinicRatingsResponseDTO getClinicRatingsWithAverage(String clinicId) {
 
-        return ClinicRatingsResponseDTO.builder()
-                .clinicId(clinicId)
-                .averageRating(average)
-                .ratings(ratings)
-                .build();
-    }
+	    List<RatingResponseDTO> ratings =
+	            bookingRatingRepository.findByClinicId(clinicId)
+	                    .stream()
+	                    .map(this::mapToRatingDTO)
+	                    .collect(Collectors.toList());
+
+	    double averageRating = ratings.stream()
+	            .mapToInt(RatingResponseDTO::getRating)
+	            .average()
+	            .orElse(0.0);
+
+	    return ClinicRatingsResponseDTO.builder()
+	            .clinicId(clinicId)
+	            .averageRating(averageRating)
+	            .ratings(ratings)
+	            .build();
+	}
+
+    // ================= LIST & RATING =================
+    // (unchanged logic – safe to keep as-is)
 }
