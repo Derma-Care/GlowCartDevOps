@@ -31,6 +31,9 @@ public class ProcedurePackageDTO {
 
     private double discountedCost;
     private double clinicPay;
+    private double platformFeePercentage; // e.g. 2.5%
+    private double platformFee;           // dynamically calculated
+
     private double finalCost;
 
     // ⭐ NEW OFFER FIELDS ⭐

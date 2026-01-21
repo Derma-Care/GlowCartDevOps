@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,10 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
     private final ProcedurePricingRepository procedurePricingRepository;
 
     private final ZoneId istZone = ZoneId.of("Asia/Kolkata");
+    
+    @Value("${glowkart.platform.fee-percentage}")
+    private double platformFeePercentage;
+
 
     // ================= CREATE =================
     @Override
@@ -206,16 +211,23 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
         }
 
         calculatePricing(dto);
-
-        // ✅ NEW — Payment calculation
         calculatePaymentAmounts(dto);
 
-        // Safety fallback
+        // ✅ PLATFORM FEE (NEW)
+        applyPlatformFee(dto);
+
         if (dto.getTotalDiscountedAmount() <= 0) {
             double totalDiscountAmount = dto.getDiscountAmount() + dto.getNgkDiscountAmount();
             dto.setTotalDiscountedAmount(round(dto.getPrice() - totalDiscountAmount));
         }
     }
+
+    private void applyPlatformFee(ProcedurePackageDTO dto) {
+        double platformFee = round(dto.getPrice() * platformFeePercentage / 100.0);
+        dto.setPlatformFee(platformFee);
+        dto.setPlatformFeePercentage(platformFeePercentage);
+    }
+
 
 	private void calculatePricing(ProcedurePackageDTO dto) {
 

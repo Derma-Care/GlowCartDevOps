@@ -222,9 +222,9 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     }
 
 
-    private double calculatePlatformFee(double price) {
-        return round(price * platformFeePercentage / 100.0);
-    }
+//    private double calculatePlatformFee(double price) {
+//        return round(price * platformFeePercentage / 100.0);
+//    }
 
     private void calculatePaymentAmounts(ProcedurePricing p) {
         double finalCost = p.getFinalCost();
