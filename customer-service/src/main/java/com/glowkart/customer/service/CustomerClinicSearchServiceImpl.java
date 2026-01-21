@@ -173,24 +173,37 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             boolean isProcedure) {
 
         ProcedurePricingDTO pricing = null;
-        try {
-            pricing = isProcedure
-                    ? procedureServiceClient
-                        .getPricingByProcedureForClinic(id, clinic.getClinicId()).getData()
-                    : procedureServiceClient
-                        .getPackagePricingForClinic(id, clinic.getClinicId()).getData();
 
-            // ✅ ADD PLATFORM FEE INTO FINAL COST
-            if (pricing != null && pricing.getPlatformFee() > 0) {
-                pricing.setFinalCost(
-                        pricing.getFinalCost() + pricing.getPlatformFee()
-                );
+        try {
+            if (isProcedure) {
+                pricing = procedureServiceClient
+                        .getPricingByProcedureForClinic(id, clinic.getClinicId())
+                        .getData();
+            } else {
+                pricing = procedureServiceClient
+                        .getPackagePricingForClinic(clinic.getClinicId(), id)
+                        .getData();
+            }
+
+            if (pricing != null) {
+                // ------------------------
+                // Apply platform fee
+                // ------------------------
+                if (pricing.getPlatformFee() > 0) {
+                    pricing.setFinalCost(pricing.getFinalCost() + pricing.getPlatformFee());
+                } else if (pricing.getPlatformFeePercentage() > 0) {
+                    // If only percentage is provided, calculate fee dynamically
+                    double fee = pricing.getFinalCost() * (pricing.getPlatformFeePercentage() / 100.0);
+                    pricing.setPlatformFee(fee);
+                    pricing.setFinalCost(pricing.getFinalCost() + fee);
+                }
             }
 
         } catch (Exception ignored) {}
 
         return mapClinicToDTO(clinic, latitude, longitude, pricing);
     }
+
 
 
     private ClinicProcedureLinkDTO mapClinicToDTO(
@@ -421,14 +434,35 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                         clinicIds = Collections.emptyList();
                     }
 
-                    Set<String> clinicSet =
-                            clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
+                    Set<String> clinicSet = clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
                     // Map clinics in the current state that offer this package
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
-                            .map(c -> (ClinicProcedureLinkDTO) mapClinicWithPricing(
-                                    c, latitude, longitude, pkg.getPackageId(), false))
+                            .map(c -> {
+                                // Get package pricing for this clinic
+                                ProcedurePricingDTO pricing = null;
+                                try {
+                                    pricing = procedureServiceClient
+                                            .getPackagePricingForClinic(c.getClinicId(), pkg.getPackageId())
+                                            .getData();
+                                } catch (Exception ignored) {}
+
+                                if (pricing != null) {
+                                    // ------------------------
+                                    // Apply platform fee
+                                    // ------------------------
+                                    if (pricing.getPlatformFee() > 0) {
+                                        pricing.setFinalCost(pricing.getFinalCost() + pricing.getPlatformFee());
+                                    } else if (pricing.getPlatformFeePercentage() > 0) {
+                                        double fee = pricing.getFinalCost() * (pricing.getPlatformFeePercentage() / 100.0);
+                                        pricing.setPlatformFee(fee);
+                                        pricing.setFinalCost(pricing.getFinalCost() + fee);
+                                    }
+                                }
+
+                                return mapClinicToDTO(c, latitude, longitude, pricing);
+                            })
                             .sorted(this::sortByDistance)
                             .toList();
 
@@ -444,6 +478,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .filter(Objects::nonNull) // remove packages with no clinics in state
                 .toList();
     }
+
 
 
 }
