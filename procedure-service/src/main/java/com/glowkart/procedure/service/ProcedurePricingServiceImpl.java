@@ -143,8 +143,8 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
     // ========================= OFFER + PRICING PROCESS =========================
     private void processOfferAndPricing(ProcedurePricing p) {
         LocalDate today = LocalDate.now(istZone);
-
         boolean offerActive = false;
+
         try {
             if (p.getOfferStart() != null && !p.getOfferStart().isBlank()) {
                 LocalDate start = LocalDate.parse(p.getOfferStart());
@@ -157,31 +157,36 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 }
             }
         } catch (DateTimeParseException e) {
-            log.error("Invalid offer date for procedureId={}, clinicId={}: {}", 
-                      p.getProcedureId(), p.getClinicId(), e.getMessage());
+            log.error("Invalid offer date for procedureId={}, clinicId={}",
+                    p.getProcedureId(), p.getClinicId());
         }
 
         p.setOfferActive(offerActive);
 
-        if (!offerActive && p.getOfferValidDate() != null && !p.getOfferValidDate().isBlank()) {
-            p.setDiscountPercentage(0.0);
+        // ✅ Discount exists but is applied only if active
+        if (!offerActive) {
             p.setDiscountAmount(0.0);
         }
 
         calculatePricing(p);
     }
 
+
     // ========================= PRICING CALCULATION =========================
     private void calculatePricing(ProcedurePricing p) {
-        double price = p.getPrice();
-        double clinicDiscountPercent = p.getDiscountPercentage();
-        double ngkDiscountPercent = p.getNgkDiscountPercentage();
 
-        // ---------------- CLINIC DISCOUNT ----------------
+        double price = p.getPrice();
+
+        // ---------------- CONFIGURED DISCOUNTS ----------------
+        double clinicDiscountPercent = Optional.ofNullable(p.getDiscountPercentage()).orElse(0.0);
+        double ngkDiscountPercent = Optional.ofNullable(p.getNgkDiscountPercentage()).orElse(0.0);
+
+        // ---------------- APPLIED DISCOUNTS ----------------
         double clinicDiscountAmount = p.isOfferActive()
                 ? round(price * clinicDiscountPercent / 100.0)
                 : 0.0;
 
+        // discounted price after clinic discount
         double discountedCost = p.isOfferActive()
                 ? round(price - clinicDiscountAmount)
                 : round(price);
@@ -193,7 +198,7 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         double consultationFee = p.getConsultationFee();
         double clinicPay = round(discountedCost + taxAmount + gstAmount + consultationFee);
 
-        // ---------------- NGK DISCOUNT ----------------
+        // ---------------- NGK DISCOUNT (APPLIED ONLY IF ACTIVE) ----------------
         double ngkDiscountAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
                 ? round(clinicPay * ngkDiscountPercent / 100.0)
                 : 0.0;
@@ -201,25 +206,35 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         // ---------------- FINAL COST ----------------
         double finalCost = round(clinicPay - ngkDiscountAmount);
 
-        // ---------------- TOTAL DISCOUNT ----------------
-        double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
-        double totalDiscountPercent = p.isOfferActive() ? clinicDiscountPercent + ngkDiscountPercent : 0.0;
+        // ---------------- TOTAL DISCOUNTS ----------------
+        // percentage = CONFIGURED (even if offer inactive)
+        double totalDiscountPercentage = clinicDiscountPercent + ngkDiscountPercent;
 
+        // amount = APPLIED (only when active)
+        double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
+
+        // ---------------- SET VALUES ----------------
         p.setDiscountAmount(clinicDiscountAmount);
         p.setDiscountedCost(discountedCost);
+
         p.setTaxAmount(taxAmount);
         p.setGstAmount(gstAmount);
+
         p.setClinicPay(clinicPay);
         p.setNgkDiscountAmount(ngkDiscountAmount);
+
         p.setFinalCost(finalCost);
+
+        p.setTotalDiscountPercentage(totalDiscountPercentage);
         p.setTotalDiscountAmount(totalDiscountAmount);
-        p.setTotalDiscountPercentage(totalDiscountPercent);
+
+        // total discounted amount = original price − applied discount
         p.setTotalDiscountedAmount(round(price - totalDiscountAmount));
 
         calculatePaymentAmounts(p);
-
         p.setUpdatedAt(Instant.now());
     }
+
 
 
 //    private double calculatePlatformFee(double price) {

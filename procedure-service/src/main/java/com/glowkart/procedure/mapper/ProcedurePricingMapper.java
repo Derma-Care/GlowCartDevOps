@@ -54,6 +54,11 @@ public class ProcedurePricingMapper {
         entity.setTaxPercentage(dto.getTaxPercentage());
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
+        
+     // ✅ OFFER DATES (FIX)
+        entity.setOfferStart(dto.getOfferStart());
+        entity.setOfferValidDate(dto.getOfferValidDate());
+
 
         // NGK fields
         entity.setNgkDiscountPercentage(dto.getNgkDiscountPercentage());
@@ -139,6 +144,10 @@ public class ProcedurePricingMapper {
         entity.setTaxPercentage(dto.getTaxPercentage());
         entity.setGst(dto.getGst());
         entity.setConsultationFee(dto.getConsultationFee());
+        
+        // ✅ OFFER DATES (FIX)
+        entity.setOfferStart(dto.getOfferStart());
+        entity.setOfferValidDate(dto.getOfferValidDate());
 
         // NGK only
         if (dto.getNgkDiscountPercentage() > 0) {
