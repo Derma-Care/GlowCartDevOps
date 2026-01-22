@@ -173,12 +173,17 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             boolean isProcedure) {
 
         ProcedurePricingDTO pricing = null;
+
         try {
-            pricing = isProcedure
-                    ? procedureServiceClient
-                        .getPricingByProcedureForClinic(id, clinic.getClinicId()).getData()
-                    : procedureServiceClient
-                        .getPackagePricingForClinic(id, clinic.getClinicId()).getData();
+            if (isProcedure) {
+                pricing = procedureServiceClient
+                        .getPricingByProcedureForClinic(id, clinic.getClinicId())
+                        .getData();
+            } else {
+                pricing = procedureServiceClient
+                        .getPackagePricingForClinic(clinic.getClinicId(), id)
+                        .getData();
+            }
 
             // ✅ ADD PLATFORM FEE INTO FINAL COST
             if (pricing != null && pricing.getPlatformFee() > 0) {
