@@ -198,6 +198,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     }
 
 
+
     private ClinicProcedureLinkDTO mapClinicToDTO(
             ClinicPublicDTO clinic,
             double latitude,
@@ -402,21 +403,23 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         List<ClinicPublicDTO> clinics =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
-        if (clinics == null || clinics.isEmpty()) return Collections.emptyList();
+        if (clinics == null || clinics.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
-        if (packages == null || packages.isEmpty()) return Collections.emptyList();
+        if (packages == null || packages.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         return packages.stream()
                 .map(pkg -> {
 
                     // ✅ ADD PLATFORM FEE TO PACKAGE FINAL COST
                     if (pkg.getPlatformFee() > 0) {
-                        pkg.setFinalCost(
-                                pkg.getFinalCost() + pkg.getPlatformFee()
-                        );
+                        pkg.setFinalCost(pkg.getFinalCost() + pkg.getPlatformFee());
                     }
 
                     List<String> clinicIds;
@@ -431,14 +434,25 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                     Set<String> clinicSet =
                             clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
+                    // ✅ IMPORTANT: EXPLICIT SORT (NO METHOD REFERENCE)
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
                             .map(c -> mapClinicWithPricing(
-                                    c, latitude, longitude, pkg.getPackageId(), false))
-                            .sorted(this::sortByDistance)
+                                    c,
+                                    latitude,
+                                    longitude,
+                                    pkg.getPackageId(),
+                                    false
+                            ))
+                            .sorted((a, b) -> Double.compare(
+                                    parseDistance(a.getDistanceInKm()),
+                                    parseDistance(b.getDistanceInKm())
+                            ))
                             .toList();
 
-                    if (clinicDtos.isEmpty()) return null;
+                    if (clinicDtos.isEmpty()) {
+                        return null;
+                    }
 
                     ProcedurePackageWithClinicsDTO dto =
                             new ProcedurePackageWithClinicsDTO();
@@ -449,6 +463,5 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .filter(Objects::nonNull)
                 .toList();
     }
-
 
 }
