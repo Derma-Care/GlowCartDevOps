@@ -356,7 +356,7 @@ public class CustomerService {
             // YES USERS
             if ("male".equalsIgnoreCase(customer.getGender())) {
                 // Male YES users → only slices 10,11,12 (indexes 9,10,11)
-                int[] allowedIndexes = {9, 10, 11};
+                int[] allowedIndexes = {10, 11};
                 int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
                 return allSlices.get(randomIndex);
             } else {
@@ -378,7 +378,7 @@ public class CustomerService {
             // INTERESTED USERS
             if ("male".equalsIgnoreCase(customer.getGender())) {
                 // Male INTERESTED users → only slices 4,5,6 (indexes 3,4,5) and 10,11,12 (indexes 9,10,11)
-                int[] allowedIndexes = {3, 4, 5, 9, 10, 11};
+                int[] allowedIndexes = {4, 5, 10, 11};
                 int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
                 return allSlices.get(randomIndex);
             } else {

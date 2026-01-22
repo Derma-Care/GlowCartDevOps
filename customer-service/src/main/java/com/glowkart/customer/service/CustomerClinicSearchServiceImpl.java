@@ -173,37 +173,24 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
             boolean isProcedure) {
 
         ProcedurePricingDTO pricing = null;
-
         try {
-            if (isProcedure) {
-                pricing = procedureServiceClient
-                        .getPricingByProcedureForClinic(id, clinic.getClinicId())
-                        .getData();
-            } else {
-                pricing = procedureServiceClient
-                        .getPackagePricingForClinic(clinic.getClinicId(), id)
-                        .getData();
-            }
+            pricing = isProcedure
+                    ? procedureServiceClient
+                        .getPricingByProcedureForClinic(id, clinic.getClinicId()).getData()
+                    : procedureServiceClient
+                        .getPackagePricingForClinic(id, clinic.getClinicId()).getData();
 
-            if (pricing != null) {
-                // ------------------------
-                // Apply platform fee
-                // ------------------------
-                if (pricing.getPlatformFee() > 0) {
-                    pricing.setFinalCost(pricing.getFinalCost() + pricing.getPlatformFee());
-                } else if (pricing.getPlatformFeePercentage() > 0) {
-                    // If only percentage is provided, calculate fee dynamically
-                    double fee = pricing.getFinalCost() * (pricing.getPlatformFeePercentage() / 100.0);
-                    pricing.setPlatformFee(fee);
-                    pricing.setFinalCost(pricing.getFinalCost() + fee);
-                }
+            // ✅ ADD PLATFORM FEE INTO FINAL COST
+            if (pricing != null && pricing.getPlatformFee() > 0) {
+                pricing.setFinalCost(
+                        pricing.getFinalCost() + pricing.getPlatformFee()
+                );
             }
 
         } catch (Exception ignored) {}
 
         return mapClinicToDTO(clinic, latitude, longitude, pricing);
     }
-
 
 
     private ClinicProcedureLinkDTO mapClinicToDTO(
@@ -405,26 +392,29 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
             double latitude, double longitude) {
 
-        // Resolve state from user's coordinates
         String state = reverseGeoService.resolveState(latitude, longitude);
 
-        // Fetch only clinics in this state that are online
         List<ClinicPublicDTO> clinicsFromAdmin =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
         final List<ClinicPublicDTO> clinics =
                 clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
 
-        // Fetch all procedure packages
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
         if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
-        // Map each package to the clinics offering it
         return packages.stream()
                 .map(pkg -> {
-                    // Get clinic IDs that offer this package
+
+                    // 🔥 ADD PLATFORM FEE INTO PACKAGE FINAL COST 🔥
+                    if (pkg.getPlatformFee() > 0) {
+                        pkg.setFinalCost(
+                                pkg.getFinalCost() + pkg.getPlatformFee()
+                        );
+                    }
+
                     List<String> clinicIds;
                     try {
                         clinicIds = procedureServiceClient
@@ -434,48 +424,25 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                         clinicIds = Collections.emptyList();
                     }
 
-                    Set<String> clinicSet = clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
+                    Set<String> clinicSet =
+                            clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
-                    // Map clinics in the current state that offer this package
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
-                            .map(c -> {
-                                // Get package pricing for this clinic
-                                ProcedurePricingDTO pricing = null;
-                                try {
-                                    pricing = procedureServiceClient
-                                            .getPackagePricingForClinic(c.getClinicId(), pkg.getPackageId())
-                                            .getData();
-                                } catch (Exception ignored) {}
-
-                                if (pricing != null) {
-                                    // ------------------------
-                                    // Apply platform fee
-                                    // ------------------------
-                                    if (pricing.getPlatformFee() > 0) {
-                                        pricing.setFinalCost(pricing.getFinalCost() + pricing.getPlatformFee());
-                                    } else if (pricing.getPlatformFeePercentage() > 0) {
-                                        double fee = pricing.getFinalCost() * (pricing.getPlatformFeePercentage() / 100.0);
-                                        pricing.setPlatformFee(fee);
-                                        pricing.setFinalCost(pricing.getFinalCost() + fee);
-                                    }
-                                }
-
-                                return mapClinicToDTO(c, latitude, longitude, pricing);
-                            })
+                            .map(c -> mapClinicWithPricing(
+                                    c, latitude, longitude, pkg.getPackageId(), false))
                             .sorted(this::sortByDistance)
                             .toList();
 
-                    // Skip package if no clinics in this state
                     if (clinicDtos.isEmpty()) return null;
 
-                    // Build DTO
-                    ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+                    ProcedurePackageWithClinicsDTO dto =
+                            new ProcedurePackageWithClinicsDTO();
                     dto.setPackageInfo(pkg);
                     dto.setClinics(clinicDtos);
                     return dto;
                 })
-                .filter(Objects::nonNull) // remove packages with no clinics in state
+                .filter(Objects::nonNull)
                 .toList();
     }
 
