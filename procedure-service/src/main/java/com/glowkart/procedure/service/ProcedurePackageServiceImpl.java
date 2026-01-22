@@ -421,16 +421,33 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
 
     private void setOfferStatus(ProcedurePackageDTO dto) {
+
         LocalDate today = LocalDate.now(istZone);
+
+        if (dto.getOfferStart() == null || dto.getOfferStart().isBlank()) {
+            dto.setOfferActive(false);
+            return;
+        }
+
         try {
             LocalDate start = LocalDate.parse(dto.getOfferStart());
-            LocalDate end = dto.getOfferValidDate() != null
-                    ? LocalDate.parse(dto.getOfferValidDate()) : null;
-            dto.setOfferActive(!today.isBefore(start) && (end == null || !today.isAfter(end)));
-        } catch (Exception e) {
+
+            LocalDate end = null;
+            if (dto.getOfferValidDate() != null && !dto.getOfferValidDate().isBlank()) {
+                end = LocalDate.parse(dto.getOfferValidDate());
+            }
+
+            boolean active =
+                    !today.isBefore(start) &&
+                    (end == null || !today.isAfter(end));
+
+            dto.setOfferActive(active);
+
+        } catch (DateTimeParseException e) {
             dto.setOfferActive(false);
         }
     }
+
 
     private void normalizePackageDTO(ProcedurePackageDTO dto) {
         if (dto.getPackageName() != null) dto.setPackageName(dto.getPackageName().trim());
