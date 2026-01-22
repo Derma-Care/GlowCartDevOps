@@ -394,11 +394,10 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
         String state = reverseGeoService.resolveState(latitude, longitude);
 
-        List<ClinicPublicDTO> clinicsFromAdmin =
+        List<ClinicPublicDTO> clinics =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
-        final List<ClinicPublicDTO> clinics =
-                clinicsFromAdmin != null ? clinicsFromAdmin : Collections.emptyList();
+        if (clinics == null || clinics.isEmpty()) return Collections.emptyList();
 
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
@@ -408,7 +407,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         return packages.stream()
                 .map(pkg -> {
 
-                    // 🔥 ADD PLATFORM FEE INTO PACKAGE FINAL COST 🔥
+                    // ✅ ADD PLATFORM FEE TO PACKAGE FINAL COST
                     if (pkg.getPlatformFee() > 0) {
                         pkg.setFinalCost(
                                 pkg.getFinalCost() + pkg.getPlatformFee()
@@ -445,7 +444,6 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .filter(Objects::nonNull)
                 .toList();
     }
-
 
 
 }
