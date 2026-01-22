@@ -434,16 +434,10 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                     Set<String> clinicSet =
                             clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
 
-                    // ✅ IMPORTANT: EXPLICIT SORT (NO METHOD REFERENCE)
+                    // Map clinics WITHOUT procedurePricing
                     List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
                             .filter(c -> clinicSet.contains(c.getClinicId()))
-                            .map(c -> mapClinicWithPricing(
-                                    c,
-                                    latitude,
-                                    longitude,
-                                    pkg.getPackageId(),
-                                    false
-                            ))
+                            .map(c -> mapClinicToDTO(c, latitude, longitude, null)) // ⚡ null pricing
                             .sorted((a, b) -> Double.compare(
                                     parseDistance(a.getDistanceInKm()),
                                     parseDistance(b.getDistanceInKm())
@@ -463,5 +457,6 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .filter(Objects::nonNull)
                 .toList();
     }
+
 
 }
