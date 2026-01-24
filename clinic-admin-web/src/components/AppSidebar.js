@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useHospital } from '../views/Usecontext/HospitalContext'
@@ -51,8 +52,8 @@ const AppSidebar = () => {
               style={{
                 width: '80px',
                 height: '80px',
-                borderRadius: '50%',
-                objectFit: 'cover',
+                // borderRadius: '50%',
+                objectFit: 'fill',
                 marginBottom: '8px',
               }}
             />

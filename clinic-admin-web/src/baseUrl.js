@@ -78,3 +78,6 @@ export const Booking_service_Url = `${wifiUrl}/api/booking`
 export const DeleteBookings = 'getAllBookings'
 export const getAllBookedServices = 'getBookingsByHospitalId'
 export const GetBookingBy_ClinicId = 'doctor/getDoctorsByHospitalId'
+
+//help form
+export const CreateClinicEnquiry = 'clinic-enquiries/create'

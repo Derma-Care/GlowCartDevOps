@@ -27,23 +27,28 @@ const AppointmentDetails = () => {
       </CCard>
     );
   }
-const getStatusStyle = (status) => {
-  switch (status) {
-    case "CONFIRMED":
-      return { backgroundColor: "#CCE5FF", color: "#084298" };
-    case "COMPLETED":
-      return { backgroundColor: "#B5E5CF", color: "#0F5132" };
-    case "HOLD":
-      return { backgroundColor: "#F8D7DA", color: "#842029" };
-    default:
-      return { backgroundColor: "#E2E3E5", color: "#41464b" };
-  }
-};
-
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "CONFIRMED":
+        return { backgroundColor: "#CCE5FF", color: "#084298" };
+      case "COMPLETED":
+       return { backgroundColor: "#E5E7EB", color: "#6B7280" };
+      case "HOLD":
+        return { backgroundColor: "#F8D7DA", color: "#842029" };
+      default:
+        return { backgroundColor: "#E2E3E5", color: "#41464b" };
+    }
+  };
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return date.toLocaleDateString("en-GB", options); // e.g. 15 Jan 2026
+  };
   return (
     <div className="p-3">
       <CCard>
-        
+
         {/* Header */}
         <div
           className="text-white p-3 d-flex justify-content-between align-items-center rounded"
@@ -53,17 +58,17 @@ const getStatusStyle = (status) => {
         >
           <h5 className="mb-1" style={{ color: "white" }}>
             {state.fullName} —{" "}
-           <CBadge
-  style={{
-    ...getStatusStyle(state.status),
-    padding: "6px 12px",
-    borderRadius: "6px",
-    fontWeight: 600,
-    fontSize: "13px"
-  }}
->
-  {state.status}
-</CBadge>
+            <CBadge
+              style={{
+                ...getStatusStyle(state.status),
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontWeight: 600,
+                fontSize: "13px"
+              }}
+            >
+              {state.status}
+            </CBadge>
           </h5>
 
           <CButton
@@ -103,7 +108,7 @@ const getStatusStyle = (status) => {
       <CCard className="mt-2">
         <CCardBody>
           <CTabContent>
-            
+
             {/* Patient */}
             <CTabPane visible={activeTab === 0}>
               <h6 className="fw-bold mb-3">Patient Information</h6>
@@ -112,7 +117,7 @@ const getStatusStyle = (status) => {
                 <div className="col-6"><strong>Gender:</strong> {state.gender}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong>DOB:</strong> {state.dob}</div>
+                <div className="col-6"><strong>DOB:</strong> {formatDate(state.dob)}</div>
                 <div className="col-6"><strong>Age:</strong> {state.ageLabel}</div>
               </div>
               <div className="row mb-2">
@@ -137,22 +142,22 @@ const getStatusStyle = (status) => {
             <CTabPane visible={activeTab === 2}>
               <h6 className="fw-bold mb-3">Appointment Details</h6>
               <div className="row mb-2">
-                <div className="col-6"><strong>Date:</strong> {state.appointmentDate}</div>
-               <div className="col-6">
-  <strong>Status:</strong>{" "}
-  <span
-    style={{
-      ...getStatusStyle(state.status),
-      padding: "4px 10px",
-      fontSize: "12px",
-      borderRadius: "6px",
-      fontWeight: 600,
-      display: "inline-block",
-    }}
-  >
-    {state.status}
-  </span>
-</div>
+                <div className="col-6"><strong>Date:</strong> {formatDate(state.appointmentDate)}</div>
+                <div className="col-6">
+                  <strong>Status:</strong>{" "}
+                  <span
+                    style={{
+                      ...getStatusStyle(state.status),
+                      padding: "4px 10px",
+                      fontSize: "12px",
+                      borderRadius: "6px",
+                      fontWeight: 600,
+                      display: "inline-block",
+                    }}
+                  >
+                    {state.status}
+                  </span>
+                </div>
 
               </div>
               <div className="row mb-2">

@@ -104,8 +104,8 @@ const Clinic_getDetails = ({ service }) => {
             {loading ? (
               <LoadingIndicator message="Fetching Clinic Details..." />
             ) : (
-              <div className="table-responsive">
-                <CTable striped hover>
+              <div>
+                <CTable striped hover responsive>
                   <CTableHead className="pink-table">
                     <CTableRow>
                       <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
@@ -118,7 +118,7 @@ const Clinic_getDetails = ({ service }) => {
                     </CTableRow>
                   </CTableHead>
 
-                  <CTableBody>
+                  <CTableBody className="pink-table">
                     {currentItems.length > 0 ? (
                       currentItems.map((clinic, index) => (
                         <CTableRow key={clinic?.clinicId || index}>

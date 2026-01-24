@@ -15,7 +15,7 @@ import {
   CModalFooter,
   CNav,
   CNavItem,
-  CNavLink,CCard,CCardBody
+  CNavLink, CCard, CCardBody
 } from "@coreui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
@@ -140,159 +140,185 @@ const AppointmentsTable = () => {
     setCurrentPage(1);
   }, [search, filter, rowsPerPage]);
 
- return (
-  <div className="p-3">
+  return (
+    <div className="p-3">
 
-    {/* TABS */}
-    <CNav variant="tabs" className="mb-0">
-      {["ALL", "CONFIRMED", "COMPLETED", "HOLD"].map(status => (
-        <CNavItem key={status}>
-          <CNavLink
-            active={filter === status}
-            onClick={() => {
-              setFilter(status);
-              setCurrentPage(1);
-            }}
-            style={{ cursor: "pointer" }}
-          >
-            {status}
-          </CNavLink>
-        </CNavItem>
-      ))}
+      {/* TABS */}
+      <CNav variant="tabs" className="mb-0">
+        {["ALL", "CONFIRMED", "COMPLETED", "HOLD"].map(status => (
+          <CNavItem key={status}>
+            <CNavLink
+              active={filter === status}
+              onClick={() => {
+                setFilter(status);
+                setCurrentPage(1);
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              {status}
+            </CNavLink>
+          </CNavItem>
+        ))}
 
-      <div className="ms-auto p-2">
-        <CFormInput
-          placeholder="Search..."
-          style={{ width: "250px" }}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-    </CNav>
+        <div className="ms-auto p-2">
+          <CFormInput
+            placeholder="Search..."
+            style={{ width: "250px" }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </CNav>
 
-    {/* CARD STARTS BELOW THE TABS */}
-    <CCard className="mt-2 shadow-sm border-0">
-      <CCardBody>
+      {/* CARD STARTS BELOW THE TABS */}
+      <CCard className="mt-2 shadow-sm border-0">
+        <CCardBody>
 
-        {loading ? (
-          <CTable striped hover responsive>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell colSpan={8} className="text-center">
-                  <LoadingIndicator message="Loading appointment data..." />
-                </CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-          </CTable>
-        ) : error ? (
-          <div style={centeredMessageStyle}>{error}</div>
-        ) : filteredData.length === 0 ? (
-          <div style={centeredMessageStyle}>No data found</div>
-        ) : (
-          <>
+          {loading ? (
             <CTable striped hover responsive>
-              <CTableHead className="pink-table">
-                <CTableRow className="text-center">
-                  <CTableHeaderCell>S.No</CTableHeaderCell>
-                  <CTableHeaderCell>Name</CTableHeaderCell>
-                  <CTableHeaderCell>Age</CTableHeaderCell>
-                  <CTableHeaderCell>Type</CTableHeaderCell>
-                  <CTableHeaderCell>Service</CTableHeaderCell>
-                  <CTableHeaderCell>Date</CTableHeaderCell>
-                  <CTableHeaderCell>Status</CTableHeaderCell>
-                  <CTableHeaderCell>Action</CTableHeaderCell>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell colSpan={8} className="text-center">
+                    <LoadingIndicator message="Loading appointment data..." />
+                  </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
-
-              <CTableBody className="pink-table">
-                {currentRows.map((item, index) => (
-                  <CTableRow key={item.id} className="text-center align-middle">
-                    <CTableDataCell>{indexOfFirstRow + index + 1}</CTableDataCell>
-                    <CTableDataCell>{item.fullName}</CTableDataCell>
-                    <CTableDataCell>{item.ageLabel}</CTableDataCell>
-                    <CTableDataCell>{item.serviceType}</CTableDataCell>
-                    <CTableDataCell>{item.serviceName}</CTableDataCell>
-                    <CTableDataCell>{item.appointmentDate}</CTableDataCell>
-
-                    <CTableDataCell>
-                      <select
-                        value={item.status}
-                        disabled={updatingId === item.id}
-                        onChange={(e) => handleStatusChange(item, e.target.value)}
-                        style={{
-                          ...getStatusStyle(item.status),
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          border: "1px solid #ced4da",
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          cursor: "pointer"
-                        }}
-                      >
-                        <option value="CONFIRMED">CONFIRMED</option>
-                        <option value="COMPLETED">COMPLETED</option>
-                        <option value="HOLD">HOLD</option>
-                      </select>
-                    </CTableDataCell>
-
-                    <CTableDataCell>
-                      <CButton size="sm" color="info" onClick={() => openDetails(item)}>
-                        View
-                      </CButton>
-                    </CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
             </CTable>
+          ) : error ? (
+            <div style={centeredMessageStyle}>{error}</div>
+          ) : filteredData.length === 0 ? (
+            <div style={centeredMessageStyle}>No data found</div>
+          ) : (
+            <>
+              <CTable striped hover responsive>
+                <CTableHead className="pink-table">
+                  <CTableRow className="text-center">
+                    <CTableHeaderCell>S.No</CTableHeaderCell>
+                    <CTableHeaderCell>Name</CTableHeaderCell>
+                    <CTableHeaderCell>Age</CTableHeaderCell>
+                    <CTableHeaderCell>Type</CTableHeaderCell>
+                    <CTableHeaderCell>Service</CTableHeaderCell>
+                    <CTableHeaderCell>Date</CTableHeaderCell>
+                    <CTableHeaderCell>Status</CTableHeaderCell>
+                    <CTableHeaderCell>Action</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
 
-            {/* Pagination */}
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <div className="fw-bold">Showing {filteredData.length} results</div>
+                <CTableBody className="pink-table">
+                  {currentRows.map((item, index) => (
+                    <CTableRow key={item.id} className="text-center align-middle">
+                      <CTableDataCell>{indexOfFirstRow + index + 1}</CTableDataCell>
+                      <CTableDataCell>{item.fullName}</CTableDataCell>
+                      <CTableDataCell>{item.ageLabel}</CTableDataCell>
+                      <CTableDataCell>{item.serviceType}</CTableDataCell>
+                      <CTableDataCell>{item.serviceName}</CTableDataCell>
+                      <CTableDataCell>{item.appointmentDate}</CTableDataCell>
+                      <CTableDataCell>
+                        {item.status === "COMPLETED" ? (
+                          <div
+                            style={{
+                              width: "140px",
+                              textAlign: "center",
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid #bfc2c7",
+                              backgroundColor: "#e5e7eb", // light gray
+                              color: "#6b7280", // darker gray text
+                              fontWeight: 600,
+                              fontSize: "13px",
+                              display: "inline-block",
+                              cursor: "not-allowed"
+                            }}
+                          >
+                            COMPLETED
+                          </div>
 
-              <div className="d-flex align-items-center gap-3">
-                <select
-                  className="form-select form-select-sm"
-                  style={{ width: "70px" }}
-                  value={rowsPerPage}
-                  onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                </select>
 
-                <div className="d-flex align-items-center gap-2">
-                  <CButton size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(prev => prev - 1)}>Prev</CButton>
-                  <span className="fw-bold">Page {currentPage} of {totalPages}</span>
-                  <CButton size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>Next</CButton>
+                        ) : (
+                          <select
+                            value={item.status}
+                            disabled={updatingId === item.id}
+                            onChange={(e) => handleStatusChange(item, e.target.value)}
+                            style={{
+                              ...getStatusStyle(item.status),
+                              width: "140px",
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid #ced4da",
+                              fontWeight: 600,
+                              fontSize: "13px",
+                              cursor: "pointer",
+                              textAlign: "center"
+                            }}
+                          >
+                            <option value="CONFIRMED">CONFIRMED</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="HOLD">HOLD</option>
+                          </select>
+                        )}
+                      </CTableDataCell>
+
+
+
+                      <CTableDataCell>
+                        <CButton className="actionBtn"
+                          title="View" onClick={() => openDetails(item)}>
+                          View
+                        </CButton>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+                </CTableBody>
+              </CTable>
+
+              {/* Pagination */}
+              <div className="d-flex justify-content-between align-items-center mt-3">
+                <div className="fw-bold">Showing {filteredData.length} results</div>
+
+                <div className="d-flex align-items-center gap-3">
+                  <select
+                    className="form-select form-select-sm"
+                    style={{ width: "70px" }}
+                    value={rowsPerPage}
+                    onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                  </select>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <CButton size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(prev => prev - 1)}>Prev</CButton>
+                    <span className="fw-bold">Page {currentPage} of {totalPages}</span>
+                    <CButton size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>Next</CButton>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-      </CCardBody>
-    </CCard>
+        </CCardBody>
+      </CCard>
 
-    {/* Confirmation Modal */}
-    <CModal visible={showConfirmModal} onClose={() => setShowConfirmModal(false)}>
-      <CModalHeader>
-        <CModalTitle>Confirm Status Update</CModalTitle>
-      </CModalHeader>
-      <CModalBody>
-        Change status to <strong>{selectedStatus}</strong>?
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" onClick={() => setShowConfirmModal(false)}>
-          Cancel
-        </CButton>
-        <CButton color="primary" onClick={handleConfirmUpdate} disabled={updatingId !== null}>
-          Confirm
-        </CButton>
-      </CModalFooter>
-    </CModal>
-  </div>
-);
+      {/* Confirmation Modal */}
+      <CModal visible={showConfirmModal} onClose={() => setShowConfirmModal(false)}>
+        <CModalHeader>
+          <CModalTitle>Confirm Status Update</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          Change status to <strong>{selectedStatus}</strong>?
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowConfirmModal(false)}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={handleConfirmUpdate} disabled={updatingId !== null}>
+            Confirm
+          </CButton>
+        </CModalFooter>
+      </CModal>
+    </div>
+  );
 
 };
 

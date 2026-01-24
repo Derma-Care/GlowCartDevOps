@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // ServiceFormModal.jsx
 import React from 'react'
 import {
@@ -61,6 +62,7 @@ const ServiceFormModal = ({
               </h6>
 
               <Select
+                isDisabled={isEdit}
                 options={procedureOptions}
                 isSearchable
                 placeholder="Select Procedure"
@@ -276,7 +278,7 @@ const ServiceFormModal = ({
                 <CFormText className="text-danger">{errors.viewDescription}</CFormText>
               )}
             </CCol>
-            <CCol md={6} className="mb-4">
+            <CCol md={3} className="mb-4">
               <h6>
                 Procedure Image <span className="text-danger">*</span>
               </h6>
@@ -296,6 +298,48 @@ const ServiceFormModal = ({
                 <CFormText className="text-danger">{errors.serviceImage}</CFormText>
               )}
             </CCol>
+
+            <CCol md={3} className="mb-4">
+              <h6>
+                Payment Type <span className="text-danger">*</span>
+              </h6>
+
+              {/* Payment Type Dropdown */}
+              <CFormSelect
+                name="paymentType"
+                value={newService.paymentType || ''}
+                onChange={onChange}
+              >
+                <option value="">Select Payment Type</option>
+                <option value="FULL_PAYMENT">Full Payment</option>
+                <option value="PARTIAL_PAYMENT">Partial Payment</option>
+              </CFormSelect>
+
+              {errors.paymentType && (
+                <CFormText className="text-danger">{errors.paymentType}</CFormText>
+              )}
+            </CCol>
+            {newService.paymentType === 'PARTIAL_PAYMENT' && (
+              <CCol md={4} className="mb-4">
+                <h6>
+                  Partial Payment Percentage <span className="text-danger">*</span>
+                </h6>
+
+                <CFormInput
+                  type="number"
+                  name="partialPaymentPercentage"
+                  placeholder="Enter percentage (e.g. 30)"
+                  min={1}
+                  max={99}
+                  value={newService.partialPaymentPercentage || ''}
+                  onChange={onChange}
+                />
+
+                {errors.partialPaymentPercentage && (
+                  <CFormText className="text-danger">{errors.partialPaymentPercentage}</CFormText>
+                )}
+              </CCol>
+            )}
           </CRow>
 
           {/* QA Section */}
@@ -322,6 +366,7 @@ const ServiceFormModal = ({
           Cancel
         </CButton>
         <CButton
+          type="button"
           color="info"
           className="pink-Btn"
           onClick={isEdit ? onUpdate : onSave}

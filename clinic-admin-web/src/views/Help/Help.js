@@ -1,211 +1,247 @@
 import React, { useMemo, useState } from 'react'
-import {
-  CAccordion,
-  CAccordionItem,
-  CAccordionHeader,
-  CAccordionBody,
-  CFormInput,
-  CButton,
-} from '@coreui/react'
+import { CFormInput, CButton, CFormTextarea } from '@coreui/react'
 import { Mail, Phone } from 'lucide-react'
-import PageLayout from './PageLayout'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
+import { showCustomToast } from '../../Utils/Toaster'
+import { emailPattern, mobilePattern } from '../../Constant/Constants'
+import axios from 'axios'
+import { BASE_URL, CreateClinicEnquiry } from '../../baseUrl'
+import { ToastContainer } from 'react-toastify'
 
 function Help() {
-  const [searchTerm, setSearchTerm] = useState('')
   const { selectedHospital } = useHospital()
+  const [emailError, setEmailError] = useState('')
+  const [mobileError, setMobileError] = useState('')
 
-  const helpTopics = [
-    {
-      title: 'How to Register a New Patient?',
-      content: (
-        <div>
-          <p>
-            To register a new customer in the <b>SureCare Dermatology Platform</b>, follow these
-            simple steps:
-          </p>
-
-          <h6>Go to the Customer Management Section</h6>
-          <p>
-            From the left sidebar, select <b>“Customer Management.”</b> You can view, search, and
-            add new customers here.
-          </p>
-
-          <h6>Click on “Add New Customer”</h6>
-          <p>
-            You’ll be directed to a form where you can enter the customer’s personal and contact
-            details.
-          </p>
-
-          <h6>Fill in Customer Details</h6>
-          <ul>
-            <li>Title – Choose Mr., Mrs., Miss, or Dr.</li>
-            <li>First & Last Name – Enter the customer’s name.</li>
-            <li>
-              Mobile Number – Enter a valid 10-digit mobile number (this becomes their password).
-            </li>
-            <li>Email – Optional, but useful for confirmations.</li>
-            <li>Gender & Date of Birth – Select appropriately.</li>
-            <li>Referred By – Mention if applicable.</li>
-          </ul>
-
-          <h6>Enter Address Information</h6>
-          <ul>
-            <li>House No, Street, Landmark – Provide full address.</li>
-            <li>Postal Code – Auto-fills city, state, and post office.</li>
-            <li>Country – Defaults to India.</li>
-          </ul>
-
-          <h6>Submit the Details</h6>
-          <p>
-            Click <b>Save</b> or <b>Register</b> to complete registration.
-          </p>
-
-          <h6>Login Credentials</h6>
-          <ul>
-            <li>Username: Customer ID</li>
-            <li>Password: Mobile Number</li>
-          </ul>
-        </div>
-      ),
-    },
-    {
-      title: 'How to Book an Appointment?',
-      content: (
-        <p>
-          Go to <b>Appointments → New Booking</b> → Select patient, doctor, and time slot → Click{' '}
-          <b>Confirm</b>.
-        </p>
-      ),
-    },
-    // {
-    //   title: 'How to Generate Bills or Invoices?',
-    //   content: (
-    //     <p>
-    //       Open <b>Billing</b> → Choose the completed appointment → Click <b>Generate Invoice</b> →
-    //       Download as PDF.
-    //     </p>
-    //   ),
-    // },
-
-    {
-      title: 'How to Contact Technical Support?',
-      content: (
-        <p>
-          Click the <b>Contact Support</b> button below or email us at{' '}
-          <a href="mailto:support@yourclinic.com">support@yourclinic.com</a>.
-        </p>
-      ),
-    },
-  ]
+  const [form, setForm] = useState({
+    name: '',
+    mobile: '',
+    email: '',
+    message: '',
+  })
 
   const mainBranch = useMemo(
     () => ({
-      name: selectedHospital?.hospitalName || 'Pragna Advanced Skin Care Clinic',
-      address:
-        selectedHospital?.address ||
-        '4-34, Gayatri Nagar, Jubilee Hills, Hyderabad, Telangana, 500070, India',
+      name: selectedHospital?.hospitalName || 'SureCare Support',
       phone: selectedHospital?.contact || '+91 9876543210',
-      email: selectedHospital?.email || 'info@dermacare.com',
-      timings: selectedHospital?.timings || 'Mon–Sat: 9am – 6pm',
+      email: 'Ngkderma@gmail.com' || 'support@dermacare.com',
     }),
     [selectedHospital],
   )
 
-  // ✅ Filter topics safely
-  const filteredHelpTopics = helpTopics.filter((topic) =>
-    topic.title.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    // Allow only digits for mobile
+    if (name === 'mobile' && !/^\d*$/.test(value)) return
+
+    setForm({ ...form, [name]: value })
+
+    if (name === 'mobile') {
+      if (!value) {
+        setMobileError('Mobile number is required')
+      } else if (!mobilePattern.test(value)) {
+        setMobileError('Enter valid 10-digit mobile number starting with 6-9')
+      } else {
+        setMobileError('')
+      }
+    }
+
+    // existing email validation
+    if (name === 'email') {
+      if (value && !emailPattern.test(value)) {
+        setEmailError('Please enter a valid email address')
+      } else {
+        setEmailError('')
+      }
+    }
+  }
+
+  const createClinicEnquiry = async (payload) => {
+    return axios.post(`${BASE_URL}/${CreateClinicEnquiry}`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
+
+  const handleSubmit = async () => {
+    if (!form.name || !form.mobile || !form.message) {
+      showCustomToast('Please fill required fields', 'error')
+      return
+    }
+
+    if (form.email && !emailPattern.test(form.email)) {
+      showCustomToast('Please enter a valid email address', 'error')
+      return
+    }
+
+    const payload = {
+      clinicId: selectedHospital?.data?.clinicId,
+      clinicName: selectedHospital?.data?.name,
+      clinicAddress: selectedHospital?.data?.address,
+      clinicMobile:
+        selectedHospital?.data?.contactNumber || selectedHospital?.data?.alternateContactNumber,
+      contactName: form.name,
+      contactMobile: form.mobile,
+      contactEmail: form.email,
+      message: form.message,
+    }
+
+    try {
+      const res = await createClinicEnquiry(payload)
+
+      showCustomToast(
+        res.data.message || 'Your request has been submitted. Our support team will contact you.',
+        'success',
+      )
+
+      setForm({ name: '', mobile: '', email: '', message: '' })
+    } catch (error) {
+      console.error(error)
+      showCustomToast('Failed to submit request. Please try again later.', 'error')
+    }
+  }
 
   return (
-    <>
-      {/* <PageLayout branch={mainBranch} /> */}
-      <div className="help-container">
-        {/* 🔍 Search Bar */}
-        <div className="mb-4 text-center ">
-          <CFormInput
-            placeholder="Search for help topics (e.g., Appointment, )..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              margin: '0 auto',
-            }}
-          />
-        </div>
+    <div className="help-container p-4">
+      <ToastContainer />
+      {/* 🔹 Header */}
+      <div className="text-center mb-5">
+        <h4 className="fw-bold mb-2">Help & Support</h4>
+        <p className="text-muted">
+          This section is only for contacting our support team.
+          <br />
+          For clinic operations, please use the respective modules.
+        </p>
+      </div>
 
-        {/* 📘 Accordion Section */}
-        <div
-          className="mx-auto mb-4"
-          style={{
-            transition: 'all 0.2s ease', // Smooth transition
-          }}
-        >
-          <CAccordion alwaysOpen>
-            {filteredHelpTopics.map((topic, index) => (
-              <CAccordionItem itemKey={index + 1} key={index}>
-                <CAccordionHeader>{topic.title}</CAccordionHeader>
-                <CAccordionBody
-                  style={{
-                    color: 'var(--color-black)',
+      {/* 🔹 ROW LAYOUT */}
+      <div className="row align-items-start">
+        {/* ================= LEFT SIDE ================= */}
+        <div className="col-12 col-md-6 mb-4">
+          <h5 className="fw-bold mb-3">Contact Support</h5>
+          <p className="text-muted mb-4">
+            Reach out to our support team for any technical or general queries.
+          </p>
 
-                    fontSize: '0.95rem',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {topic.content}
-                </CAccordionBody>
-              </CAccordionItem>
-            ))}
-
-            {filteredHelpTopics.length === 0 && (
-              <p className="text-center text-muted mt-3">
-                No help topics found. Try a different keyword.
-              </p>
-            )}
-          </CAccordion>
-        </div>
-
-        {/* 📞 Contact Support Section */}
-        <div className="text-center mb-4">
-          <h5 className="fw-bold mb-2">Need More Help?</h5>
-          <p className="text-muted mb-4">Contact our support team for personalized assistance.</p>
-
-          <CButton
-            style={{
-              backgroundColor: 'var(--color-black)',
-              color: 'white',
-              borderRadius: '8px',
-              padding: '8px 16px',
-            }}
-            className="me-3"
-            onClick={() => {
-              const email = mainBranch.email
-              const subject = 'Support Request'
-              const body = 'Hello,\n\nI need assistance with...'
-              const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-                email,
-              )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-              window.open(gmailUrl, '_blank')
-            }}
-          >
-            <Mail size={18} className="me-2" /> Email Support
-          </CButton>
-
-          <a href={`tel:${mainBranch.phone}`} style={{ textDecoration: 'none' }}>
+          <div className="d-flex flex-wrap gap-3">
             <CButton
               style={{
-                backgroundColor: 'var(--color-bgcolor)',
-                color: 'var(--color-black)',
+                backgroundColor: 'var(--color-black)',
+                color: '#fff',
                 borderRadius: '8px',
                 padding: '8px 16px',
               }}
+              onClick={() => {
+                const subject = 'Support Request'
+                const body = 'Hello,\n\nI need assistance with...'
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                  mainBranch.email,
+                )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+                window.open(gmailUrl, '_blank')
+              }}
             >
-              <Phone size={18} className="me-2" /> Call Support
+              <Mail size={18} className="me-2" />
+              Email Support
             </CButton>
-          </a>
+
+            <a href={`tel:${mainBranch.phone}`} style={{ textDecoration: 'none' }}>
+              <CButton
+                style={{
+                  backgroundColor: 'var(--color-bgcolor)',
+                  color: 'var(--color-black)',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                }}
+              >
+                <Phone size={18} className="me-2" />
+                Call Support
+              </CButton>
+            </a>
+          </div>
+
+          {/* Support timing */}
+          <p className="text-muted mt-4  " style={{ fontSize: '13px' }}>
+            Support Hours: Mon–Sat, 9:00 AM – 6:00 PM
+            <br />
+            Response within 24 working hours
+          </p>
+        </div>
+
+        {/* ================= RIGHT SIDE ================= */}
+        <div className="col-12 col-md-6">
+          <div
+            style={{
+              // border: '1px solid #eee',
+              borderRadius: '12px',
+              // padding: '20px',
+              // background: '#fff',
+            }}
+          >
+            <h5 className="fw-bold mb-3">Submit a Support Request</h5>
+
+            <CFormInput
+              className="mb-3"
+              placeholder="Your Name *"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+            />
+
+            <CFormInput
+              className="mb-3"
+              placeholder="Mobile Number *"
+              name="mobile"
+              value={form.mobile}
+              onChange={handleChange}
+              maxLength={10}
+            />
+
+            {mobileError && (
+              <div style={{ color: 'red', fontSize: '12px', marginBottom: '12px' }}>
+                {mobileError}
+              </div>
+            )}
+
+            <CFormInput
+              className="mb-3"
+              placeholder="Email (optional)"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+            />
+
+            {emailError && (
+              <div style={{ color: 'red', fontSize: '12px', marginBottom: '12px' }}>
+                {emailError}
+              </div>
+            )}
+
+            <CFormTextarea
+              rows={3}
+              className="mb-3"
+              placeholder="Describe your issue *"
+              name="message"
+              value={form.message}
+              onChange={handleChange}
+            />
+
+            <CButton
+              onClick={handleSubmit}
+              style={{
+                backgroundColor: 'var(--color-black)',
+                color: '#fff',
+                width: '100%',
+                borderRadius: '8px',
+              }}
+            >
+              Submit Request
+            </CButton>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

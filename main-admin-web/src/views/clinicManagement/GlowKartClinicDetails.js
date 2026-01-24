@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { getClinicTimings } from "./GlowKartgetTimingsAPI";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import capitalizeWords from "../../Utils/capitalizeWords";
+import { NGK_COLORS } from "../../Constant/Themes";
 
 /** ⭐ LABEL MAP FOR PRETTY UI */
 const LABELS = {
@@ -371,7 +372,15 @@ const ClinicDetails = () => {
                         </CButton>
 
                         <CButton
-                            className="back-button"
+                            size="sm"
+                            style={{
+                                background: "#fff",
+                                color: NGK_COLORS.primary,
+                                border: "none",
+                                fontWeight: "600",
+                                borderRadius: "8px",
+                                padding: "6px 14px",
+                            }}
                             onClick={() => navigate(-1)}
                         >
                             Back

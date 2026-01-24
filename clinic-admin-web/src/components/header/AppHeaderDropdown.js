@@ -11,7 +11,7 @@ import {
   CModalTitle,
   CButton,
 } from '@coreui/react'
-import { cilLockLocked, cilAccountLogout, cilSettings } from '@coreui/icons'
+import { cilLockLocked, cilAccountLogout, cilSettings, cilInfo } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
 import DermaCareLogo from '../../assets/images/logoP.png'
@@ -19,6 +19,8 @@ import axios from 'axios'
 import { MainAdmin_URL, updatePassword } from '../../baseUrl'
 import { showCustomToast } from '../../Utils/Toaster'
 import ResetPassword from '../../views/Resetpassword'
+import AboutClinic from '../../views/pages/Clinic/AboutClinic'
+import ConfirmationModal from '../ConfirmationModal'
 
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
@@ -27,12 +29,18 @@ const AppHeaderDropdown = () => {
   const [showResetModal, setShowResetModal] = useState(false)
   const resetRef = useRef(null)
   const [uloading, setULoading] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   // ⭐ Logout
-  const handleLogout = () => {
+  const handleLogoutConfirm = () => {
     localStorage.clear()
     sessionStorage.clear()
     navigate('/login')
+  }
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true)
   }
 
   // ⭐ Update Password
@@ -73,9 +81,9 @@ const AppHeaderDropdown = () => {
 
         <CDropdownMenu placement="bottom-end">
           {/* Settings */}
-          <CDropdownItem>
-            <CIcon icon={cilSettings} className="me-2" />
-            Settings
+          <CDropdownItem onClick={() => setShowSettingsModal(true)}>
+            <CIcon icon={cilInfo} className="me-2" />
+            About
           </CDropdownItem>
 
           {/* 🔥 Change Password */}
@@ -85,7 +93,7 @@ const AppHeaderDropdown = () => {
           </CDropdownItem>
 
           {/* Logout */}
-          <CDropdownItem onClick={handleLogout}>
+          <CDropdownItem onClick={handleLogoutClick}>
             <CIcon icon={cilAccountLogout} className="me-2" />
             Logout
           </CDropdownItem>
@@ -118,6 +126,40 @@ const AppHeaderDropdown = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* ⭐ ABOUT CLINIC MODAL */}
+      <CModal
+        visible={showSettingsModal}
+        size="lg"
+        backdrop="static"
+        onClose={() => setShowSettingsModal(false)}
+        className="custom-modal"
+      >
+        <CModalHeader>
+          <CModalTitle>About Clinic</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <AboutClinic setShowSettingsModal={setShowSettingsModal} />
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowSettingsModal(false)}>
+            Close
+          </CButton>
+        </CModalFooter>
+      </CModal>
+      <ConfirmationModal
+        isVisible={showLogoutModal}
+        title="Confirm Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        confirmColor="danger"
+        cancelColor="secondary"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </>
   )
 }

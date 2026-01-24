@@ -104,8 +104,10 @@ export const postServiceData = async (serviceData) => {
 
     return response
   } catch (error) {
-    console.error('Error response:', error.response)
-    showCustomToast(`${error.response.data.message || error.response.statusText}`, 'error')
+    console.error('API Error:', error.response || error)
+
+    // ✅ VERY IMPORTANT
+    throw error
   }
 }
 
