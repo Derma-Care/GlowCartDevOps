@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import { getClinicTimings } from "./GlowKartgetTimingsAPI";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import capitalizeWords from "../../Utils/capitalizeWords";
-import { NGK_COLORS } from "../../Constant/Themes";
+import { COLORS, NGK_COLORS } from "../../Constant/Themes";
 
 /** ⭐ LABEL MAP FOR PRETTY UI */
 const LABELS = {
@@ -75,13 +75,14 @@ const LABELS = {
 const ActionButtons = ({ edit, loading, onEdit, onSave }) => (
     <div className="button-bottom-container">
         {!edit ? (
-            <CButton color="primary" onClick={onEdit}>
-                ✏ Edit
+            <CButton type="edit"
+                className="actionBtn edit" onClick={onEdit}>
+                Edit
             </CButton>
         ) : (
             <>
                 <CButton color="success" disabled={loading} onClick={onSave}>
-                    {loading ? "Saving..." : "✔ Save"}
+                    {loading ? "Saving..." : " Save"}
                 </CButton>
 
             </>
@@ -340,12 +341,12 @@ const ClinicDetails = () => {
         } else if (!/^[A-Za-z\s.]{2,50}$/.test(editDoctor.doctorName)) {
             errors.doctorName = "Only letters & spaces allowed";
         }
-
         if (!editDoctor.registrationNumber.trim()) {
-            errors.registrationNumber = "Registration number required";
-        } else if (!/^[A-Za-z0-9-]{3,20}$/.test(editDoctor.registrationNumber)) {
-            errors.registrationNumber = "Invalid Reg No";
+            errors.registrationNumber = "Registration number is required";
+        } else if (!/^[A-Za-z0-9 .\/-]{3,30}$/.test(editDoctor.registrationNumber)) {
+            errors.registrationNumber = "Invalid registration number format";
         }
+
 
         if (!editDoctor.specialization.trim()) {
             errors.specialization = "Specialization is required";
@@ -413,6 +414,7 @@ const ClinicDetails = () => {
                                 <CNavLink
                                     active={activeTab === i + 1}
                                     onClick={() => setActiveTab(i + 1)}
+                                    style={{ cursor: 'pointer' }}
                                 >
                                     {t}
                                 </CNavLink>
@@ -730,8 +732,8 @@ const ClinicDetails = () => {
                             {/* ➕ ADD BUTTON - ONLY IN THIS TAB */}
                             <div className="section-card">
                                 <div className="text-end">
-                                    <CButton color="primary" onClick={() => setShowAddDoctorRow(true)}>
-                                        ➕ Add Doctor
+                                    <CButton style={{ backgroundColor: 'var(--color-black)', color: 'white', }} onClick={() => setShowAddDoctorRow(true)}>
+                                        Add Doctor
                                     </CButton>
                                 </div><br />
                                 <CTable striped hover responsive>
@@ -816,29 +818,30 @@ const ClinicDetails = () => {
                                                         <CTableDataCell>{capitalizeWords(doctor.doctorName)}</CTableDataCell>
                                                         <CTableDataCell>{doctor.registrationNumber}</CTableDataCell>
                                                         <CTableDataCell>{capitalizeWords(doctor.specialization)}</CTableDataCell>
-                                                        <CTableDataCell className="d-flex gap-1">
-                                                            <CButton
-                                                                size="sm"
-                                                                color="warning"
-                                                                onClick={() => {
-                                                                    setEditingIndex(i);
-                                                                    setEditDoctor(doctor);
-                                                                }}
-                                                            >
-                                                                ✏ Edit
-                                                            </CButton>
+                                                        <CTableDataCell className="text-center">
+                                                            <div className="d-flex justify-content-center gap-2">
+                                                                <button
+                                                                    className="actionBtn edit"
+                                                                    onClick={() => {
+                                                                        setEditingIndex(i);
+                                                                        setEditDoctor(doctor);
+                                                                    }}
+                                                                >
+                                                                    Edit
+                                                                </button>
 
-                                                            <CButton
-                                                                size="sm"
-                                                                color="danger"
-                                                                onClick={() => {
-                                                                    setDoctorIndexToDelete(i);
-                                                                    setShowDeleteDoctorModal(true);
-                                                                }}
-                                                            >
-                                                                🗑 Delete
-                                                            </CButton>
+                                                                <button
+                                                                    className="actionBtn delete"
+                                                                    onClick={() => {
+                                                                        setDoctorIndexToDelete(i);
+                                                                        setShowDeleteDoctorModal(true);
+                                                                    }}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
                                                         </CTableDataCell>
+
                                                     </>
                                                 )}
                                             </CTableRow>
