@@ -27,7 +27,7 @@ spring:
 
 # =================== Server ===================
 server:
-  port: 8090
+  port: 4555
 
   tomcat:
     max-http-form-post-size: 52428800 # 50MB in bytes
