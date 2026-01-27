@@ -39,6 +39,11 @@ spring:
           uri: lb://customer-service
           predicates:
             - Path=/api/**
+            
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/**
 
         - id: onboarding-service
           uri: lb://onboarding-service

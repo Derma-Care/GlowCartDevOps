@@ -1,0 +1,11 @@
+package com.glowkart.auth.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class SpinWheelDTO {
+
+    @NotBlank
+    private String rewardId;
+}

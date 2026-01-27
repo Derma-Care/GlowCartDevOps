@@ -1,0 +1,71 @@
+# =================== AWS SQS ===================
+aws:
+  access-key: ${AWS_ACCESS_KEY_ID}
+  secret-key: ${AWS_SECRET_ACCESS_KEY}
+  region: ap-south-1
+  sqs:
+    notification-queue-url: ${SQS_NOTIFICATION_QUEUE_URL}
+
+# =================== Spring Boot ===================
+spring:
+  application:
+    name: auth-service
+
+  cloud:
+    config:
+      uri: http://config-server:8888  # Config Server URI
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/auth_db}
+      database: ${SPRING_DATA_MONGODB_DATABASE:auth_db}
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# =================== Server ===================
+server:
+  port: 8090
+
+  tomcat:
+    max-http-form-post-size: 52428800 # 50MB in bytes
+
+  compression:
+    enabled: true
+    min-response-size: 1KB
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+# =================== Feign ===================
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+
+# =================== Eureka ===================
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# =================== Async Executor ===================
+async:
+  core-pool-size: 5
+  max-pool-size: 20
+  queue-capacity: 50
+
+# =================== Twilio ===================
+twilio:
+  accountSid: ${TWILIO_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
+  authToken: ${TWILIO_AUTH_TOKEN:YOUR_TWILIO_AUTH_TOKEN}
+  fromPhone: ${TWILIO_FROM_PHONE:+1234567890}
