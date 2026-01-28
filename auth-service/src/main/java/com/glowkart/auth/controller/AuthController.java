@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/authapi")
 public class AuthController {
 
     private final CustomerClient customerClient;
@@ -33,7 +33,8 @@ public class AuthController {
     }
 
     @PostMapping("/auth/verify-otp")
-    public ResponseEntity<ApiResponse<Customer>> verifyOtp(@RequestBody @Valid OtpVerifyDTO dto) {
+    public ResponseEntity<ApiResponse<CustomerDTO>> verifyOtp(
+            @RequestBody @Valid OtpVerifyDTO dto) {
 
         // 1️⃣ Verify OTP
         if (!otpService.verifyOtp(dto.getMobile(), dto.getOtp())) {
@@ -41,22 +42,28 @@ public class AuthController {
                     .body(new ApiResponse<>(false, "Invalid OTP", null, 400));
         }
 
-        // 2️⃣ Fetch customer via Feign
-        Customer customer = customerClient.getCustomer(dto.getMobile());
+        // 2️⃣ Fetch customer
+        ApiResponse<CustomerDTO> response =
+                customerClient.getCustomer(dto.getMobile());
+
+        CustomerDTO customer = response.getData();
+
         if (customer == null) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse<>(false, "Customer not found", null, 404));
         }
 
-        // 3️⃣ Update device token via Feign
-        customerClient.updateDeviceToken(dto.getMobile(), dto.getDeviceToken());
-        customer.setDeviceToken(dto.getDeviceToken()); // update local object for response
 
-        // 4️⃣ Publish login success event
+        // 3️⃣ Update device token
+        customerClient.updateDeviceToken(dto.getMobile(), dto.getDeviceToken());
+        customer.setDeviceToken(dto.getDeviceToken());
+
+        // 4️⃣ Publish event
         notificationProducer.sendLoginSuccess(customer);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Login successful", customer, 200)
         );
     }
+
 }

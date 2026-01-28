@@ -21,7 +21,7 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # Copy the built JAR from the build stage
-COPY --from=build /app/target/auth-service-0.0.1-SNAPSHOT.jar /app/auth-service.jar
+COPY --from=build /app/target/customer-service-0.0.1-SNAPSHOT.jar /app/auth-service.jar
 
 # Expose the port (matches your Spring Boot application.yml)
 EXPOSE 8090

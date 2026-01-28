@@ -1,6 +1,7 @@
 package com.glowkart.auth.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.glowkart.auth.dto.CustomerDTO;
 import com.glowkart.auth.dto.NotificationEvent;
 import com.glowkart.auth.model.Customer;
 
@@ -27,7 +28,7 @@ public class NotificationProducer {
         this.sqsClient = sqsClient;
     }
 
-    public void sendLoginSuccess(Customer customer) {
+    public void sendLoginSuccess(CustomerDTO customer) {
         try {
         	NotificationEvent event = NotificationEvent.builder()
         	        .eventId(UUID.randomUUID().toString())
