@@ -1,26 +1,33 @@
 package com.glowkart.customer.controller;
 
-import com.glowkart.customer.dto.*;
-import com.glowkart.customer.model.Customer;
-import com.glowkart.customer.service.CustomerService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.CustomerRegisterDTO;
+import com.glowkart.customer.dto.OtpRequestDTO;
+import com.glowkart.customer.dto.OtpVerifyDTO;
+import com.glowkart.customer.feign.CustomerClient;
 import com.glowkart.customer.service.NotificationProducer;
 import com.glowkart.customer.service.OtpService;
+
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
 public class AuthController {
 
-    private final CustomerService customerService;
+    private final CustomerClient customerClient;
     private final OtpService otpService;
     private final NotificationProducer notificationProducer;
 
-    public AuthController(CustomerService customerService,
+    public AuthController(CustomerClient customerClient,
                           OtpService otpService,
                           NotificationProducer notificationProducer) {
-        this.customerService = customerService;
+        this.customerClient = customerClient;
         this.otpService = otpService;
         this.notificationProducer = notificationProducer;
     }
@@ -32,7 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/auth/verify-otp")
-    public ResponseEntity<ApiResponse<Customer>> verifyOtp(
+    public ResponseEntity<ApiResponse<CustomerRegisterDTO>> verifyOtp(
             @RequestBody @Valid OtpVerifyDTO dto) {
 
         // 1️⃣ Verify OTP
@@ -42,13 +49,22 @@ public class AuthController {
         }
 
         // 2️⃣ Fetch customer
-        Customer customer = customerService.getCustomer(dto.getMobile()).getData();
+        ApiResponse<CustomerRegisterDTO> response =
+                customerClient.getCustomer(dto.getMobile());
 
-        // 3️⃣ Save device token
+        CustomerRegisterDTO customer = response.getData();
+
+        if (customer == null) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Customer not found", null, 404));
+        }
+
+
+        // 3️⃣ Update device token
+        customerClient.updateDeviceToken(dto.getMobile(), dto.getDeviceToken());
         customer.setDeviceToken(dto.getDeviceToken());
-        customerService.saveCustomerEntity(customer);  // ✅ Use service layer
 
-        // 4️⃣ Publish login success event
+        // 4️⃣ Publish event
         notificationProducer.sendLoginSuccess(customer);
 
         return ResponseEntity.ok(
@@ -57,3 +73,4 @@ public class AuthController {
     }
 
 }
+

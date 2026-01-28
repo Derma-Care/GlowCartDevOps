@@ -1,6 +1,7 @@
 package com.glowkart.customer.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.glowkart.customer.dto.CustomerRegisterDTO;
 import com.glowkart.customer.dto.NotificationEvent;
 import com.glowkart.customer.model.Customer;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class NotificationProducer {
         this.sqsClient = sqsClient;
     }
 
-    public void sendLoginSuccess(Customer customer) {
+    public void sendLoginSuccess(CustomerRegisterDTO customer) {
         try {
         	NotificationEvent event = NotificationEvent.builder()
         	        .eventId(UUID.randomUUID().toString())

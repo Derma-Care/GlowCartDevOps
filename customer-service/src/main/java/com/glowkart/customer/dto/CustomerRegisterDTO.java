@@ -16,6 +16,8 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomerRegisterDTO {
 
+	private String customerId;
+	
     @NotBlank(message = "fullName is required")
     private String fullName;
 
@@ -47,7 +49,7 @@ public class CustomerRegisterDTO {
     private String skinTone;
     private String photo;
 
-   
+    private String deviceToken;
     private String registrationCode;
     private String referBy;
 
