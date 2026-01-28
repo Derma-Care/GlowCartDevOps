@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.CustomerResponseDTO;
 
-@FeignClient(name = "customer-service")
+@FeignClient(name = "customer-service",url = "http://3.111.202.212:8080")
 public interface CustomerServiceClient {
 
     @GetMapping("/api/customer/all")
