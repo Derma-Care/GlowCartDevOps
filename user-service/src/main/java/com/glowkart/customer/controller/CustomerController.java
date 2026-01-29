@@ -4,26 +4,23 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
-import com.glowkart.customer.dto.CustomerRegisterDTO;
+import com.glowkart.customer.dto.ReferralRegistrationDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.model.Customer;
-import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.service.CustomerService;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
@@ -31,112 +28,82 @@ import jakarta.validation.Valid;
 public class CustomerController {
 
     @Autowired
-    private CustomerService customerService;
+    private CustomerService userService;
     
-    @Autowired
-    private CustomerRepository customerRepository;
-
-
-    // ==================== STEP 1 ====================
     @PostMapping("/customer/step1")
-    public ResponseEntity<ApiResponse<Customer>> step1(@RequestBody @Valid CustomerDetailsDTO dto) {
-        ApiResponse<Customer> response = customerService.saveCustomer(dto);
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST)
-                .body(response);
+    public ApiResponse<Customer> step1(@RequestBody CustomerDetailsDTO dto) {
+        return userService.step1(dto);
     }
 
- // ==================== STEP 2: Spin Wheel ====================
     @PostMapping("/customer/{mobile}/spin")
-    public ResponseEntity<ApiResponse<Customer>> step2(
+    public ApiResponse<Customer> spin(
             @PathVariable String mobile,
-            @RequestBody(required = false) SpinWheelDTO dto) { // optional DTO
-        if (dto == null) dto = new SpinWheelDTO(); // allow empty DTO
-        ApiResponse<Customer> response = customerService.completeSpinByMobile(mobile, dto);
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
-                .body(response);
+            @RequestBody(required = false) SpinWheelDTO dto) {
+        return userService.spin(mobile, dto);
     }
 
-
-
-    // ==================== STEP 3 ====================
     @PostMapping("/customer/{mobile}/complete")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> step3(
+    public ApiResponse<Map<String, Object>> complete(
             @PathVariable String mobile,
-            @RequestBody @Valid CompleteRegistrationDTO dto) {
-
-        ApiResponse<Map<String, Object>> response = customerService.completeRegistrationByMobile(mobile, dto);
-
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
-                .body(response);
+            @RequestBody CompleteRegistrationDTO dto) {
+        return userService.completeRegistration(mobile, dto);
     }
 
-
-    // ==================== GET Wheel Slices ====================
     @GetMapping("/customer/{mobile}/wheel-slices")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getWheelSlices(@PathVariable String mobile) {
-        ApiResponse<Map<String, Object>> response = customerService.getWheelSlices(mobile);
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
-                .body(response);
+    public ApiResponse<Map<String, Object>> wheelSlices(@PathVariable String mobile) {
+        return userService.getWheelSlices(mobile);
     }
 
-
-    // ==================== CRUD ====================
     @GetMapping("/customer/all")
-    public ResponseEntity<ApiResponse<List<Customer>>> getAllCustomers() {
-        return ResponseEntity.ok(customerService.getAllCustomers());
+    public ApiResponse<List<Customer>> allCustomers() {
+        return userService.getAllCustomers();
     }
 
     @GetMapping("/customer/{mobile}")
-    public ResponseEntity<ApiResponse<Customer>> getCustomer(@PathVariable String mobile) {
-        ApiResponse<Customer> response = customerService.getCustomer(mobile);
-        return response.isSuccess() ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-    
-    @GetMapping("/customer/id/{customerId}")
-    public ResponseEntity<ApiResponse<Customer>> getCustomerId(@PathVariable String customerId) {
-        ApiResponse<Customer> response = customerService.getCustomerById(customerId);
-        return response.isSuccess() ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-    
-    // ==================== GET Customer by Registration Code ====================
-    @GetMapping("/customer/code/{registrationCode}")
-    public ResponseEntity<ApiResponse<Customer>> getCustomerByCode(@PathVariable String registrationCode) {
-        ApiResponse<Customer> response = customerService.getCustomerByRegistrationCode(registrationCode);
-        return response.isSuccess() ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    public ApiResponse<Customer> getCustomer(@PathVariable String mobile) {
+        return userService.getCustomer(mobile);
     }
 
-    // New endpoint to get all distinct cities
-    @GetMapping("/customer/cities")
-    public ResponseEntity<ApiResponse<List<String>>> getCities() {
-        List<String> cities = customerService.getDistinctCities();
-        return ResponseEntity.ok(new ApiResponse<>(true, "Cities fetched successfully", cities));
+    @GetMapping("/customer/id/{customerId}")
+    public ApiResponse<Customer> getCustomerById(@PathVariable String customerId) {
+        return userService.getCustomerById(customerId);
     }
-    
+
+    @GetMapping("/customer/code/{code}")
+    public ApiResponse<Customer> getCustomerByCode(@PathVariable String code) {
+        return userService.getCustomerByCode(code);
+    }
+
     @DeleteMapping("/customer/{mobile}")
-    public ResponseEntity<ApiResponse<String>> deleteCustomer(@PathVariable String mobile) {
-        ApiResponse<String> response = customerService.deleteCustomer(mobile);
-        return response.isSuccess() ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    public ApiResponse<String> delete(@PathVariable String mobile) {
+        return userService.deleteCustomer(mobile);
     }
-    
+
+    @GetMapping("/customer/cities")
+    public ApiResponse<List<String>> cities() {
+        return userService.getCities();
+    }
+
     @GetMapping("/customer/referral/{referId}/validate")
     public ApiResponse<String> validateReferral(@PathVariable String referId) {
-        return customerRepository.findByReferId(referId)
-            .map(c -> new ApiResponse<>(true, "Valid referral ID", c.getFullName()))
-            .orElse(new ApiResponse<>(false, "Invalid referral ID", null));
+        return userService.validateReferral(referId);
     }
 
- // ==================== REGISTER & COMPLETE IN ONE GO ====================
-//    @PostMapping("/customer/register-and-complete")
-//    public ResponseEntity<ApiResponse<Map<String, Object>>> registerAndComplete(
-//            @RequestBody @Valid CustomerRegisterDTO dto) {
-//
-//        ApiResponse<Map<String, Object>> response = customerService.registerAndComplete(dto);
-//        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
-//                .body(response);
-//    }
+    @GetMapping("/customer/referral/{referId}/verify")
+    public ApiResponse<Void> verifyReferral(@PathVariable String referId) {
+        return userService.verifyReferral(referId);
+    }
 
+    @PostMapping("/customer/referral/register")
+    public ApiResponse<Map<String, Object>> registerViaReferral(
+            @RequestBody ReferralRegistrationDTO dto) {
+        return userService.registerViaReferral(dto);
+    }
+
+    @PutMapping("/customer/{mobile}/device-token")
+    public ApiResponse<Void> updateDeviceToken(
+            @PathVariable String mobile,
+            @RequestParam String deviceToken) {
+        return userService.updateDeviceToken(mobile, deviceToken);
+    }
 }

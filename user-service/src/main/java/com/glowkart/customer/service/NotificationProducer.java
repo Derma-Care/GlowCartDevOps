@@ -27,7 +27,7 @@ public class NotificationProducer {
         this.sqsClient = sqsClient;
     }
 
-    public void sendLoginSuccess(CustomerRegisterDTO customer) {
+    public void sendLoginSuccess(Customer customer) {
         try {
         	NotificationEvent event = NotificationEvent.builder()
         	        .eventId(UUID.randomUUID().toString())

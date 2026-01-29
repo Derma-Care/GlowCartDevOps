@@ -11,6 +11,7 @@ import com.glowkart.customer.dto.CustomerRegisterDTO;
 import com.glowkart.customer.dto.OtpRequestDTO;
 import com.glowkart.customer.dto.OtpVerifyDTO;
 import com.glowkart.customer.feign.CustomerClient;
+import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.service.NotificationProducer;
 import com.glowkart.customer.service.OtpService;
 
@@ -39,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/auth/verify-otp")
-    public ResponseEntity<ApiResponse<CustomerRegisterDTO>> verifyOtp(
+    public ResponseEntity<ApiResponse<Customer>> verifyOtp(
             @RequestBody @Valid OtpVerifyDTO dto) {
 
         // 1️⃣ Verify OTP
@@ -49,10 +50,10 @@ public class AuthController {
         }
 
         // 2️⃣ Fetch customer
-        ApiResponse<CustomerRegisterDTO> response =
+        ApiResponse<Customer> response =
                 customerClient.getCustomer(dto.getMobile());
 
-        CustomerRegisterDTO customer = response.getData();
+        Customer customer = response.getData();
 
         if (customer == null) {
             return ResponseEntity.badRequest()
