@@ -35,15 +35,10 @@ spring:
           predicates:
             - Path=/clinic-admin/**
 
-        - id: customer-service
-          uri: lb://customer-service
+        - id: user-service
+          uri: lb://user-service
           predicates:
             - Path=/api/**
-            
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/authapi/**
 
         - id: onboarding-service
           uri: lb://onboarding-service
