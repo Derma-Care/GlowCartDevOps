@@ -9,7 +9,7 @@ aws:
 # =================== Spring Boot ===================
 spring:
   application:
-    name: customer-service
+    name: user-service
 
   cloud:
     config:

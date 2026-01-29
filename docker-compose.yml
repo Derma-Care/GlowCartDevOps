@@ -80,9 +80,9 @@ services:
       - app-network
 
   # Customer Service
-  customer-service:
-    build: ./customer-service
-    container_name: customer_service
+  user-service:
+    build: ./user-service
+    container_name: user_service
     ports:
       - "8090:8090"
     environment:

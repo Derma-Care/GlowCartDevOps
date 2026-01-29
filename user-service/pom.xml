@@ -15,7 +15,7 @@
     </parent>
 
     <groupId>com.glowkart</groupId>
-    <artifactId>customer-service</artifactId>
+    <artifactId>user-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>customer-service</name>
     <description>GlowKart Customer Service</description>
