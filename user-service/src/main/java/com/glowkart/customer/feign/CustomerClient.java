@@ -88,20 +88,20 @@ public interface CustomerClient {
     
     
     // Deduct points
-    @PostMapping("/rewards/{customerId}/deduct")
+    @PostMapping("/api/rewards/{customerId}/deduct")
     ApiResponse<Void> deductPoints(
             @PathVariable String customerId,
             @RequestParam int points
     );
 
     // Wallet summary
-    @GetMapping("/rewards/{mobile}/wallet")
+    @GetMapping("/api/rewards/{mobile}/wallet")
     ApiResponse<WalletSummaryDTO> getWalletSummary(
             @PathVariable String mobile
     );
 
     // Transactions
-    @GetMapping("/rewards/{mobile}/transactions")
+    @GetMapping("/api/rewards/{mobile}/transactions")
     ApiResponse<List<RewardTransactionDTO>> getTransactions(
             @PathVariable String mobile,
             @RequestParam(value = "filter", required = false, defaultValue = "all")
