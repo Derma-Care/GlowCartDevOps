@@ -20,43 +20,29 @@ public class RewardController {
     private RewardQueryService rewardQueryService;
 
     @Autowired
-    private RewardService rewardService;
+    private RewardService userRewardService;
 
+    // Deduct reward points
     @PostMapping("/rewards/{customerId}/deduct")
-    public ResponseEntity<ApiResponse<Void>> deductPoints(
+    public ApiResponse<Void> deductPoints(
             @PathVariable String customerId,
             @RequestParam int points) {
-
-        try {
-            rewardService.deductPoints(customerId, points);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Points deducted successfully", null));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
-        }
+        return userRewardService.deductPoints(customerId, points);
     }
 
-    /**
-     * Get wallet summary for a customer
-     * Throws 404 if customer does not exist
-     */
+    // Get wallet summary
     @GetMapping("/rewards/{mobile}/wallet")
-    public ResponseEntity<ApiResponse<WalletSummaryDTO>> getWalletSummary(
+    public ApiResponse<WalletSummaryDTO> getWalletSummary(
             @PathVariable String mobile) {
-
-        WalletSummaryDTO walletSummary = rewardQueryService.getWalletSummary(mobile);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Wallet summary fetched successfully", walletSummary));
+        return userRewardService.getWalletSummary(mobile);
     }
 
-    /**
-     * Get reward transactions with optional filter
-     * Throws 404 if customer does not exist
-     */
+    // Get reward transactions
     @GetMapping("/rewards/{mobile}/transactions")
-    public ResponseEntity<ApiResponse<List<RewardTransactionDTO>>> getTransactions(
+    public ApiResponse<List<RewardTransactionDTO>> getTransactions(
             @PathVariable String mobile,
-            @RequestParam(value = "filter", required = false, defaultValue = "all") String filter) {
-
-        List<RewardTransactionDTO> transactions = rewardQueryService.getTransactions(mobile, filter);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Transactions fetched successfully", transactions));
+            @RequestParam(value = "filter", required = false, defaultValue = "all")
+            String filter) {
+        return userRewardService.getTransactions(mobile, filter);
     }
 }

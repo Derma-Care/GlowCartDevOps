@@ -1,96 +1,33 @@
 package com.glowkart.customer.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.glowkart.customer.enums.RewardReason;
-import com.glowkart.customer.enums.RewardTransactionType;
-import com.glowkart.customer.model.Customer;
-import com.glowkart.customer.model.RewardTransaction;
-import com.glowkart.customer.repo.CustomerRepository;
-import com.glowkart.customer.repo.RewardTransactionRepository;
+import com.glowkart.customer.dto.ApiResponse;
+import com.glowkart.customer.dto.RewardTransactionDTO;
+import com.glowkart.customer.dto.WalletSummaryDTO;
+import com.glowkart.customer.feign.CustomerClient;
 
 @Service
 public class RewardService {
 
-    @Autowired
-    private RewardTransactionRepository rewardRepo;
-
-    @Autowired
-    private CustomerRepository customerRepo;
-    
-    // ==================== Apply Registration Reward ====================
-    @Transactional
-    public void applyRegistrationReward(Customer customer) {
-        // Avoid double-credit
-        if (customer.isRegistrationRewardGiven()) return;
-
-        int points = RewardReason.REGISTRATION_COMPLETED.getDefaultPoints();
-        int updatedBalance = customer.getRewardPoints() + points;
-
-        // Update customer
-        customer.setRewardPoints(updatedBalance);
-        customer.setRegistrationRewardGiven(true);
-
-        // Save transaction
-        RewardTransaction tx = new RewardTransaction();
-        tx.setCustomerId(customer.getCustomerId());
-        tx.setMobile(customer.getMobile());
-        tx.setPoints(points);
-        tx.setType(RewardTransactionType.CREDIT);
-        tx.setReason(RewardReason.REGISTRATION_COMPLETED);
-        tx.setBalanceAfter(updatedBalance);
-
-        rewardRepo.save(tx);
+	   @Autowired
+	    private CustomerClient rewardFeignClient;
+	   
+    public ApiResponse<Void> deductPoints(String customerId, int points) {
+        return rewardFeignClient.deductPoints(customerId, points);
     }
-    
-    @Transactional
-    public void deductPoints(String customerId, int points) {
-        if (points <= 0) throw new IllegalArgumentException("Points to deduct must be positive");
 
-        Customer customer = customerRepo.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-
-        int currentBalance = customer.getRewardPoints();
-        if (points > currentBalance) {
-            throw new IllegalArgumentException("Insufficient reward points");
-        }
-
-        int updatedBalance = currentBalance - points;
-        customer.setRewardPoints(updatedBalance);
-        customerRepo.save(customer);
-
-        RewardTransaction tx = new RewardTransaction();
-        tx.setCustomerId(customer.getCustomerId());
-        tx.setMobile(customer.getMobile());
-        tx.setPoints(points);
-        tx.setType(RewardTransactionType.DEBIT);
-        tx.setReason(RewardReason.REDEEMED_FOR_BOOKING); // You can add a new enum for booking redemption
-        tx.setBalanceAfter(updatedBalance);
-
-        rewardRepo.save(tx);
+    public ApiResponse<WalletSummaryDTO> getWalletSummary(String mobile) {
+        return rewardFeignClient.getWalletSummary(mobile);
     }
-    
-    @Transactional
-    public void applyReferralReward(Customer referrer) {
-        if (referrer == null) return;
 
-        int points = RewardReason.REFERRAL_BONUS.getDefaultPoints();
-        int updatedBalance = referrer.getRewardPoints() + points;
-
-        referrer.setRewardPoints(updatedBalance);
-        customerRepo.save(referrer);
-
-        RewardTransaction tx = new RewardTransaction();
-        tx.setCustomerId(referrer.getCustomerId());
-        tx.setMobile(referrer.getMobile());
-        tx.setPoints(points);
-        tx.setType(RewardTransactionType.CREDIT);
-        tx.setReason(RewardReason.REFERRAL_BONUS);
-        tx.setBalanceAfter(updatedBalance);
-
-        rewardRepo.save(tx);
+    public ApiResponse<List<RewardTransactionDTO>> getTransactions(
+            String mobile,
+            String filter) {
+        return rewardFeignClient.getTransactions(mobile, filter);
     }
 
 }

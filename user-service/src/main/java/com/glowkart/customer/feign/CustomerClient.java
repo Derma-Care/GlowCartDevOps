@@ -16,7 +16,9 @@ import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
 import com.glowkart.customer.dto.ReferralRegistrationDTO;
+import com.glowkart.customer.dto.RewardTransactionDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
+import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.model.Customer;
 
 @FeignClient(name = "customer-service", url = "http://3.111.202.212:8080")
@@ -82,5 +84,27 @@ public interface CustomerClient {
     ApiResponse<Void> updateDeviceToken(
             @PathVariable String mobile,
             @RequestParam String deviceToken
+    );
+    
+    
+    // Deduct points
+    @PostMapping("/rewards/{customerId}/deduct")
+    ApiResponse<Void> deductPoints(
+            @PathVariable String customerId,
+            @RequestParam int points
+    );
+
+    // Wallet summary
+    @GetMapping("/rewards/{mobile}/wallet")
+    ApiResponse<WalletSummaryDTO> getWalletSummary(
+            @PathVariable String mobile
+    );
+
+    // Transactions
+    @GetMapping("/rewards/{mobile}/transactions")
+    ApiResponse<List<RewardTransactionDTO>> getTransactions(
+            @PathVariable String mobile,
+            @RequestParam(value = "filter", required = false, defaultValue = "all")
+            String filter
     );
 }
