@@ -53,7 +53,7 @@ const ServiceManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [serviceIdToDelete, setServiceIdToDelete] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [selectedService, setSelectedService] = useState(null)
   const [viewModalVisible, setViewModalVisible] = useState(false)
 

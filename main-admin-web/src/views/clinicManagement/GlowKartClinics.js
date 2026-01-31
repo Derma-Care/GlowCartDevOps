@@ -55,7 +55,7 @@ const ClinicManagement = ({ service }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [linkInputValue, setLinkInputValue] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const [modalVisible, setModalVisible] = useState(false)
   const [inputValue, setInputValue] = useState("")
@@ -287,8 +287,8 @@ const sendNGKRegistrationLink = async (email) => {
             {loading ? (
               <LoadingIndicator message="Fetching Clinic Details, please wait..." />
             ) : (
-              <div className="table-responsive">
-                <CTable striped hover>
+              <div>
+                <CTable striped hover responsive>
                   <CTableHead className="pink-table">
                     <CTableRow>
                       <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
@@ -302,7 +302,7 @@ const sendNGKRegistrationLink = async (email) => {
                     </CTableRow>
                   </CTableHead>
 
-                  <CTableBody>
+                  <CTableBody className='pink-table'>
                     {currentItems.length > 0 ? (
                       currentItems.map((clinic, index) => (
                         <CTableRow key={clinic?.clinicId || index}>

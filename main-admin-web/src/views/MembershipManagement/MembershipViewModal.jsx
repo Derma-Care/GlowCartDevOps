@@ -23,7 +23,6 @@ export default function MembershipViewModal({ member, onClose }) {
       >
         <CModalTitle style={{ fontWeight: 700, color: 'white' }}>Membership Details</CModalTitle>
       </CModalHeader>
-
       <CModalBody style={{ padding: '25px' }}>
         {/* PROFILE CARD */}
         <div
@@ -36,8 +35,6 @@ export default function MembershipViewModal({ member, onClose }) {
           }}
         >
           <h3 style={{ marginBottom: 5, fontWeight: 700, color: "var(--color-black)" }}>{member.name}</h3>
-
-          <p style={{ margin: 0, color: '#444' }}>{member.email}</p>
           <p style={{ margin: 0, color: '#444' }}>{member.phone}</p>
         </div>
 
@@ -65,40 +62,19 @@ export default function MembershipViewModal({ member, onClose }) {
               {member.membership}
             </div>
           </div>
-
           <div className="info-card">
             <label>Coins</label>
             <p>{member.coins.toLocaleString()}</p>
           </div>
-
           <div className="info-card">
             <label>Referral Code</label>
             <p style={{ fontWeight: 600 }}>{member.referralCode}</p>
           </div>
-
-          <div className="info-card">
-            <label>Status</label>
-            <p
-              style={{
-                fontWeight: 700,
-                color: member.status === 'Active' ? 'green' : 'red',
-              }}
-            >
-              {member.status}
-            </p>
-          </div>
-
           <div className="info-card">
             <label>Joined</label>
             <p>{new Date(member.joined).toLocaleDateString('en-GB')}</p>
           </div>
-
-          <div className="info-card">
-            <label>Expiry</label>
-            <p>{new Date(member.expiry).toLocaleDateString('en-GB')}</p>
-          </div>
         </div>
-
         <hr />
 
         {/* TRANSACTION SECTION */}

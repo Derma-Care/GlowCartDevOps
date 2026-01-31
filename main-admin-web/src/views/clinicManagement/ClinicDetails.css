@@ -14,12 +14,12 @@
 .nav-tabs .nav-link {
   font-weight: 600;
   padding: 10px 20px;
-  color: #4b4b4b;
+  color: #000;
 }
 
 .nav-tabs .nav-link.active {
-  background: #6A0DAD !important;
-  color: white !important;
+  /* background: #7e3a93 !important; */
+  color: #7e3a93 !important;
 }
 
 .section-card {
@@ -40,7 +40,7 @@
 
 .clinic-label {
   font-weight: 600;
-  color: #6A0DAD;
+  color: #7e3a93;
   white-space: nowrap;
 }
 
@@ -72,7 +72,8 @@
 }
 
 .button-bottom-container .btn-primary {
-  background: #4a4af5;
+  background: #a5c4d4ff;
+  color: #7e3a93;
   border: none;
 }
 

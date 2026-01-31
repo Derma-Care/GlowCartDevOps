@@ -19,7 +19,7 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
-  CForm,
+  CForm, CFormSelect, CPagination, CPaginationItem
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch } from '@coreui/icons'
@@ -30,6 +30,7 @@ import LoadingIndicator from '../../Utils/loader'
 import Pagination from '../../Utils/Pagination'
 import { BASE_URL_API } from '../../baseUrl'
 import { Eye } from 'lucide-react'
+import { COLORS } from '../../Constant/Themes'
 
 const PayoutManagement = () => {
   const navigate = useNavigate()
@@ -241,8 +242,8 @@ const PayoutManagement = () => {
             </CCol>
             <CCol md={8} className="text-end">
               <CButton
-                style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-                shape="rounded-pill"
+                color="secondary"
+                style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
               >
                 No. of Payouts: {filteredData.length}
               </CButton>
@@ -302,16 +303,75 @@ const PayoutManagement = () => {
           )}
 
           {filteredData.length > 0 && (
-            <div className="mb-3 mt-3">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(displayData.length / rowsPerPage)}
-                pageSize={rowsPerPage}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setRowsPerPage}
-              />
+            <div className="d-flex justify-content-between align-items-center mt-3">
+
+              {/* Rows per page */}
+              <div>
+                <label className="me-2">Rows per page:</label>
+                <CFormSelect
+                  value={rowsPerPage}
+                  onChange={(e) => {
+                    setRowsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                   style={{ width: '80px', display: 'inline-block' }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </CFormSelect>
+              </div>
+
+              {/* Display info + pagination */}
+              <div>
+                <div>
+                  Showing {(currentPage - 1) * rowsPerPage + 1} to{' '}
+                  {Math.min(currentPage * rowsPerPage, filteredData.length)} of{' '}
+                  {filteredData.length} entries
+                </div>
+
+                <CPagination align="end">
+                  <CPaginationItem
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  >
+                    Previous
+                  </CPaginationItem>
+
+                  {Array.from(
+                    { length: Math.ceil(filteredData.length / rowsPerPage) },
+                    (_, i) => i + 1
+                  )
+                    .filter((page) => {
+                      const totalPages = Math.ceil(filteredData.length / rowsPerPage)
+
+                      if (totalPages <= 5) return true
+                      if (currentPage <= 3) return page <= 5
+                      if (currentPage >= totalPages - 2) return page >= totalPages - 4
+                      return page >= currentPage - 2 && page <= currentPage + 2
+                    })
+                    .map((page) => (
+                      <CPaginationItem
+                        key={page}
+                        active={page === currentPage}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </CPaginationItem>
+                    ))}
+
+                  <CPaginationItem
+                    disabled={currentPage === Math.ceil(filteredData.length / rowsPerPage)}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  >
+                    Next
+                  </CPaginationItem>
+                </CPagination>
+              </div>
             </div>
           )}
+
 
           {/* View Modal */}
           <CModal visible={!!viewData} onClose={() => setViewData(null)} alignment="center">

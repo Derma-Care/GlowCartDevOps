@@ -55,7 +55,7 @@ const ProcedureManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [delloading, setDelLoading] = useState(false)
 
   const PROCEDURE_REGEX = /^[A-Za-z0-9]+([A-Za-z0-9\s\-\&\/\+\(\)\.\,\:\%\']*)$/;

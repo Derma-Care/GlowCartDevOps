@@ -73,11 +73,7 @@ const CustomerManagement = () => {
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-  const handlePerChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
-    }
-  }
+
 
   const centeredMessageStyle = {
     display: 'flex',
@@ -145,72 +141,6 @@ const CustomerManagement = () => {
     navigate(`/customer-management/${mobile}`)
   }
 
-  const handleDeleteCustomer = async (mobile) => {
-    // const confirmed = window.confirm('Are you sure you want to delete this customer?')
-    setCustomerIdToDelete(mobile)
-    setIsModalVisible(true)
-
-    try {
-      await deleteCustomerData(mobile)
-      toast.success('Customer deleted successfully')
-      const updatedData = customerData.filter((customer) => customer?.mobile !== mobile)
-      setCustomerData(updatedData)
-      setFilteredData(updatedData)
-    } catch (error) {
-      console.error('Delete failed:', error)
-      toast.error('Failed to delete customer')
-    }
-  }
-
-  const handleEditCustomer = async (mobile) => {
-    try {
-      setLoading(true)
-      const response = await getCustomerByMobile(mobile)
-      const customer = response.data || response
-
-      console.log('Customer data:', customer)
-
-      let formattedDate = ''
-
-      if (customer.dob) {
-        const dobStr = customer.dob.trim()
-
-        if (/^\d{2}-\d{2}-\d{4}$/.test(dobStr)) {
-          // Format: DD-MM-YYYY — safely parse manually
-          const [day, month, year] = dobStr.split('-')
-          formattedDate = `${year}-${month}-${day}` // convert to input-friendly format
-        } else {
-          // Try parsing YYYY-MM-DD or ISO string
-          const parsedDate = new Date(dobStr)
-          if (!isNaN(parsedDate)) {
-            const year = parsedDate.getFullYear().toString().padStart(4, '0')
-            const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
-            const day = String(parsedDate.getDate()).padStart(2, '0')
-            formattedDate = `${year}-${month}-${day}`
-          }
-        }
-      }
-
-      setFormData({
-        fullName: customer.fullName || '',
-        mobile: customer.mobile || '',
-        gender: customer.gender || '',
-        emailId: customer.emailId || '',
-        dob: formattedDate,
-        referCode: customer.referCode || '',
-      })
-
-      setCurrentMobile(mobile)
-      setIsEditing(true)
-      setIsAdding(true)
-    } catch (error) {
-      console.error('Failed to fetch customer:', error)
-      toast.error('Failed to load customer data')
-    } finally {
-      setLoading(false)
-    }
-  }
-
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -223,15 +153,6 @@ const CustomerManagement = () => {
         : [...prev, mobile]
     )
   }
-
-  const handleSelectAll = () => {
-    if (selectedMobiles.length === currentItems.length) {
-      setSelectedMobiles([])
-    } else {
-      setSelectedMobiles(currentItems.map((c) => c.mobile))
-    }
-  }
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -536,7 +457,7 @@ const CustomerManagement = () => {
 
           {loading ? (
             <CTable striped hover responsive>
-              <CTableHead>
+              <CTableHead className="pink-table">
                 <CTableRow >
                   <CTableHeaderCell colSpan={6} className="text-center">
                     <LoadingIndicator message="Loading customer data..." />

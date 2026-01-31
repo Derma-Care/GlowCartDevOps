@@ -28,15 +28,11 @@ import {
 import Select from 'react-select'
 import ConfirmationModal from '../../components/ConfirmationModal'
 import { Edit2, Eye, Trash2 } from 'lucide-react'
-import { useHospital } from '../Usecontext/HospitalContext'
 import { CustomerData } from '../customerManagement/CustomerAPI'
-import { http } from '../../Utils/Interceptors'
-import { BASE_URL } from '../../baseUrl'
-import Pagination from '../../Utils/Pagination'
 import { showCustomToast } from '../../Utils/Toaster'
 import { ToastContainer } from 'react-toastify'
 import '../Style/CustomModal.css'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 
 const FCMNotification = () => {
@@ -44,7 +40,6 @@ const FCMNotification = () => {
   const [body, setBody] = useState('')
   const [image, setImage] = useState(null)
   const [sendAll, setSendAll] = useState(false)
-  const [responseLog, setResponseLog] = useState(null)
   const [responseMessage, setResponseMessage] = useState(null)
   const [sentNotifications, setSentNotifications] = useState([])
   const [customerOptions, setCustomerOptions] = useState([])
@@ -56,7 +51,8 @@ const FCMNotification = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editId, setEditId] = useState(null)
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const location = useLocation();
   const clinicId = location.state?.clinicId;   // ⬅️ get clinicId from state
 
@@ -64,27 +60,21 @@ const FCMNotification = () => {
   const can = (feature, action) => user?.permissions?.[feature]?.includes(action)
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+
 
   const filteredData = sentNotifications
-
-  // Always keep totalPages at least 1
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage))
-
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const paginatedNotifications = filteredData.slice(indexOfFirstItem, indexOfLastItem)
 
-  const paginatedNotifications =
-    filteredData.length > 0
-      ? filteredData.slice(indexOfFirstItem, indexOfLastItem)
-      : []
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
+      setCurrentPage(page);
     }
-  }
+  };
+
 
 
   // 🖼 Handle image
@@ -364,6 +354,7 @@ const FCMNotification = () => {
         <CCardHeader className="bg-light">
           <h6 className="mb-0">📋 Sent Notifications Log</h6>
         </CCardHeader>
+
         <CCardBody>
           {responseMessage && (
             <CAlert color={responseMessage.error ? 'danger' : 'success'}>
@@ -372,7 +363,7 @@ const FCMNotification = () => {
           )}
 
           <CTable striped hover responsive>
-            <CTableHead className='pink-table'>
+            <CTableHead className="pink-table">
               <CTableRow>
                 <CTableHeaderCell className="text-center">#</CTableHeaderCell>
                 <CTableHeaderCell className="text-center">Title</CTableHeaderCell>
@@ -382,6 +373,7 @@ const FCMNotification = () => {
                 <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
+
             <CTableBody className="pink-table">
               {paginatedNotifications.length > 0 ? (
                 paginatedNotifications.map((n, idx) => (
@@ -391,17 +383,18 @@ const FCMNotification = () => {
                     </CTableDataCell>
                     <CTableDataCell className="text-center">{n.title}</CTableDataCell>
                     <CTableDataCell className="text-center">{n.body}</CTableDataCell>
-                    <CTableDataCell className="text-center">{new Date().toLocaleString()}</CTableDataCell>
+                    <CTableDataCell className="text-center">
+                      {new Date(n.createdAt || Date.now()).toLocaleString()}
+                    </CTableDataCell>
                     <CTableDataCell className="text-center">
                       {n.image ? (
                         <img src={n.image} alt="notif" style={{ width: 50, borderRadius: 5 }} />
                       ) : (
                         '-'
                       )}
-                    </CTableDataCell >
+                    </CTableDataCell>
                     <CTableDataCell className="text-center">
                       <div className="d-flex justify-content-end gap-2">
-
                         <button className="actionBtn view" onClick={() => handleView(n)}>
                           <Eye size={18} />
                         </button>
@@ -411,13 +404,12 @@ const FCMNotification = () => {
                         <button
                           className="actionBtn delete"
                           onClick={() => {
-                            setSelectedItem(n.id)
-                            setDeleteConfirm(true)
+                            setSelectedItem(n.id);
+                            setDeleteConfirm(true);
                           }}
                         >
                           <Trash2 size={18} />
                         </button>
-
                       </div>
                     </CTableDataCell>
                   </CTableRow>
@@ -430,73 +422,96 @@ const FCMNotification = () => {
                 </CTableRow>
               )}
             </CTableBody>
-
           </CTable>
 
-          {/* Pagination */}
-          <div className="d-flex justify-content-between px-3 pb-3 mt-3">
+          {filteredData.length > 0 && (
+            <div className="d-flex justify-content-between px-3 pb-3 mt-3">
 
-            {/* Rows per page */}
-            <div>
-              <label className="me-2">Rows per page:</label>
-              <CFormSelect
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value))
-                  setCurrentPage(1)
-                }}
-                style={{ width: '80px', display: 'inline-block' }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </CFormSelect>
-            </div>
-
-            {/* Info + Pagination */}
-            <div className="text-end">
-              <div className="mb-1 text-muted">
-                {filteredData.length === 0
-                  ? 'Showing 0 to 0 of 0 entries'
-                  : `Showing ${indexOfFirstItem + 1} to ${Math.min(
-                    indexOfLastItem,
-                    filteredData.length
-                  )} of ${filteredData.length} entries`}
+              {/* Rows per Page */}
+              <div>
+                <label className="me-2">Rows per page:</label>
+                <CFormSelect
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  style={{ width: '80px' }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </CFormSelect>
               </div>
 
-              <CPagination align="end">
-                <CPaginationItem
-                  disabled={filteredData.length === 0 || currentPage === 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  Previous
-                </CPaginationItem>
+              {/* Pagination */}
+              <div className="text-end">
+                <div className="mb-1 text-muted">
+                  Showing {indexOfFirstItem + 1} to{' '}
+                  {Math.min(indexOfLastItem, filteredData.length)} of{' '}
+                  {filteredData.length} entries
+                </div>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <CPagination align="end">
                   <CPaginationItem
-                    key={page}
-                    active={page === currentPage}
-                    disabled={filteredData.length === 0}
-                    onClick={() => handlePageChange(page)}
+                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
                   >
-                    {page}
+                    Previous
                   </CPaginationItem>
-                ))}
 
-                <CPaginationItem
-                  disabled={
-                    filteredData.length === 0 || currentPage === totalPages
-                  }
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  Next
-                </CPaginationItem>
-              </CPagination>
+                  {/* Smart page logic */}
+                  {(() => {
+                    const pages = [];
+                    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+                    for (let page = 1; page <= totalPages; page++) {
+                      if (
+                        totalPages <= 7 ||
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(currentPage - page) <= 2
+                      ) {
+                        pages.push(page);
+                      } else if (
+                        page === currentPage - 3 ||
+                        page === currentPage + 3
+                      ) {
+                        pages.push('...');
+                      }
+                    }
+
+                    return pages.map((page, i) =>
+                      page === '...' ? (
+                        <CPaginationItem key={`ellipsis-${i}`} disabled>
+                          ...
+                        </CPaginationItem>
+                      ) : (
+                        <CPaginationItem
+                          key={page}
+                          active={page === currentPage}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </CPaginationItem>
+                      )
+                    );
+                  })()}
+
+                  <CPaginationItem
+                    disabled={currentPage === Math.ceil(filteredData.length / itemsPerPage)}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                  >
+                    Next
+                  </CPaginationItem>
+                </CPagination>
+              </div>
             </div>
-          </div>
+          )}
         </CCardBody>
       </CCard>
+
 
       {/* View Modal */}
       <CModal visible={viewMode} size="lg" onClose={() => setViewMode(false)}>
