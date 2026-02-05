@@ -93,6 +93,14 @@ public interface CustomerClient {
             @PathVariable String customerId,
             @RequestParam int points
     );
+    
+ // Credit points
+    @PostMapping("/api/rewards/{customerId}/credit")
+    ApiResponse<Void> creditPoints(
+            @PathVariable String customerId,
+            @RequestParam int points
+    );
+
 
     // Wallet summary
     @GetMapping("/api/rewards/{mobile}/wallet")

@@ -19,6 +19,11 @@ public class RewardService {
     public ApiResponse<Void> deductPoints(String customerId, int points) {
         return rewardFeignClient.deductPoints(customerId, points);
     }
+    
+    // New method for crediting points
+    public ApiResponse<Void> creditPoints(String customerId, int points) {
+        return rewardFeignClient.creditPoints(customerId, points);
+    }
 
     public ApiResponse<WalletSummaryDTO> getWalletSummary(String mobile) {
         return rewardFeignClient.getWalletSummary(mobile);

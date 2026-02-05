@@ -29,6 +29,14 @@ public class RewardController {
             @RequestParam int points) {
         return userRewardService.deductPoints(customerId, points);
     }
+    
+    // Credit reward points for a completed booking
+    @PostMapping("/rewards/{customerId}/credit")
+    public ApiResponse<Void> creditPoints(
+            @PathVariable String customerId,
+            @RequestParam int points) {
+        return userRewardService.creditPoints(customerId, points);
+    }
 
     // Get wallet summary
     @GetMapping("/rewards/{mobile}/wallet")

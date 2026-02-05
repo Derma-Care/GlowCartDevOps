@@ -1,3 +1,4 @@
+
 package com.glowkart.booking.service;
 
 import java.time.Instant;
@@ -14,8 +15,26 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.glowkart.booking.client.ClinicServiceClient;
 import com.glowkart.booking.client.CustomerInfoClient;
+import com.glowkart.booking.client.CustomerRewardsClient;
 import com.glowkart.booking.client.ProcedureServiceClient;
-import com.glowkart.booking.dto.*;
+import com.glowkart.booking.dto.ApiResponse;
+import com.glowkart.booking.dto.BookingPriceRequestDTO;
+import com.glowkart.booking.dto.BookingPriceResponseDTO;
+import com.glowkart.booking.dto.BookingProcedureDTO;
+import com.glowkart.booking.dto.BookingRequestDTO;
+import com.glowkart.booking.dto.BookingResponseDTO;
+import com.glowkart.booking.dto.CancelBookingDTO;
+import com.glowkart.booking.dto.ClinicDTO;
+import com.glowkart.booking.dto.ClinicRatingsResponseDTO;
+import com.glowkart.booking.dto.CustomerDTO;
+import com.glowkart.booking.dto.PricingDetails;
+import com.glowkart.booking.dto.ProcedurePackageDTO;
+import com.glowkart.booking.dto.ProcedurePricingDTO;
+import com.glowkart.booking.dto.RatingDTO;
+import com.glowkart.booking.dto.RatingResponseDTO;
+import com.glowkart.booking.dto.RescheduleBookingDTO;
+import com.glowkart.booking.dto.UpdateBookingStatusDTO;
+import com.glowkart.booking.dto.WalletSummaryDTO;
 import com.glowkart.booking.model.Booking;
 import com.glowkart.booking.model.BookingRating;
 import com.glowkart.booking.repository.BookingRatingRepository;
@@ -31,6 +50,7 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingRatingRepository bookingRatingRepository;
+    private final CustomerRewardsClient customerRewardsClient;
 
     private final CustomerInfoClient customerInfoClient;
     private final ProcedureServiceClient procedureClient;
@@ -39,16 +59,46 @@ public class BookingServiceImpl implements BookingService {
     private final WalletService walletService;
 
     // ================= PRICE CALCULATION =================
+//    @Override
+//    public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
+//        double originalAmount = fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
+//        CustomerDTO customer = fetchCustomer(request.getCustomerId());
+//
+//        int availablePoints = walletService.getWalletSummary(customer.getMobile()).getBalance();
+//        int maxRedeemablePoints = availablePoints / 2;
+//        int appliedPoints = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
+//
+//        double finalAmount = Math.max(originalAmount - appliedPoints, 0);
+//
+//        return BookingPriceResponseDTO.builder()
+//                .originalFinalAmount(originalAmount)
+//                .availablePoints(availablePoints)
+//                .maxRedeemablePoints(maxRedeemablePoints)
+//                .appliedPoints(appliedPoints)
+//                .finalAmount(finalAmount)
+//                .build();
+//    }
+
+ // ================= PRICE CALCULATION =================
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
+        // Fetch service cost and customer info
         double originalAmount = fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
 
-        int availablePoints = walletService.getWalletSummary(customer.getMobile()).getBalance();
-        int maxRedeemablePoints = availablePoints / 2;
+        // Fetch wallet summary once
+        WalletSummaryDTO wallet = walletService.getWalletSummary(customer.getMobile());
+        int availablePoints = wallet.getBalance();
+        int coinValue = wallet.getCoinValue(); // Guaranteed >= 1
+
+        // Calculate max redeemable points using the helper method
+        int maxRedeemablePoints = calculateRedeemablePoints(originalAmount, availablePoints, coinValue);
+
+        // Points to apply = min(requested, available, maxRedeemable)
         int appliedPoints = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
 
-        double finalAmount = Math.max(originalAmount - appliedPoints, 0);
+        // Final amount after applying points
+        double finalAmount = Math.max(originalAmount - (appliedPoints * coinValue), 0);
 
         return BookingPriceResponseDTO.builder()
                 .originalFinalAmount(originalAmount)
@@ -59,9 +109,28 @@ public class BookingServiceImpl implements BookingService {
                 .build();
     }
 
-    // ================= CREATE BOOKING =================
+
+
+ // ================= CREATE BOOKING =================
     @Override
     public BookingResponseDTO createBooking(BookingRequestDTO request) {
+    	
+        // Validate input
+        if (request.getCustomerId() == null || request.getCustomerId().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer ID cannot be null or empty");
+        }
+        if (request.getClinicId() == null || request.getClinicId().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Clinic ID cannot be null or empty");
+        }
+        if (request.getServiceId() == null || request.getServiceId().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Service ID cannot be null or empty");
+        }
+        if (request.getAppointmentDate() == null || !request.getAppointmentDate().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid appointment date format");
+        }
+        if (request.getPointsToRedeem() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Points to redeem cannot be negative");
+        }
         validateAppointmentDate(request.getAppointmentDate());
 
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
@@ -69,37 +138,32 @@ public class BookingServiceImpl implements BookingService {
         PricingDetails pricing = fetchPricingDetails(request.getServiceType(), request.getServiceId());
         List<BookingProcedureDTO> procedures = fetchBookingProcedures(request.getServiceType(), request.getServiceId());
 
-        // ======= Dynamic partial payment calculation =======
+        // ======= Partial payment calculation =======
         double partialPaymentPercentage = pricing.getPartialPaymentPercentage() > 0 
                 ? pricing.getPartialPaymentPercentage() 
                 : 100;
 
-        double partialAmount = Math.round(pricing.getFinalAmount() * partialPaymentPercentage / 100.0 * 100.0) / 100.0;
-        double dueAmount = Math.round((pricing.getFinalAmount() - partialAmount) * 100.0) / 100.0;
+        double partialAmount = round(pricing.getFinalAmount() * partialPaymentPercentage / 100.0);
+        double dueAmount = round(pricing.getFinalAmount() - partialAmount);
 
         Booking booking = Booking.builder()
                 .bookingId(UUID.randomUUID().toString())
-                // Customer
                 .customerId(customer.getCustomerId())
                 .mobileNumber(customer.getMobile())
                 .fullName(customer.getFullName())
                 .city(customer.getCity())
                 .dob(customer.getDob())
                 .gender(customer.getGender())
-                // Clinic
                 .clinicId(clinic.getClinicId())
                 .clinicName(clinic.getName())
                 .clinicAddress(clinic.getAddress())
-                // Service
                 .serviceId(request.getServiceId())
                 .serviceName(pricing.getServiceName())
                 .serviceType(request.getServiceType())
                 .procedures(procedures)
-                // Appointment
                 .appointmentDate(request.getAppointmentDate())
                 .paymentMode(request.getPaymentMode())
                 .paymentType(request.getPaymentType())
-                // Pricing
                 .price(pricing.getPrice())
                 .discount(pricing.getDiscountPercentage())
                 .discountAmount(pricing.getDiscountAmount())
@@ -113,15 +177,12 @@ public class BookingServiceImpl implements BookingService {
                 .gst(pricing.getGst())
                 .gstAmount(pricing.getGstAmount())
                 .consultationFee(pricing.getConsultationFee())
-                // Platform fee
                 .platformFeePercentage(pricing.getPlatformFeePercentage())
                 .platformFee(pricing.getPlatformFee())
-                // Payment breakup
                 .finalAmount(pricing.getFinalAmount())
                 .partialPaymentPercentage(partialPaymentPercentage)
                 .partialAmount(partialAmount)
                 .dueAmount(dueAmount)
-                // Meta
                 .redeemedPoints(0)
                 .status("HOLD")
                 .paymentStatus("PENDING")
@@ -130,32 +191,44 @@ public class BookingServiceImpl implements BookingService {
                 .updatedAt(Instant.now().toString())
                 .build();
 
-        // ================= WALLET =================
-        int pointsToRedeem = validateWalletPoints(booking, request.getPointsToRedeem());
+        // ================= WALLET / POINTS =================
+        // Fetch wallet once
+        WalletSummaryDTO wallet = walletService.getWalletSummary(customer.getMobile());
+
+        // Points to redeem (pass wallet to avoid refetch)
+        int pointsToRedeem = validateWalletPoints(booking, request.getPointsToRedeem(), wallet);
 
         if (pointsToRedeem > 0) {
             booking.setRedeemedPoints(pointsToRedeem);
 
-            // Subtract points only from service amount, not platform fee
+            // Deduct points from service amount only (exclude platform fee)
             double serviceAmount = booking.getFinalAmount() - booking.getPlatformFee();
-            serviceAmount = Math.max(serviceAmount - pointsToRedeem, 0);
+            serviceAmount = Math.max(serviceAmount - (pointsToRedeem * wallet.getCoinValue()), 0);
 
-            // Recalculate final amount
+            // Update final, partial, and due amounts
             booking.setFinalAmount(serviceAmount + booking.getPlatformFee());
-
-            // Update partial & due amounts accordingly
-            partialAmount = Math.round(serviceAmount * partialPaymentPercentage / 100.0 * 100.0) / 100.0;
-            dueAmount = Math.round((serviceAmount - partialAmount) * 100.0) / 100.0;
-
-            booking.setPartialAmount(partialAmount);
-            booking.setDueAmount(dueAmount);
+            booking.setPartialAmount(round(serviceAmount * booking.getPartialPaymentPercentage() / 100.0));
+            booking.setDueAmount(round(serviceAmount - booking.getPartialAmount()));
         }
 
-        // ================= PAYMENT =================
+        // Process payment
         boolean paymentSuccess = processPayment(booking);
+
+        // Deduct points from wallet only if payment successful
         if (paymentSuccess && pointsToRedeem > 0) {
-            walletService.redeemPoints(customer.getCustomerId(), pointsToRedeem);
+            double bookingAmount = booking.getFinalAmount();  // Assuming finalAmount is the amount you want to apply points on
+            String membership = wallet.getMembership();  // Assuming `wallet.getMembership()` returns the correct membership level for the customer
+            
+            walletService.redeemPoints(
+                    customer.getCustomerId(),
+                    customer.getMobile(),   // ✅ pass mobile explicitly
+                    pointsToRedeem,
+                    bookingAmount,
+                    wallet.getMembership()
+            );
+        
         }
+
 
         booking.setUpdatedAt(Instant.now().toString());
         bookingRepository.save(booking);
@@ -163,17 +236,45 @@ public class BookingServiceImpl implements BookingService {
         return mapToDTO(booking);
     }
 
-    // ================= WALLET VALIDATION =================
-    private int validateWalletPoints(Booking booking, int requestedPoints) {
+  
+
+    // ================= HELPER: ROUNDING =================
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+
+    private int calculateRedeemablePoints(double originalAmount, int availablePoints, int coinValue) {
+        // Maximum discount allowed = 50% of service amount
+        double maxDiscountAllowed = originalAmount * 0.5;
+        int maxRedeemablePoints = (int) Math.floor(maxDiscountAllowed / coinValue);
+
+        // Return the minimum of available points and max redeemable points
+        return Math.min(availablePoints, maxRedeemablePoints);
+    }
+
+    private int validateWalletPoints(Booking booking, int requestedPoints, WalletSummaryDTO wallet) {
         if (requestedPoints <= 0) return 0;
-        int availablePoints = walletService.getWalletSummary(booking.getMobileNumber()).getBalance();
-        int maxRedeemablePoints = availablePoints / 2;
-        if (requestedPoints > maxRedeemablePoints) {
+
+        int availablePoints = wallet.getBalance();
+        int coinValue = wallet.getCoinValue();
+
+        // Use the calculateRedeemablePoints method to calculate max redeemable points
+        int maxRedeemablePoints = calculateRedeemablePoints(booking.getFinalAmount(), availablePoints, coinValue);
+
+        // Determine final allowed points
+        int allowedPoints = Math.min(requestedPoints, Math.min(availablePoints, maxRedeemablePoints));
+
+        if (requestedPoints > allowedPoints) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Requested points exceed maximum redeemable points");
         }
-        return requestedPoints;
+
+        return allowedPoints;
     }
+
+
+
 
     // ================= PAYMENT =================
     private boolean processPayment(Booking booking) {
@@ -388,6 +489,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     // ================= UPDATE BOOKING STATUS =================
+ // ================= UPDATE BOOKING STATUS =================
     @Override
     public BookingResponseDTO updateBookingStatus(UpdateBookingStatusDTO request) {
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
@@ -403,8 +505,18 @@ public class BookingServiceImpl implements BookingService {
         booking.setUpdatedAt(Instant.now().toString());
         bookingRepository.save(booking);
 
+        // 🔥 CREDIT REWARD COINS IF COMPLETED
+        if ("COMPLETED".equalsIgnoreCase(newStatus)) {
+            int coinsEarned = (int) (booking.getFinalAmount() / 100);
+            customerRewardsClient.creditBookingReward(
+                    booking.getCustomerId(),
+                    coinsEarned
+            );
+        }
+
         return mapToDTO(booking);
     }
+
 
     // ================= RATE BOOKING =================
     @Override
@@ -510,3 +622,4 @@ public class BookingServiceImpl implements BookingService {
 
 
 }
+

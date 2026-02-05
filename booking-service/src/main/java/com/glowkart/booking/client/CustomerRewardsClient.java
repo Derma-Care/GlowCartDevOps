@@ -23,4 +23,13 @@ public interface CustomerRewardsClient {
     @PostMapping("/api/rewards/{customerId}/deduct")
     ApiResponse<Void> deductPoints(@PathVariable("customerId") String customerId,
                                          @RequestParam("points") int points);
+    
+    // Credit booking reward coins (same pattern)
+    @PostMapping("/api/rewards/{customerId}/credit")
+    ApiResponse<Void> creditBookingReward(
+            @PathVariable("customerId") String customerId,
+            @RequestParam("points") int points  // can also call it 'coins'
+    );
 }
+
+
