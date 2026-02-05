@@ -9,6 +9,8 @@ import com.glowkart.booking.exception.WalletServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Service
@@ -43,9 +45,11 @@ public class WalletService {
         // ✅ Membership must be based on computed balance
         wallet.setMembership(determineMembership(wallet.getTotalCredits()));
 
+        // Set the membership levels (thresholds for each level) with correct order
+        wallet.setLevels(getSortedMembershipLevels());  // Using a LinkedHashMap to keep order
+
         return wallet;
     }
-
 
     /**
      * Determines membership level based on the number of points.
@@ -151,7 +155,6 @@ public class WalletService {
         log.info("Successfully redeemed {} points for customerId={}", points, customerId);
     }
 
-
     /**
      * Calculate maximum redeemable coins based on booking amount and membership level.
      * Only 50% of the booking amount can be redeemed using coins.
@@ -173,16 +176,15 @@ public class WalletService {
     }
 
     /**
-     * Reward the referrer with coins when a new user makes a successful booking.
+     * Returns the membership levels as a LinkedHashMap to ensure the correct order:
+     * PLATINUM > GOLD > SILVER > BASIC
      */
-//    public void rewardReferral(String referrerId, String newCustomerId) {
-//        // Add 100 coins to the referrer's wallet after the new user makes their first booking
-//        ApiResponse<Void> response = customerRewardsClient.addCoins(referrerId, 100);
-//        
-//        if (!response.isSuccess()) {
-//            throw new WalletServiceException("Failed to reward referrer", response.getStatusCode());
-//        }
-//
-//        log.info("Referral reward of 100 coins awarded to customer: {}", referrerId);
-//    }
+    private Map<String, Integer> getSortedMembershipLevels() {
+        Map<String, Integer> levels = new LinkedHashMap<>();
+        levels.put("PLATINUM", 7500);
+        levels.put("GOLD", 5000);
+        levels.put("SILVER", 2500);
+        levels.put("BASIC", 2499);
+        return levels;
+    }
 }
