@@ -1,6 +1,7 @@
 package com.glowkart.customer.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -102,6 +103,9 @@ public class Customer {
     @Transient // Not stored in DB
     private WalletSummaryDTO walletSummary;
     
+    private List<String> referredCustomerIds = new ArrayList<>();
+
+
     
     public String getAadharNumber() {
         if (aadharLast4 == null) return null;

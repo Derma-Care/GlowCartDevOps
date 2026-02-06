@@ -2,6 +2,7 @@ package com.glowkart.admin.dto;
 
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -49,6 +50,8 @@ public class CustomerResponseDTO {
 
     // Final registration
     private String address;
+
+    private List<String> referredCustomerIds = new ArrayList<>();
 
     // Status flags
     private boolean registrationCodeVerified;
