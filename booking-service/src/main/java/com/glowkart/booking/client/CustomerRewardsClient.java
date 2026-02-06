@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "customer-service", contextId = "customerRewardsClient")
+@FeignClient(name = "customer-service", contextId = "customerRewardsClient", url = "http://3.111.202.212:8080")
 public interface CustomerRewardsClient {
 
     @GetMapping("/api/rewards/{mobile}/wallet")
