@@ -85,8 +85,8 @@ public class WalletController {
                 customerId,
                 customer.getMobile(),
                 points,
-                bookingAmount,
-                membership
+                bookingAmount
+//                membership
         );
 
         return ApiResponse.<Void>builder()

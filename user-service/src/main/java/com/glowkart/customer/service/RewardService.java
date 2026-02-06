@@ -21,10 +21,11 @@ public class RewardService {
     }
     
     // New method for crediting points
-    public ApiResponse<Void> creditPoints(String customerId, int points) {
-        return rewardFeignClient.creditPoints(customerId, points);
-    }
-
+   
+    public ApiResponse<Void> creditPoints(String customerId, String bookingId, double bookingAmount) {
+		// TODO Auto-generated method stub
+		return rewardFeignClient.creditBookingReward(customerId, bookingId, bookingAmount);
+	}
     public ApiResponse<WalletSummaryDTO> getWalletSummary(String mobile) {
         return rewardFeignClient.getWalletSummary(mobile);
     }
@@ -34,5 +35,7 @@ public class RewardService {
             String filter) {
         return rewardFeignClient.getTransactions(mobile, filter);
     }
+
+	
 
 }

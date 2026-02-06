@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "customer-service", contextId = "customerRewardsClient", url = "http://3.111.202.212:8080" )
+@FeignClient(name = "customer-service", contextId = "customerRewardsClient")
 public interface CustomerRewardsClient {
 
     @GetMapping("/api/rewards/{mobile}/wallet")
@@ -27,9 +27,9 @@ public interface CustomerRewardsClient {
     // Credit booking reward coins (same pattern)
     @PostMapping("/api/rewards/{customerId}/credit")
     ApiResponse<Void> creditBookingReward(
-            @PathVariable("customerId") String customerId,
-            @RequestParam("points") int points  // can also call it 'coins'
+            @PathVariable String customerId,
+            @RequestParam String bookingId,
+            @RequestParam double bookingAmount
     );
+
 }
-
-

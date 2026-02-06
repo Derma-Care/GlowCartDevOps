@@ -95,12 +95,13 @@ public interface CustomerClient {
     );
     
  // Credit points
+    // Credit booking reward coins (same pattern)
     @PostMapping("/api/rewards/{customerId}/credit")
-    ApiResponse<Void> creditPoints(
+    ApiResponse<Void> creditBookingReward(
             @PathVariable String customerId,
-            @RequestParam int points
+            @RequestParam String bookingId,
+            @RequestParam double bookingAmount
     );
-
 
     // Wallet summary
     @GetMapping("/api/rewards/{mobile}/wallet")

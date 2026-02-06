@@ -30,13 +30,19 @@ public class RewardController {
         return userRewardService.deductPoints(customerId, points);
     }
     
-    // Credit reward points for a completed booking
+    /**
+     * Credit reward points for a completed booking
+     */
     @PostMapping("/rewards/{customerId}/credit")
-    public ApiResponse<Void> creditPoints(
+    public ApiResponse<Void> creditBookingReward(
             @PathVariable String customerId,
-            @RequestParam int points) {
-        return userRewardService.creditPoints(customerId, points);
+            @RequestParam String bookingId,
+            @RequestParam double bookingAmount) {
+
+        // Calculate points in customer-service and forward the points to reward-service
+        return userRewardService.creditPoints(customerId, bookingId, bookingAmount);
     }
+
 
     // Get wallet summary
     @GetMapping("/rewards/{mobile}/wallet")

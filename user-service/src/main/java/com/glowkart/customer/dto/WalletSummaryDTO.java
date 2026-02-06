@@ -14,6 +14,12 @@ public class WalletSummaryDTO {
     private int totalDebits;
     private int balance;
     
+    private String membership;
+    private int coinValue;
+    private double balanceValue;
+
+    private Map<String, Integer> levels;
+    
     // Optional info for frontend
     private boolean registrationRewardGiven;
     private boolean referralRewardGiven;

@@ -226,8 +226,8 @@ public class BookingServiceImpl implements BookingService {
                     customer.getCustomerId(),
                     customer.getMobile(),   // ✅ pass mobile explicitly
                     pointsToRedeem,
-                    bookingAmount,
-                    wallet.getMembership()
+                    bookingAmount
+//                    wallet.getMembership()
             );
         }
 
@@ -494,14 +494,18 @@ public class BookingServiceImpl implements BookingService {
 
     // ================= UPDATE BOOKING STATUS =================
  // ================= UPDATE BOOKING STATUS =================
+ // ================= UPDATE BOOKING STATUS =================
     @Override
     public BookingResponseDTO updateBookingStatus(UpdateBookingStatusDTO request) {
+
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
 
         String newStatus = request.getStatus().toUpperCase();
 
-        if (!List.of("HOLD", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "FAILED").contains(newStatus)) {
+        if (!List.of("HOLD", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "FAILED")
+                .contains(newStatus)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
         }
 
@@ -509,17 +513,18 @@ public class BookingServiceImpl implements BookingService {
         booking.setUpdatedAt(Instant.now().toString());
         bookingRepository.save(booking);
 
-        // 🔥 CREDIT REWARD COINS IF COMPLETED
-        if ("COMPLETED".equalsIgnoreCase(newStatus)) {
-            int coinsEarned = (int) (booking.getFinalAmount() / 100);
+        // 🔥 NOTIFY CUSTOMER-SERVICE ON COMPLETION
+        if ("COMPLETED".equals(newStatus)) {
             customerRewardsClient.creditBookingReward(
                     booking.getCustomerId(),
-                    coinsEarned
+                    booking.getBookingId(),
+                    booking.getFinalAmount()
             );
         }
 
         return mapToDTO(booking);
     }
+
 
 
     // ================= RATE BOOKING =================
