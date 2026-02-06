@@ -141,7 +141,10 @@ public class BookingServiceImpl implements BookingService {
                 ? pricing.getPartialPaymentPercentage() 
                 : 100;
 
+        // Initial partial amount based on the service's full amount (before applying points)
         double partialAmount = round(pricing.getFinalAmount() * partialPaymentPercentage / 100.0);
+
+        // Due amount calculation (initially based on full amount before points)
         double dueAmount = round(pricing.getFinalAmount() - partialAmount);
 
         Booking booking = Booking.builder()
@@ -177,7 +180,7 @@ public class BookingServiceImpl implements BookingService {
                 .consultationFee(pricing.getConsultationFee())
                 .platformFeePercentage(pricing.getPlatformFeePercentage())
                 .platformFee(pricing.getPlatformFee())
-                .finalAmount(pricing.getFinalAmount())
+                .finalAmount(pricing.getFinalAmount()) // Start with the original full amount
                 .partialPaymentPercentage(partialPaymentPercentage)
                 .partialAmount(partialAmount)
                 .dueAmount(dueAmount)
@@ -203,8 +206,10 @@ public class BookingServiceImpl implements BookingService {
             double serviceAmount = booking.getFinalAmount() - booking.getPlatformFee();
             serviceAmount = Math.max(serviceAmount - (pointsToRedeem * wallet.getCoinValue()), 0);
 
-            // Update final, partial, and due amounts
+            // Recalculate final amount after applying points
             booking.setFinalAmount(serviceAmount + booking.getPlatformFee());
+
+            // Recalculate partial and due amounts after points are deducted
             booking.setPartialAmount(round(serviceAmount * booking.getPartialPaymentPercentage() / 100.0));
             booking.setDueAmount(round(serviceAmount - booking.getPartialAmount()));
         }
@@ -231,6 +236,7 @@ public class BookingServiceImpl implements BookingService {
 
         return mapToDTO(booking);
     }
+
 
  // ================= CALCULATE REDEEMABLE POINTS =================
     private int calculateRedeemablePoints(double originalAmount, int availablePoints, int coinValue) {
