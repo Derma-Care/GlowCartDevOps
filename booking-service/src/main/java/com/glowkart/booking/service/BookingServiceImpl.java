@@ -80,6 +80,7 @@ public class BookingServiceImpl implements BookingService {
 //    }
 
  // ================= PRICE CALCULATION =================
+ // ================= PRICE CALCULATION =================
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
         // Fetch service cost and customer info
@@ -109,12 +110,9 @@ public class BookingServiceImpl implements BookingService {
                 .build();
     }
 
-
-
- // ================= CREATE BOOKING =================
+    // ================= WALLET / POINTS =================
     @Override
     public BookingResponseDTO createBooking(BookingRequestDTO request) {
-    	
         // Validate input
         if (request.getCustomerId() == null || request.getCustomerId().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer ID cannot be null or empty");
@@ -226,9 +224,7 @@ public class BookingServiceImpl implements BookingService {
                     bookingAmount,
                     wallet.getMembership()
             );
-        
         }
-
 
         booking.setUpdatedAt(Instant.now().toString());
         bookingRepository.save(booking);
@@ -236,23 +232,20 @@ public class BookingServiceImpl implements BookingService {
         return mapToDTO(booking);
     }
 
-  
-
-    // ================= HELPER: ROUNDING =================
-    private double round(double value) {
-        return Math.round(value * 100.0) / 100.0;
-    }
-
-
+ // ================= CALCULATE REDEEMABLE POINTS =================
     private int calculateRedeemablePoints(double originalAmount, int availablePoints, int coinValue) {
         // Maximum discount allowed = 50% of service amount
         double maxDiscountAllowed = originalAmount * 0.5;
         int maxRedeemablePoints = (int) Math.floor(maxDiscountAllowed / coinValue);
 
-        // Return the minimum of available points and max redeemable points
-        return Math.min(availablePoints, maxRedeemablePoints);
+        // Cap maximum redeemable points to 50% of available points
+        int maxPointsByAvailability = (int) Math.floor(availablePoints * 0.5);
+
+        // Return the minimum of available points, max redeemable points, and max points based on availability
+        return Math.min(availablePoints, Math.min(maxRedeemablePoints, maxPointsByAvailability));
     }
 
+    // ================= VALIDATE WALLET POINTS =================
     private int validateWalletPoints(Booking booking, int requestedPoints, WalletSummaryDTO wallet) {
         if (requestedPoints <= 0) return 0;
 
@@ -262,7 +255,7 @@ public class BookingServiceImpl implements BookingService {
         // Use the calculateRedeemablePoints method to calculate max redeemable points
         int maxRedeemablePoints = calculateRedeemablePoints(booking.getFinalAmount(), availablePoints, coinValue);
 
-        // Determine final allowed points
+        // Determine final allowed points (lesser of requested, available, or max redeemable)
         int allowedPoints = Math.min(requestedPoints, Math.min(availablePoints, maxRedeemablePoints));
 
         if (requestedPoints > allowedPoints) {
@@ -273,6 +266,11 @@ public class BookingServiceImpl implements BookingService {
         return allowedPoints;
     }
 
+
+    // ================= HELPER: ROUNDING =================
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
 
 
 
