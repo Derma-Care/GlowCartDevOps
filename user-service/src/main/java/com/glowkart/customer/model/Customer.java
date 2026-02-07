@@ -103,8 +103,7 @@ public class Customer {
     private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
     // ==================== EXPOSE MASKED AADHAAR ====================
- // Version 2 — ternary (compact)
-    // <-- Add this field for Jackson -->
+
     private String aadharNumber;
 
 }
