@@ -18,7 +18,7 @@ import com.glowkart.customer.util.AadhaarUtils;
 import lombok.Data;
 
 @Data
-@Document(collection = "customers")
+//@Document(collection = "customers")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 
 public class Customer {
@@ -104,10 +104,8 @@ public class Customer {
 
     // ==================== EXPOSE MASKED AADHAAR ====================
  // Version 2 — ternary (compact)
-    @JsonProperty("aadharNumber")
-    public String getAadharNumber() {
-        return aadharLast4 != null ? AadhaarUtils.maskAadhaar(aadharLast4) : null;
-    }
+    // <-- Add this field for Jackson -->
+    private String aadharNumber;
 
 }
 
