@@ -51,7 +51,7 @@ public class CustomerResponseDTO {
     // Final registration
     private String address;
 
-    private List<String> referredCustomerIds = new ArrayList<>();
+    private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
     // Status flags
     private boolean registrationCodeVerified;

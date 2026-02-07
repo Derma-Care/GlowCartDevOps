@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.util.AadhaarUtils;
 
@@ -19,6 +20,7 @@ import lombok.Data;
 @Data
 @Document(collection = "customers")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+
 public class Customer {
 
     @Id
@@ -55,16 +57,13 @@ public class Customer {
     private String registrationCode;
     private String referBy;
     private Integer registrationRank;
-    private String referId;  // This will hold the referId
-   
- // For new user
-    private boolean referralRewardGiven = false;
+    private String referId;
 
-    // For referrer
+    // Referral flags
+    private boolean referralRewardGiven = false;
     private boolean referralRewardReceived = false;
 
-    
-    // Aadhaar
+    // ==================== Aadhaar (SECURE) ====================
     @JsonIgnore
     @Indexed(unique = true)
     private String aadharHash;
@@ -79,7 +78,7 @@ public class Customer {
     @Indexed
     private String aadharPreHash;
 
-    // Wheel fields
+    // ==================== Wheel ====================
     private String spinRewardId;
     private String spinRewardValue;
     private String spinRewardImage;
@@ -87,28 +86,27 @@ public class Customer {
     // Final registration
     private String address;
 
- // ==================== REWARD ====================
+    // ==================== REWARD ====================
     private Integer rewardPoints = 0;
     private boolean registrationRewardGiven = false;
 
     private String deviceToken;
- // FCM tokens
 
     private boolean registrationCodeVerified = false;
     private boolean isUserProfileCompleted = false;
     private boolean isSpinWheelCompleted = false;
     private boolean isRegistrationCompleted = false;
 
-    
-    @Transient // Not stored in DB
+    @Transient
     private WalletSummaryDTO walletSummary;
-    
-    private List<String> referredCustomerIds = new ArrayList<>();
 
+    private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
-    
+    // ==================== EXPOSE MASKED AADHAAR ====================
+    @JsonProperty("aadharNumber")
     public String getAadharNumber() {
         if (aadharLast4 == null) return null;
         return AadhaarUtils.maskAadhaar(aadharLast4);
     }
 }
+
