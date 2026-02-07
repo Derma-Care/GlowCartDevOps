@@ -103,10 +103,11 @@ public class Customer {
     private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
     // ==================== EXPOSE MASKED AADHAAR ====================
+ // Version 2 — ternary (compact)
     @JsonProperty("aadharNumber")
     public String getAadharNumber() {
-        if (aadharLast4 == null) return null;
-        return AadhaarUtils.maskAadhaar(aadharLast4);
+        return aadharLast4 != null ? AadhaarUtils.maskAadhaar(aadharLast4) : null;
     }
+
 }
 
