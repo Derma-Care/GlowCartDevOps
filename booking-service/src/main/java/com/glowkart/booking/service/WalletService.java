@@ -55,7 +55,7 @@ public class WalletService {
         return response.getData();
     }
 
-    // ================= REDEEM POINTS =================
+ // ================= REDEEM POINTS =================
     public void redeemPoints(
             String customerId,
             String mobile,
@@ -66,19 +66,18 @@ public class WalletService {
             throw new WalletServiceException("Points must be greater than 0", 400);
         }
 
-        // Always fetch fresh wallet snapshot
+        // Fetch fresh wallet snapshot
         WalletSummaryDTO wallet = getWalletSummary(mobile);
 
         int balance = wallet.getBalance();
-        int coinValue = wallet.getCoinValue(); // 🔥 owned by customer-service
 
         // Validate balance
         if (points > balance) {
             throw new WalletServiceException("Insufficient points to redeem", 400);
         }
 
-        // Enforce 50% booking rule
-        int maxRedeemablePoints = calculateMaxRedeemablePoints(bookingAmount, coinValue);
+        // Validate against 50% wallet rule
+        int maxRedeemablePoints = calculateMaxRedeemablePoints(wallet);
         if (points > maxRedeemablePoints) {
             throw new WalletServiceException(
                     "You can redeem a maximum of " + maxRedeemablePoints + " points for this booking",
@@ -87,8 +86,7 @@ public class WalletService {
         }
 
         // Deduct points
-        ApiResponse<Void> response =
-                customerRewardsClient.deductPoints(customerId, points);
+        ApiResponse<Void> response = customerRewardsClient.deductPoints(customerId, points);
 
         if (!response.isSuccess()) {
             throw new WalletServiceException(
@@ -100,9 +98,14 @@ public class WalletService {
         log.info("Redeemed {} points for customerId={}", points, customerId);
     }
 
-    // ================= HELPERS =================
-    private int calculateMaxRedeemablePoints(double bookingAmount, int coinValue) {
-        double maxDiscountAllowed = bookingAmount * 0.5;
-        return (int) (maxDiscountAllowed / coinValue);
+
+ // ================= HELPERS =================
+    /**
+     * Calculates maximum redeemable points based on wallet rules.
+     * Rule: Maximum 50% of available wallet points can be redeemed per booking.
+     */
+    private int calculateMaxRedeemablePoints(WalletSummaryDTO wallet) {
+        return wallet.getBalance() / 2; // 50% of available points
     }
+
 }
