@@ -84,7 +84,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
 
-        double originalAmount = fetchServiceFinalCost(
+        // Fetch service pricing **for this clinic + service**
+        double originalAmount = fetchServiceFinalCostForClinic(
+                request.getClinicId(),
                 request.getServiceType(),
                 request.getServiceId()
         );
@@ -94,7 +96,7 @@ public class BookingServiceImpl implements BookingService {
 
         int availablePoints = wallet.getBalance();
 
-        // 50% rule — no coinValue here
+        // Max points user can redeem = min(50% wallet, 50% service amount)
         int maxRedeemablePoints = Math.min(
                 availablePoints / 2,
                 (int) Math.floor(originalAmount * 0.5)
@@ -102,7 +104,6 @@ public class BookingServiceImpl implements BookingService {
 
         int appliedPoints = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
 
-        // ❗ NO coinValue multiplication
         double finalAmount = Math.max(originalAmount - appliedPoints, 0);
 
         return BookingPriceResponseDTO.builder()
@@ -348,13 +349,14 @@ public class BookingServiceImpl implements BookingService {
         return response.getData();
     }
 
-    private double fetchServiceFinalCost(String serviceType, String serviceId) {
+ // ================= FETCH SERVICE PRICING FOR CLINIC =================
+    private double fetchServiceFinalCostForClinic(String clinicId, String serviceType, String serviceId) {
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ProcedurePricingDTO p = procedureClient.getPricingByProcedure(serviceId).getData();
+            ProcedurePricingDTO p = procedureClient.getPricingByProcedureAndClinic(serviceId, clinicId).getData();
             return p.getFinalCost() + Math.max(p.getPlatformFee(), 0);
         }
         if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ProcedurePackageDTO p = procedureClient.getPricingByPackage(serviceId).getData();
+            ProcedurePackageDTO p = procedureClient.getPricingByPackageAndClinic(serviceId, clinicId).getData();
             return p.getFinalCost() + Math.max(p.getPlatformFee(), 0);
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");

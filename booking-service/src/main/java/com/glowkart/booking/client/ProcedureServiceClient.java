@@ -12,10 +12,27 @@ import com.glowkart.booking.dto.ProcedurePricingDTO;
 public interface ProcedureServiceClient {
     @GetMapping("/procedures/pricing/get/{procedureId}")
     ApiResponse<ProcedurePricingDTO> getPricingByProcedure(@PathVariable String procedureId);
+    
+    
+
+    // Fetch procedure pricing for a specific clinic
+    @GetMapping("/procedures/pricing/get/{procedureId}/{clinicId}")
+    ApiResponse<ProcedurePricingDTO> getPricingByProcedureAndClinic(
+            @PathVariable String procedureId,
+            @PathVariable String clinicId
+    );
 
     // PACKAGE pricing
     @GetMapping("/procedures/packages/{packageId}")
     ApiResponse<ProcedurePackageDTO> getPricingByPackage(
             @PathVariable String packageId
+    );
+    
+    
+    // Fetch package pricing for a specific clinic
+    @GetMapping("/procedures/packages/clinic/{clinicId}/{packageId}")
+    ApiResponse<ProcedurePackageDTO> getPricingByPackageAndClinic(
+            @PathVariable String packageId,
+            @PathVariable String clinicId
     );
 }
