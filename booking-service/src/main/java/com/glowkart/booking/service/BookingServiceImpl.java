@@ -83,23 +83,27 @@ public class BookingServiceImpl implements BookingService {
  // ================= PRICE CALCULATION =================
     @Override
     public BookingPriceResponseDTO calculateFinalAmountWithPoints(BookingPriceRequestDTO request) {
-        // Fetch service cost and customer info
-        double originalAmount = fetchServiceFinalCost(request.getServiceType(), request.getServiceId());
+
+        double originalAmount = fetchServiceFinalCost(
+                request.getServiceType(),
+                request.getServiceId()
+        );
+
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
-
-        // Fetch wallet summary once
         WalletSummaryDTO wallet = walletService.getWalletSummary(customer.getMobile());
+
         int availablePoints = wallet.getBalance();
-        int coinValue = wallet.getCoinValue(); // Guaranteed >= 1
 
-        // Calculate max redeemable points using the helper method
-        int maxRedeemablePoints = calculateRedeemablePoints(originalAmount, availablePoints, coinValue);
+        // 50% rule — no coinValue here
+        int maxRedeemablePoints = Math.min(
+                availablePoints / 2,
+                (int) Math.floor(originalAmount * 0.5)
+        );
 
-        // Points to apply = min(requested, available, maxRedeemable)
         int appliedPoints = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
 
-        // Final amount after applying points
-        double finalAmount = Math.max(originalAmount - (appliedPoints * coinValue), 0);
+        // ❗ NO coinValue multiplication
+        double finalAmount = Math.max(originalAmount - appliedPoints, 0);
 
         return BookingPriceResponseDTO.builder()
                 .originalFinalAmount(originalAmount)
@@ -109,6 +113,7 @@ public class BookingServiceImpl implements BookingService {
                 .finalAmount(finalAmount)
                 .build();
     }
+
 
     // ================= WALLET / POINTS =================
     @Override
@@ -204,15 +209,22 @@ public class BookingServiceImpl implements BookingService {
 
             // Deduct points from service amount only (exclude platform fee)
             double serviceAmount = booking.getFinalAmount() - booking.getPlatformFee();
-            serviceAmount = Math.max(serviceAmount - (pointsToRedeem * wallet.getCoinValue()), 0);
 
-            // Recalculate final amount after applying points
+            // 1 point = ₹1 (NO coinValue)
+            serviceAmount = Math.max(serviceAmount - pointsToRedeem, 0);
+
+            // Recalculate final amount
             booking.setFinalAmount(serviceAmount + booking.getPlatformFee());
 
-            // Recalculate partial and due amounts after points are deducted
-            booking.setPartialAmount(round(serviceAmount * booking.getPartialPaymentPercentage() / 100.0));
-            booking.setDueAmount(round(serviceAmount - booking.getPartialAmount()));
+            // Recalculate partial & due amounts
+            booking.setPartialAmount(
+                round(serviceAmount * booking.getPartialPaymentPercentage() / 100.0)
+            );
+            booking.setDueAmount(
+                round(serviceAmount - booking.getPartialAmount())
+            );
         }
+
 
         // Process payment
         boolean paymentSuccess = processPayment(booking);
@@ -239,37 +251,46 @@ public class BookingServiceImpl implements BookingService {
 
 
  // ================= CALCULATE REDEEMABLE POINTS =================
-    private int calculateRedeemablePoints(double originalAmount, int availablePoints, int coinValue) {
-        // Maximum discount allowed = 50% of service amount
-        double maxDiscountAllowed = originalAmount * 0.5;
-        int maxRedeemablePoints = (int) Math.floor(maxDiscountAllowed / coinValue);
+    private int calculateRedeemablePoints(
+            double originalAmount,
+            int availablePoints
+    ) {
+        // 50% of service amount
+        int maxByAmount = (int) Math.floor(originalAmount * 0.5);
 
-        // Cap maximum redeemable points to 50% of available points
-        int maxPointsByAvailability = (int) Math.floor(availablePoints * 0.5);
+        // 50% wallet usage rule
+        int maxByWallet = availablePoints / 2;
 
-        // Return the minimum of available points, max redeemable points, and max points based on availability
-        return Math.min(availablePoints, Math.min(maxRedeemablePoints, maxPointsByAvailability));
+        // Final allowed points
+        return Math.min(maxByAmount, maxByWallet);
     }
 
     // ================= VALIDATE WALLET POINTS =================
-    private int validateWalletPoints(Booking booking, int requestedPoints, WalletSummaryDTO wallet) {
-        if (requestedPoints <= 0) return 0;
-
-        int availablePoints = wallet.getBalance();
-        int coinValue = wallet.getCoinValue();
-
-        // Use the calculateRedeemablePoints method to calculate max redeemable points
-        int maxRedeemablePoints = calculateRedeemablePoints(booking.getFinalAmount(), availablePoints, coinValue);
-
-        // Determine final allowed points (lesser of requested, available, or max redeemable)
-        int allowedPoints = Math.min(requestedPoints, Math.min(availablePoints, maxRedeemablePoints));
-
-        if (requestedPoints > allowedPoints) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Requested points exceed maximum redeemable points");
+ // ================= VALIDATE WALLET POINTS =================
+    private int validateWalletPoints(
+            Booking booking,
+            int requestedPoints,
+            WalletSummaryDTO wallet
+    ) {
+        if (requestedPoints <= 0) {
+            return 0;
         }
 
-        return allowedPoints;
+        int availablePoints = wallet.getBalance();
+
+        int maxRedeemablePoints = calculateRedeemablePoints(
+                booking.getFinalAmount(),
+                availablePoints
+        );
+
+        if (requestedPoints > maxRedeemablePoints) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Requested points exceed maximum redeemable points"
+            );
+        }
+
+        return requestedPoints;
     }
 
 
