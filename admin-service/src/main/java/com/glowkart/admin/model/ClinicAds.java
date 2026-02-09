@@ -15,6 +15,7 @@ public class ClinicAds {
     @Id
     private String id;
 
+    private String clinicId;   // ✅ REQUIRED
     private String type;    // image / video
     private String s3Key;   // S3 object key
     private String title;   // ad title

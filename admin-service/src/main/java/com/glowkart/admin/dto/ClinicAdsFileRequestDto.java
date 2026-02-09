@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ClinicAdsFileRequestDto {
+	  private String clinicId;   // ✅ REQUIRED
     private String type;      // image / video
     private String filename;  // original filename
     private String data;      // Base64-encoded file

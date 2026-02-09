@@ -38,15 +38,35 @@ public class ClinicAdsController {
     }
 
     @PutMapping("/clinic-ads/{id}")
-    public ResponseEntity<ApiResponse<ClinicAdsResponseDto>> update(@PathVariable String id,
-                                                                    @RequestBody ClinicAdsFileRequestDto dto) {
+    public ResponseEntity<ApiResponse<ClinicAdsResponseDto>> update(
+            @PathVariable String id,
+            @RequestBody ClinicAdsFileRequestDto dto) {  // clinicId included in body
         ClinicAdsResponseDto updatedAd = clinicAdsService.updateAd(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Ad updated successfully", updatedAd));
     }
 
-    @DeleteMapping("/clinic-ads/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
-        clinicAdsService.deleteAd(id);
+    @DeleteMapping("/clinic-ads/{id}/{clinicId}")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable String id,
+            @PathVariable String clinicId) {
+
+        clinicAdsService.deleteAd(id, clinicId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Ad deleted successfully", null));
     }
+
+    
+    
+    @GetMapping("/clinic-ads/{clinicId}")
+    public ResponseEntity<ApiResponse<List<ClinicAdsResponseDto>>> getAll(
+            @PathVariable String clinicId) {
+
+        List<ClinicAdsResponseDto> ads =
+                clinicAdsService.getAdsByClinicId(clinicId);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Clinic ads fetched", ads)
+        );
+    }
+
+
 }

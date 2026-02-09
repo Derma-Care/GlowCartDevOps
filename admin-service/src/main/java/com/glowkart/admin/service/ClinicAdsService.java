@@ -20,6 +20,7 @@ import com.glowkart.admin.dto.ClinicAdsFileRequestDto;
 import com.glowkart.admin.dto.ClinicAdsResponseDto;
 import com.glowkart.admin.model.ClinicAds;
 import com.glowkart.admin.repo.ClinicAdsRepository;
+import com.glowkart.admin.repo.ClinicRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class ClinicAdsService {
 
     private final ClinicAdsRepository clinicAdsRepository;
+    private final ClinicRepository clinicRepository;
     private final S3Client s3Client;
     private final S3PresignedUrlUtil presignedUrlUtil;
 
@@ -48,6 +50,7 @@ public class ClinicAdsService {
     // ----------------- CREATE -----------------
     public ClinicAdsResponseDto uploadFile(ClinicAdsFileRequestDto dto) {
         validateRequest(dto);
+        validateClinicId(dto.getClinicId());
 
         byte[] fileBytes = decodeBase64(dto.getData());
         String extension = getFileExtension(dto.getFilename(), dto.getType());
@@ -56,6 +59,7 @@ public class ClinicAdsService {
         uploadToS3(key, fileBytes, dto.getType(), extension);
 
         ClinicAds ad = new ClinicAds();
+        ad.setClinicId(dto.getClinicId());
         ad.setType(dto.getType().toLowerCase());
         ad.setS3Key(key);
         ad.setTitle(dto.getTitle());
@@ -66,7 +70,8 @@ public class ClinicAdsService {
 
     // ----------------- READ -----------------
     public List<ClinicAdsResponseDto> getAllAds() {
-        return clinicAdsRepository.findAll().stream()
+        return clinicAdsRepository.findAll()
+                .stream()
                 .map(this::createResponse)
                 .collect(Collectors.toList());
     }
@@ -77,10 +82,13 @@ public class ClinicAdsService {
         return createResponse(ad);
     }
 
-    // ----------------- UPDATE -----------------
+ // ----------------- UPDATE -----------------
     public ClinicAdsResponseDto updateAd(String id, ClinicAdsFileRequestDto dto) {
         ClinicAds existingAd = clinicAdsRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+
+        // validate clinicId passed in body
+        validateClinicId(dto.getClinicId());
 
         deleteFromS3(existingAd.getS3Key());
 
@@ -91,6 +99,8 @@ public class ClinicAdsService {
 
         uploadToS3(key, fileBytes, dto.getType(), extension);
 
+        // update all fields including clinicId
+        existingAd.setClinicId(dto.getClinicId());
         existingAd.setType(dto.getType().toLowerCase());
         existingAd.setS3Key(key);
         existingAd.setTitle(dto.getTitle());
@@ -99,13 +109,34 @@ public class ClinicAdsService {
         return createResponse(existingAd);
     }
 
-    // ----------------- DELETE -----------------
-    public void deleteAd(String id) {
+
+ // ----------------- DELETE -----------------
+    public void deleteAd(String id, String clinicId) {
         ClinicAds ad = clinicAdsRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
 
+        // validate clinicId passed and matches the ad's clinicId
+        validateClinicId(clinicId);
+
+        if (!clinicId.equals(ad.getClinicId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ad does not belong to the specified clinic");
+        }
+
         deleteFromS3(ad.getS3Key());
         clinicAdsRepository.delete(ad);
+    }
+
+
+    // ----------------- READ BY CLINIC -----------------
+    public List<ClinicAdsResponseDto> getAdsByClinicId(String clinicId) {
+        if (clinicId == null || clinicId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clinicId is required");
+        }
+
+        return clinicAdsRepository.findByClinicId(clinicId)
+                .stream()
+                .map(this::createResponse)
+                .collect(Collectors.toList());
     }
 
     // ----------------- HELPERS -----------------
@@ -115,6 +146,7 @@ public class ClinicAdsService {
 
         return new ClinicAdsResponseDto(
                 ad.getId(),
+                ad.getClinicId(),
                 ad.getType(),
                 url,
                 ad.getTitle(),
@@ -181,6 +213,16 @@ public class ClinicAdsService {
         }
     }
 
+ // ----------------- HELPER -----------------
+    private void validateClinicId(String clinicId) {
+        if (clinicId == null || clinicId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clinicId is required");
+        }
+        if (!clinicRepository.existsById(clinicId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found");
+        }
+    }
+
     private byte[] decodeBase64(String base64) {
         try {
             byte[] bytes = Base64.getDecoder().decode(base64);
@@ -215,4 +257,5 @@ public class ClinicAdsService {
             };
         };
     }
+
 }

@@ -7,6 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class ClinicAdsResponseDto {
     private String id;        // DB ID
+    private String clinicId;   // ✅ REQUIRED
     private String type;      // image / video
     private String url;       // presigned URL
     private String title;     // ad title
