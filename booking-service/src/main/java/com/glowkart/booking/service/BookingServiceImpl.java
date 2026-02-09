@@ -97,10 +97,9 @@ public class BookingServiceImpl implements BookingService {
         int availablePoints = wallet.getBalance();
 
         // Max points user can redeem = min(50% wallet, 50% service amount)
-        int maxRedeemablePoints = Math.min(
-                availablePoints / 2,
-                (int) Math.floor(originalAmount * 0.5)
-        );
+     // Max points user can redeem = 50% of wallet balance
+        int maxRedeemablePoints = availablePoints / 2;
+
 
         int appliedPoints = Math.min(request.getPointsToRedeem(), maxRedeemablePoints);
 
@@ -139,8 +138,13 @@ public class BookingServiceImpl implements BookingService {
 
         CustomerDTO customer = fetchCustomer(request.getCustomerId());
         ClinicDTO clinic = fetchClinic(request.getClinicId());
-        PricingDetails pricing = fetchPricingDetails(request.getServiceType(), request.getServiceId());
-        List<BookingProcedureDTO> procedures = fetchBookingProcedures(request.getServiceType(), request.getServiceId());
+        PricingDetails pricing = fetchPricingDetailsForClinic(request.getClinicId(),request.getServiceType(), request.getServiceId());
+        List<BookingProcedureDTO> procedures =
+                fetchBookingProcedures(
+                        request.getClinicId(),
+                        request.getServiceType(),
+                        request.getServiceId()
+                );
 
         // ======= Partial payment calculation =======
         double partialPaymentPercentage = pricing.getPartialPaymentPercentage() > 0 
@@ -362,24 +366,58 @@ public class BookingServiceImpl implements BookingService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
 
-    private PricingDetails fetchPricingDetails(String serviceType, String serviceId) {
+    private PricingDetails fetchPricingDetailsForClinic(
+            String clinicId,
+            String serviceType,
+            String serviceId
+    ) {
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            return PricingDetails.fromProcedurePricing(procedureClient.getPricingByProcedure(serviceId).getData());
+            ProcedurePricingDTO p =
+                procedureClient
+                    .getPricingByProcedureAndClinic(serviceId, clinicId)
+                    .getData();
+
+            return PricingDetails.fromProcedurePricing(p);
         }
+
         if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            return PricingDetails.fromPackagePricing(procedureClient.getPricingByPackage(serviceId).getData());
+            ProcedurePackageDTO p =
+                procedureClient
+                    .getPricingByPackageAndClinic(serviceId, clinicId)
+                    .getData();
+
+            return PricingDetails.fromPackagePricing(p);
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
+
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Invalid serviceType"
+        );
     }
 
-    private List<BookingProcedureDTO> fetchBookingProcedures(String serviceType, String serviceId) {
+
+    private List<BookingProcedureDTO> fetchBookingProcedures(
+            String clinicId,
+            String serviceType,
+            String serviceId
+    ) {
         if (!"PACKAGE".equalsIgnoreCase(serviceType)) return List.of();
-        ProcedurePackageDTO pkg = procedureClient.getPricingByPackage(serviceId).getData();
+
+        ProcedurePackageDTO pkg =
+                procedureClient
+                        .getPricingByPackageAndClinic(serviceId, clinicId)
+                        .getData();
+
         if (pkg == null || pkg.getProcedures() == null) return List.of();
+
         return pkg.getProcedures().stream()
-                .map(p -> new BookingProcedureDTO(p.getProcedureName(), p.getNoOfSittings()))
+                .map(p -> new BookingProcedureDTO(
+                        p.getProcedureName(),
+                        p.getNoOfSittings()
+                ))
                 .collect(Collectors.toList());
     }
+
 
     private LocalDate parseDate(String dateStr) {
         return dateStr == null || dateStr.isEmpty() ? null : LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
