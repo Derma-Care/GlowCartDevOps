@@ -89,7 +89,7 @@ const Clinic_getDetails = ({ service }) => {
                 <CFormInput
                   type="text"
                   autoComplete="off"
-                  style={{ border: '1px solid #7e3a93' }}
+                  style={{ border: '1px solid var(--color-black)', }}
                   placeholder="Search by Clinic Name, Mobile, or Email"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -213,7 +213,7 @@ const Clinic_getDetails = ({ service }) => {
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredClinics.length)} of {filteredClinics.length}entries
                   </div>
 
-                  <CPagination align="end">
+                  <CPagination align="end" className="mt-2 themed-pagination">
                     <CPaginationItem
                       disabled={currentPage === 1}
                       onClick={() => handlePageChange(currentPage - 1)}

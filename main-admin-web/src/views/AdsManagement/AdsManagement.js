@@ -19,6 +19,7 @@ import {
 import { BASE_URL_API } from "../../baseUrl";
 import { Edit2, Eye, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { COLORS } from "../../Constant/Themes";
 
 const AdsManagement = () => {
   const [activeKey, setActiveKey] = useState(1);
@@ -293,26 +294,27 @@ const AdsManagement = () => {
         style={{ background: "linear-gradient(135deg, var(--color-black), var(--color-bgcolor))" }}
       >
         <h5 className="mb-1" style={{ color: "white" }}>Advertisement Management</h5>
-        <CButton color="primary" onClick={openAddModal}>
+        <CButton color="secondary"
+          style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }} onClick={openAddModal}>
           + Add Ad
         </CButton>
       </div>
 
       <CCardBody>
         {/* Tabs */}
-        <CNav variant="tabs" className="mb-3">
+        <CNav variant="tabs" className="mt-3 themed-tabs">
           <CNavItem>
-            <CNavLink active={activeKey === 1} onClick={() => setActiveKey(1)}>
-              Dashboard Ads
+            <CNavLink active={activeKey === 1} onClick={() => setActiveKey(1)} style={{ cursor: "pointer" }}>
+              Mobile Login
             </CNavLink>
           </CNavItem>
           <CNavItem>
-            <CNavLink active={activeKey === 2} onClick={() => setActiveKey(2)}>
-              Service Ads
+            <CNavLink active={activeKey === 2} onClick={() => setActiveKey(2)} style={{ cursor: "pointer" }}>
+              Mobile Dashboard
             </CNavLink>
           </CNavItem>
           <CNavItem>
-            <CNavLink active={activeKey === 3} onClick={() => setActiveKey(3)}>
+            <CNavLink active={activeKey === 3} onClick={() => setActiveKey(3)} style={{ cursor: "pointer" }}>
               Clinic Ads
             </CNavLink>
           </CNavItem>
@@ -450,8 +452,20 @@ const AdsManagement = () => {
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowAddModal(false)}>Cancel</CButton>
-          <CButton color="primary" onClick={handleSaveAd}>Save</CButton>
+          <CButton
+            className="theme-secondary-btn"
+            onClick={() => setShowAddModal(false)}
+          >
+            Cancel
+          </CButton>
+
+          <CButton
+            className="theme-primary-btn"
+            onClick={handleSaveAd}
+          >
+            Save
+          </CButton>
+
         </CModalFooter>
       </CModal>
 
@@ -499,7 +513,7 @@ const AdsManagement = () => {
 
             {/* Button to trigger file input */}
             <CButton
-              color="primary"
+              className="theme-primary-btn"
               onClick={() => editFileInputRef.current && editFileInputRef.current.click()}
             >
               Browse
@@ -542,12 +556,20 @@ const AdsManagement = () => {
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowEditModal(false)}>
+          <CButton
+            className="theme-secondary-btn"
+            onClick={() => setShowEditModal(false)}
+          >
             Cancel
           </CButton>
-          <CButton color="primary" onClick={handleUpdateAd}>
+
+          <CButton
+            className="theme-primary-btn"
+            onClick={handleUpdateAd}
+          >
             Update
           </CButton>
+
         </CModalFooter>
       </CModal>
 

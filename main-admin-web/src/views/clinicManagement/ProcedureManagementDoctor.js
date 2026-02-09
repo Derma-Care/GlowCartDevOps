@@ -661,9 +661,9 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
               placeholder="Search by Procedure Name, Category"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ height: '40px', border: "1px solid #7e3a93" }}
+              style={{ height: '40px', bborder: '1px solid var(--color-black)', }}
             />
-            <CInputGroupText style={{ height: '40px', border: "1px solid #7e3a93" }}>
+            <CInputGroupText style={{ height: '40px', border: '1px solid var(--color-black)', }}>
               <CIcon icon={cilSearch} />
             </CInputGroupText>
           </CInputGroup>

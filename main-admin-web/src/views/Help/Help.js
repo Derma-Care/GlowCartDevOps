@@ -122,7 +122,7 @@ NGK Support Team`
               style={{
                 width: '260px',
                 borderRadius: '6px',
-                border: '1px solid #d0d5db',
+               border: '1px solid var(--color-black)',
                 background: '#fafbfc'
               }}
             />
@@ -198,7 +198,7 @@ NGK Support Team`
                       Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalItems)} of {totalItems} entries
                     </span>
 
-                    <CPagination>
+                    <CPagination align="end" className="mt-2 themed-pagination">
                       <CPaginationItem
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}

@@ -74,12 +74,12 @@ const AppointmentDetails = () => {
           <CButton
             size="sm"
             style={{
-              background: "#fff",
-              color: NGK_COLORS.primary,
-              border: "none",
+              background: '#fff',
+              color: 'var(--color-black)',
+              border: '1px solid var(--color-black)',
               fontWeight: 600,
               borderRadius: 8,
-              padding: "6px 14px",
+              padding: '6px 14px',
             }}
             onClick={() => navigate(-1)}
           >
@@ -89,20 +89,48 @@ const AppointmentDetails = () => {
       </CCard>
 
       {/* Tabs */}
-      <CNav variant="tabs" className="mt-3">
+      <CNav variant="tabs" className="mt-3 themed-tabs">
         <CNavItem>
-          <CNavLink active={activeTab === 0} onClick={() => setActiveTab(0)}>Patient</CNavLink>
+          <CNavLink
+            className="theme-tab"
+            active={activeTab === 0}
+            onClick={() => setActiveTab(0)}
+          >
+            Patient
+          </CNavLink>
         </CNavItem>
+
         <CNavItem>
-          <CNavLink active={activeTab === 1} onClick={() => setActiveTab(1)}>Clinic</CNavLink>
+          <CNavLink
+            className="theme-tab"
+            active={activeTab === 1}
+            onClick={() => setActiveTab(1)}
+          >
+            Clinic
+          </CNavLink>
         </CNavItem>
+
         <CNavItem>
-          <CNavLink active={activeTab === 2} onClick={() => setActiveTab(2)}>Appointment</CNavLink>
+          <CNavLink
+            className="theme-tab"
+            active={activeTab === 2}
+            onClick={() => setActiveTab(2)}
+          >
+            Appointment
+          </CNavLink>
         </CNavItem>
+
         <CNavItem>
-          <CNavLink active={activeTab === 3} onClick={() => setActiveTab(3)}>Payment</CNavLink>
+          <CNavLink
+            className="theme-tab"
+            active={activeTab === 3}
+            onClick={() => setActiveTab(3)}
+          >
+            Payment
+          </CNavLink>
         </CNavItem>
       </CNav>
+
 
       {/* Card Starts BELOW Tabs */}
       <CCard className="mt-2">
@@ -113,16 +141,16 @@ const AppointmentDetails = () => {
             <CTabPane visible={activeTab === 0}>
               {/* <h6 className="fw-bold mb-3">Patient Information</h6> */}
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Name:</strong> {state.fullName}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Gender:</strong> {state.gender}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Name:</strong> {state.fullName}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Gender:</strong> {state.gender}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>DOB:</strong> {formatDate(state.dob)}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Age:</strong> {state.ageLabel}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>DOB:</strong> {formatDate(state.dob)}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Age:</strong> {state.ageLabel}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Mobile:</strong> {state.mobileNumber}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>City:</strong> {state.city}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Mobile:</strong> {state.mobileNumber}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>City:</strong> {state.city}</div>
               </div>
             </CTabPane>
 
@@ -130,11 +158,11 @@ const AppointmentDetails = () => {
             <CTabPane visible={activeTab === 1}>
               {/* <h6 className="fw-bold mb-3">Clinic Information</h6> */}
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Clinic:</strong> {state.clinicName}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Booking ID:</strong> {state.bookingId}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Clinic:</strong> {state.clinicName}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Booking ID:</strong> {state.bookingId}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-12"><strong style={{color:COLORS.black}}>Address:</strong> {state.clinicAddress}</div>
+                <div className="col-12"><strong style={{ color: 'var(--color-black)' }}>Address:</strong> {state.clinicAddress}</div>
               </div>
             </CTabPane>
 
@@ -142,9 +170,9 @@ const AppointmentDetails = () => {
             <CTabPane visible={activeTab === 2}>
               {/* <h6 className="fw-bold mb-3">Appointment Details</h6> */}
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Date:</strong> {formatDate(state.appointmentDate)}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Date:</strong> {formatDate(state.appointmentDate)}</div>
                 <div className="col-6">
-                  <strong style={{color:COLORS.black}}>Status:</strong>{" "}
+                  <strong style={{ color: 'var(--color-black)' }}>Status:</strong>{" "}
                   <span
                     style={{
                       ...getStatusStyle(state.status),
@@ -161,12 +189,12 @@ const AppointmentDetails = () => {
 
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Service:</strong> {state.serviceName}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Type:</strong> {state.serviceType}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Service:</strong> {state.serviceName}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Type:</strong> {state.serviceType}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Customer ID:</strong> {state.customerId}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Service ID:</strong> {state.serviceId}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Customer ID:</strong> {state.customerId}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Service ID:</strong> {state.serviceId}</div>
               </div>
             </CTabPane>
 
@@ -174,32 +202,32 @@ const AppointmentDetails = () => {
             <CTabPane visible={activeTab === 3}>
               {/* <h6 className="fw-bold mb-3">Payment Information</h6> */}
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Base Price:</strong> ₹{state.price}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Consultation Fee:</strong> ₹{state.consultationFee}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Base Price:</strong> ₹{state.price}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Consultation Fee:</strong> ₹{state.consultationFee}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Payment Type:</strong> {state.paymentType}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Payment Status:</strong> {state.paymentStatus}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Payment Type:</strong> {state.paymentType}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Payment Status:</strong> {state.paymentStatus}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Payment Mode:</strong> {state.paymentMode ?? "N/A"}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Discount:</strong> {state.totalDiscountPercentage}% (₹{state.totalDiscountAmount})</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Payment Mode:</strong> {state.paymentMode ?? "N/A"}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Discount:</strong> {state.totalDiscountPercentage}% (₹{state.totalDiscountAmount})</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Discounted Cost:</strong> ₹{state.discountedCost}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>NGK Discount:</strong> {state.ngkDiscountPercentage}% (₹{state.ngkDiscount})</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Discounted Cost:</strong> ₹{state.discountedCost}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>NGK Discount:</strong> {state.ngkDiscountPercentage}% (₹{state.ngkDiscount})</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Tax :</strong> {state.taxPercentage}% (₹{state.taxAmount})</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>GST:</strong> {state.gst}% (₹{state.gstAmount})</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Tax :</strong> {state.taxPercentage}% (₹{state.taxAmount})</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>GST:</strong> {state.gst}% (₹{state.gstAmount})</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Redeemed Points:</strong> {state.redeemedPoints}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Partial Amount:</strong> ₹{state.partialAmount}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Redeemed Points:</strong> {state.redeemedPoints}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Partial Amount:</strong> ₹{state.partialAmount}</div>
               </div>
               <div className="row mb-2">
-                <div className="col-6"><strong style={{color:COLORS.black}}>Due Amount:</strong> ₹{state.dueAmount}</div>
-                <div className="col-6"><strong style={{color:COLORS.black}}>Final Amount:</strong> <strong>₹{state.finalAmount}</strong></div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Due Amount:</strong> ₹{state.dueAmount}</div>
+                <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Final Amount:</strong> <strong>₹{state.finalAmount}</strong></div>
               </div>
             </CTabPane>
 

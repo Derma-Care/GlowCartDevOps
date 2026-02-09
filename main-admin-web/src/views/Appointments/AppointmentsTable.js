@@ -144,31 +144,32 @@ const AppointmentsTable = () => {
     <div>
 
       {/* TABS */}
-      <CNav variant="tabs" className="mt-3">
-        {["ALL", "CONFIRMED", "COMPLETED", "HOLD"].map(status => (
-          <CNavItem key={status}>
-            <CNavLink
-              active={filter === status}
-              onClick={() => {
-                setFilter(status);
-                setCurrentPage(1);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              {status}
-            </CNavLink>
-          </CNavItem>
-        ))}
+     <CNav variant="tabs" className="mt-3 themed-tabs">
+  {["ALL", "CONFIRMED", "COMPLETED", "HOLD"].map((status) => (
+    <CNavItem key={status}>
+      <CNavLink
+        active={filter === status}
+        onClick={() => {
+          setFilter(status)
+          setCurrentPage(1)
+        }}
+        className="theme-tab"
+      >
+        {status}
+      </CNavLink>
+    </CNavItem>
+  ))}
 
-        <div className="ms-auto p-2">
-          <CFormInput
-            placeholder="Search..."
-            style={{ width: "250px" }}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </CNav>
+  <div className="ms-auto p-2">
+    <CFormInput
+      placeholder="Search..."
+      style={{ width: "250px" ,border: '1px solid var(--color-black)',}}
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+  </div>
+</CNav>
+
 
       {/* CARD STARTS BELOW THE TABS */}
 
@@ -300,7 +301,7 @@ const AppointmentsTable = () => {
                 {filteredData.length} entries
               </div>
 
-              <CPagination align="end" className="mt-2">
+              <CPagination align="end" className="mt-2 themed-pagination">
                 <CPaginationItem
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(currentPage - 1)}

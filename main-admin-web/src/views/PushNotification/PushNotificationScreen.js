@@ -453,7 +453,7 @@ const FCMNotification = () => {
                   {filteredData.length} entries
                 </div>
 
-                <CPagination align="end">
+                <CPagination align="end" className="mt-2 themed-pagination">
                   <CPaginationItem
                     disabled={currentPage === 1}
                     onClick={() => handlePageChange(currentPage - 1)}

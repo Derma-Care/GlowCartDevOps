@@ -75,7 +75,7 @@ export default function SearchableSelect({
             style={{
               padding: '10px',
               width: '100%',
-              border: 'none',
+              border: '1px solid var(--color-black)',
               borderBottom: '1px solid #eee',
               outline: 'none',
               fontSize: '14px',

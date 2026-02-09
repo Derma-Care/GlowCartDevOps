@@ -633,7 +633,7 @@ const ServiceManagement = () => {
                   <span className="me-3">
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredData.length)} of {filteredData.length} entries
                   </span>
-                  <CPagination>
+                  <CPagination align="end" className="mt-2 themed-pagination">
                     <CPaginationItem
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}

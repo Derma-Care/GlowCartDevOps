@@ -440,13 +440,13 @@ const CategoryManagement = () => {
             <CInputGroup style={{ width: '300px' }}>
               <CFormInput
                 type="text"
-                style={{ border: "1px solid #7e3a93" }}
+                style={{ border: '1px solid var(--color-black)', }}
                 placeholder="Search by Category Name"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
 
-              <CInputGroupText style={{ border: "1px solid #7e3a93" }}>
+              <CInputGroupText style={{ border: '1px solid var(--color-black)', }}>
                 <CIcon icon={cilSearch} />
               </CInputGroupText>
             </CInputGroup>
@@ -543,7 +543,7 @@ const CategoryManagement = () => {
                 {Math.min(indexOfLastItem, filteredData.length)} of{' '}
                 {filteredData.length} entries
               </span>
-              <CPagination>
+              <CPagination align="end" className="mt-2 themed-pagination">
                 <CPaginationItem
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}

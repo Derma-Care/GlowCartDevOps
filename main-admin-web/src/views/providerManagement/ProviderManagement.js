@@ -129,6 +129,7 @@ const customStyles = {
         <CInputGroup className="mb-3 w-50">
           <CFormInput
             type="text"
+            style={{border: '1px solid var(--color-black)',}}
             id="search-input"
             placeholder="Search by full name, mobile, or email"
             value={searchQuery}

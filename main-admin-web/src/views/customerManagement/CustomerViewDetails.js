@@ -10,7 +10,12 @@ import {
   CRow,
   CCol,
   CSpinner,
-  CButton
+  CButton, CTable,
+  CTableHead,
+  CTableBody,
+  CTableRow,
+  CTableHeaderCell,
+  CTableDataCell
 } from '@coreui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCustomerByMobile } from './CustomerAPI'
@@ -178,7 +183,14 @@ const CustomerViewDetails = () => {
         customerData.referBy ||
         customerData.userProfileCompleted
       )
+    },
+    {
+      id: 6,
+      title: 'Referred',
+      visible: true
+
     }
+
   ]
 
   const visibleTabs = tabs.filter(t => t.visible)
@@ -208,7 +220,7 @@ const CustomerViewDetails = () => {
         className="text-white p-3 d-flex justify-content-between align-items-center rounded"
         style={{ background: 'linear-gradient(135deg, var(--color-black), var(--color-bgcolor))', color: 'white' }}
       >
-        <h5 className="mb-1" style={{color:"white"}}>
+        <h5 className="mb-1" style={{ color: "white" }}>
           Customer Details: {customerData.fullName}
         </h5>
 
@@ -216,11 +228,11 @@ const CustomerViewDetails = () => {
           size="sm"
           style={{
             background: '#fff',
-            color: NGK_COLORS.primary,
-            border: 'none',
-            fontWeight: '600',
-            borderRadius: '8px',
-            padding: '6px 14px'
+            color: 'var(--color-black)',
+            border: '1px solid var(--color-black)',
+            fontWeight: 600,
+            borderRadius: 8,
+            padding: '6px 14px',
           }}
           onClick={() => navigate(-1)}
         >
@@ -231,13 +243,13 @@ const CustomerViewDetails = () => {
       <CCardBody>
 
         {/* TABS */}
-        <CNav variant="tabs" className="mb-3">
+        <CNav variant="tabs" className="mt-3 themed-tabs">
           {visibleTabs.map(tab => (
             <CNavItem key={tab.id}>
               <CNavLink
                 active={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                style={{ cursor: 'pointer' }}
+                className="theme-tab"
               >
                 {tab.title}
               </CNavLink>
@@ -376,6 +388,75 @@ const CustomerViewDetails = () => {
               </CRow>
             </CCard>
           </CTabPane>
+          {/* REFERRED */}
+
+          <CTabPane visible={activeTab === 6}>
+            <CCard className="p-3 shadow-sm">
+              <CRow className="gy-3">
+
+                {customerData.referredCustomerIds ||
+                  customerData.fullName
+                  ? (
+
+                    <>
+                      {/* Referred Customers TABLE */}
+                      {Array.isArray(customerData.referredCustomers) &&
+                        customerData.referredCustomers.length > 0 && (
+                          <CCol sm="12">
+                            <strong>Referred Customers:</strong>
+
+                            <CTable
+                              striped hover responsive
+                            >
+                              <CTableHead className="pink-table">
+                                <CTableRow>
+                                  <CTableHeaderCell className="text-center" style={{ width: '60px' }}>
+                                    S.No
+                                  </CTableHeaderCell>
+                                  <CTableHeaderCell className="text-center">
+                                    Customer ID
+                                  </CTableHeaderCell>
+                                  <CTableHeaderCell className="text-center">
+                                    Customer Name
+                                  </CTableHeaderCell>
+                                </CTableRow>
+                              </CTableHead>
+
+                              <CTableBody className="pink-table">
+                                {customerData.referredCustomers.map((customer, index) => (
+                                  <CTableRow key={customer.customerId}>
+                                    <CTableDataCell className="text-center">
+                                      {index + 1}
+                                    </CTableDataCell>
+                                    <CTableDataCell className="text-center">
+                                      {customer.customerId}
+                                    </CTableDataCell>
+                                    <CTableDataCell className="text-center">
+                                      {customer.fullName}
+                                    </CTableDataCell>
+                                  </CTableRow>
+                                ))}
+                              </CTableBody>
+                            </CTable>
+                          </CCol>
+                        )}
+                    </>
+                  ) : (
+                    // 👇 NO DATA UI
+                    <CCol sm="12" className="text-center py-4">
+                      <p className="text-muted fw-semibold mb-1">
+                        No referral details available
+                      </p>
+                      <small className="text-muted">
+                        This customer was not referred by anyone.
+                      </small>
+                    </CCol>
+                  )}
+
+              </CRow>
+            </CCard>
+          </CTabPane>
+
 
         </CTabContent>
       </CCardBody>

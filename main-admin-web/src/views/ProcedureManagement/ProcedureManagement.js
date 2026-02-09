@@ -245,9 +245,9 @@ const ProcedureManagement = () => {
       <CCard className="mt-4">
         <CCardHeader>
           <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-            <h4 className="mb-0" style={{ color: COLORS.black }}>
+            <h2 className="mb-0">
               Procedure Management
-            </h4>
+            </h2>
 
             <div className="d-flex align-items-center gap-2">
               <CForm style={{ width: "50%" }}>
@@ -261,9 +261,9 @@ const ProcedureManagement = () => {
                       setCurrentPage(1)
                     }}
                     type="text"
-                    style={{ border: "1px solid #7e3a93" }}
+                     style={{ border: '1px solid var(--color-black)', }}
                   />
-                  <CInputGroupText style={{ border: "1px solid #7e3a93" }}>
+                  <CInputGroupText   style={{ border: '1px solid var(--color-black)', }}>
                     <CIcon icon={cilSearch} />
                   </CInputGroupText>
                 </CInputGroup>
@@ -271,7 +271,7 @@ const ProcedureManagement = () => {
               {/* Add Button */}
               <CButton
                 color="secondary"
-                style={{ backgroundColor: COLORS.black, color: COLORS.white }}
+                style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
                 onClick={() => {
                   setEditMode(false)
                   setProcedureInput('')
@@ -342,7 +342,7 @@ const ProcedureManagement = () => {
               <div>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredProcedures.length)} of {filteredProcedures.length} entries
               </div>
 
-              <CPagination align="end">
+              <CPagination align="end" className="mt-2 themed-pagination">
                 <CPaginationItem disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>Previous</CPaginationItem>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((page) => {
@@ -392,12 +392,13 @@ const ProcedureManagement = () => {
           {errors.procedure && <p className="text-danger mt-1">{errors.procedure}</p>}<br />
 
           <CButton
-            color="primary"
+           color="secondary"
+                    
             onClick={handleAddToTemp}
             disabled={editMode}
             style={{
-              backgroundColor: editMode ? '#bdbdbd' : '#0d6efd',
-              borderColor: editMode ? '#bdbdbd' : '#0d6efd',
+              backgroundColor: editMode ? '#bdbdbd' : 'var(--color-black)',
+              borderColor: editMode ? '#bdbdbd' : 'var(--color-black)',
               cursor: editMode ? 'not-allowed' : 'pointer',
               opacity: editMode ? 0.7 : 1,
             }}

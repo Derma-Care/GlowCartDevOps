@@ -331,7 +331,7 @@ const PayoutManagement = () => {
                   {filteredData.length} entries
                 </div>
 
-                <CPagination align="end">
+                <CPagination align="end" className="mt-2 themed-pagination">
                   <CPaginationItem
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(currentPage - 1)}

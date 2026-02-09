@@ -238,7 +238,7 @@ Warm regards,
                 setSearchText(e.target.value);
                 setCurrentPage(1);
               }}
-              style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa" }}
+              style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa",border: '1px solid var(--color-black)', }}
             />
           </CCardHeader>
           <CCardBody style={{ flex: 1, position: "relative" }}>
@@ -439,7 +439,7 @@ Warm regards,
                         {Math.min(indexOfLast, filteredCodes.length)} of{" "}
                         {filteredCodes.length} entries
                       </div>
-                      <CPagination align="end">
+                      <CPagination align="end" className="mt-2 themed-pagination">
                         <CPaginationItem
                           disabled={currentPage === 1}
                           onClick={() => handlePageChange(currentPage - 1)}

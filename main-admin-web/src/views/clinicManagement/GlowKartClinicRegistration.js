@@ -838,13 +838,15 @@ const ClinicRegistration = () => {
     <div className="container mt-4">
       <ToastContainer />
       <CCard className="shadow-sm border-0 rounded-3">
-        <CCardHeader className="text-center" style={{ backgroundColor: NGK_COLORS.primary, color:COLORS.white }}>
+        <CCardHeader className="text-center" style={{ backgroundColor: NGK_COLORS.primary, color: COLORS.white }}>
           <h3 className="mb-0">Clinic Registration</h3>
         </CCardHeader>
 
         <CCardBody>
           <CForm onSubmit={handleSubmit}>
-            <h5 className="mb-3  mt-6" style={{ color: NGK_COLORS.primary }}>Clinic Information</h5>
+            <h5 className="mb-3 mt-6" style={{ color: 'var(--color-black)' }}>
+              Clinic Information
+            </h5>
             <CRow className="mb-4 g-3">
               <CCol md={4}>
                 <CFormLabel>
@@ -2000,7 +2002,7 @@ const ClinicRegistration = () => {
             </CRow>
 
             <CButton
-            style={{backgroundColor:NGK_COLORS.primary,color:"white"}}
+              style={{ backgroundColor: NGK_COLORS.primary, color: "white" }}
               // color="primary"
               className="mb-3"
               onClick={(e) => {

@@ -58,12 +58,12 @@ const Package_ProcedureManagement_Tabs = () => {
         <CButton
           size="sm"
           style={{
-            background: "#fff",
-            color: NGK_COLORS.primary,
-            border: "none",
-            fontWeight: "600",
-            borderRadius: "8px",
-            padding: "6px 14px",
+            background: '#fff',
+            color: 'var(--color-black)',
+            border: '1px solid var(--color-black)',
+            fontWeight: 600,
+            borderRadius: 8,
+            padding: '6px 14px',
           }}
           onClick={() => navigate(-1)}
         >

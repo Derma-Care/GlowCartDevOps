@@ -115,6 +115,8 @@ const CustomerManagement = () => {
       const trimmedQuery = searchQuery.toLowerCase().trim()
 
       const filtered = customerData.filter((customer) => {
+        const customerId = (customer?.customerId || '').toLowerCase()
+    const fullName = (customer?.fullName || '').toLowerCase()
         const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
         const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
         const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
@@ -126,7 +128,7 @@ const CustomerManagement = () => {
           (type) => type.toLowerCase().startsWith(trimmedQuery)
         )
 
-        return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch
+        return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch||customerId||fullName
       })
 
       setFilteredData(filtered)
@@ -134,8 +136,6 @@ const CustomerManagement = () => {
 
     setCurrentPage(1) // ✅ only when SEARCH changes
   }, [searchQuery])
-
-
 
   const handleCustomerViewDetails = (mobile) => {
     navigate(`/customer-management/${mobile}`)
@@ -424,12 +424,12 @@ const CustomerManagement = () => {
                 <CInputGroup>
                   <CFormInput
                     type="text"
-                    style={{ border: "1px solid #7e3a93" }}
+                    style={{ border: '1px solid var(--color-black)', }}
                     placeholder="Search by name, mobile, or email"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <CInputGroupText style={{ border: "1px solid #7e3a93" }}>
+                  <CInputGroupText style={{ border: '1px solid var(--color-black)', }}>
                     <CIcon icon={cilSearch} />
                   </CInputGroupText>
                 </CInputGroup>
@@ -442,7 +442,8 @@ const CustomerManagement = () => {
             {/* 🗑 Delete Selected */}
             <div className="col-md-3 d-flex justify-content-end">
               <CButton
-                color="danger"
+                color="secondary"
+                style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
                 disabled={selectedMobiles.length === 0}
                 onClick={() => {
                   setIsMultiDelete(true)
@@ -586,7 +587,7 @@ const CustomerManagement = () => {
                     </div>
 
                     {/* Pagination */}
-                    <CPagination align="end">
+                    <CPagination align="end" className="mt-2 themed-pagination">
                       <CPaginationItem
                         disabled={currentPage === 1}
                         onClick={() => handlePageChange(currentPage - 1)}

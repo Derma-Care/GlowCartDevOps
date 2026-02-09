@@ -83,9 +83,9 @@ const MembershipTable = () => {
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
-            style={{ border: "1px solid #7e3a93", height: '40px' }}
+            style={{ border: '1px solid var(--color-black)', height: '40px' }}
           />
-          <CInputGroupText style={{ border: "1px solid #7e3a93", height: '40px' }}>
+          <CInputGroupText style={{ border: '1px solid var(--color-black)', height: '40px' }}>
             <CIcon icon={cilSearch} />
           </CInputGroupText>
         </CInputGroup>
@@ -164,7 +164,7 @@ const MembershipTable = () => {
               {searchedData.length} entries
             </div>
 
-            <CPagination align="end">
+            <CPagination align="end" className="mt-2 themed-pagination">
               <CPaginationItem
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(currentPage - 1)}

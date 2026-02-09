@@ -698,7 +698,7 @@ const PackageManagement = () => {
                 className="form-control"
                 style={{
                   width: "350px",
-                  border: "1px solid #7e3a93",
+                  border: '1px solid var(--color-black)',
                 }}
               />
 
