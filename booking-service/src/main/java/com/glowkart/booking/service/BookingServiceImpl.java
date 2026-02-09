@@ -197,33 +197,38 @@ public class BookingServiceImpl implements BookingService {
                 .updatedAt(Instant.now().toString())
                 .build();
 
-        // ================= WALLET / POINTS =================
-        // Fetch wallet once
-        WalletSummaryDTO wallet = walletService.getWalletSummary(customer.getMobile());
+     // ================= WALLET / POINTS =================
 
-        // Points to redeem (pass wallet to avoid refetch)
-        int pointsToRedeem = validateWalletPoints(booking, request.getPointsToRedeem(), wallet);
+     // Fetch wallet once
+     WalletSummaryDTO wallet = walletService.getWalletSummary(customer.getMobile());
 
-        if (pointsToRedeem > 0) {
-            booking.setRedeemedPoints(pointsToRedeem);
+     // Validate points (ONLY wallet-based rule)
+     int pointsToRedeem = validateWalletPoints(
+             request.getPointsToRedeem(),
+             wallet
+     );
 
-            // Deduct points from service amount only (exclude platform fee)
-            double serviceAmount = booking.getFinalAmount() - booking.getPlatformFee();
+     if (pointsToRedeem > 0) {
+         booking.setRedeemedPoints(pointsToRedeem);
 
-            // 1 point = ₹1 (NO coinValue)
-            serviceAmount = Math.max(serviceAmount - pointsToRedeem, 0);
+         // Deduct points from service amount only (exclude platform fee)
+         double serviceAmount = booking.getFinalAmount() - booking.getPlatformFee();
 
-            // Recalculate final amount
-            booking.setFinalAmount(serviceAmount + booking.getPlatformFee());
+         // 1 point = ₹1
+         serviceAmount = Math.max(serviceAmount - pointsToRedeem, 0);
 
-            // Recalculate partial & due amounts
-            booking.setPartialAmount(
-                round(serviceAmount * booking.getPartialPaymentPercentage() / 100.0)
-            );
-            booking.setDueAmount(
-                round(serviceAmount - booking.getPartialAmount())
-            );
-        }
+         // Recalculate final amount
+         booking.setFinalAmount(serviceAmount + booking.getPlatformFee());
+
+         // Recalculate partial & due amounts
+         booking.setPartialAmount(
+                 round(serviceAmount * booking.getPartialPaymentPercentage() / 100.0)
+         );
+         booking.setDueAmount(
+                 round(serviceAmount - booking.getPartialAmount())
+         );
+     }
+
 
 
         // Process payment
@@ -251,24 +256,18 @@ public class BookingServiceImpl implements BookingService {
 
 
  // ================= CALCULATE REDEEMABLE POINTS =================
-    private int calculateRedeemablePoints(
-            double originalAmount,
-            int availablePoints
-    ) {
-        // 50% of service amount
-        int maxByAmount = (int) Math.floor(originalAmount * 0.5);
-
-        // 50% wallet usage rule
-        int maxByWallet = availablePoints / 2;
-
-        // Final allowed points
-        return Math.min(maxByAmount, maxByWallet);
+    /**
+     * Rule:
+     * - User can redeem ONLY 50% of available wallet points
+     * - 1 point = ₹1
+     */
+    private int calculateRedeemablePoints(int availablePoints) {
+        return availablePoints / 2;
     }
 
-    // ================= VALIDATE WALLET POINTS =================
+
  // ================= VALIDATE WALLET POINTS =================
     private int validateWalletPoints(
-            Booking booking,
             int requestedPoints,
             WalletSummaryDTO wallet
     ) {
@@ -277,16 +276,12 @@ public class BookingServiceImpl implements BookingService {
         }
 
         int availablePoints = wallet.getBalance();
-
-        int maxRedeemablePoints = calculateRedeemablePoints(
-                booking.getFinalAmount(),
-                availablePoints
-        );
+        int maxRedeemablePoints = calculateRedeemablePoints(availablePoints);
 
         if (requestedPoints > maxRedeemablePoints) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Requested points exceed maximum redeemable points"
+                    "You can redeem only 50% of available wallet points"
             );
         }
 
