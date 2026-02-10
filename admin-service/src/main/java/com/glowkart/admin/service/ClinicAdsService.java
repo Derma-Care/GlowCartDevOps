@@ -48,9 +48,14 @@ public class ClinicAdsService {
     private static final Duration URL_DURATION = Duration.ofMinutes(15);
 
     // ----------------- CREATE -----------------
+ // CREATE
     public ClinicAdsResponseDto uploadFile(ClinicAdsFileRequestDto dto) {
         validateRequest(dto);
         validateClinicId(dto.getClinicId());
+
+        var clinic = clinicRepository.findById(dto.getClinicId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Clinic not found"));
 
         byte[] fileBytes = decodeBase64(dto.getData());
         String extension = getFileExtension(dto.getFilename(), dto.getType());
@@ -60,13 +65,44 @@ public class ClinicAdsService {
 
         ClinicAds ad = new ClinicAds();
         ad.setClinicId(dto.getClinicId());
+        ad.setClinicName(clinic.getName()); // ✅ STORED
         ad.setType(dto.getType().toLowerCase());
         ad.setS3Key(key);
         ad.setTitle(dto.getTitle());
-        clinicAdsRepository.save(ad);
 
+        clinicAdsRepository.save(ad);
         return createResponse(ad);
     }
+
+
+    // UPDATE
+    public ClinicAdsResponseDto updateAd(String id, ClinicAdsFileRequestDto dto) {
+        ClinicAds ad = clinicAdsRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+
+        var clinic = clinicRepository.findById(dto.getClinicId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Clinic not found"));
+
+        deleteFromS3(ad.getS3Key());
+        validateRequest(dto);
+
+        byte[] fileBytes = decodeBase64(dto.getData());
+        String key = generateS3Key(dto.getFilename(), fileBytes);
+
+        uploadToS3(key, fileBytes, dto.getType(), getFileExtension(dto.getFilename(), dto.getType()));
+
+        ad.setClinicId(dto.getClinicId());
+        ad.setClinicName(clinic.getName()); // ✅ STORED
+        ad.setType(dto.getType().toLowerCase());
+        ad.setS3Key(key);
+        ad.setTitle(dto.getTitle());
+
+        clinicAdsRepository.save(ad);
+        return createResponse(ad);
+    }
+
+
 
     // ----------------- READ -----------------
     public List<ClinicAdsResponseDto> getAllAds() {
@@ -82,32 +118,7 @@ public class ClinicAdsService {
         return createResponse(ad);
     }
 
- // ----------------- UPDATE -----------------
-    public ClinicAdsResponseDto updateAd(String id, ClinicAdsFileRequestDto dto) {
-        ClinicAds existingAd = clinicAdsRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
-
-        // validate clinicId passed in body
-        validateClinicId(dto.getClinicId());
-
-        deleteFromS3(existingAd.getS3Key());
-
-        validateRequest(dto);
-        byte[] fileBytes = decodeBase64(dto.getData());
-        String extension = getFileExtension(dto.getFilename(), dto.getType());
-        String key = generateS3Key(dto.getFilename(), fileBytes);
-
-        uploadToS3(key, fileBytes, dto.getType(), extension);
-
-        // update all fields including clinicId
-        existingAd.setClinicId(dto.getClinicId());
-        existingAd.setType(dto.getType().toLowerCase());
-        existingAd.setS3Key(key);
-        existingAd.setTitle(dto.getTitle());
-        clinicAdsRepository.save(existingAd);
-
-        return createResponse(existingAd);
-    }
+  
 
 
  // ----------------- DELETE -----------------
@@ -141,18 +152,23 @@ public class ClinicAdsService {
 
     // ----------------- HELPERS -----------------
     private ClinicAdsResponseDto createResponse(ClinicAds ad) {
-        String url = presignedUrlUtil.generatePresignedUrl(bucketName, ad.getS3Key(), URL_DURATION);
+        String url = presignedUrlUtil.generatePresignedUrl(
+                bucketName, ad.getS3Key(), URL_DURATION);
+
         String filename = ad.getS3Key().substring(ad.getS3Key().indexOf('-') + 1);
 
         return new ClinicAdsResponseDto(
                 ad.getId(),
                 ad.getClinicId(),
+                ad.getClinicName(), // ✅ from DB
                 ad.getType(),
                 url,
                 ad.getTitle(),
                 filename
         );
     }
+
+
 
     private void uploadToS3(String key, byte[] fileBytes, String type, String extension) {
         PutObjectRequest putReq = PutObjectRequest.builder()
