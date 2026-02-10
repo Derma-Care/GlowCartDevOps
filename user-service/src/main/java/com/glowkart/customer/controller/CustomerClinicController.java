@@ -33,16 +33,17 @@ public class CustomerClinicController {
     public ResponseEntity<ApiResponse<List<ClinicProcedureLinkDTO>>> getClinicsForProcedure(
             @RequestParam double latitude,
             @RequestParam double longitude,
-            @RequestParam String procedureId
+            @RequestParam String procedureId,
+            @RequestParam String state // NEW: state from frontend
     ) {
         List<ClinicProcedureLinkDTO> clinics = customerClinicSearchService
-                .findClinicsForProcedure(latitude, longitude, procedureId);
+                .findClinicsForProcedure(latitude, longitude, procedureId, state);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Clinics fetched for procedure and location", clinics)
         );
     }
-
+    
     /**
      * 🔥 FRONTEND CALLS THIS API
      *
@@ -56,10 +57,11 @@ public class CustomerClinicController {
     @GetMapping("/customer/procedures/packages")
     public ResponseEntity<ApiResponse<List<ProcedurePackageWithClinicsDTO>>> getAllPackagesWithClinics(
             @RequestParam double latitude,
-            @RequestParam double longitude
+            @RequestParam double longitude,
+            @RequestParam String state // NEW: state from frontend
     ) {
-        List<ProcedurePackageWithClinicsDTO> packagesWithClinics = 
-                customerClinicSearchService.getAllPackagesWithClinics(latitude, longitude);
+        List<ProcedurePackageWithClinicsDTO> packagesWithClinics =
+                customerClinicSearchService.getAllPackagesWithClinics(latitude, longitude, state);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "All procedure packages fetched successfully", packagesWithClinics)
@@ -74,14 +76,17 @@ public class CustomerClinicController {
     @GetMapping("/customer/clinics/nearby")
     public ResponseEntity<ApiResponse<List<ClinicProcedureLinkDTO>>> getNearbyClinics(
             @RequestParam double latitude,
-            @RequestParam double longitude
+            @RequestParam double longitude,
+            @RequestParam String state // NEW
     ) {
-        List<ClinicProcedureLinkDTO> clinics = customerClinicSearchService.findNearbyClinics(latitude, longitude);
+        List<ClinicProcedureLinkDTO> clinics = customerClinicSearchService
+                .findNearbyClinics(latitude, longitude, state);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Nearby clinics fetched successfully", clinics)
         );
     }
+
     
     
     /**
@@ -101,10 +106,11 @@ public class CustomerClinicController {
     @GetMapping("/customer/offers/clinics/nearby")
     public ResponseEntity<ApiResponse<List<ClinicProcedureLinkDTO>>> getNearbyClinicsWithOffers(
             @RequestParam double latitude,
-            @RequestParam double longitude
+            @RequestParam double longitude,
+            @RequestParam String state // NEW
     ) {
         List<ClinicProcedureLinkDTO> clinics =
-                customerClinicSearchService.findNearbyClinicsWithOffers(latitude, longitude);
+                customerClinicSearchService.findNearbyClinicsWithOffers(latitude, longitude, state);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Nearby clinics with offers fetched", clinics)

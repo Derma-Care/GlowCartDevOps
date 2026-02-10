@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchService {
 
-    private final ReverseGeoService reverseGeoService;
+//    private final ReverseGeoService reverseGeoService;
     private final AdminClinicClient adminClinicClient;
     private final ProcedureServiceClient procedureServiceClient;
 
@@ -39,9 +39,10 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // =========================================================
     @Override
     public List<ClinicProcedureLinkDTO> findClinicsForProcedure(
-            double latitude, double longitude, String procedureId) {
+            double latitude, double longitude, String procedureId, String state) {
 
-        String state = reverseGeoService.resolveState(latitude, longitude);
+        if (state == null || state.isBlank()) return Collections.emptyList();
+
         List<ClinicPublicDTO> clinics =
                 adminClinicClient.getClinicsByState(state, null).getData();
 
@@ -65,39 +66,40 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // =========================================================
     // Find clinics offering a package
     // =========================================================
-    @Override
-    public List<ClinicProcedureLinkDTO> findClinicsForPackage(
-            double latitude, double longitude, String packageId) {
-
-        String state = reverseGeoService.resolveState(latitude, longitude);
-        List<ClinicPublicDTO> clinics =
-                adminClinicClient.getClinicsByState(state, null).getData();
-
-        if (clinics == null) return Collections.emptyList();
-
-        List<String> clinicIds =
-                procedureServiceClient.getClinicIdsByPackage(packageId).getData();
-
-        if (clinicIds == null || clinicIds.isEmpty()) return Collections.emptyList();
-
-        Set<String> allowedIds = Set.copyOf(clinicIds);
-
-        return clinics.stream()
-                .filter(ClinicPublicDTO::isOnline)
-                .filter(c -> allowedIds.contains(c.getClinicId()))
-                .map(c -> mapClinicWithPricing(c, latitude, longitude, packageId, false))
-                .sorted(this::sortByDistance)
-                .toList();
-    }
+//    @Override
+//    public List<ClinicProcedureLinkDTO> findClinicsForPackage(
+//            double latitude, double longitude, String packageId) {
+//
+//        String state = reverseGeoService.resolveState(latitude, longitude);
+//        List<ClinicPublicDTO> clinics =
+//                adminClinicClient.getClinicsByState(state, null).getData();
+//
+//        if (clinics == null) return Collections.emptyList();
+//
+//        List<String> clinicIds =
+//                procedureServiceClient.getClinicIdsByPackage(packageId).getData();
+//
+//        if (clinicIds == null || clinicIds.isEmpty()) return Collections.emptyList();
+//
+//        Set<String> allowedIds = Set.copyOf(clinicIds);
+//
+//        return clinics.stream()
+//                .filter(ClinicPublicDTO::isOnline)
+//                .filter(c -> allowedIds.contains(c.getClinicId()))
+//                .map(c -> mapClinicWithPricing(c, latitude, longitude, packageId, false))
+//                .sorted(this::sortByDistance)
+//                .toList();
+//    }
 
     // =========================================================
     // Nearby clinics
     // =========================================================
     @Override
     public List<ClinicProcedureLinkDTO> findNearbyClinics(
-            double latitude, double longitude) {
+            double latitude, double longitude, String state) {
 
-        String state = reverseGeoService.resolveState(latitude, longitude);
+        if (state == null || state.isBlank()) return Collections.emptyList();
+
         List<ClinicPublicDTO> clinics =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
@@ -114,9 +116,10 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
     // =========================================================
     @Override
     public List<ClinicProcedureLinkDTO> findNearbyClinicsWithOffers(
-            double latitude, double longitude) {
+            double latitude, double longitude, String state) {
 
-        String state = reverseGeoService.resolveState(latitude, longitude);
+        if (state == null || state.isBlank()) return Collections.emptyList();
+
         List<ClinicPublicDTO> clinics =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
@@ -128,6 +131,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .sorted(this::sortByDistance)
                 .toList();
     }
+
 
     // =========================================================
     // Clinic details
@@ -396,67 +400,63 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
     @Override
     public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
-            double latitude, double longitude) {
+            double latitude, double longitude, String state) {
 
-        String state = reverseGeoService.resolveState(latitude, longitude);
+        if (state == null || state.isBlank()) return Collections.emptyList();
 
         List<ClinicPublicDTO> clinics =
                 adminClinicClient.getClinicsByState(state, true).getData();
 
-        if (clinics == null || clinics.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (clinics == null || clinics.isEmpty()) return Collections.emptyList();
 
         List<ProcedurePackageDTO> packages =
                 procedureServiceClient.getAllPackages().getData();
 
-        if (packages == null || packages.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
+        // mapping logic stays the same
         return packages.stream()
-                .map(pkg -> {
-
-                    // ✅ ADD PLATFORM FEE TO PACKAGE FINAL COST
-                    if (pkg.getPlatformFee() > 0) {
-                        pkg.setFinalCost(pkg.getFinalCost() + pkg.getPlatformFee());
-                    }
-
-                    List<String> clinicIds;
-                    try {
-                        clinicIds = procedureServiceClient
-                                .getClinicIdsByPackage(pkg.getPackageId())
-                                .getData();
-                    } catch (Exception e) {
-                        clinicIds = Collections.emptyList();
-                    }
-
-                    Set<String> clinicSet =
-                            clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
-
-                    // Map clinics WITHOUT procedurePricing
-                    List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
-                            .filter(c -> clinicSet.contains(c.getClinicId()))
-                            .map(c -> mapClinicToDTO(c, latitude, longitude, null)) // ⚡ null pricing
-                            .sorted((a, b) -> Double.compare(
-                                    parseDistance(a.getDistanceInKm()),
-                                    parseDistance(b.getDistanceInKm())
-                            ))
-                            .toList();
-
-                    if (clinicDtos.isEmpty()) {
-                        return null;
-                    }
-
-                    ProcedurePackageWithClinicsDTO dto =
-                            new ProcedurePackageWithClinicsDTO();
-                    dto.setPackageInfo(pkg);
-                    dto.setClinics(clinicDtos);
-                    return dto;
-                })
+                .map(pkg -> mapPackageWithClinics(pkg, clinics, latitude, longitude))
                 .filter(Objects::nonNull)
                 .toList();
     }
 
+    private ProcedurePackageWithClinicsDTO mapPackageWithClinics(
+            ProcedurePackageDTO pkg,
+            List<ClinicPublicDTO> clinics,
+            double latitude,
+            double longitude) {
+
+        // Add platform fee if any
+        if (pkg.getPlatformFee() > 0) {
+            pkg.setFinalCost(pkg.getFinalCost() + pkg.getPlatformFee());
+        }
+
+        List<String> clinicIds;
+        try {
+            clinicIds = procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData();
+        } catch (Exception e) {
+            clinicIds = Collections.emptyList();
+        }
+
+        Set<String> clinicSet = clinicIds != null ? Set.copyOf(clinicIds) : Set.of();
+
+        // Map clinics WITHOUT procedurePricing
+        List<ClinicProcedureLinkDTO> clinicDtos = clinics.stream()
+                .filter(c -> clinicSet.contains(c.getClinicId()))
+                .map(c -> mapClinicToDTO(c, latitude, longitude, null))
+                .sorted((a, b) -> Double.compare(
+                        parseDistance(a.getDistanceInKm()),
+                        parseDistance(b.getDistanceInKm())
+                ))
+                .toList();
+
+        if (clinicDtos.isEmpty()) return null;
+
+        ProcedurePackageWithClinicsDTO dto = new ProcedurePackageWithClinicsDTO();
+        dto.setPackageInfo(pkg);
+        dto.setClinics(clinicDtos);
+        return dto;
+    }
 
 }
