@@ -48,10 +48,29 @@ public class ServiceAdsController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @DeleteMapping("/service-ads/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
-        serviceAdsService.deleteAd(id);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(true, "Ad deleted successfully", null);
+    @DeleteMapping("/service-ads/{id}/{clinicId}")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable String id,
+            @PathVariable String clinicId) {
+
+        serviceAdsService.deleteAd(id, clinicId);
+
+        ApiResponse<Void> apiResponse =
+                new ApiResponse<>(true, "Ad deleted successfully", null);
+
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/service-ads/clinic/{clinicId}")
+    public ResponseEntity<ApiResponse<List<ServiceAdsResponseDto>>> getByClinic(
+            @PathVariable String clinicId) {
+
+        List<ServiceAdsResponseDto> ads =
+                serviceAdsService.getAdsByClinicId(clinicId);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Clinic service ads fetched", ads)
+        );
+    }
+
 }

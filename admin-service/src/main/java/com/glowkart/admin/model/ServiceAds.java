@@ -16,7 +16,10 @@ public class ServiceAds {
     @Id
     private String id;
 
-    private String type;    // image / video
-    private String s3Key;   // S3 object key
-    private String title;   // ad title
+    private String clinicId;     // ✅ NEW
+    private String clinicName;   // ✅ NEW
+
+    private String type;    
+    private String s3Key;   
+    private String title;   
 }

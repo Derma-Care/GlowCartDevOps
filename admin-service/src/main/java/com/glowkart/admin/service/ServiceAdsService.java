@@ -19,6 +19,7 @@ import com.glowkart.admin.config.S3PresignedUrlUtil;
 import com.glowkart.admin.dto.ServiceAdsFileRequestDto;
 import com.glowkart.admin.dto.ServiceAdsResponseDto;
 import com.glowkart.admin.model.ServiceAds;
+import com.glowkart.admin.repo.ClinicRepository;
 import com.glowkart.admin.repo.ServiceAdsRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @RequiredArgsConstructor
 @Slf4j
 public class ServiceAdsService {
+
+	private final ClinicRepository clinicRepository;  // ✅ ADD THIS
 
     private final ServiceAdsRepository serviceAdsRepository;
     private final S3Client s3Client;
@@ -47,7 +50,13 @@ public class ServiceAdsService {
 
     // ----------------- CREATE -----------------
     public ServiceAdsResponseDto uploadFile(ServiceAdsFileRequestDto dto) {
+
         validateRequest(dto);
+        validateClinicId(dto.getClinicId());
+
+        var clinic = clinicRepository.findById(dto.getClinicId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Clinic not found"));
 
         byte[] fileBytes = decodeBase64(dto.getData());
         String extension = getFileExtension(dto.getFilename(), dto.getType());
@@ -56,14 +65,28 @@ public class ServiceAdsService {
         uploadToS3(key, fileBytes, dto.getType(), extension);
 
         ServiceAds ad = new ServiceAds();
+        ad.setClinicId(dto.getClinicId());          // ✅ STORE
+        ad.setClinicName(clinic.getName());         // ✅ STORE
         ad.setType(dto.getType().toLowerCase());
         ad.setS3Key(key);
         ad.setTitle(dto.getTitle());
+
         serviceAdsRepository.save(ad);
 
         return createResponse(ad);
     }
 
+
+    private void validateClinicId(String clinicId) {
+        if (clinicId == null || clinicId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clinicId is required");
+        }
+        if (!clinicRepository.existsById(clinicId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found");
+        }
+    }
+
+    
     // ----------------- READ -----------------
     public List<ServiceAdsResponseDto> getAllAds() {
         return serviceAdsRepository.findAll().stream()
@@ -79,8 +102,15 @@ public class ServiceAdsService {
 
     // ----------------- UPDATE -----------------
     public ServiceAdsResponseDto updateAd(String id, ServiceAdsFileRequestDto dto) {
+
         ServiceAds existingAd = serviceAdsRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+
+        validateClinicId(dto.getClinicId());
+
+        var clinic = clinicRepository.findById(dto.getClinicId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Clinic not found"));
 
         deleteFromS3(existingAd.getS3Key());
 
@@ -91,18 +121,35 @@ public class ServiceAdsService {
 
         uploadToS3(key, fileBytes, dto.getType(), extension);
 
+        existingAd.setClinicId(dto.getClinicId());     // ✅ UPDATE
+        existingAd.setClinicName(clinic.getName());    // ✅ UPDATE
         existingAd.setType(dto.getType().toLowerCase());
         existingAd.setS3Key(key);
         existingAd.setTitle(dto.getTitle());
+
         serviceAdsRepository.save(existingAd);
 
         return createResponse(existingAd);
     }
 
+
     // ----------------- DELETE -----------------
-    public void deleteAd(String id) {
+    public void deleteAd(String id, String clinicId) {
+
         ServiceAds ad = serviceAdsRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+
+        // validate clinicId
+        validateClinicId(clinicId);
+
+        // check if ad belongs to that clinic
+        if (!clinicId.equals(ad.getClinicId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Ad does not belong to the specified clinic"
+            );
+        }
 
         deleteFromS3(ad.getS3Key());
         serviceAdsRepository.delete(ad);
@@ -110,17 +157,35 @@ public class ServiceAdsService {
 
     // ----------------- HELPERS -----------------
     private ServiceAdsResponseDto createResponse(ServiceAds ad) {
-        String url = presignedUrlUtil.generatePresignedUrl(bucketName, ad.getS3Key(), URL_DURATION);
-        String filename = ad.getS3Key().substring(ad.getS3Key().indexOf('-') + 1);
+
+        String url = presignedUrlUtil.generatePresignedUrl(
+                bucketName, ad.getS3Key(), URL_DURATION);
+
+        String filename = ad.getS3Key()
+                .substring(ad.getS3Key().indexOf('-') + 1);
 
         return new ServiceAdsResponseDto(
                 ad.getId(),
+                ad.getClinicId(),       // ✅
+                ad.getClinicName(),     // ✅
                 ad.getType(),
                 url,
                 ad.getTitle(),
                 filename
         );
     }
+
+ // ----------------- READ BY CLINIC -----------------
+    public List<ServiceAdsResponseDto> getAdsByClinicId(String clinicId) {
+
+        validateClinicId(clinicId);  // reuse same validation logic
+
+        return serviceAdsRepository.findByClinicId(clinicId)
+                .stream()
+                .map(this::createResponse)
+                .collect(Collectors.toList());
+    }
+
 
     private void uploadToS3(String key, byte[] fileBytes, String type, String extension) {
         PutObjectRequest putReq = PutObjectRequest.builder()

@@ -139,16 +139,17 @@ public class ClinicAdsService {
 
 
     // ----------------- READ BY CLINIC -----------------
+ // ----------------- READ BY CLINIC -----------------
     public List<ClinicAdsResponseDto> getAdsByClinicId(String clinicId) {
-        if (clinicId == null || clinicId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clinicId is required");
-        }
+
+        validateClinicId(clinicId);
 
         return clinicAdsRepository.findByClinicId(clinicId)
                 .stream()
                 .map(this::createResponse)
                 .collect(Collectors.toList());
     }
+
 
     // ----------------- HELPERS -----------------
     private ClinicAdsResponseDto createResponse(ClinicAds ad) {
