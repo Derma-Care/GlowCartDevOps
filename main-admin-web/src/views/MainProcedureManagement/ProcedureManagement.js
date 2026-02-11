@@ -61,7 +61,7 @@ const ServiceManagement = () => {
     postProcedureQA: [],
     ngkDiscountAmount: '',
     procedureLink: '',
-     paymentType: 'FULL_PAYMENT',
+    paymentType: 'FULL_PAYMENT',
     partialPaymentPercentage: '',
   })
 
@@ -101,6 +101,8 @@ const ServiceManagement = () => {
     () => filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage),
     [filteredData, currentPage, rowsPerPage],
   )
+  // ✅ ADD THIS LINE
+  const totalItems = filteredData.length
 
   // Format minutes into "1 hr 30 min"
   const formatMinutes = (minTime) => {
@@ -218,7 +220,7 @@ const ServiceManagement = () => {
     if (newService.discount && Number(newService.discount) > 100) {
       newErrors.discount = 'Discount cannot exceed 100%.'
     }
- if (!newService.paymentType) {
+    if (!newService.paymentType) {
       newErrors.paymentType = 'Payment type is required'
     }
 
@@ -294,7 +296,7 @@ const ServiceManagement = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }))
     }
 
-      // ---------- UPDATE STATE ----------
+    // ---------- UPDATE STATE ----------
     setNewService((prev) => ({
       ...prev,
       [name]: newValue,
@@ -347,7 +349,7 @@ const ServiceManagement = () => {
       preProcedureQA: [],
       postProcedureQA: [],
       procedureLink: '',
-        paymentType: 'FULL_PAYMENT',
+      paymentType: 'FULL_PAYMENT',
       partialPaymentPercentage: '',
     })
     setErrors({})
@@ -409,7 +411,7 @@ const ServiceManagement = () => {
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
       postProcedureQA: service.postProcedureQA || [],
-       paymentType: service.paymentType || 'FULL_PAYMENT',
+      paymentType: service.paymentType || 'FULL_PAYMENT',
       partialPaymentPercentage: service.partialPaymentPercentage || '',
     })
 
@@ -468,8 +470,8 @@ const ServiceManagement = () => {
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
         procedureLink: newService.procedureLink,
-        
-        ngkDiscountPercentage: newService.ngkDiscountAmount, 
+
+        ngkDiscountPercentage: newService.ngkDiscountAmount,
         paymentType: newService.paymentType || 'FULL_PAYMENT', // ✅
         partialPaymentPercentage:
           newService.paymentType === 'PARTIAL_PAYMENT'
@@ -479,22 +481,22 @@ const ServiceManagement = () => {
 
       const response = await postServiceData(payload)
 
-    if (response?.data?.success) {
-      showCustomToast(response.data.message, 'success')
-      handleCloseFormModal()
-      fetchProcedurePricing()
-    }
-  } catch (error) {
-    console.error('Error in handleAddService:', error?.response || error)
+      if (response?.data?.success) {
+        showCustomToast(response.data.message, 'success')
+        handleCloseFormModal()
+        fetchProcedurePricing()
+      }
+    } catch (error) {
+      console.error('Error in handleAddService:', error?.response || error)
 
-    const backendMessage = error?.response?.data?.message
-    if (backendMessage) {
-      showCustomToast(backendMessage, 'error')
+      const backendMessage = error?.response?.data?.message
+      if (backendMessage) {
+        showCustomToast(backendMessage, 'error')
+      }
+    } finally {
+      setSaveLoading(false)
     }
-  } finally {
-    setSaveLoading(false)
   }
-}
 
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
@@ -504,75 +506,75 @@ const ServiceManagement = () => {
       reader.onerror = (error) => reject(error)
     })
 
-const handleUpdateService = async () => {
-  try {
-    setSaveLoading(true)
+  const handleUpdateService = async () => {
+    try {
+      setSaveLoading(true)
 
-    const hospitalId = clinicId
+      const hospitalId = clinicId
 
-    let base64ImageToSend = ''
-    if (newService.serviceImageFile) {
-      const fullBase64String = await toBase64(newService.serviceImageFile)
-      base64ImageToSend = fullBase64String.split(',')[1]
-    } else if (newService.serviceImage?.startsWith('data:')) {
-      base64ImageToSend = newService.serviceImage.split(',')[1]
-    } else {
-      base64ImageToSend = newService.serviceImage || ''
-    }
+      let base64ImageToSend = ''
+      if (newService.serviceImageFile) {
+        const fullBase64String = await toBase64(newService.serviceImageFile)
+        base64ImageToSend = fullBase64String.split(',')[1]
+      } else if (newService.serviceImage?.startsWith('data:')) {
+        base64ImageToSend = newService.serviceImage.split(',')[1]
+      } else {
+        base64ImageToSend = newService.serviceImage || ''
+      }
 
-    const updatedService = {
-      clinicId: hospitalId,
-      procedureName: newService.subServiceName || '',
-      procedureId: newService.subServiceId || '',
-      description: newService.viewDescription || '',
-      sittings: Number(newService.sittings || 0),
-      minTime: newService.minTimeValue
-        ? `${newService.minTimeValue} ${newService.minTimeUnit}`
-        : '',
-      price: Number(newService.price || 0),
-      discountPercentage: Number(newService.discount || 0),
-      taxPercentage: Number(newService.taxPercentage || 0),
-      gst: Number(newService.gst || 0),
-      consultationFee: Number(newService.consultationFee || 0),
-      procedureImage: base64ImageToSend,
-      procedureQA: newService.procedureQA,
-      preProcedureQA: newService.preProcedureQA,
-      postProcedureQA: newService.postProcedureQA,
-      procedureLink: newService.procedureLink,
-       paymentType: newService.paymentType || 'FULL_PAYMENT',
+      const updatedService = {
+        clinicId: hospitalId,
+        procedureName: newService.subServiceName || '',
+        procedureId: newService.subServiceId || '',
+        description: newService.viewDescription || '',
+        sittings: Number(newService.sittings || 0),
+        minTime: newService.minTimeValue
+          ? `${newService.minTimeValue} ${newService.minTimeUnit}`
+          : '',
+        price: Number(newService.price || 0),
+        discountPercentage: Number(newService.discount || 0),
+        taxPercentage: Number(newService.taxPercentage || 0),
+        gst: Number(newService.gst || 0),
+        consultationFee: Number(newService.consultationFee || 0),
+        procedureImage: base64ImageToSend,
+        procedureQA: newService.procedureQA,
+        preProcedureQA: newService.preProcedureQA,
+        postProcedureQA: newService.postProcedureQA,
+        procedureLink: newService.procedureLink,
+        paymentType: newService.paymentType || 'FULL_PAYMENT',
         partialPaymentPercentage:
           newService.paymentType === 'PARTIAL_PAYMENT'
             ? Number(newService.partialPaymentPercentage)
             : 0,
-      ngkDiscountPercentage: Number(newService.ngkDiscountAmount || 0),
+        ngkDiscountPercentage: Number(newService.ngkDiscountAmount || 0),
+      }
+
+      // ❗ Send offer dates ALWAYS (backend will validate)
+      updatedService.offerStart = newService.offerValidDate || null
+      updatedService.offerValidDate = newService.offerEndDate || null
+
+      const response = await updateServiceData(
+        newService.subServiceId,
+        hospitalId,
+        updatedService
+      )
+
+      if (response?.success) {
+        showCustomToast(response.message, 'success')
+        handleCloseFormModal()
+        fetchProcedurePricing()
+      }
+
+    } catch (error) {
+      // ✅ SHOW ONLY BACKEND MESSAGE
+      const backendMessage = error?.response?.data?.message
+      if (backendMessage) {
+        showCustomToast(backendMessage, 'error')
+      }
+    } finally {
+      setSaveLoading(false)
     }
-
-    // ❗ Send offer dates ALWAYS (backend will validate)
-    updatedService.offerStart = newService.offerValidDate || null
-    updatedService.offerValidDate = newService.offerEndDate || null
-
-    const response = await updateServiceData(
-      newService.subServiceId,
-      hospitalId,
-      updatedService
-    )
-
-    if (response?.success) {
-      showCustomToast(response.message, 'success')
-      handleCloseFormModal()
-      fetchProcedurePricing()
-    }
-
-  } catch (error) {
-    // ✅ SHOW ONLY BACKEND MESSAGE
-    const backendMessage = error?.response?.data?.message
-    if (backendMessage) {
-      showCustomToast(backendMessage, 'error')
-    }
-  } finally {
-    setSaveLoading(false)
   }
-}
 
 
 
@@ -612,36 +614,36 @@ const handleUpdateService = async () => {
 
       {/* Top Right "Add" Button (if needed) */}
       <div>
-     
-          <div className="w-100 mb-3">
-            <div className="d-flex justify-content-between align-items-center">
 
-              {/* 🔍 SEARCH FIELD */}
-              <input
-                type="text"
-                placeholder="Search by name, price, or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="form-control"
-                style={{
-                  width: "350px",
-                  border: '1px solid var(--color-black)',
-                }}
-              />
+        <div className="w-100 mb-3">
+          <div className="d-flex justify-content-between align-items-center">
 
-              {/* ➕ ADD BUTTON */}
-              <CButton
-                style={{
-                  color: 'var(--color-black)',
-                  backgroundColor: 'var(--color-bgcolor)',
-                }}
-                onClick={openAddModal}
-              >
-                Add Procedure Details
-              </CButton>
+            {/* 🔍 SEARCH FIELD */}
+            <input
+              type="text"
+              placeholder="Search by name, price, or description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-control"
+              style={{
+                width: "350px",
+                border: '1px solid var(--color-black)',
+              }}
+            />
 
-            </div>
+            {/* ➕ ADD BUTTON */}
+            <CButton
+              style={{
+                color: 'var(--color-black)',
+                backgroundColor: 'var(--color-bgcolor)',
+              }}
+              onClick={openAddModal}
+            >
+              Add Procedure Details
+            </CButton>
+
           </div>
+        </div>
 
       </div>
 
@@ -716,15 +718,20 @@ const handleUpdateService = async () => {
             onDelete={handleServiceDelete}
           />
 
-          {displayData.length > 0 && (
+          {totalItems > 0 && (
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(filteredData.length / rowsPerPage)}
+              totalPages={Math.ceil(totalItems / rowsPerPage)}
               pageSize={rowsPerPage}
+              totalItems={totalItems}
               onPageChange={setCurrentPage}
-              onPageSizeChange={setRowsPerPage}
+              onPageSizeChange={(size) => {
+                setRowsPerPage(size)
+                setCurrentPage(1) // reset to page 1
+              }}
             />
           )}
+
         </>
       )}
     </div>

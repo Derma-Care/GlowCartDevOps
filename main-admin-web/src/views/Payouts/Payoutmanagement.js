@@ -257,28 +257,28 @@ const PayoutManagement = () => {
           ) : (
             <CTable striped hover responsive>
               <CTableHead className="pink-table">
-                <CTableRow>
-                  <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Booking ID</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Billing Name</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Amount</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Payment Method</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                <CTableRow className="text-center">
+                  <CTableHeaderCell >S.No</CTableHeaderCell>
+                  <CTableHeaderCell>Booking ID</CTableHeaderCell>
+                  <CTableHeaderCell >Billing Name</CTableHeaderCell>
+                  <CTableHeaderCell>Amount</CTableHeaderCell>
+                  <CTableHeaderCell >Payment Method</CTableHeaderCell>
+                  <CTableHeaderCell >Actions</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
 
               <CTableBody className="pink-table">
                 {displayData.length > 0 ? (
                   displayData.map((p, index) => (
-                    <CTableRow key={`${p.bookingId}-${index}`}>
-                      <CTableDataCell className="text-center">
+                    <CTableRow key={`${p.bookingId}-${index}`} className="text-center align-middle">
+                      <CTableDataCell>
                         {(currentPage - 1) * rowsPerPage + index + 1}
                       </CTableDataCell>
-                      <CTableDataCell className="text-center">{p.bookingId}</CTableDataCell>
-                      <CTableDataCell className="text-center">{p.billingName}</CTableDataCell>
-                      <CTableDataCell className="text-center">{p.amount}</CTableDataCell>
-                      <CTableDataCell className="text-center">{p.paymentMethod}</CTableDataCell>
-                      <CTableDataCell className="text-center">
+                      <CTableDataCell>{p.bookingId}</CTableDataCell>
+                      <CTableDataCell>{p.billingName}</CTableDataCell>
+                      <CTableDataCell>{p.amount}</CTableDataCell>
+                      <CTableDataCell>{p.paymentMethod}</CTableDataCell>
+                      <CTableDataCell>
                         <div className="d-flex justify-content-center align-items-center gap-2">
                           <button
                             className="actionBtn view"
@@ -314,7 +314,7 @@ const PayoutManagement = () => {
                     setRowsPerPage(Number(e.target.value))
                     setCurrentPage(1)
                   }}
-                   style={{ width: '80px', display: 'inline-block' }}
+                  style={{ width: '80px', display: 'inline-block' }}
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>

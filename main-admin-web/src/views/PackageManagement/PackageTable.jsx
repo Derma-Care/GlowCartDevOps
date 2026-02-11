@@ -14,48 +14,48 @@ const PackageTableData = ({ data, onView, onEdit, onDelete }) => {
   return (
     <CTable striped hover responsive>
       <CTableHead className="pink-table w-auto">
-        <CTableRow>
+        <CTableRow className="text-center">
           <CTableHeaderCell style={{ paddingLeft: '40px' }}>S.No</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Package Name</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Discount %</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Offer Start Date</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Offer End Date</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Price</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+          <CTableHeaderCell >Package Name</CTableHeaderCell>
+          <CTableHeaderCell >Discount %</CTableHeaderCell>
+          <CTableHeaderCell >Offer Start Date</CTableHeaderCell>
+          <CTableHeaderCell >Offer End Date</CTableHeaderCell>
+          <CTableHeaderCell >Price</CTableHeaderCell>
+          <CTableHeaderCell >Actions</CTableHeaderCell>
         </CTableRow>
       </CTableHead>
 
       <CTableBody className="pink-table">
         {data && data.length > 0 ? (
           data.map((item, index) => (
-            <CTableRow key={item.packageId || index}>
+            <CTableRow key={item.packageId || index} className="text-center align-middle">
               <CTableDataCell style={{ paddingLeft: '40px' }}>{index + 1}</CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {capitalizeWords(item.packageName || 'N/A')}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {item.discountPercentage ?? 'NA'}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {item.offerStart
                   ? new Date(item.offerStart).toLocaleDateString('en-GB')
                   : 'NA'}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 {item.offerValidDate
                   ? new Date(item.offerValidDate).toLocaleDateString('en-GB')
                   : 'NA'}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 ₹{item.price || 'NA'}
               </CTableDataCell>
 
-              <CTableDataCell className="text-center">
+              <CTableDataCell>
                 <div className="d-flex justify-content-center gap-2">
                   <button className="actionBtn" onClick={() => onView(item)} title="View">
                     <Eye size={18} />

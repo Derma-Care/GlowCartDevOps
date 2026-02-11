@@ -459,7 +459,7 @@ const CustomerManagement = () => {
           {loading ? (
             <CTable striped hover responsive>
               <CTableHead className="pink-table">
-                <CTableRow >
+                <CTableRow className="text-center" >
                   <CTableHeaderCell colSpan={6} className="text-center">
                     <LoadingIndicator message="Loading customer data..." />
                   </CTableHeaderCell>
@@ -474,25 +474,25 @@ const CustomerManagement = () => {
             <>
               <CTable striped hover responsive>
                 <CTableHead className='pink-table'>
-                  <CTableRow>
+                  <CTableRow className="text-center">
 
-                    <CTableHeaderCell className="text-center">
+                    <CTableHeaderCell >
                       Select
                     </CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Full Name</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Mobile Number</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Gender</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Date Of Birth</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                    <CTableHeaderCell >S.No</CTableHeaderCell>
+                    <CTableHeaderCell >Full Name</CTableHeaderCell>
+                    <CTableHeaderCell >Mobile Number</CTableHeaderCell>
+                    <CTableHeaderCell >Gender</CTableHeaderCell>
+                    <CTableHeaderCell >Date Of Birth</CTableHeaderCell>
+                    <CTableHeaderCell >Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
 
                 <CTableBody className='pink-table'>
                   {currentItems.map((customer, index) => (
-                    <CTableRow key={customer.mobile || index}>
+                    <CTableRow key={customer.mobile || index} className="text-center align-middle">
                       {/* Row Checkbox */}
-                      <CTableDataCell className="text-center">
+                      <CTableDataCell>
                         <input
                           type="checkbox"
                           checked={selectedMobiles.includes(customer.mobile)}
@@ -500,13 +500,13 @@ const CustomerManagement = () => {
                         />
                       </CTableDataCell>
 
-                      <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
-                      <CTableDataCell className="text-center">{customer?.fullName || '-'}</CTableDataCell>
-                      <CTableDataCell className="text-center">{customer?.mobile || '-'}</CTableDataCell>
-                      <CTableDataCell className="text-center">{customer?.gender || '-'}</CTableDataCell>
-                      <CTableDataCell className="text-center">{customer?.dob || '-'}</CTableDataCell>
+                      <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
+                      <CTableDataCell>{customer?.fullName || '-'}</CTableDataCell>
+                      <CTableDataCell>{customer?.mobile || '-'}</CTableDataCell>
+                      <CTableDataCell>{customer?.gender || '-'}</CTableDataCell>
+                      <CTableDataCell>{customer?.dob || '-'}</CTableDataCell>
 
-                      <CTableDataCell className="text-center">
+                      <CTableDataCell>
                         <div className="d-flex justify-content-center align-items-center gap-2">
                           <button
                             className="actionBtn view"

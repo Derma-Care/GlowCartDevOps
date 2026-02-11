@@ -554,23 +554,23 @@ const ServiceManagement = () => {
           <>
             <CTable striped hover responsive>
               <CTableHead className='pink-table'>
-                <CTableRow>
+                <CTableRow className="text-center">
                   <CTableHeaderCell >S.No</CTableHeaderCell>
                   <CTableHeaderCell>Service Name</CTableHeaderCell>
                   <CTableHeaderCell>Category Name</CTableHeaderCell>
                   <CTableHeaderCell>Description</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                  <CTableHeaderCell>Actions</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody className='pink-table'>
                 {currentItems && currentItems.length > 0 ? (
                   currentItems.map((service, index) => (
-                    <CTableRow key={service.serviceId || index}>
+                    <CTableRow key={service.serviceId || index} className="text-center align-middle">
                       <CTableDataCell>{(currentPage - 1) * itemsPerPage + index + 1}</CTableDataCell>
                       <CTableDataCell>{service.serviceName}</CTableDataCell>
                       <CTableDataCell>{service.categoryName}</CTableDataCell>
                       <CTableDataCell>{service.description || 'N/A'}</CTableDataCell>
-                      <CTableDataCell className="text-center">
+                      <CTableDataCell>
                         <div className="d-flex justify-content-center align-items-center gap-2">
                           <button
                             // color="primary"

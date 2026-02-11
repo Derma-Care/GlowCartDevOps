@@ -94,7 +94,7 @@ const MembershipTable = () => {
       {/* TABLE */}
       <CTable striped hover responsive>
         <CTableHead className="pink-table">
-          <CTableRow>
+          <CTableRow className="text-center">
             <CTableHeaderCell>S.No</CTableHeaderCell>
             <CTableHeaderCell>Name</CTableHeaderCell>
             <CTableHeaderCell>Phone</CTableHeaderCell>
@@ -109,7 +109,7 @@ const MembershipTable = () => {
         <CTableBody className="pink-table">
           {paginatedData.length > 0 ? (
             paginatedData.map((item, index) => (
-              <CTableRow key={item.id || index}>
+              <CTableRow key={item.id || index} className="text-center align-middle">
                 <CTableDataCell>{startIndex + index + 1}</CTableDataCell>
                 <CTableDataCell>{item.name}</CTableDataCell>
                 <CTableDataCell>{item.phone}</CTableDataCell>

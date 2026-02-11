@@ -142,7 +142,7 @@ NGK Support Team`
                 <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
                   <CTable striped hover responsive>
                     <CTableHead className="pink-table">
-                      <CTableRow>
+                      <CTableRow className="text-center">
                         <CTableHeaderCell>S.No</CTableHeaderCell>
                         <CTableHeaderCell>Clinic Name</CTableHeaderCell>
                         <CTableHeaderCell>Contact Name</CTableHeaderCell>
@@ -153,7 +153,7 @@ NGK Support Team`
 
                     <CTableBody className="pink-table">
                       {currentItems.map((item, index) => (
-                        <CTableRow key={index}>
+                        <CTableRow key={index} className="text-center align-middle">
                           <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
                           <CTableDataCell>{item.clinicName}</CTableDataCell>
                           <CTableDataCell>{item.contactName}</CTableDataCell>

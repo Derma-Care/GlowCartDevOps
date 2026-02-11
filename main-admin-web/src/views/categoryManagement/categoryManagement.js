@@ -459,18 +459,18 @@ const CategoryManagement = () => {
         ) : (
           <CTable striped hover responsive>
             <CTableHead className="pink-table">
-              <CTableRow>
-                <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
+              <CTableRow className="text-center">
+                <CTableHeaderCell >S.No</CTableHeaderCell>
                 <CTableHeaderCell>Category Name</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                <CTableHeaderCell >Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
 
             <CTableBody className="pink-table">
               {currentItems.length > 0 ? (
                 currentItems.map((category, index) => (
-                  <CTableRow key={category.categoryId}>
-                    <CTableDataCell className="text-center">
+                  <CTableRow key={category.categoryId} className="text-center align-middle" >
+                    <CTableDataCell>
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </CTableDataCell>
 

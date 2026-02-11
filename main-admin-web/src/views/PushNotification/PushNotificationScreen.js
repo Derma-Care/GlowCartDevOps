@@ -364,36 +364,36 @@ const FCMNotification = () => {
 
           <CTable striped hover responsive>
             <CTableHead className="pink-table">
-              <CTableRow>
-                <CTableHeaderCell className="text-center">#</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Title</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Body</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Date</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Image</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+              <CTableRow className="text-center">
+                <CTableHeaderCell >#</CTableHeaderCell>
+                <CTableHeaderCell>Title</CTableHeaderCell>
+                <CTableHeaderCell>Body</CTableHeaderCell>
+                <CTableHeaderCell>Date</CTableHeaderCell>
+                <CTableHeaderCell>Image</CTableHeaderCell>
+                <CTableHeaderCell>Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
 
             <CTableBody className="pink-table">
               {paginatedNotifications.length > 0 ? (
                 paginatedNotifications.map((n, idx) => (
-                  <CTableRow key={idx}>
-                    <CTableDataCell className="text-center">
+                  <CTableRow key={idx} className="text-center align-middle">
+                    <CTableDataCell>
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </CTableDataCell>
-                    <CTableDataCell className="text-center">{n.title}</CTableDataCell>
-                    <CTableDataCell className="text-center">{n.body}</CTableDataCell>
-                    <CTableDataCell className="text-center">
+                    <CTableDataCell>{n.title}</CTableDataCell>
+                    <CTableDataCell>{n.body}</CTableDataCell>
+                    <CTableDataCell>
                       {new Date(n.createdAt || Date.now()).toLocaleString()}
                     </CTableDataCell>
-                    <CTableDataCell className="text-center">
+                    <CTableDataCell>
                       {n.image ? (
                         <img src={n.image} alt="notif" style={{ width: 50, borderRadius: 5 }} />
                       ) : (
                         '-'
                       )}
                     </CTableDataCell>
-                    <CTableDataCell className="text-center">
+                    <CTableDataCell>
                       <div className="d-flex justify-content-end gap-2">
                         <button className="actionBtn view" onClick={() => handleView(n)}>
                           <Eye size={18} />

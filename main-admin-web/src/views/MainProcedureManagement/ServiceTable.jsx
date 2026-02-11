@@ -22,21 +22,21 @@ const ServiceTable = ({
   return (
     <CTable striped hover responsive>
       <CTableHead className="pink-table w-auto">
-         <CTableRow>
+         <CTableRow className="text-center">
           <CTableHeaderCell style={{ paddingLeft: '40px' }}>S.No</CTableHeaderCell>
           <CTableHeaderCell>Procedure Name</CTableHeaderCell>
           <CTableHeaderCell>Discount %</CTableHeaderCell>
           <CTableHeaderCell>Offer Start Date</CTableHeaderCell>
           <CTableHeaderCell>Offer End Date</CTableHeaderCell>
           <CTableHeaderCell>Price</CTableHeaderCell>
-          <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
+          <CTableHeaderCell>Actions</CTableHeaderCell>
         </CTableRow>
       </CTableHead>
 
       <CTableBody className="pink-table">
         {data.length > 0 ? (
           data.map((item, index) => (
-            <CTableRow key={item.procedureId || index}>
+            <CTableRow key={item.procedureId || index} className="text-center align-middle">
               <CTableDataCell style={{ paddingLeft: "40px" }}>
                 {index + 1}
               </CTableDataCell>

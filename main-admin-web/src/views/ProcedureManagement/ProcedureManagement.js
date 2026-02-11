@@ -224,19 +224,29 @@ const ProcedureManagement = () => {
     setDelLoading(false)
     setShowDeleteModal(false)
   }
-  const filteredProcedures = procedures.filter((proc) =>
-    proc.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredProcedures.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(filteredProcedures.length / itemsPerPage)
+ const filteredProcedures = procedures.filter((proc) =>
+  proc.name.toLowerCase().includes(searchTerm.toLowerCase())
+)
 
 
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-  };
+const totalPages = Math.max(
+  1,
+  Math.ceil(filteredProcedures.length / itemsPerPage)
+)
+
+const indexOfLastItem = currentPage * itemsPerPage
+const indexOfFirstItem = indexOfLastItem - itemsPerPage
+
+const currentItems = filteredProcedures.slice(
+  indexOfFirstItem,
+  indexOfLastItem
+)
+useEffect(() => {
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages)
+  }
+}, [totalPages])
+
 
   return (
     <>
@@ -261,9 +271,9 @@ const ProcedureManagement = () => {
                       setCurrentPage(1)
                     }}
                     type="text"
-                     style={{ border: '1px solid var(--color-black)', }}
+                    style={{ border: '1px solid var(--color-black)', }}
                   />
-                  <CInputGroupText   style={{ border: '1px solid var(--color-black)', }}>
+                  <CInputGroupText style={{ border: '1px solid var(--color-black)', }}>
                     <CIcon icon={cilSearch} />
                   </CInputGroupText>
                 </CInputGroup>
@@ -291,20 +301,20 @@ const ProcedureManagement = () => {
         ) : (
           <CTable striped hover responsive >
             <CTableHead className='pink-table'>
-              <CTableRow>
-                <CTableHeaderCell className="text-center" style={{ width: "10%" }}>S.No</CTableHeaderCell>
-                <CTableHeaderCell className="text-center" style={{ width: "60%" }}>Procedure</CTableHeaderCell>
-                <CTableHeaderCell className="text-center" style={{ width: "30%" }}>Actions</CTableHeaderCell>
+              <CTableRow className="text-center">
+                <CTableHeaderCell  style={{ width: "10%" }}>S.No</CTableHeaderCell>
+                <CTableHeaderCell  style={{ width: "60%" }}>Procedure</CTableHeaderCell>
+                <CTableHeaderCell style={{ width: "30%" }}>Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
 
             <CTableBody className='pink-table'>
               {currentItems.length > 0 ? (
                 currentItems.map((row, index) => (
-                  <CTableRow key={row.id}>
-                    <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
-                    <CTableDataCell className="text-center">{row.name}</CTableDataCell>
-                    <CTableDataCell className="text-center">
+                  <CTableRow key={row.id} className="text-center align-middle">
+                    <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
+                    <CTableDataCell>{row.name}</CTableDataCell>
+                    <CTableDataCell>
                       <div className="d-flex justify-content-center gap-2">
                         <button className="actionBtn" onClick={() => handleView(row)}><Eye size={18} /></button>
                         <button className="actionBtn" onClick={() => handleEdit(row)}><Edit2 size={18} /></button>
@@ -322,50 +332,72 @@ const ProcedureManagement = () => {
           </CTable>
 
         )}
+        {/* Pagination */}
+     {filteredProcedures.length > 0 && (
+  <div className="d-flex justify-content-between px-3 pb-3 mt-3">
+    
+    {/* Rows Per Page */}
+    <div>
+      <label className="me-2">Rows per page:</label>
+      <CFormSelect
+        value={itemsPerPage}
+        onChange={(e) => {
+          setItemsPerPage(Number(e.target.value))
+          setCurrentPage(1)
+        }}
+        style={{ width: '80px', display: 'inline-block' }}
+      >
+        <option value={5}>5</option>
+        <option value={10}>10</option>
+        <option value={25}>25</option>
+        <option value={50}>50</option>
+      </CFormSelect>
+    </div>
 
-        {procedures.length > 0 && (
-          <div className="d-flex justify-content-between px-3 pb-3 mt-3">
-            <div>
-              <label className="me-2">Rows per page:</label>
-              <CFormSelect
-                value={itemsPerPage}
-                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                style={{ width: '80px', display: 'inline-block' }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-              </CFormSelect>
-            </div>
+    {/* Pagination */}
+    <div>
+      <div>
+        Showing {filteredProcedures.length === 0 ? 0 : indexOfFirstItem + 1} to{" "}
+        {Math.min(indexOfLastItem, filteredProcedures.length)} of{" "}
+        {filteredProcedures.length} entries
+      </div>
 
-            <div>
-              <div>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredProcedures.length)} of {filteredProcedures.length} entries
-              </div>
+      <CPagination align="end" className="mt-2 themed-pagination">
+        <CPaginationItem
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Prev
+        </CPaginationItem>
 
-              <CPagination align="end" className="mt-2 themed-pagination">
-                <CPaginationItem disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>Previous</CPaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((page) => {
-                    if (totalPages <= 5) return true;
-                    if (currentPage <= 3) return page <= 5;
-                    if (currentPage >= totalPages - 2)
-                      return page >= totalPages - 4;
-                    return page >= currentPage - 2 && page <= currentPage + 2;
-                  })
-                  .map((page) => (
-                    <CPaginationItem
-                      key={page}
-                      active={page === currentPage}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </CPaginationItem>
-                  ))}
-                <CPaginationItem disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next</CPaginationItem>
-              </CPagination>
-            </div>
-          </div>
-        )}
+        {Array.from({ length: totalPages }, (_, i) => i + 1)
+          .filter((page) => {
+            if (totalPages <= 5) return true
+            if (currentPage <= 3) return page <= 5
+            if (currentPage >= totalPages - 2) return page >= totalPages - 4
+            return page >= currentPage - 2 && page <= currentPage + 2
+          })
+          .map((page) => (
+            <CPaginationItem
+              key={page}
+              active={page === currentPage}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </CPaginationItem>
+          ))}
+
+        <CPaginationItem
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </CPaginationItem>
+      </CPagination>
+    </div>
+  </div>
+)}
+
       </CCard>
 
       {/* Add Procedures Modal */}
@@ -392,8 +424,8 @@ const ProcedureManagement = () => {
           {errors.procedure && <p className="text-danger mt-1">{errors.procedure}</p>}<br />
 
           <CButton
-           color="secondary"
-                    
+            color="secondary"
+
             onClick={handleAddToTemp}
             disabled={editMode}
             style={{

@@ -187,8 +187,10 @@ const CustomerViewDetails = () => {
     {
       id: 6,
       title: 'Referred',
-      visible: true
-
+      visible:
+        customerData &&
+        Array.isArray(customerData.referredCustomers) &&
+        customerData.referredCustomers.length > 0
     }
 
   ]
@@ -394,64 +396,48 @@ const CustomerViewDetails = () => {
             <CCard className="p-3 shadow-sm">
               <CRow className="gy-3">
 
-                {customerData.referredCustomerIds ||
-                  customerData.fullName
-                  ? (
+                {Array.isArray(customerData.referredCustomers) &&
+                  customerData.referredCustomers.length > 0 ? (
 
-                    <>
-                      {/* Referred Customers TABLE */}
-                      {Array.isArray(customerData.referredCustomers) &&
-                        customerData.referredCustomers.length > 0 && (
-                          <CCol sm="12">
-                            <strong>Referred Customers:</strong>
+                  /* ✅ SHOW TABLE ONLY */
+                  <CCol sm="12">
+                    <CTable striped hover responsive>
+                      <CTableHead className="pink-table">
+                        <CTableRow className="text-center">
+                          <CTableHeaderCell>S.No</CTableHeaderCell>
+                          <CTableHeaderCell>Customer ID</CTableHeaderCell>
+                          <CTableHeaderCell>Customer Name</CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
 
-                            <CTable
-                              striped hover responsive
-                            >
-                              <CTableHead className="pink-table">
-                                <CTableRow>
-                                  <CTableHeaderCell className="text-center" style={{ width: '60px' }}>
-                                    S.No
-                                  </CTableHeaderCell>
-                                  <CTableHeaderCell className="text-center">
-                                    Customer ID
-                                  </CTableHeaderCell>
-                                  <CTableHeaderCell className="text-center">
-                                    Customer Name
-                                  </CTableHeaderCell>
-                                </CTableRow>
-                              </CTableHead>
+                      <CTableBody className="pink-table">
+                        {customerData.referredCustomers.map((customer, index) => (
+                          <CTableRow
+                            key={customer.customerId}
+                            className="text-center align-middle"
+                          >
+                            <CTableDataCell>{index + 1}</CTableDataCell>
+                            <CTableDataCell>{customer.customerId}</CTableDataCell>
+                            <CTableDataCell>{customer.fullName}</CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  </CCol>
 
-                              <CTableBody className="pink-table">
-                                {customerData.referredCustomers.map((customer, index) => (
-                                  <CTableRow key={customer.customerId}>
-                                    <CTableDataCell className="text-center">
-                                      {index + 1}
-                                    </CTableDataCell>
-                                    <CTableDataCell className="text-center">
-                                      {customer.customerId}
-                                    </CTableDataCell>
-                                    <CTableDataCell className="text-center">
-                                      {customer.fullName}
-                                    </CTableDataCell>
-                                  </CTableRow>
-                                ))}
-                              </CTableBody>
-                            </CTable>
-                          </CCol>
-                        )}
-                    </>
-                  ) : (
-                    // 👇 NO DATA UI
-                    <CCol sm="12" className="text-center py-4">
-                      <p className="text-muted fw-semibold mb-1">
-                        No referral details available
-                      </p>
-                      <small className="text-muted">
-                        This customer was not referred by anyone.
-                      </small>
-                    </CCol>
-                  )}
+                ) : (
+
+                  /* ❌ NO DATA UI */
+                  <CCol sm="12" className="text-center py-4">
+                    <p className="text-muted fw-semibold mb-1">
+                      No referral details available
+                    </p>
+                    <small className="text-muted">
+                      This customer was not referred by anyone.
+                    </small>
+                  </CCol>
+
+                )}
 
               </CRow>
             </CCard>

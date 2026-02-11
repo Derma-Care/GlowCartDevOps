@@ -2023,27 +2023,27 @@ const ClinicRegistration = () => {
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}> {/* Scrollable container */}
                 <CTable striped hover responsive>
                   <CTableHead className="pink-table">
-                    <CTableRow>
+                    <CTableRow className="text-center">
                       <CTableHeaderCell>S.No</CTableHeaderCell>
                       <CTableHeaderCell>Doctor Name</CTableHeaderCell>
                       <CTableHeaderCell>Specialization</CTableHeaderCell>
                       <CTableHeaderCell>Registration No</CTableHeaderCell>
                       <CTableHeaderCell>Association No</CTableHeaderCell>
                       <CTableHeaderCell>Association Name</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                      <CTableHeaderCell>Actions</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
 
                   <CTableBody className="pink-table">
                     {doctorsList.map((doctor, index) => (
-                      <CTableRow key={index}>
+                      <CTableRow key={index} className="text-center align-middle">
                         <CTableDataCell>{index + 1}</CTableDataCell>
                         <CTableDataCell>{doctor.doctorName || '-'}</CTableDataCell>
                         <CTableDataCell>{doctor.specialization || '-'}</CTableDataCell>
                         <CTableDataCell>{doctor.registrationNumber || '-'}</CTableDataCell>
                         <CTableDataCell>{doctor.associationNumber || '-'}</CTableDataCell>
                         <CTableDataCell>{doctor.associationName || '-'}</CTableDataCell>
-                        <CTableDataCell className="text-center">
+                        <CTableDataCell>
                           <div className="d-flex justify-content-center align-items-center gap-2">
                             <button
                               type="button"     // ⛔ Prevent submit

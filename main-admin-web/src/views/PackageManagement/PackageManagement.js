@@ -14,7 +14,7 @@ import { useHospital } from '../Usecontext/HospitalContext'
 import { showCustomToast } from '../../Utils/Toaster'
 import LoadingIndicator from '../../Utils/loader'
 import Pagination from '../../Utils/Pagination'
-import {getProcedurePricingByClinicId } from '../MainProcedureManagement/procedureService'
+import { getProcedurePricingByClinicId } from '../MainProcedureManagement/procedureService'
 import PackageViewModal from './PackageViewModal'
 import PackageFormModal from './PackageFormModal'
 import PackageTableData from './PackageTable'
@@ -107,7 +107,8 @@ const PackageManagement = () => {
     () => filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage),
     [filteredData, currentPage, rowsPerPage],
   )
-
+  // ✅ ADD THIS LINE
+  const totalItems = filteredData.length
   // Format minutes into "1 hr 30 min"
   const formatMinutes = (minTime) => {
     const minutes = parseInt(minTime, 10)
@@ -232,7 +233,7 @@ const PackageManagement = () => {
     if (!newService.packageProcedures || newService.packageProcedures.length < 2) {
       newErrors.packageProcedures = 'Please select at least two procedures.'
     }
- if (!newService.paymentType) {
+    if (!newService.paymentType) {
       newErrors.paymentType = 'Payment type is required'
     }
 
@@ -353,7 +354,7 @@ const PackageManagement = () => {
       'discount',
       'gst',
       'taxPercentage',
-  'partialPaymentPercentage',
+      'partialPaymentPercentage',
     ]
 
     let newValue = value
@@ -381,7 +382,7 @@ const PackageManagement = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }))
     }
 
-      // ---------- UPDATE STATE ----------
+    // ---------- UPDATE STATE ----------
     setNewService((prev) => ({
       ...prev,
       [name]: newValue,
@@ -430,7 +431,7 @@ const PackageManagement = () => {
       procedureQA: [],
       preProcedureQA: [],
       postProcedureQA: [],
-   paymentType: 'FULL_PAYMENT',
+      paymentType: 'FULL_PAYMENT',
       partialPaymentPercentage: '',
       packageProcedures: [],
     })
@@ -490,7 +491,7 @@ const PackageManagement = () => {
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
       postProcedureQA: service.postProcedureQA || [],
- paymentType: service.paymentType || 'FULL_PAYMENT',
+      paymentType: service.paymentType || 'FULL_PAYMENT',
       partialPaymentPercentage: service.partialPaymentPercentage || '',
       packageProcedures: mappedProcedures,
     })
@@ -623,7 +624,7 @@ const PackageManagement = () => {
         procedureImage: base64ImageToSend,
         gst: Number(newService.gst || 0),
         consultationFee: Number(newService.consultationFee || 0),
-         paymentType: newService.paymentType || 'FULL_PAYMENT',
+        paymentType: newService.paymentType || 'FULL_PAYMENT',
         partialPaymentPercentage:
           newService.paymentType === 'PARTIAL_PAYMENT'
             ? Number(newService.partialPaymentPercentage)
@@ -684,37 +685,37 @@ const PackageManagement = () => {
 
       {/* Top Right "Add" Button (if needed) */}
       <div>
-      
 
-          <div className="w-100 mb-3">
-            <div className="d-flex justify-content-between align-items-center">
 
-              {/* 🔍 SEARCH FIELD */}
-              <input
-                type="text"
-                placeholder="Search by name, price, or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="form-control"
-                style={{
-                  width: "350px",
-                  border: '1px solid var(--color-black)',
-                }}
-              />
+        <div className="w-100 mb-3">
+          <div className="d-flex justify-content-between align-items-center">
 
-              {/* ➕ ADD BUTTON */}
-              <CButton
-                style={{
-                  color: 'var(--color-black)',
-                  backgroundColor: 'var(--color-bgcolor)',
-                }}
-                onClick={openAddModal}
-              >
-                Add Package Details
-              </CButton>
-            </div>
+            {/* 🔍 SEARCH FIELD */}
+            <input
+              type="text"
+              placeholder="Search by name, price, or description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-control"
+              style={{
+                width: "350px",
+                border: '1px solid var(--color-black)',
+              }}
+            />
+
+            {/* ➕ ADD BUTTON */}
+            <CButton
+              style={{
+                color: 'var(--color-black)',
+                backgroundColor: 'var(--color-bgcolor)',
+              }}
+              onClick={openAddModal}
+            >
+              Add Package Details
+            </CButton>
           </div>
-    
+        </div>
+
       </div>
 
       {/* View Modal */}
@@ -743,7 +744,7 @@ const PackageManagement = () => {
       />
 
       {/* Delete Confirmation */}
-<ConfirmationModal
+      <ConfirmationModal
         isVisible={isModalVisible}
         title="Delete Procedure"
         message="Are you sure you want to delete this procedure? This action cannot be undone."
@@ -788,13 +789,17 @@ const PackageManagement = () => {
             onDelete={handleServiceDelete}
           />
 
-          {displayData.length > 0 && (
+          {totalItems > 0 && (
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(filteredData.length / rowsPerPage)}
+              totalPages={Math.ceil(totalItems / rowsPerPage)}
               pageSize={rowsPerPage}
+              totalItems={totalItems}
               onPageChange={setCurrentPage}
-              onPageSizeChange={setRowsPerPage}
+              onPageSizeChange={(size) => {
+                setRowsPerPage(size)
+                setCurrentPage(1) // reset to page 1
+              }}
             />
           )}
         </>

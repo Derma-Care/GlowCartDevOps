@@ -15,19 +15,21 @@ import {
   CModalFooter,
   CNav,
   CNavItem,
-  CNavLink, CCard, CCardBody, CPagination, CPaginationItem
+  CNavLink,
+  CPagination,
+  CPaginationItem
 } from "@coreui/react";
-
 import { useNavigate, useParams } from "react-router-dom";
 import { getAppointmentsByBookingId, updateAppointmentStatus } from "./AppointmentsApis";
 import { showCustomToast } from "../../Utils/Toaster";
 import LoadingIndicator from "../../Utils/loader";
+import "./AppointmentsTable.css";
 
 const centeredMessageStyle = {
   textAlign: "center",
   padding: "40px 0",
   fontWeight: 600,
-  color: "#6c757d"
+  color: "var(--cui-body-color)"
 };
 
 const AppointmentsTable = () => {
@@ -48,82 +50,54 @@ const AppointmentsTable = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   useEffect(() => {
-    if (!bookingId) return;
-    fetchAppointments();
+    if (bookingId) fetchAppointments();
   }, [bookingId]);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      setError(null);
-
       const { success, message, data } = await getAppointmentsByBookingId(bookingId);
-
-      if (!success) {
-        showCustomToast(message);
-      }
-
+      if (!success) showCustomToast(message);
       setAppointments(success ? data : []);
-
     } catch (err) {
-      console.error("Error fetching appointments:", err);
-      setError("Failed to fetch data.");
+      setError("Failed to fetch data");
     } finally {
       setLoading(false);
     }
   };
 
-  const openDetails = (item) => {
-    navigate(`/appointment-details/${item.id}`, { state: item });
-  };
-
-  const handleStatusChange = (item, newStatus) => {
-    if (item.status === newStatus) return;
+  const handleStatusChange = (item, status) => {
+    if (item.status === status) return;
     setSelectedItem(item);
-    setSelectedStatus(newStatus);
+    setSelectedStatus(status);
     setShowConfirmModal(true);
   };
 
   const handleConfirmUpdate = async () => {
     try {
       setUpdatingId(selectedItem.id);
-
       const { success, message } = await updateAppointmentStatus(
         selectedItem.bookingId,
         selectedStatus
       );
-
       showCustomToast(message);
-
-      if (success) {
-        await fetchAppointments();
-      }
-
-    } catch (err) {
-      showCustomToast(err.message || "Something went wrong");
+      if (success) fetchAppointments();
     } finally {
       setUpdatingId(null);
       setShowConfirmModal(false);
     }
   };
 
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case "CONFIRMED": return { backgroundColor: "#CCE5FF", color: "#084298" };
-      case "COMPLETED": return { backgroundColor: "#B5E5CF", color: "#0F5132" };
-      case "HOLD": return { backgroundColor: "#F8D7DA", color: "#842029" };
-      default: return { backgroundColor: "#E2E3E5", color: "#41464b" };
-    }
-  };
-
-  const filteredData = appointments.filter(item => {
-    const matchesFilter = filter === "ALL" || item.status === filter;
+  const filteredData = appointments.filter((item) => {
     const q = search.toLowerCase();
-    return matchesFilter && (
-      item.fullName?.toLowerCase().includes(q) ||
-      item.serviceName?.toLowerCase().includes(q) ||
-      item.serviceType?.toLowerCase().includes(q) ||
-      item.status?.toLowerCase().includes(q)
+    return (
+      (filter === "ALL" || item.status === filter) &&
+      (
+        item.fullName?.toLowerCase().includes(q) ||
+        item.serviceName?.toLowerCase().includes(q) ||
+        item.serviceType?.toLowerCase().includes(q) ||
+        item.status?.toLowerCase().includes(q)
+      )
     );
   });
 
@@ -142,48 +116,32 @@ const AppointmentsTable = () => {
 
   return (
     <div>
+      {/* Tabs & Search */}
+      <CNav variant="tabs" className="themed-tabs mt-3">
+        {["ALL", "CONFIRMED", "COMPLETED"].map((status) => (
+          <CNavItem key={status}>
+            <CNavLink
+              active={filter === status}
+              onClick={() => setFilter(status)}
+              className="theme-tab"
+            >
+              {status}
+            </CNavLink>
+          </CNavItem>
+        ))}
+        <div className="ms-auto p-2">
+          <CFormInput
+            placeholder="Search..."
+            className="theme-input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </CNav>
 
-      {/* TABS */}
-     <CNav variant="tabs" className="mt-3 themed-tabs">
-  {["ALL", "CONFIRMED", "COMPLETED", "HOLD"].map((status) => (
-    <CNavItem key={status}>
-      <CNavLink
-        active={filter === status}
-        onClick={() => {
-          setFilter(status)
-          setCurrentPage(1)
-        }}
-        className="theme-tab"
-      >
-        {status}
-      </CNavLink>
-    </CNavItem>
-  ))}
-
-  <div className="ms-auto p-2">
-    <CFormInput
-      placeholder="Search..."
-      style={{ width: "250px" ,border: '1px solid var(--color-black)',}}
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
-  </div>
-</CNav>
-
-
-      {/* CARD STARTS BELOW THE TABS */}
-
-
+      {/* Table */}
       {loading ? (
-        <CTable striped hover responsive>
-          <CTableHead>
-            <CTableRow>
-              <CTableHeaderCell colSpan={8} className="text-center">
-                <LoadingIndicator message="Loading appointment data..." />
-              </CTableHeaderCell>
-            </CTableRow>
-          </CTableHead>
-        </CTable>
+        <LoadingIndicator message="Loading appointments..." />
       ) : error ? (
         <div style={centeredMessageStyle}>{error}</div>
       ) : filteredData.length === 0 ? (
@@ -204,7 +162,7 @@ const AppointmentsTable = () => {
               </CTableRow>
             </CTableHead>
 
-            <CTableBody className="pink-table">
+            <CTableBody className='pink-table'>
               {currentRows.map((item, index) => (
                 <CTableRow key={item.id} className="text-center align-middle">
                   <CTableDataCell>{indexOfFirstRow + index + 1}</CTableDataCell>
@@ -213,58 +171,33 @@ const AppointmentsTable = () => {
                   <CTableDataCell>{item.serviceType}</CTableDataCell>
                   <CTableDataCell>{item.serviceName}</CTableDataCell>
                   <CTableDataCell>{item.appointmentDate}</CTableDataCell>
+
                   <CTableDataCell>
                     {item.status === "COMPLETED" ? (
-                      <div
-                        style={{
-                          width: "140px",
-                          textAlign: "center",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          border: "1px solid #bfc2c7",
-                          backgroundColor: "#e5e7eb", // light gray
-                          color: "#6b7280", // darker gray text
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          display: "inline-block",
-                          cursor: "not-allowed"
-                        }}
-                      >
-                        COMPLETED
-                      </div>
-
-
+                      <span className="status-pill completed">COMPLETED</span>
                     ) : (
                       <select
                         value={item.status}
                         disabled={updatingId === item.id}
                         onChange={(e) => handleStatusChange(item, e.target.value)}
-                        style={{
-                          ...getStatusStyle(item.status),
-                          width: "140px",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          border: "1px solid #ced4da",
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          cursor: "pointer",
-                          textAlign: "center"
-                        }}
+                        className={`status-select ${item.status.toLowerCase()}`}
                       >
                         <option value="CONFIRMED">CONFIRMED</option>
                         <option value="COMPLETED">COMPLETED</option>
-                        <option value="HOLD">HOLD</option>
                       </select>
                     )}
                   </CTableDataCell>
 
-
-
-                  <CTableDataCell>
-                    <CButton className="actionBtn"
-                      title="View" onClick={() => openDetails(item)}>
+                  <CTableDataCell className="text-center">
+                    <button
+                      className="actionBtn"
+                      title="View"
+                      onClick={() =>
+                        navigate(`/appointment-details/${item.id}`, { state: item })
+                      }
+                    >
                       View
-                    </CButton>
+                    </button>
                   </CTableDataCell>
                 </CTableRow>
               ))}
@@ -272,78 +205,54 @@ const AppointmentsTable = () => {
           </CTable>
 
           {/* Pagination */}
-          {/* New Pagination */}
-          <div className="d-flex justify-content-between px-3 pb-3 mt-3">
-
-            {/* Rows Dropdown */}
+          <div className="d-flex justify-content-between px-3 py-3">
             <div>
-              <label className="me-2">Rows per page:</label>
+              Rows:
               <select
-                className="form-select form-select-sm"
-                style={{ width: "80px", display: "inline-block" }}
+                className="form-select form-select-sm d-inline ms-2"
+                style={{ width: "80px" }}
                 value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setRowsPerPage(+e.target.value)}
               >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
+                {[5, 10, 25, 50].map((n) => (
+                  <option key={n}>{n}</option>
+                ))}
               </select>
             </div>
 
-            <div>
-              <div>
-                Showing {indexOfFirstRow + 1} to{" "}
-                {Math.min(indexOfLastRow, filteredData.length)} of{" "}
-                {filteredData.length} entries
-              </div>
+            <CPagination className="themed-pagination">
+              <CPaginationItem
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                Previous
+              </CPaginationItem>
 
-              <CPagination align="end" className="mt-2 themed-pagination">
+              {Array.from({ length: totalPages }, (_, i) => (
                 <CPaginationItem
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  key={i}
+                  active={i + 1 === currentPage}
+                  onClick={() => setCurrentPage(i + 1)}
                 >
-                  Previous
+                  {i + 1}
                 </CPaginationItem>
+              ))}
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((page) => {
-                    if (totalPages <= 5) return true;
-                    if (currentPage <= 3) return page <= 5;
-                    if (currentPage >= totalPages - 2)
-                      return page >= totalPages - 4;
-                    return page >= currentPage - 2 && page <= currentPage + 2;
-                  })
-                  .map((page) => (
-                    <CPaginationItem
-                      key={page}
-                      active={page === currentPage}
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
-                    </CPaginationItem>
-                  ))}
-
-                <CPaginationItem
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                >
-                  Next
-                </CPaginationItem>
-              </CPagination>
-            </div>
+              <CPaginationItem
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Next
+              </CPaginationItem>
+            </CPagination>
           </div>
         </>
       )}
 
-
       {/* Confirmation Modal */}
       <CModal visible={showConfirmModal} onClose={() => setShowConfirmModal(false)}>
         <CModalHeader>
-          <CModalTitle>Confirm Status Update</CModalTitle>
+          <CModalTitle>Confirm Status</CModalTitle>
         </CModalHeader>
         <CModalBody>
           Change status to <strong>{selectedStatus}</strong>?
@@ -352,14 +261,13 @@ const AppointmentsTable = () => {
           <CButton color="secondary" onClick={() => setShowConfirmModal(false)}>
             Cancel
           </CButton>
-          <CButton color="primary" onClick={handleConfirmUpdate} disabled={updatingId !== null}>
+          <CButton color="primary" onClick={handleConfirmUpdate}>
             Confirm
           </CButton>
         </CModalFooter>
       </CModal>
     </div>
   );
-
 };
 
 export default AppointmentsTable;

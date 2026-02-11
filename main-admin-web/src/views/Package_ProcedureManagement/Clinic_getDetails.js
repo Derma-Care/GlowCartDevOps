@@ -107,27 +107,27 @@ const Clinic_getDetails = ({ service }) => {
               <div>
                 <CTable striped hover responsive>
                   <CTableHead className="pink-table">
-                    <CTableRow>
-                      <CTableHeaderCell className="text-center">S.No</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Clinic Name</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Contact Number</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Email</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">City</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Status</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                    <CTableRow className="text-center">
+                      <CTableHeaderCell >S.No</CTableHeaderCell>
+                      <CTableHeaderCell>Clinic Name</CTableHeaderCell>
+                      <CTableHeaderCell>Contact Number</CTableHeaderCell>
+                      <CTableHeaderCell>Email</CTableHeaderCell>
+                      <CTableHeaderCell>City</CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
+                      <CTableHeaderCell>Actions</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
 
                   <CTableBody className="pink-table">
                     {currentItems.length > 0 ? (
                       currentItems.map((clinic, index) => (
-                        <CTableRow key={clinic?.clinicId || index}>
-                          <CTableDataCell className="text-center">{indexOfFirstItem + index + 1}</CTableDataCell>
-                          <CTableDataCell className="text-center">{capitalizeWords(clinic?.name || "N/A")}</CTableDataCell>
-                          <CTableDataCell className="text-center">{clinic?.contactNumber || "N/A"}</CTableDataCell>
-                          <CTableDataCell className="text-center">{clinic?.email || "N/A"}</CTableDataCell>
-                          <CTableDataCell className="text-center">{capitalizeWords(clinic?.city || "N/A")}</CTableDataCell>
-                          <CTableDataCell className="text-center">
+                        <CTableRow key={clinic?.clinicId || index} className="text-center align-middle">
+                          <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
+                          <CTableDataCell>{capitalizeWords(clinic?.name || "N/A")}</CTableDataCell>
+                          <CTableDataCell>{clinic?.contactNumber || "N/A"}</CTableDataCell>
+                          <CTableDataCell>{clinic?.email || "N/A"}</CTableDataCell>
+                          <CTableDataCell>{capitalizeWords(clinic?.city || "N/A")}</CTableDataCell>
+                          <CTableDataCell>
                             {clinic?.status ? (
                               <CButton
                                 color="success"
