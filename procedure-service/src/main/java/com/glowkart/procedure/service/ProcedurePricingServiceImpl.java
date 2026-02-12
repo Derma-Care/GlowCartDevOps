@@ -413,21 +413,40 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         return null;
     }
 
+//    private ProcedurePricingDTO formatOfferDatesForResponse(ProcedurePricing p) {
+//        ProcedurePricingDTO dto = mapper.toDto(p);
+//
+//        dto.setOfferStart(p.getOfferStart());
+//        dto.setOfferValidDate(p.getOfferValidDate());
+//
+//        // dynamically calculate platform fee
+//        double platformFee = round(p.getPrice() * platformFeePercentage / 100.0);
+//        dto.setPlatformFee(platformFee);
+//
+//        // include the percentage itself
+//        dto.setPlatformFeePercentage(platformFeePercentage);
+//
+//        return dto;
+//    }
+
     private ProcedurePricingDTO formatOfferDatesForResponse(ProcedurePricing p) {
+
         ProcedurePricingDTO dto = mapper.toDto(p);
 
         dto.setOfferStart(p.getOfferStart());
         dto.setOfferValidDate(p.getOfferValidDate());
 
-        // dynamically calculate platform fee
+        // dynamically calculate platform fee (based on PRICE as you are doing)
         double platformFee = round(p.getPrice() * platformFeePercentage / 100.0);
         dto.setPlatformFee(platformFee);
 
-        // include the percentage itself
+        // include the percentage
         dto.setPlatformFeePercentage(platformFeePercentage);
+
+        // ✅ JUST ADD platform fee to finalCost for response
+        dto.setFinalCost(round(p.getFinalCost() + platformFee));
 
         return dto;
     }
-
 
 }
