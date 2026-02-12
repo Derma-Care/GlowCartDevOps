@@ -21,8 +21,18 @@ public class ClinicProcedurePricingService {
     }
 
     public ApiResponse<List<ProcedurePricingDTO>> getByClinic(String clinicId) {
-        return feignClient.getByClinic(clinicId);
+
+        ApiResponse<List<ProcedurePricingDTO>> response = feignClient.getByClinic(clinicId);
+
+        if (response.getData() != null) {
+            response.getData().forEach(dto -> {
+                dto.setFinalCost(dto.getFinalCost() - dto.getPlatformFee());
+            });
+        }
+
+        return response;
     }
+
 
     public ApiResponse<ProcedurePricingDTO> getByProcedureAndClinic(String procedureId, String clinicId) {
         return feignClient.getByProcedureAndClinic(procedureId, clinicId);
