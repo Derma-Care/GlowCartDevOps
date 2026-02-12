@@ -8,6 +8,6 @@ import com.glowkart.admin.model.ClinicAds;
 
 public interface ClinicAdsRepository extends MongoRepository<ClinicAds, String> {
 
-	Optional<ClinicAds> findByClinicId(String clinicId);
+//	Optional<ClinicAds> findByClinicId(String clinicId);
     // Standard CRUD operations
 }
