@@ -1,15 +1,62 @@
-import React from 'react'
-import { CModal, CModalBody, CModalHeader, CModalTitle, CButton } from '@coreui/react'
+import React, { useEffect, useMemo, useState } from 'react'
+import axios from 'axios'
+import {
+  CModal,
+  CModalBody,
+  CModalHeader,
+  CModalTitle,
+  CButton,
+  CSpinner,
+} from '@coreui/react'
 
 export default function MembershipViewModal({ member, onClose }) {
-  const transactionHistory = member.transactionHistory || []
+  if (!member) return null
+
+  const wallet = member.walletSummary || {}
+
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [selectedReason, setSelectedReason] = useState('ALL')
+
+  const formatNumber = (value) => Number(value || 0).toLocaleString()
 
   const membershipColors = {
-    Basic: '#6c757d',
-    Silver: '#bfc6d1',
-    Gold: '#f7c400',
-    Platinum: '#af8de5',
+    BASIC: '#6c757d',
+    SILVER: '#bfc6d1',
+    GOLD: '#f7c400',
+    PLATINUM: '#af8de5',
   }
+
+  // 🔥 Fetch Transactions
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true)
+        const res = await axios.get(
+          `http://35.154.152.61:8080/admin/customers/${member.mobile}/reward-transactions`
+        )
+        setTransactions(res.data?.data || [])
+      } catch (error) {
+        setTransactions([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTransactions()
+  }, [member.mobile])
+
+  // 🔽 Reason options
+  const reasonOptions = useMemo(() => {
+    const reasons = transactions.map((t) => t.reason)
+    return ['ALL', ...new Set(reasons)]
+  }, [transactions])
+
+  // 🔍 Filtered transactions
+  const filteredTransactions =
+    selectedReason === 'ALL'
+      ? transactions
+      : transactions.filter((t) => t.reason === selectedReason)
 
   return (
     <CModal visible onClose={onClose} size="lg" backdrop="static" className="custom-modal">
@@ -21,24 +68,28 @@ export default function MembershipViewModal({ member, onClose }) {
           borderBottom: 'none',
         }}
       >
-        <CModalTitle style={{ fontWeight: 700, color: 'white' }}>Membership Details</CModalTitle>
+        <CModalTitle style={{ fontWeight: 700, color: 'white' }}>
+          Membership Details
+        </CModalTitle>
       </CModalHeader>
+
       <CModalBody style={{ padding: '25px' }}>
-        {/* PROFILE CARD */}
+        {/* PROFILE */}
         <div
           style={{
             background: 'linear-gradient(135deg, #ffe3ef, #ffd2e7)',
             padding: '20px',
             borderRadius: '16px',
             marginBottom: '25px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
           }}
         >
-          <h3 style={{ marginBottom: 5, fontWeight: 700, color: "var(--color-black)" }}>{member.name}</h3>
-          <p style={{ margin: 0, color: '#444' }}>{member.phone}</p>
+          <h3 style={{ marginBottom: 5, fontWeight: 700 }}>
+            {member.fullName}
+          </h3>
+          <p style={{ margin: 0 }}>{member.mobile}</p>
         </div>
 
-        {/* DETAILS GRID */}
+        {/* DETAILS */}
         <div
           style={{
             display: 'grid',
@@ -47,11 +98,11 @@ export default function MembershipViewModal({ member, onClose }) {
             marginBottom: '20px',
           }}
         >
-          <div className="info-card">
+          <div>
             <label>Membership</label>
             <div
               style={{
-                background: membershipColors[member.membership],
+                background: membershipColors[wallet.membership] || '#999',
                 padding: '6px 12px',
                 color: 'white',
                 width: 'fit-content',
@@ -59,95 +110,120 @@ export default function MembershipViewModal({ member, onClose }) {
                 fontWeight: 600,
               }}
             >
-              {member.membership}
+              {wallet.membership || '-'}
             </div>
           </div>
-          <div className="info-card">
+
+          <div>
             <label>Coins</label>
-            <p>{member.coins.toLocaleString()}</p>
+            <p>{formatNumber(wallet.balance)}</p>
           </div>
-          <div className="info-card">
+
+          <div>
             <label>Referral Code</label>
-            <p style={{ fontWeight: 600 }}>{member.referralCode}</p>
+            <p>{member.referId || '-'}</p>
           </div>
-          <div className="info-card">
-            <label>Joined</label>
-            <p>{new Date(member.joined).toLocaleDateString('en-GB')}</p>
+
+          <div>
+            <label>Date of Birth</label>
+            <p>
+              {member.dob
+                ? new Date(member.dob).toLocaleDateString('en-GB')
+                : '-'}
+            </p>
           </div>
         </div>
+
         <hr />
 
-        {/* TRANSACTION SECTION */}
-        <h5
-          style={{
-            fontWeight: 700,
-            marginBottom: 15,
-            color: '#d81b60',
-          }}
-        >
-          Transaction History
-        </h5>
+        {/* TRANSACTION HEADER + FILTER */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 style={{ fontWeight: 700, color: '#d81b60' }}>
+            Transaction History
+          </h5>
 
-        <div
-          style={{
-            borderRadius: '12px',
-            overflow: 'hidden',
-            border: '1px solid #f3c4d9',
-            boxShadow: '0 3px 10px rgba(0,0,0,0.05)',
-          }}
-        >
-          <table className="table mb-0">
-            <thead
-              style={{
-                background: '#ffe3ef',
-                color: '#d81b60',
-                fontWeight: 700,
-              }}
+          <div style={{ width: '240px' }}>
+            <label className="fw-semibold">Filter by Reason</label>
+            <select
+              className="form-select"
+              value={selectedReason}
+              onChange={(e) => setSelectedReason(e.target.value)}
             >
-              <tr>
-                <th>Date</th>
-                <th>Activity</th>
-                <th>Coins</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactionHistory.length > 0 ? (
-                transactionHistory.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.date}</td>
-                    <td>{t.activity}</td>
-                    <td
-                      style={{
-                        fontWeight: 700,
-                        color: t.coins.startsWith('+') ? 'green' : 'red',
-                      }}
-                    >
-                      {t.coins}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="text-center text-muted py-3">
-                    No transactions found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              {reasonOptions.map((reason) => (
+                <option key={reason} value={reason}>
+                  {reason === 'ALL'
+                    ? 'All Reasons'
+                    : reason.replaceAll('_', ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* CLOSE BUTTON */}
+        {/* TRANSACTION TABLE */}
+        {loading ? (
+          <div className="text-center py-4">
+            <CSpinner />
+          </div>
+        ) : (
+          <div
+            style={{
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: '1px solid #f3c4d9',
+            }}
+          >
+            <table className="table mb-0">
+              <thead style={{ background: '#ffe3ef' }}>
+                <tr>
+                  <th>Date</th>
+                  <th>Reason</th>
+                  <th>Points</th>
+                  <th>Balance After</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((t) => (
+                    <tr key={t.id}>
+                      <td>
+                        {new Date(t.createdAt).toLocaleDateString('en-GB')}
+                      </td>
+                      <td>{t.reason.replaceAll('_', ' ')}</td>
+                      <td
+                        style={{
+                          fontWeight: 700,
+                          color: t.type === 'CREDIT' ? 'green' : 'red',
+                        }}
+                      >
+                        {t.type === 'CREDIT' ? '+' : '-'}
+                        {formatNumber(t.points)}
+                      </td>
+                      <td>{formatNumber(t.balanceAfter)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="text-center text-muted py-3">
+                      No transactions found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* CLOSE */}
         <div className="text-end mt-4">
           <CButton
-            color="danger"
             style={{
-              background: 'linear-gradient(135deg, var(--color-black), var(--color-black))',
+              background: 'var(--color-black)',
               border: 'none',
               padding: '10px 20px',
               borderRadius: '10px',
-              fontWeight: 600,
               color: 'white',
+              fontWeight: 600,
             }}
             onClick={onClose}
           >

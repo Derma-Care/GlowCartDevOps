@@ -290,7 +290,14 @@ const CustomerViewDetailsProd = () => {
                                         ? customerData.serviceType.join(', ')
                                         : customerData.serviceType
                                 )}
-                                {renderField('Service Status', customerData.serviceStatus)}
+                                {renderField(
+                                    'Did you take any procedure?',
+                                    customerData.serviceStatus === 1
+                                        ? 'YES'
+                                        : customerData.serviceStatus === 2
+                                            ? 'NO'
+                                            : 'N/A' // optional fallback for other values
+                                )}
 
                                 {/* serviceStatus = 1 → show prescription */}
                                 {customerData.serviceStatus === 1 && renderField('Prescription', customerData.prescription)}
@@ -386,7 +393,10 @@ const CustomerViewDetailsProd = () => {
                         <CCard className="p-3 shadow-sm">
                             <CRow className="gy-3">
                                 {renderField('Referral By', customerData.referBy)}
-                                {renderField('User Profile Completed', customerData.userProfileCompleted ? 'Yes' : 'No')}
+                                {renderField(
+                                    'User Profile Completed',
+                                    customerData.userProfileCompleted ? 'Yes' : 'No',
+                                )}
                             </CRow>
                         </CCard>
                     </CTabPane>

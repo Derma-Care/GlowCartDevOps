@@ -13,7 +13,10 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
-  CButton,
+  CButton, CAccordion,
+  CAccordionItem,
+  CAccordionHeader,
+  CAccordionBody,
 } from "@coreui/react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -188,7 +191,7 @@ Warm regards,
               setSearchText(e.target.value);
               setCurrentPage(1);
             }}
-            style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa",border: '1px solid var(--color-black)', }}
+            style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa", border: '1px solid var(--color-black)', }}
           />
 
         </CCardHeader>

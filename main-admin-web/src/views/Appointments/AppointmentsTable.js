@@ -207,7 +207,7 @@ const AppointmentsTable = () => {
           {/* Pagination */}
           <div className="d-flex justify-content-between px-3 py-3">
             <div>
-              Rows:
+              Rows per page:
               <select
                 className="form-select form-select-sm d-inline ms-2"
                 style={{ width: "80px" }}

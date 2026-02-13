@@ -120,7 +120,7 @@ const CustomerManagement = () => {
   const filtered = customerData.filter((customer) => {
     const fullName = (customer?.fullName || '').toLowerCase()
     const mobile = (customer?.mobile || '').toString()
-    const email = (customer?.emailId || '').toLowerCase()
+    const registrationCode = (customer?.registrationCode || '').toLowerCase()
     const customerId = (customer?.customerId || '').toLowerCase()
     const addressPincode = (customer?.address?.pincode || '').toString()
 
@@ -131,7 +131,7 @@ const CustomerManagement = () => {
     return (
       fullName.includes(trimmedQuery) ||
       mobile.includes(trimmedQuery) ||
-      email.includes(trimmedQuery) ||
+      registrationCode.includes(trimmedQuery) ||
       customerId.includes(trimmedQuery) ||
       addressPincode.includes(trimmedQuery) ||
       serviceTypeMatch
@@ -431,7 +431,7 @@ const CustomerManagement = () => {
                   <CFormInput
                     type="text"
                     style={{ border: '1px solid var(--color-black)', }}
-                    placeholder="Search by name, mobile, or email"
+                    placeholder="Search by name, mobile, or registrationcode"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -492,6 +492,7 @@ const CustomerManagement = () => {
                     <CTableHeaderCell >Mobile Number</CTableHeaderCell>
                     <CTableHeaderCell >Gender</CTableHeaderCell>
                     <CTableHeaderCell >Date Of Birth</CTableHeaderCell>
+                    <CTableHeaderCell >Registration Code</CTableHeaderCell>
                     <CTableHeaderCell >Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -513,6 +514,7 @@ const CustomerManagement = () => {
                       <CTableDataCell>{customer?.mobile || '-'}</CTableDataCell>
                       <CTableDataCell>{customer?.gender || '-'}</CTableDataCell>
                       <CTableDataCell>{customer?.dob || '-'}</CTableDataCell>
+                       <CTableDataCell>{customer?.registrationCode || 'NA'}</CTableDataCell>
 
                       <CTableDataCell>
                         <div className="d-flex justify-content-center align-items-center gap-2">

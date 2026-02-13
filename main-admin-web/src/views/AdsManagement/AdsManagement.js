@@ -86,7 +86,7 @@ const AdsManagement = () => {
   useEffect(() => {
     fetchAds()
 
-    if (getCategory() === "clinic") {
+    if (getCategory() === "service") {
       fetchClinics()
     }
   }, [activeKey])

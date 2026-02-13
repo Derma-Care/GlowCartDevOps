@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
+import axios from 'axios'
 import {
   CTable,
   CTableHead,
@@ -6,48 +7,58 @@ import {
   CTableHeaderCell,
   CTableBody,
   CTableDataCell,
-  CNav,
-  CNavItem,
-  CNavLink,
   CFormInput,
   CInputGroup,
   CInputGroupText,
   CPagination,
   CPaginationItem,
-  CFormSelect
+  CFormSelect,
+  CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch } from '@coreui/icons'
 import { Eye } from 'lucide-react'
-import { MEMBERSHIP_DATA } from './MembershipData'
 import MembershipViewModal from './MembershipViewModal'
+import { BASE_URL_API, CustomerAllData } from '../../baseUrl'
+
 
 const MembershipTable = () => {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [selectedMember, setSelectedMember] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeStatusTab, setActiveStatusTab] = useState('All')
 
-  // Filter by status
-  const statusFilteredData = useMemo(() => {
-    if (activeStatusTab === 'All') return MEMBERSHIP_DATA
-    return MEMBERSHIP_DATA.filter(
-      (member) => member.status.toLowerCase() === activeStatusTab.toLowerCase()
-    )
-  }, [activeStatusTab])
+  // 📡 Fetch API Data
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setLoading(true)
+        const res = await axios.get(`${BASE_URL_API}/${CustomerAllData}`)
+        setData(res.data?.data || res.data || [])
+      } catch (err) {
+        setError('Failed to load membership data')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  // Global search
+    fetchMembers()
+  }, [])
+
+  // 🔍 Global Search
   const searchedData = useMemo(() => {
-    if (!searchTerm) return statusFilteredData
-    return statusFilteredData.filter((member) =>
+    if (!searchTerm) return data
+    return data.filter((member) =>
       Object.values(member).some((value) =>
         value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
-  }, [searchTerm, statusFilteredData])
+  }, [searchTerm, data])
 
-  // Pagination calculated
+  // 📄 Pagination
   const totalPages = Math.ceil(searchedData.length / rowsPerPage)
   const startIndex = (currentPage - 1) * rowsPerPage
   const endIndex = startIndex + rowsPerPage
@@ -55,26 +66,8 @@ const MembershipTable = () => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        {/* STATUS TABS */}
-        <CNav variant="tabs">
-          {['All', 'Active', 'InActive', 'Expired'].map((status) => (
-            <CNavItem key={status}>
-              <CNavLink
-                active={activeStatusTab === status}
-                onClick={() => {
-                  setActiveStatusTab(status)
-                  setCurrentPage(1)
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                {status}
-              </CNavLink>
-            </CNavItem>
-          ))}
-        </CNav>
-
-        {/* SEARCH */}
+      {/* 🔍 SEARCH */}
+      <div className="d-flex justify-content-end mb-3">
         <CInputGroup style={{ width: '300px' }}>
           <CFormInput
             placeholder="Search..."
@@ -83,126 +76,146 @@ const MembershipTable = () => {
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
-            style={{ border: '1px solid var(--color-black)', height: '40px' }}
           />
-          <CInputGroupText style={{ border: '1px solid var(--color-black)', height: '40px' }}>
+          <CInputGroupText>
             <CIcon icon={cilSearch} />
           </CInputGroupText>
         </CInputGroup>
       </div>
 
-      {/* TABLE */}
-      <CTable striped hover responsive>
-        <CTableHead className="pink-table">
-          <CTableRow className="text-center">
-            <CTableHeaderCell>S.No</CTableHeaderCell>
-            <CTableHeaderCell>Name</CTableHeaderCell>
-            <CTableHeaderCell>Phone</CTableHeaderCell>
-            <CTableHeaderCell>Coins</CTableHeaderCell>
-            <CTableHeaderCell>Membership</CTableHeaderCell>
-            <CTableHeaderCell>Referral Code</CTableHeaderCell>
-            <CTableHeaderCell>Joined</CTableHeaderCell>
-            <CTableHeaderCell>Actions</CTableHeaderCell>
-          </CTableRow>
-        </CTableHead>
-
-        <CTableBody className="pink-table">
-          {paginatedData.length > 0 ? (
-            paginatedData.map((item, index) => (
-              <CTableRow key={item.id || index} className="text-center align-middle">
-                <CTableDataCell>{startIndex + index + 1}</CTableDataCell>
-                <CTableDataCell>{item.name}</CTableDataCell>
-                <CTableDataCell>{item.phone}</CTableDataCell>
-                <CTableDataCell>{item.coins.toLocaleString()}</CTableDataCell>
-                <CTableDataCell>
-                  <span className={`tag ${item.membership.toLowerCase()}`}>{item.membership}</span>
-                </CTableDataCell>
-                <CTableDataCell>{item.referralCode}</CTableDataCell>
-                <CTableDataCell>{new Date(item.joined).toLocaleDateString('en-GB')}</CTableDataCell>
-                <CTableDataCell>
-                  <button className="actionBtn" onClick={() => setSelectedMember(item)}>
-                    <Eye size={18} />
-                  </button>
-                </CTableDataCell>
-              </CTableRow>
-            ))
-          ) : (
-            <CTableRow>
-              <CTableDataCell colSpan={10} className="text-center text-muted">
-                🔍 No Membership Data Found
-              </CTableDataCell>
-            </CTableRow>
-          )}
-        </CTableBody>
-      </CTable>
-
-      {/* PAGINATION SECTION */}
-      {searchedData.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          {/* ROWS PER PAGE */}
-          <div>
-            <label className="me-2">Rows per page:</label>
-            <CFormSelect
-              value={rowsPerPage}
-              onChange={(e) => {
-                setRowsPerPage(Number(e.target.value))
-                setCurrentPage(1)
-              }}
-               style={{ width: '80px', display: 'inline-block' }}
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </CFormSelect>
-          </div>
-
-          {/* PAGE DETAILS + PAGINATION */}
-          <div>
-            <div>
-              Showing {startIndex + 1} to {Math.min(endIndex, searchedData.length)} of{' '}
-              {searchedData.length} entries
-            </div>
-
-            <CPagination align="end" className="mt-2 themed-pagination">
-              <CPaginationItem
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-              >
-                Previous
-              </CPaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((page) => {
-                  if (totalPages <= 5) return true
-                  if (currentPage <= 3) return page <= 5
-                  if (currentPage >= totalPages - 2) return page >= totalPages - 4
-                  return page >= currentPage - 2 && page <= currentPage + 2
-                })
-                .map((page) => (
-                  <CPaginationItem
-                    key={page}
-                    active={page === currentPage}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </CPaginationItem>
-                ))}
-
-              <CPaginationItem
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                Next
-              </CPaginationItem>
-            </CPagination>
-          </div>
+      {/* ⏳ LOADING */}
+      {loading && (
+        <div className="text-center py-4">
+          <CSpinner />
         </div>
       )}
 
-      {/* MODAL VIEW */}
+      {/* ❌ ERROR */}
+      {error && <div className="text-danger text-center">{error}</div>}
+
+      {/* 📋 TABLE */}
+      {!loading && !error && (
+        <CTable striped hover responsive>
+          <CTableHead className="pink-table">
+            <CTableRow className="text-center">
+              <CTableHeaderCell>S.No</CTableHeaderCell>
+              <CTableHeaderCell>Name</CTableHeaderCell>
+              <CTableHeaderCell>Phone</CTableHeaderCell>
+              <CTableHeaderCell>Coins</CTableHeaderCell>
+              <CTableHeaderCell>Membership</CTableHeaderCell>
+              <CTableHeaderCell>Referral Code</CTableHeaderCell>
+              <CTableHeaderCell>Joined</CTableHeaderCell>
+              <CTableHeaderCell>Actions</CTableHeaderCell>
+            </CTableRow>
+          </CTableHead>
+
+          <CTableBody className="pink-table">
+            {paginatedData.length > 0 ? (
+              paginatedData.map((item, index) => (
+                <CTableRow
+                  key={item.customerId}
+                  className="text-center align-middle"
+                >
+                  <CTableDataCell>{startIndex + index + 1}</CTableDataCell>
+
+                  <CTableDataCell>{item.fullName}</CTableDataCell>
+
+                  <CTableDataCell>{item.mobile}</CTableDataCell>
+
+                  <CTableDataCell>
+                    {item.walletSummary?.balance ?? 0}
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+                    <span className={`tag ${item.walletSummary?.membership?.toLowerCase()}`}>
+                      {item.walletSummary?.membership || '-'}
+                    </span>
+                  </CTableDataCell>
+
+                  <CTableDataCell>{item.referId || '-'}</CTableDataCell>
+
+                  <CTableDataCell>
+                    {item.dob
+                      ? new Date(item.dob).toLocaleDateString('en-GB')
+                      : '-'}
+                  </CTableDataCell>
+
+                  <CTableDataCell>
+                    <button
+                      className="actionBtn"
+                      onClick={() => setSelectedMember(item)}
+                    >
+                      <Eye size={18} />
+                    </button>
+                  </CTableDataCell>
+                </CTableRow>
+              ))
+            ) : (
+              <CTableRow>
+                <CTableDataCell colSpan={8} className="text-center text-muted">
+                  🔍 No Customer Data Found
+                </CTableDataCell>
+              </CTableRow>
+            )}
+          </CTableBody>
+
+        </CTable>
+      )}
+
+      {/* 📑 PAGINATION */}
+      {!loading && searchedData.length > 0 && (
+        <div className="d-flex justify-content-between px-3 py-3">
+          <div>
+            Rows per page:
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(+e.target.value)
+                setCurrentPage(1)
+              }}
+             className="form-select form-select-sm d-inline ms-2"
+                style={{ width: "80px" }}
+            >
+              {[5, 10, 25, 50].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+
+          <CPagination className="themed-pagination">
+            <CPaginationItem
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+            >
+              Previous
+            </CPaginationItem>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <CPaginationItem
+                key={page}
+                active={page === currentPage}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </CPaginationItem>
+            ))}
+
+            <CPaginationItem
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
+              Next
+            </CPaginationItem>
+          </CPagination>
+        </div>
+      )}
+
+      {/* 👁️ MODAL */}
       {selectedMember && (
-        <MembershipViewModal member={selectedMember} onClose={() => setSelectedMember(null)} />
+        <MembershipViewModal
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+        />
       )}
     </div>
   )
