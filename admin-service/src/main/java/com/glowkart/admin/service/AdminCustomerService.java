@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import com.glowkart.admin.client.CustomerServiceClient;
 import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.CustomerResponseDTO;
+import com.glowkart.admin.dto.RewardTransactionDTO;
 import com.glowkart.admin.exception.ResourceNotFoundException;
+
 
 @Service
 public class AdminCustomerService {
@@ -37,4 +39,27 @@ public class AdminCustomerService {
             throw new ResourceNotFoundException("Customer not found or cannot delete: " + mobile);
         }
     }
+    // ================= FETCH TRANSACTIONS =================
+    public List<RewardTransactionDTO> getTransactions(String mobile, String filter) {
+
+        ApiResponse<List<RewardTransactionDTO>> response =
+                customerServiceClient.getTransactions(mobile, filter);
+
+        return extractList(response,
+                "Customer not found with mobile: " + mobile);
+    }
+
+    
+    private <T> List<T> extractList(ApiResponse<List<T>> response, String errorMessage) {
+
+        if (response == null || !response.isSuccess()) {
+            throw new ResourceNotFoundException(errorMessage);
+        }
+
+        return response.getData() != null
+                ? response.getData()
+                : new ArrayList<>();
+    }
+
+
 }

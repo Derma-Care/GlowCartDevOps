@@ -9,10 +9,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.CustomerResponseDTO;
+import com.glowkart.admin.dto.RewardTransactionDTO;
 import com.glowkart.admin.service.AdminCustomerService;
 
 
@@ -51,5 +53,25 @@ public class AdminCustomerController {
     public ResponseEntity<ApiResponse<String>> deleteCustomer(@PathVariable String mobile) {
         adminCustomerService.deleteCustomer(mobile);
         return ResponseEntity.ok(new ApiResponse<>(true, "Customer deleted successfully", mobile));
+    }
+    
+    
+ // =================== Transactions ===================
+    @GetMapping("/customers/{mobile}/reward-transactions")
+    public ResponseEntity<ApiResponse<List<RewardTransactionDTO>>> getTransactions(
+            @PathVariable String mobile,
+            @RequestParam(value = "filter", defaultValue = "all") String filter) {
+
+        List<RewardTransactionDTO> transactions =
+                adminCustomerService.getTransactions(mobile, filter);
+
+        ApiResponse<List<RewardTransactionDTO>> response =
+                ApiResponse.<List<RewardTransactionDTO>>builder()
+                        .success(true)
+                        .message("Transactions fetched successfully")
+                        .data(transactions)
+                        .build();
+
+        return ResponseEntity.ok(response);
     }
 }
