@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React, { useEffect, useMemo, useState } from 'react'
 import '../CSS/ClinicRatingsAdmin.css'
 import axios from 'axios'
@@ -5,6 +6,7 @@ import { BASE_URL } from '../../../baseUrl'
 import { timeAgo } from '../Utills/timesAgo'
 import { COLORS, NGK_COLORS } from '../../../Constant/Themes'
 import Pagination from '../../../Utils/Pagination'
+import { http } from '../../../Utils/Interceptors'
 
 // eslint-disable-next-line react/prop-types
 export default function ClinicRatingsAdmin() {
@@ -33,7 +35,7 @@ export default function ClinicRatingsAdmin() {
       try {
         setLoading(true)
 
-        const res = await axios.get(`${BASE_URL}/ratings/${clinicId}`)
+        const res = await http.get(`${BASE_URL}/ratings/${clinicId}`)
 
         const apiData = res.data?.data
         console.log(apiData)
@@ -94,15 +96,24 @@ export default function ClinicRatingsAdmin() {
   const pageList = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   /* ---------------- STATS ---------------- */
-  const stats = useMemo(() => {
-    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-    reviews.forEach((r) => counts[r.rating]++)
-    return {
-      avg: statsApi.avg.toFixed(1),
-      total: statsApi.total,
-      counts,
+const stats = useMemo(() => {
+  const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+
+  reviews.forEach((r) => {
+    if (counts[r.rating] !== undefined) {
+      counts[r.rating]++
     }
-  }, [reviews, statsApi])
+  })
+
+  const total = reviews.length // ✅ FIX
+
+  return {
+    avg: total ? (statsApi.avg || 0).toFixed(1) : '0.0',
+    total,
+    counts,
+  }
+}, [reviews, statsApi])
+
 
   /* ---------------- STARS ---------------- */
   const stars = (n) =>
@@ -160,23 +171,28 @@ export default function ClinicRatingsAdmin() {
           <div>{stars(Math.round(stats.avg))}</div>
         </div>
 
-        <div className="cr-card">
-          <p className="label">Rating Breakdown</p>
-          {[5, 4, 3, 2, 1].map((star) => (
-            <div className="cr-breakdown-row" key={star}>
-              <span>{star}★</span>
-              <div className="cr-bar">
-                <div
-                  className="cr-bar-fill"
-                  style={{
-                    width: stats.total ? `${(stats.counts[star] / stats.total) * 100}%` : '0%',
-                  }}
-                />
-              </div>
-              <span>{stats.counts[star]}</span>
-            </div>
-          ))}
-        </div>
+  <div className="cr-card">
+  <p className="label">Rating Breakdown</p>
+  {[5, 4, 3, 2, 1].map((star) => (
+    <div className="cr-breakdown-row" key={star}>
+      <span>{star}★</span>
+
+      <div className="cr-bar">
+        <div
+          className="cr-bar-fill"
+          style={{
+            width: stats.total
+              ? `${(stats.counts[star] / stats.total) * 100}%`
+              : '0%',
+          }}
+        />
+      </div>
+
+      <span>{stats.counts[star]}</span>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* Filters */}

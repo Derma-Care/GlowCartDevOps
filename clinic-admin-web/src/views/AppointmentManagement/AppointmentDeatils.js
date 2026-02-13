@@ -394,13 +394,45 @@ const AppointmentDetails = () => {
             <strong>Time:</strong> {appointment?.servicetime.serviceType}
           </div> */}
           <div className="col-md-4">
-            <strong>Paid Amount:</strong> ₹{appointment.finalAmount}
-          </div>
-          <div className="col-md-4">
             <strong>Consultation Fee:</strong> ₹{appointment.consultationFee}
           </div>
-          <div className="col-md-12">
+
+          <div className="col-md-4">
+            <strong>Total Amount:</strong> ₹{appointment.finalAmount}
+          </div>
+          {appointment.partialPaymentPercentage > 0 && (
+            <>
+              <div className="col-md-4 mb-2">
+                <strong>Paid Amount ({appointment.partialPaymentPercentage}%):</strong>{' '}
+                <span className="text-success fw-bold">₹{appointment.partialAmount}</span>
+              </div>
+
+              <div className="col-md-4 mb-2">
+                <strong>Due Amount:</strong>{' '}
+                <span className="text-danger fw-bold">₹{appointment.dueAmount}</span>
+              </div>
+            </>
+          )}
+          <div className="col-md-4 mb-2">
+            <strong>Payment Status:</strong>{' '}
+            <span
+              className={`fw-bold ${
+                appointment.paymentStatus === 'PAID'
+                  ? 'text-success'
+                  : appointment.paymentStatus === 'DUE'
+                    ? 'text-danger'
+                    : 'text-warning'
+              }`}
+            >
+              {appointment.paymentStatus}
+            </span>
+          </div>
+
+          <div className="col-md-6">
             <strong>Service Name:</strong> {appointment.serviceName}
+          </div>
+          <div className="col-md-6">
+            <strong>Payment Type:</strong> {appointment.paymentType}
           </div>
         </div>
 

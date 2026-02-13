@@ -250,7 +250,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   // useEffect(() => {
   //   async function fetchCities() {
   //     try {
-  //       const res = await fetch(`${wifiUrl}/api/customer/cities`, { cache: 'no-store' })
+  //       const res = await fetch(`/api/customer/cities`, { cache: 'no-store' })
 
   //       if (!res.ok) {
   //         throw new Error('Server error')
@@ -270,7 +270,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   async function fetchCities() {
     try {
-      const res = await fetch(`${wifiUrl}/api/customer/cities`, { cache: 'no-store' })
+      const res = await fetch(`/api/customer/cities`, { cache: 'no-store' })
       console.log(res)
       if (!res.ok) {
         throw new Error('Server error')

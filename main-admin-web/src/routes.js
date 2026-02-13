@@ -5,8 +5,6 @@ import VerifiedClinic_getDetails from './views/Appointments/VerifiedClinic_getDe
 import Appointments_Tabs from './views/Appointments/Appointments_Tabs'
 import AppointmentDetails from './views/Appointments/AppointmentDetails'
 
-
-
 // Lazy-loaded components
 const Login = React.lazy(() => import('./views/pages/login/Login'))
 const serviceManagement = React.lazy(() => import('./views/servicesManagement/serviceManagement'))
@@ -29,6 +27,9 @@ const PayoutManagement = React.lazy(() => import('./views/Payouts/Payoutmanageme
 const FCMNotification = React.lazy(() => import('./views/PushNotification/PushNotificationScreen'))
 const RegistrationCodeManagement = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodes'))
 const RegistrationCodeManagementDev = React.lazy(() => import('./views/RegistrationCodes/RegistrationCodesDev'))
+// const CustomerViewDetailsProd=React.lazy(()=>import('./views/customerManagement/CustomerViewDetailsProd'))
+
+
 const ClinicManagementDetails = React.lazy(() => import('./views/clinicManagement/GlowKartClinicDetails'))
 const Help = React.lazy(() => import('./views/Help/Help'))
 const routes = [
@@ -38,6 +39,9 @@ const routes = [
   { path: '/Service-Management', name: 'Service Management', element: serviceManagement },
   { path: '/Customer-Management/:mobileNumber', name: 'Customer View Details', element: CustomerViewDetails },
   { path: '/Customer-Management', name: 'Customer Management', element: customerManagement },
+  // { path: '/Customer-ManagementProd/:mobileNumber', name: 'Customer View Details Prod', element: CustomerViewDetailsProd },
+
+
   { path: '/Procedure-Management', name: 'Procedure Management', element: procedureManagement },
   { path: '/Clinic-Management', name: 'Clinic Management', element: ClinicManagement },
   // { path: '/add-clinic', name: 'Add Clinic', element: AddClinic },

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // PackageFormModal.jsx
 import React from 'react'
 import {
@@ -166,81 +167,9 @@ const PackageFormModal = ({
                 <CFormText className="text-danger">{errors.consultationFee}</CFormText>
               )}
             </CCol>
-
-            {/* <CCol md={3} className="mb-4">
-              <h6>
-                Min Time <span className="text-danger">*</span>
-              </h6>
-              <div className="d-flex">
-                <CFormInput
-                  type="text"
-                  name="minTimeValue"
-                  placeholder="Enter time"
-                  value={newService.minTimeValue || ''}
-                  onChange={onChange}
-                  onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '')
-                  }}
-                />
-                <CFormSelect
-                  name="minTimeUnit"
-                  className="ms-2"
-                  value={newService.minTimeUnit || ''}
-                  onChange={onChange}
-                >
-                  <option value="" disabled>
-                    Select Time
-                  </option>
-                  <option value="minutes">Minutes</option>
-                  <option value="hours">Hours</option>
-                </CFormSelect>
-              </div>
-              {errors.minTimeValue && (
-                <CFormText className="text-danger">{errors.minTimeValue}</CFormText>
-              )}
-              {errors.minTimeUnit && (
-                <CFormText className="text-danger">{errors.minTimeUnit}</CFormText>
-              )}
-            </CCol> */}
-
-            {/* <CCol md={3} className="mb-4">
-              <h6>
-                No of Sittings <span className="text-danger">*</span>
-              </h6>
-              <CFormInput
-                type="text"
-                name="sittings"
-                value={newService.sittings || ''}
-                onChange={onChange}
-                placeholder="Enter no of sittings"
-              />
-              {errors.sittings && <CFormText className="text-danger">{errors.sittings}</CFormText>}
-            </CCol> */}
           </CRow>
 
-          {/* Consultation Fee + Min Time + Image + Description */}
           <CRow>
-            {/* <CCol md={3} className="mb-4">
-              <h6>
-                Package Image <span className="text-danger">*</span>
-              </h6>
-              <CFormInput type="file" accept="image/*" name="serviceImage" onChange={onChange} />
-              {newService?.serviceImage && (
-                <img
-                  src={
-                    newService.serviceImage.startsWith('data:')
-                      ? newService.serviceImage
-                      : `data:image/jpeg;base64,${newService.serviceImage}`
-                  }
-                  alt="Preview"
-                  style={{ width: 100, height: 100, marginTop: 10, objectFit: 'cover' }}
-                />
-              )}
-              {errors.serviceImage && (
-                <CFormText className="text-danger">{errors.serviceImage}</CFormText>
-              )}
-            </CCol> */}
-
             <CCol md={6} className="mb-4">
               <h6>
                 View Description <span className="text-danger">*</span>
@@ -256,6 +185,47 @@ const PackageFormModal = ({
                 <CFormText className="text-danger">{errors.viewDescription}</CFormText>
               )}
             </CCol>
+            <CCol md={3} className="mb-4">
+              <h6>
+                Payment Type <span className="text-danger">*</span>
+              </h6>
+
+              {/* Payment Type Dropdown */}
+              <CFormSelect
+                name="paymentType"
+                value={newService.paymentType || ''}
+                onChange={onChange}
+              >
+                <option value="">Select Payment Type</option>
+                <option value="FULL_PAYMENT">Full Payment</option>
+                <option value="PARTIAL_PAYMENT">Partial Payment</option>
+              </CFormSelect>
+
+              {errors.paymentType && (
+                <CFormText className="text-danger">{errors.paymentType}</CFormText>
+              )}
+            </CCol>
+            {newService.paymentType === 'PARTIAL_PAYMENT' && (
+              <CCol md={3} className="mb-4">
+                <h6>
+                  Partial Payment Percentage <span className="text-danger">*</span>
+                </h6>
+
+                <CFormInput
+                  type="number"
+                  name="partialPaymentPercentage"
+                  placeholder="Enter percentage (e.g. 30)"
+                  min={1}
+                  max={99}
+                  value={newService.partialPaymentPercentage || ''}
+                  onChange={onChange}
+                />
+
+                {errors.partialPaymentPercentage && (
+                  <CFormText className="text-danger">{errors.partialPaymentPercentage}</CFormText>
+                )}
+              </CCol>
+            )}
           </CRow>
 
           {/* <CCol md={3} className="mb-4">

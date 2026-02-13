@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { http } from '../../Utils/Interceptors'
 // import { GetSubServices_ByClinicId } from '../ProcedureManagement/ProcedureManagementAPI'
-import { BASE_URL } from '../../baseUrl'
+import { BASE_URL, MainAdmin_URL } from '../../baseUrl'
 
 const HospitalContext = createContext()
 
+// eslint-disable-next-line react/prop-types
 export const HospitalProvider = ({ children }) => {
   // Hydrate from localStorage
   const [selectedHospital, setSelectedHospital] = useState(() => {
@@ -24,39 +25,8 @@ export const HospitalProvider = ({ children }) => {
   })
   const [hospitalId, setHospitalId] = useState(localStorage.getItem('HospitalId'))
   const [hydrated, setHydrated] = useState(false) // Track data readiness
-
-  // ✅ Fetch Permissions by Clinic, Branch, and User
-  // const fetchPermissions = useCallback(async () => {
-  //   console.log('fetchPermissions calling')
-  //   try {
-  //     const hospitalId = localStorage.getItem('HospitalId')
-  //     const branchId = localStorage.getItem('branchId')
-  //     const staffId = localStorage.getItem('staffId')
-
-  //     if (!hospitalId || !branchId || !staffId) {
-  //       console.warn('Missing IDs for permissions fetch')
-  //       return
-  //     }
-
-  //     const url = `${BASE_URL}/getPermissionsByClinicIdBranchIdUserId/${hospitalId}/${branchId}/${staffId}`
-  //     console.log(url)
-
-  //     const res = await http.get(url)
-
-  //     console.log(res)
-  //     if (res.status === 200 && res.data) {
-  //       const permissions = res.data.data.permissions
-
-  //       // ✅ Update user in state and localStorage
-  //       const updatedUser = { ...user, permissions }
-  //       localStorage.setItem('hospitalUser', JSON.stringify(updatedUser))
-  //       setUser(updatedUser)
-
-  //       console.log('✅ Permissions updated:', permissions)
-  //     }
-  //   } catch (err) {
-  //     console.error('Error fetching permissions:', err)
-  //   }
+  // useEffect(() => {
+  //   setHydrated(true)
   // }, [])
 
   // Persist user & hospital to localStorage
@@ -70,56 +40,35 @@ export const HospitalProvider = ({ children }) => {
     else localStorage.removeItem('selectedHospital')
   }, [selectedHospital])
 
-  // Fetch hospital details
-  // const fetchHospital = useCallback(async (id) => {
-  //   // ✅ also update permissions on refresh or hospital change
-
-  //   if (!id) return
-  //   setLoading(true)
-  //   try {
-  //     const res = await http.get(`/getClinic/${id}`)
-  //     if (res.status === 200 && res.data) {
-  //       setSelectedHospital(res.data)
-  //     }
-  //     return res.data // ✅ return data here
-  //     console.log(res.data)
-  //   } catch (err) {
-  //     console.error(err)
-  //     setErrorMessage('Error fetching hospital data.')
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }, [])
-
- 
-
-  // Fetch subservices by hospital
-  // const fetchSubServices = useCallback(async () => {
-  //   const hospitalId = localStorage.getItem('HospitalId')
-  //   if (!hospitalId) return
-  //   setLoading(true)
-  //   try {
-  //     const res = await GetSubServices_ByClinicId(hospitalId)
-  //     const list = Array.isArray(res?.data) ? res.data : []
-  //     setSubServices(list.filter((s) => s.hospitalId === hospitalId))
-  //   } catch (err) {
-  //     console.error(err)
-  //     setErrorMessage('Error fetching subservices.')
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }, [])
-
   const fetchAllData = useCallback(
     async (id = hospitalId) => {
-      if (!id) return
+      if (!id) {
+        setHydrated(true)
+        return
+      }
       setHydrated(false)
-      // await fetchHospital(id)
-    
-      // await fetchSubServices()
-      setHydrated(true)
+      try {
+        const res = await http.get(`${MainAdmin_URL}/clinics/get/${id}`)
+        const clinicData = res.data.data
+
+        const updatedHospital = {
+          hospitalId: id,
+          hospitalName: clinicData.name,
+          data: clinicData,
+        }
+
+        // ✅ UPDATE CONTEXT
+        setSelectedHospital(updatedHospital)
+
+        // ✅ UPDATE localStorage
+        localStorage.setItem('selectedHospital', JSON.stringify(updatedHospital))
+      } catch (err) {
+        console.error('Failed to refresh clinic data', err)
+      } finally {
+        setHydrated(true)
+      }
     },
-    [hospitalId,],
+    [hospitalId],
   )
 
   // Auto-fetch on hospitalId change
@@ -154,8 +103,7 @@ export const HospitalProvider = ({ children }) => {
         setHospitalId,
         setNotificationCount,
         fetchAllData,
-   
-      
+
         // fetchSubServices,
         // fetchPermissions, // expose for manual calls (like after login)
       }}

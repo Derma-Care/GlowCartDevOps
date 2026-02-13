@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useHospital } from '../views/Usecontext/HospitalContext'
@@ -19,8 +20,9 @@ const AppSidebar = () => {
 
   if (!hydrated) return null // show spinner if needed
 
-  const hospitalName = selectedHospital?.data.name || 'Hospital Name'
-  const hospitalLogo = selectedHospital?.data.hospitalLogo || null
+  const hospitalName = selectedHospital?.data?.name || '—'
+  const hospitalLogo = selectedHospital?.data?.hospitalLogo
+
   const navItems = getNavigation(user?.permissions || {})
   return (
     <CSidebar
@@ -51,8 +53,8 @@ const AppSidebar = () => {
               style={{
                 width: '80px',
                 height: '80px',
-                borderRadius: '50%',
-                objectFit: 'cover',
+                // borderRadius: '50%',
+                objectFit: 'fill',
                 marginBottom: '8px',
               }}
             />

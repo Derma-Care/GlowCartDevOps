@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/jsx-no-comment-textnodes */
 // ServiceViewModal.jsx
 import React from 'react'
 import {
@@ -29,22 +31,41 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
       <CModalBody className="bg-light text-dark">
         {/* Basic Details */}
         <div className="p-3 mb-4 bg-white rounded shadow-sm">
-          <h6 className="fw-bold border-bottom pb-2 mb-3">Basic Information</h6>
+          <CRow className="align-items-center mb-3">
+            {/* Left Side */}
+            <CCol xs={6}>
+              <h6 className="mb-0 fw-bold">Basic Information</h6>
+            </CCol>
+
+            {/* Right Side */}
+            <CCol xs={6} className="text-end">
+              <span style={{ color: 'var(--color-black)' }} className="fw-bold">
+                Offer Active Status :{' '}
+              </span>{' '}
+              <span className={`badge ${data.offerActive ? 'bg-success' : 'bg-secondary'}`}>
+                {data.offerActive ? 'Active' : 'Inactive'}
+              </span>
+            </CCol>
+          </CRow>
+
           <CRow className="gy-2">
             <CCol sm={6}>
               <p className="mb-1 fw-semibold">Procedure Name:</p>
               <span className="text-muted">{data.procedureName || 'N/A'}</span>
             </CCol>
+
             <CCol sm={6}>
               <p className="mb-1 fw-semibold">Procedure ID:</p>
               <span className="text-muted">{data.procedureId || 'N/A'}</span>
             </CCol>
+
             <CCol sm={6}>
               <p className="mb-1 fw-semibold">Offer Start Date:</p>
               <span className="text-muted">
                 {data.offerStart ? new Date(data.offerStart).toLocaleDateString('en-GB') : 'N/A'}
               </span>
             </CCol>
+
             <CCol sm={6}>
               <p className="mb-1 fw-semibold">Offer End Date:</p>
               <span className="text-muted">
@@ -61,7 +82,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
           <h6 className="fw-bold border-bottom pb-2 mb-3">Pricing Details</h6>
           <CRow className="gy-2">
             <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Offer End Date:</span>
+              <span className="mb-1 fw-semibold">Price</span>
               <span className="text-muted"> ₹ {Math.round(data.price || 0)}</span>
             </CCol>
             <CCol sm={4}>
@@ -100,6 +121,11 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               {/* <strong>GST %:</strong> {Math.round(data.gst || 0)} */}
             </CCol>
             <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Gst Amount:</span>
+              <span className="text-muted"> {Math.round(data.gstAmount || 0)}</span>
+              {/* <strong>GST %:</strong> {Math.round(data.gst || 0)} */}
+            </CCol>
+            <CCol sm={4}>
               <span className="mb-1 fw-semibold">Consultation Fee:</span>
               <span className="text-muted"> ₹ {data.consultationFee || 0}</span>
               {/* <strong>Consultation Fee:</strong> ₹ {data.consultationFee || 0} */}
@@ -111,9 +137,7 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Service Time: </span>
-              <span className="text-muted">
-             {data.minTime ? data.minTime : 'N/A'}
-              </span>
+              <span className="text-muted">{data.minTime ? data.minTime : 'N/A'}</span>
               {/* <strong>Service Time:</strong> {data.minTime ? formatMinutes(data.minTime) : 'N/A'} */}
             </CCol>
             <CCol sm={4}>
@@ -121,6 +145,17 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
               {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
             </CCol>
+            <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Payment Type:</span>
+              <span className="text-muted"> {data.paymentType ? data.paymentType : 'N/A'}</span>
+              {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
+            </CCol>
+            {data?.partialPaymentPercentage != null && (
+              <CCol sm={4}>
+                <span className="mb-1 fw-semibold">Partial Payment Percentage:</span>
+                <span className="text-muted"> {data.partialPaymentPercentage}%</span>
+              </CCol>
+            )}
           </CRow>
         </div>
 

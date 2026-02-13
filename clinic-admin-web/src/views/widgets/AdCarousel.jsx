@@ -4,6 +4,7 @@ import axios from 'axios'
 import DermaCareLogo from '../../assets/images/ad.jpg'
 import adVideo from '../../assets/images/ad.mp4'
 import { wifiUrl } from '../../baseUrl'
+import { http } from '../../Utils/Interceptors'
 
 export default function AdCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -15,7 +16,7 @@ export default function AdCarousel() {
   useEffect(() => {
     const fetchAds = async () => {
       try {
-        const res = await axios.get(`${wifiUrl}/admin/dashboard-ads`)
+        const res = await http.get(`/admin/clinic-ads`)
 
         if (res.data && res.data.length > 0) {
           const backendAds = res.data.map((item) => ({

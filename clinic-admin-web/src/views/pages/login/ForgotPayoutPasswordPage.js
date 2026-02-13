@@ -15,6 +15,7 @@ import {
   sendOtp,
   sendPayoutOtp,
 } from '../../../baseUrl'
+import { http } from '../../../Utils/Interceptors'
 
 export default function ForgotPasswordPayoutContent({ onClose, setForgotModal }) {
   const [step, setStep] = useState(1)
@@ -73,7 +74,7 @@ export default function ForgotPasswordPayoutContent({ onClose, setForgotModal })
     }
     setLoading(true)
     try {
-      const res = await axios.post(`${BASE_URL}/${sendPayoutOtp}`, {
+      const res = await http.post(`${BASE_URL}/${sendPayoutOtp}`, {
         identifier: email,
       })
 
@@ -162,7 +163,7 @@ export default function ForgotPasswordPayoutContent({ onClose, setForgotModal })
     otpRefs.current[0]?.focus()
 
     try {
-      const res = await axios.post(`${BASE_URL}/${resendPayoutOTP}`, {
+      const res = await http.post(`${BASE_URL}/${resendPayoutOTP}`, {
         identifier: email,
       })
 
@@ -200,7 +201,7 @@ export default function ForgotPasswordPayoutContent({ onClose, setForgotModal })
     }
     setupdate(true)
     try {
-      const res = await axios.post(`${BASE_URL}/${resetPayoutPassword}`, {
+      const res = await http.post(`${BASE_URL}/${resetPayoutPassword}`, {
         identifier: email,
         otp: otp.join(''),
         newPassword: password,

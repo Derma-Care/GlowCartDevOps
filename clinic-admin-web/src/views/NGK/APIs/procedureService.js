@@ -4,7 +4,7 @@ import { http } from '../../../Utils/Interceptors'
 
 export const getAllProcedures = async () => {
   try {
-    const response = await axios.get(`${wifiUrl}/${getAllProceduresNames}`)
+    const response = await http.get(`/${getAllProceduresNames}`)
 
     if (response.data?.success) {
       return response.data.data // returns array of procedures

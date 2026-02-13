@@ -6,6 +6,7 @@ import { emailPattern, passwordRegex } from '../../../Constant/Constants'
 import { showCustomToast } from '../../../Utils/Toaster'
 import DermaCareLogo from '../../../assets/images/logoP.png'
 import { MainAdmin_URL, resendOTP, resetPassword, sendOtp } from '../../../baseUrl'
+import { http } from '../../../Utils/Interceptors'
 
 export default function ForgotPasswordContent({ onClose }) {
   const [step, setStep] = useState(1)
@@ -64,7 +65,7 @@ export default function ForgotPasswordContent({ onClose }) {
     }
     setLoading(true)
     try {
-      const res = await axios.post(`${MainAdmin_URL}/${sendOtp}`, {
+      const res = await http.post(`${MainAdmin_URL}/${sendOtp}`, {
         identifier: email,
       })
 
@@ -153,7 +154,7 @@ export default function ForgotPasswordContent({ onClose }) {
     otpRefs.current[0]?.focus()
 
     try {
-      const res = await axios.post(`${MainAdmin_URL}/${resendOTP}`, {
+      const res = await http.post(`${MainAdmin_URL}/${resendOTP}`, {
         identifier: email,
       })
 
@@ -191,7 +192,7 @@ export default function ForgotPasswordContent({ onClose }) {
     }
     setupdate(true)
     try {
-      const res = await axios.post(`${MainAdmin_URL}/${resetPassword}`, {
+      const res = await http.post(`${MainAdmin_URL}/${resetPassword}`, {
         identifier: email,
         otp: otp.join(''),
         newPassword: password,

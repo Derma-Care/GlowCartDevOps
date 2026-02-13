@@ -2,7 +2,7 @@ import { wifiUrl } from '../../../baseUrl'
 
 export const registerCustomer = async (formData) => {
   try {
-    const response = await fetch(`${wifiUrl}/api/customer/step1`, {
+    const response = await fetch(`/api/customer/step1`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

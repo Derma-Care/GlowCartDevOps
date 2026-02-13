@@ -32,8 +32,8 @@ public class CustomerResponseDTO {
     private String skinTone;
     private String photo;
 
-    private String aadharNumber; // Masked only
-    private Boolean aadhaarConsent = false;
+//    private String aadharNumber; // Masked only
+//    private Boolean aadhaarConsent = false;
     private Boolean userConsent = false;
     private Boolean privacyConsent = false;
     

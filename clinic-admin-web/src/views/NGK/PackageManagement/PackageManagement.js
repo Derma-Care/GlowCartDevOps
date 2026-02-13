@@ -60,6 +60,8 @@ const PackageManagement = () => {
     postProcedureQA: [],
     packageName: '',
     packageId: '',
+    paymentType: 'FULL_PAYMENT',
+    partialPaymentPercentage: '',
     // packageProcedures: [{ procedureId: '', sittings: '' }],
     packageProcedures: [],
   })
@@ -179,26 +181,36 @@ const PackageManagement = () => {
     }
 
     // ----- DISCOUNT + OFFER DATE VALIDATION -----
-    if (newService.discount && newService.discount.trim() !== '') {
-      // discount exists → validate dates
+    // ----- DISCOUNT + OFFER DATE VALIDATION -----
+
+    const discountValue = Number(newService.discount || 0)
+
+    // ❌ Offer date given WITHOUT discount
+    if (discountValue <= 0 && (newService.offerValidDate || newService.offerEndDate)) {
+      newErrors.discount = 'Please enter discount to apply offer dates.'
+      newErrors.offerValidDate = 'Offer dates require a valid discount.'
+    }
+
+    // ✅ Discount given → Start date mandatory
+    if (discountValue > 0) {
       if (!newService.offerValidDate) {
         newErrors.offerValidDate = 'Offer Start Date is required when discount is applied.'
       }
-
-      // if (!newService.offerEndDate) {
-      //   newErrors.offerEndDate = 'Offer End Date is required when discount is applied.'
-      // }
     }
+
+    // ❌ Start date > End date
     if (newService.offerValidDate && newService.offerEndDate) {
       const start = new Date(newService.offerValidDate)
       const end = new Date(newService.offerEndDate)
 
       if (start > end) {
-        newErrors.offerValidDate = 'Start date cannot be greater than End date.'
+        newErrors.offerValidDate = 'Start date cannot be after End date.'
         newErrors.offerEndDate = 'End date must be after Start date.'
       }
     }
-    if (newService.discount && Number(newService.discount) > 100) {
+
+    // ❌ Discount > 100
+    if (discountValue > 100) {
       newErrors.discount = 'Discount cannot exceed 100%.'
     }
 
@@ -241,6 +253,19 @@ const PackageManagement = () => {
     //   newErrors.sittings = 'Number of sittings is required.'
     // }
 
+    if (!newService.paymentType) {
+      newErrors.paymentType = 'Payment type is required'
+    }
+
+    if (
+      newService.paymentType === 'PARTIAL_PAYMENT' &&
+      (!newService.partialPaymentPercentage ||
+        Number(newService.partialPaymentPercentage) < 1 ||
+        Number(newService.partialPaymentPercentage) > 99)
+    ) {
+      newErrors.partialPaymentPercentage = 'Enter valid percentage between 1 and 99'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -260,6 +285,16 @@ const PackageManagement = () => {
           ...prev,
           packageProcedures: '',
         }))
+      }
+
+      if (name === 'discount' && Number(newValue) <= 0) {
+        setNewService((prev) => ({
+          ...prev,
+          discount: newValue,
+          offerValidDate: '',
+          offerEndDate: '',
+        }))
+        return
       }
 
       if (name === 'updateProcedure') {
@@ -364,7 +399,13 @@ const PackageManagement = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }))
     }
 
-    setNewService((prev) => ({ ...prev, [name]: newValue }))
+    setNewService((prev) => ({
+      ...prev,
+      [name]: newValue,
+      ...(name === 'paymentType' && newValue === 'FULL_PAYMENT'
+        ? { partialPaymentPercentage: '' }
+        : {}),
+    }))
   }
 
   // const onChange = (e) => {
@@ -405,6 +446,8 @@ const PackageManagement = () => {
       procedureQA: [],
       preProcedureQA: [],
       postProcedureQA: [],
+      paymentType: 'FULL_PAYMENT',
+      partialPaymentPercentage: '',
 
       // ✅ ADD THIS LINE
       // packageProcedures: [{ procedureId: '', sittings: '' }],
@@ -469,6 +512,8 @@ const PackageManagement = () => {
       // PackageName: '',
       // packageProcedures: service.packageProcedures || [{ procedureId: '', sittings: '' }],
       packageProcedures: mappedProcedures,
+      paymentType: service.paymentType || 'FULL_PAYMENT',
+      partialPaymentPercentage: service.partialPaymentPercentage || '',
     })
 
     setErrors({})
@@ -526,6 +571,11 @@ const PackageManagement = () => {
         // minTime: formattedMinTime,
         offerStart: newService.offerValidDate || '',
         offerValidDate: newService.offerEndDate || '',
+        paymentType: newService.paymentType || 'FULL_PAYMENT',
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0,
         // procedureImage: base64ImageToSend,
       }
 
@@ -597,6 +647,11 @@ const PackageManagement = () => {
         procedureImage: base64ImageToSend,
         gst: Number(newService.gst || 0),
         consultationFee: Number(newService.consultationFee || 0),
+        paymentType: newService.paymentType || 'FULL_PAYMENT',
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0,
       }
 
       const response = await updatePackageData(newService.packageId, hospitalId, updatedService) // imported from ProcedureManagementAPI

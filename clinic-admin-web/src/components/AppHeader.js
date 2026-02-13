@@ -36,7 +36,7 @@ import BackButton from '../views/widgets/BackButton'
 // import DermaCareLogo from '../../../assets/images/logoP.png'
 const AppHeader = () => {
   const headerRef = useRef()
-  const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  // const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const { notificationCount } = useHospital()
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)

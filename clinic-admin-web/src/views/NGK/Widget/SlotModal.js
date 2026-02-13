@@ -4,6 +4,7 @@ import axios from 'axios'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { BASE_URL } from '../../../baseUrl'
 import LoadingIndicator from '../../../Utils/loader'
+import { http } from '../../../Utils/Interceptors'
 
 export default function ClinicSlotManager({ show, setShow, clinicId }) {
   const [days, setDays] = useState([])
@@ -18,7 +19,7 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
   const fetchSlots = async () => {
     setLoading(true)
     try {
-      const res = await axios.get(`${BASE_URL}/available-slots`, {
+      const res = await http.get(`${BASE_URL}/available-slots`, {
         params: { clinicId },
       })
 
@@ -96,6 +97,7 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
     setDays(
       days.map((d) => ({
         ...d,
+        hasSlot: true, // 🔥 THIS is the missing piece
         isWorking: true,
         reason: 'Working Day',
         error: '',
@@ -136,7 +138,7 @@ export default function ClinicSlotManager({ show, setShow, clinicId }) {
     }
 
     try {
-      const res = await axios.post(`${BASE_URL}/save-slots`, {
+      const res = await http.post(`${BASE_URL}/save-slots`, {
         clinicId,
         exceptions,
       })

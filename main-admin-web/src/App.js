@@ -14,6 +14,8 @@ import './scss/style.scss'
 import ClinicOnboardingSuccess from './views/clinicManagement/SuccessOnboradClinic'
 import RegistrationCodeManagement from './views/RegistrationCodes/RegistrationCodes'
 import ClinicRegistration from './views/clinicManagement/GlowKartClinicRegistration'
+import CustomerManagementProd from './views/customerManagement/CustomerManagementProd'
+import CustomerViewDetailsProd from './views/customerManagement/CustomerViewDetailsProd'
 
 // Lazy-loaded pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -64,7 +66,14 @@ const App = () => {
             path="/registration-codes"
             element={<RegistrationCodeManagement />}
           />
-
+          <Route
+            path="/Customer-info"
+            element={<CustomerManagementProd />}
+          />
+          <Route
+            path="/Customer-ManagementProd/:mobileNumber"
+            element={<CustomerViewDetailsProd />}
+          />
           <Route
             path="/clinic-onboarding-success"
             element={<ClinicOnboardingSuccess />}

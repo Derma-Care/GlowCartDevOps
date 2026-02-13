@@ -3,5 +3,5 @@ import { http } from '../Utils/Interceptors'
 
 export const getBookingsByPatientId = (patientId) => {
   const clinicid = localStorage.getItem('HospitalId')
-  return http.get(`${wifiUrl}/clinic-admin/bookings/byInput/${patientId}/${clinicid}`)
+  return http.get(`/clinic-admin/bookings/byInput/${patientId}/${clinicid}`)
 }

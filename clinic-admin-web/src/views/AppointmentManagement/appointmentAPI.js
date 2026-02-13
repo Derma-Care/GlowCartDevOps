@@ -86,7 +86,7 @@ export const AppointmentData = async () => {
   const hospitalId = localStorage.getItem('HospitalId')
   const branchId = localStorage.getItem('branchId')
   try {
-    const response = await axios.get(`${Booking_service_Url}/${getAllBookedServices}`) //TODO:chnage when apigetway call axios to http
+    const response = await http.get(`${Booking_service_Url}/${getAllBookedServices}`) //TODO:chnage when apigetway call axios to http
     return response.data
   } catch (error) {
     console.error('Error fetching service data:', error.message)
@@ -96,7 +96,7 @@ export const AppointmentData = async () => {
 
 export const deleteBookingData = async (id) => {
   try {
-    const response = await axios.delete(`${Booking_service_Url}/${DeleteBookings}/${id}`, {
+    const response = await http.delete(`${Booking_service_Url}/${DeleteBookings}/${id}`, {
       //TODO:chnage when apigetway call axios to http
       headers: { 'Content-Type': 'application/json' },
     })
@@ -122,7 +122,7 @@ export const GetBookingByClinicIdData = async (id) => {
   const branchId = localStorage.getItem('branchId')
   console.log(id)
   try {
-    const response = await axios.get(
+    const response = await http.get(
       `${BASE_URL}/getAllbookingsDetailsByClinicAndBranchId/${hID}/${branchId}`,
     ) //TODO:chnage when apigetway call axios to http
     return response.data
@@ -139,7 +139,7 @@ export const followUpBookings = async (bookingDetails) => {
   console.log('Request payload:', bookingDetails)
 
   try {
-    const response = await axios.post(BASE_URL, {
+    const response = await http.post(BASE_URL, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -168,7 +168,7 @@ export const bookingUpdate = async (bookingDetails) => {
   console.log('Request payload:', bookingDetails)
 
   try {
-    const response = await axios.put(
+    const response = await http.put(
       `${BASE_URL}/updateAppointmentBasedOnBookingId`,
       bookingDetails, // 👈 send object directly
       {
@@ -190,7 +190,7 @@ export const GetBookingInprogress = async () => {
   const hID = localStorage.getItem('HospitalId')
   const branchId = localStorage.getItem('branchId')
   try {
-    const response = await axios.get(`${BASE_URL}/appointments/byIds/${hID}/${branchId}`) //TODO:chnage when apigetway call axios to http
+    const response = await http.get(`${BASE_URL}/appointments/byIds/${hID}/${branchId}`) //TODO:chnage when apigetway call axios to http
     console.log(`${BASE_URL}/appointments/byIds/${hID}/${branchId}`)
     console.log(response.data.data)
     return response.data.data

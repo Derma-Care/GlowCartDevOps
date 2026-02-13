@@ -63,7 +63,7 @@ const AdsManagement = () => {
       get: `${BASE_URL_API}/service-ads`,
       post: `${BASE_URL_API}/service-ads/upload-file-json`,
       update: (id) => `${BASE_URL_API}/service-ads/${id}`,
-      delete: (id) => `${BASE_URL_API}/service-ads/${id}`,
+      delete: (id, clinicId) => `${BASE_URL_API}/service-ads/${id}/${clinicId}`,
     },
     clinic: {
       get: `${BASE_URL_API}/clinic-ads`,
@@ -112,7 +112,7 @@ const AdsManagement = () => {
         title: ad.title || "Ad",
         fileName: ad.url.split("/").pop().split("?")[0],
         category: ad.category || category,
-        ...(category === "clinic" && { clinicId: ad.clinicId || ad.clinic_id || "" }), // add clinicId here based on your API
+        ...(category === "service" && { clinicId: ad.clinicId || ad.clinic_id || "" }), // add clinicId here based on your API
       }));
 
       setAdsData((prev) => ({
@@ -176,7 +176,7 @@ const AdsManagement = () => {
       errors.title = "Title is required.";
       valid = false;
     }
-    if (getCategory() === "clinic" && !selectedClinic.clinicId) {
+    if (getCategory() === "service" && !selectedClinic.clinicId) {
       toast.error("Please select a clinic")
       valid = false
     }
@@ -194,12 +194,9 @@ const AdsManagement = () => {
     let errors = { title: "", data: "" };
     let valid = true;
 
-    if (!editData.title.trim()) {
-      errors.title = "Title is required.";
-      valid = false;
-    }
 
-    if (getCategory() === "clinic" && !selectedClinic.clinicId) {
+
+    if (getCategory() === "service" && !selectedClinic.clinicId) {
       toast.error("Please select a clinic");
       valid = false;
     }
@@ -221,7 +218,7 @@ const AdsManagement = () => {
       data: formData.data,
       type: formData.type,
       filename: formData.fileName,
-      ...(category === "clinic" && {
+      ...(category === "service" && {
         clinicId: selectedClinic.clinicId // only send ID to backend
       })
     }
@@ -238,7 +235,7 @@ const AdsManagement = () => {
   }
 
 
-
+  // Update Ad
   // Update Ad
   const handleUpdateAd = async () => {
     if (!validateEditForm()) return;
@@ -249,9 +246,14 @@ const AdsManagement = () => {
       title: editData.title,
       type: editData.type,
       filename: editData.fileName,
-      data: editData.data, // new file base64 if uploaded
-      ...(category === "clinic" && { clinicId: selectedClinic.clinicId }),
+      ...(category === "service" && { clinicId: selectedClinic.clinicId }),
     };
+
+    // ✅ Only send data if new file uploaded
+    if (editData.data) {
+      payload.data = editData.data;
+    }
+
 
     try {
       await axios.put(API[category].update(editData._id), payload);
@@ -263,13 +265,12 @@ const AdsManagement = () => {
     }
   };
 
-
   // Delete Ad
   const confirmDelete = async () => {
     const category = getCategory();
     try {
-      if (category === "clinic") {
-        await axios.delete(API.clinic.delete(deleteId, selectedAd.clinicId));
+      if (category === "service") {
+        await axios.delete(API.service.delete(deleteId, selectedAd.clinicId));
       } else {
         await axios.delete(API[category].delete(deleteId));
       }
@@ -293,14 +294,14 @@ const AdsManagement = () => {
     setEditData({
       _id: ad._id,
       title: ad.title || "",
-      data: "",               // clear data, wait for new upload
+      data: ad.data || "",
       type: ad.type || "",
       fileName: ad.fileName || "",
       previewUrl: ad.data || "",  // existing media URL/base64
       clinicId: ad.clinicId || "", // keep clinic ID for clinic ads
     });
 
-    if (category === "clinic") {
+    if (category === "service") {
       // Find the clinic name by clinicId and set selectedClinic
       const clinic = clinics.find((c) => c.clinicId === ad.clinicId);
       setSelectedClinic({
@@ -456,7 +457,7 @@ const AdsManagement = () => {
         </CModalHeader>
         <CModalBody>
           {
-            getCategory() === "clinic" && (
+            getCategory() === "service" && (
               <>
                 <CFormLabel className="mt-3" >
                   Select Clinic < span style={{ color: "red" }
@@ -556,7 +557,7 @@ const AdsManagement = () => {
         </CModalHeader>
         <CModalBody>
           {/* Clinic Dropdown (only for clinic ads) */}
-          {getCategory() === "clinic" && (
+          {getCategory() === "service" && (
             <>
               <CFormLabel className="mt-3">
                 Select Clinic <span style={{ color: "red" }}>*</span>

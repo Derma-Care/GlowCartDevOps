@@ -57,6 +57,8 @@ const ServiceManagement = () => {
     preProcedureQA: [],
     postProcedureQA: [],
     procedureLink: '',
+    paymentType: 'FULL_PAYMENT',
+    partialPaymentPercentage: '',
   })
 
   const [errors, setErrors] = useState({
@@ -212,6 +214,18 @@ const ServiceManagement = () => {
     if (newService.discount && Number(newService.discount) > 100) {
       newErrors.discount = 'Discount cannot exceed 100%.'
     }
+    if (!newService.paymentType) {
+      newErrors.paymentType = 'Payment type is required'
+    }
+
+    if (
+      newService.paymentType === 'PARTIAL_PAYMENT' &&
+      (!newService.partialPaymentPercentage ||
+        Number(newService.partialPaymentPercentage) < 1 ||
+        Number(newService.partialPaymentPercentage) > 99)
+    ) {
+      newErrors.partialPaymentPercentage = 'Enter valid percentage between 1 and 99'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -222,24 +236,25 @@ const ServiceManagement = () => {
   const handleChange = (e) => {
     const { name, value, files, type } = e.target
 
+    // ---------- FILE UPLOAD ----------
     if (type === 'file' && files && files[0]) {
       const file = files[0]
       const reader = new FileReader()
+
       reader.onloadend = () => {
         setNewService((prev) => ({
           ...prev,
-          [name]: reader.result, // full base64 data URL
+          [name]: reader.result,
           serviceImageFile: file,
         }))
-        // ✅ CLEAR IMAGE ERROR HERE
-        setErrors((prev) => ({
-          ...prev,
-          serviceImage: '',
-        }))
       }
+
       reader.readAsDataURL(file)
       return
     }
+
+    // ---------- NORMAL INPUT ----------
+    let newValue = value
 
     const numericFields = [
       'consultationFee',
@@ -249,9 +264,8 @@ const ServiceManagement = () => {
       'gst',
       'taxPercentage',
       'sittings',
+      'partialPaymentPercentage',
     ]
-
-    let newValue = value
 
     if (numericFields.includes(name)) {
       if (name === 'minTimeValue') {
@@ -276,7 +290,15 @@ const ServiceManagement = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }))
     }
 
-    setNewService((prev) => ({ ...prev, [name]: newValue }))
+    // ---------- UPDATE STATE ----------
+    setNewService((prev) => ({
+      ...prev,
+      [name]: newValue,
+      // ✅ Reset percentage if FULL PAYMENT selected
+      ...(name === 'paymentType' && newValue === 'FULL_PAYMENT'
+        ? { partialPaymentPercentage: '' }
+        : {}),
+    }))
   }
 
   const handleSubServiceChange = (selectedOption) => {
@@ -320,6 +342,8 @@ const ServiceManagement = () => {
       preProcedureQA: [],
       postProcedureQA: [],
       procedureLink: '',
+      paymentType: 'FULL_PAYMENT',
+      partialPaymentPercentage: '',
     })
     setErrors({})
   }
@@ -380,6 +404,8 @@ const ServiceManagement = () => {
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
       postProcedureQA: service.postProcedureQA || [],
+      paymentType: service.paymentType || 'FULL_PAYMENT',
+      partialPaymentPercentage: service.partialPaymentPercentage || '',
     })
 
     setErrors({})
@@ -429,27 +455,30 @@ const ServiceManagement = () => {
         gstAmount,
         consultationFee,
         minTime: formattedMinTime,
-        offerStart: (newService.offerValidDate),
-        offerValidDate: (newService.offerEndDate),
+        offerStart: newService.offerValidDate,
+        offerValidDate: newService.offerEndDate,
         procedureImage: base64ImageToSend,
         procedureQA: newService.procedureQA,
         preProcedureQA: newService.preProcedureQA,
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
         procedureLink: newService.procedureLink,
+        paymentType: newService.paymentType || 'FULL_PAYMENT', // ✅
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0, // ✅
       }
 
       const response = await postServiceData(payload) // imported from ProcedureManagementAPI
-      if (response.data.success || response.status === 200) {
-        showCustomToast(response.data.message, 'success')
-        handleCloseFormModal()
-        fetchProcedurePricing()
-      } else {
-        showCustomToast(response.data.message, 'error')
-      }
+
+      // ✅ SUCCESS ONLY
+      showCustomToast(response.data.message, 'success')
+      handleCloseFormModal()
+      fetchProcedurePricing()
     } catch (error) {
       console.error('Error in handleAddService:', error?.response || error)
-      showCustomToast(error?.response?.data?.message || 'Something went wrong', 'error')
+      // showCustomToast(error?.response?.data?.message || 'Something went wrong', 'error')
     } finally {
       setSaveLoading(false)
     }
@@ -488,8 +517,8 @@ const ServiceManagement = () => {
         minTime: newService.minTimeValue
           ? `${newService.minTimeValue} ${newService.minTimeUnit}`
           : '',
-        offerStart: (newService.offerValidDate || ''),
-        offerValidDate: (newService.offerEndDate || ''),
+        offerStart: newService.offerValidDate || '',
+        offerValidDate: newService.offerEndDate || '',
         procedureQA: newService.procedureQA,
         preProcedureQA: newService.preProcedureQA,
         postProcedureQA: newService.postProcedureQA,
@@ -500,6 +529,11 @@ const ServiceManagement = () => {
         gst: Number(newService.gst || 0),
         consultationFee: Number(newService.consultationFee || 0),
         procedureLink: newService.procedureLink,
+        paymentType: newService.paymentType || 'FULL_PAYMENT',
+        partialPaymentPercentage:
+          newService.paymentType === 'PARTIAL_PAYMENT'
+            ? Number(newService.partialPaymentPercentage)
+            : 0,
       }
 
       const response = await updateServiceData(newService.subServiceId, hospitalId, updatedService) // imported from ProcedureManagementAPI

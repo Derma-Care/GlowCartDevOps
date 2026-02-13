@@ -2,7 +2,7 @@ import { wifiUrl } from '../../../baseUrl'
 
 export const verifyRegistrationCode = async (code) => {
   try {
-    const response = await fetch(`${wifiUrl}/api/customer/registration/verify`, {
+    const response = await fetch(`/api/customer/registration/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

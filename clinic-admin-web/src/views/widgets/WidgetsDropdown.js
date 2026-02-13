@@ -23,6 +23,7 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
+  CSpinner,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
@@ -42,6 +43,7 @@ import { BASE_URL } from '../../baseUrl'
 import { showCustomToast } from '../../Utils/Toaster'
 import ConfirmationModal from '../../components/ConfirmationModal'
 import { ToastContainer } from 'react-toastify'
+import { http } from '../../Utils/Interceptors'
 const WidgetsDropdown = () => {
   const navigate = useNavigate()
   const today = new Date().toISOString().split('T')[0]
@@ -60,6 +62,8 @@ const WidgetsDropdown = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [pendingStatusChange, setPendingStatusChange] = useState(null)
   // { bookingId, newStatus }
+  const [typeFilter, setTypeFilter] = useState('ALL')
+  // ALL | PACKAGE | PROCEDURE
 
   // Toggle filter (Pending / Completed)
   const toggleFilter = (status) => {
@@ -99,9 +103,11 @@ const WidgetsDropdown = () => {
 
       const matchesStatus = filterTypes.length === 0 ? true : filterTypes.includes(item.status)
 
-      return matchesSearch && matchesDate && matchesStatus
+      const matchesType = typeFilter === 'ALL' ? true : item.serviceType === typeFilter
+
+      return matchesSearch && matchesDate && matchesStatus && matchesType
     })
-  }, [appointments, searchQuery, selectedDate, filterTypes])
+  }, [appointments, searchQuery, selectedDate, filterTypes, typeFilter])
 
   const displayData = useMemo(
     () => finalFiltered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
@@ -114,7 +120,7 @@ const WidgetsDropdown = () => {
     const fetchBookings = async () => {
       setLoading(true)
       try {
-        const res = await axios.get(`${BASE_URL}/bookings/${selectedHospital.data.clinicId}`)
+        const res = await http.get(`${BASE_URL}/bookings/${selectedHospital.data.clinicId}`)
 
         setAppointments(res.data?.data || [])
       } catch (error) {
@@ -129,7 +135,7 @@ const WidgetsDropdown = () => {
 
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      const res = await axios.put(`${BASE_URL}/bookings/update-status`, {
+      const res = await http.put(`${BASE_URL}/bookings/update-status`, {
         bookingId: bookingId,
         status: newStatus,
       })
@@ -213,58 +219,110 @@ const WidgetsDropdown = () => {
 
       {/* ----------------------  TODAY APPOINTMENTS ---------------------- */}
       <div className="container mt-4">
-        <h5 className="mb-4">Appointments</h5>
+        {/* {displayData.length > 0 && ( */}
+        <div>
+          <h5 className="mb-4">Appointments</h5>
 
-        {/* FILTER BUTTONS */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          {/* LEFT SIDE → FILTER BUTTONS */}
-          <div className="d-flex gap-2">
-            <CButton
-              style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
-              onClick={() => {
-                setSelectedDate('')
-                setFilterTypes([])
-              }}
-              setSelectedDate
-            >
-              All
-            </CButton>
+          {/* FILTER BUTTONS */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            {/* LEFT SIDE → FILTER BUTTONS */}
+            {/* <div className="d-flex gap-2">
+                <CButton
+                  style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+                  onClick={() => {
+                    setSelectedDate('')
+                    setFilterTypes([])
+                  }}
+                  setSelectedDate
+                >
+                  All
+                </CButton>
 
-            <button
-              onClick={() => toggleFilter('CONFIRMED')}
-              className={`btn ${filterTypes.includes('CONFIRMED') ? 'btn-selected' : 'btn-unselected'
+                <button
+                  onClick={() => toggleFilter('CONFIRMED')}
+                  className={`btn ${
+                    filterTypes.includes('CONFIRMED') ? 'btn-selected' : 'btn-unselected'
+                  }`}
+                >
+                  Confirmed
+                </button>
+
+                <button
+                  onClick={() => toggleFilter('COMPLETED')}
+                  className={`btn ${
+                    filterTypes.includes('COMPLETED') ? 'btn-selected' : 'btn-unselected'
+                  }`}
+                >
+                  Completed
+                </button>
+              </div> */}
+            <div className="d-flex gap-2 flex-wrap">
+              {/* STATUS FILTERS */}
+              <CButton
+                style={{ backgroundColor: 'var(--color-black)', color: 'white' }}
+                onClick={() => {
+                  setSelectedDate('')
+                  setFilterTypes([])
+                  setTypeFilter('ALL')
+                }}
+              >
+                All
+              </CButton>
+
+              <button
+                onClick={() => toggleFilter('CONFIRMED')}
+                className={`btn ${
+                  filterTypes.includes('CONFIRMED') ? 'btn-selected' : 'btn-unselected'
                 }`}
-            >
-              Confirmed
-            </button>
+              >
+                Confirmed
+              </button>
 
-            <button
-              onClick={() => toggleFilter('COMPLETED')}
-              className={`btn ${filterTypes.includes('COMPLETED') ? 'btn-selected' : 'btn-unselected'
+              <button
+                onClick={() => toggleFilter('COMPLETED')}
+                className={`btn ${
+                  filterTypes.includes('COMPLETED') ? 'btn-selected' : 'btn-unselected'
                 }`}
-            >
-              Completed
-            </button>
-          </div>
+              >
+                Completed
+              </button>
 
-          {/* RIGHT SIDE → RESULTS + DATE */}
-          <div className="d-flex align-items-center gap-3">
-            <p className="m-0  " style={{ color: 'var(--color-black)' }}>
-              Showing {displayData.length} results
-            </p>
+              {/* TYPE FILTERS */}
+              <button
+                onClick={() => setTypeFilter('PROCEDURE')}
+                className={`btn ${typeFilter === 'PROCEDURE' ? 'btn-selected' : 'btn-unselected'}`}
+              >
+                Procedure
+              </button>
 
-            <CFormInput
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              style={{
-                maxWidth: '160px',
-                borderColor: 'var(--color-black)',
-                color: 'var(--color-black)',
-              }}
-            />
+              <button
+                onClick={() => setTypeFilter('PACKAGE')}
+                className={`btn ${typeFilter === 'PACKAGE' ? 'btn-selected' : 'btn-unselected'}`}
+              >
+                Package
+              </button>
+            </div>
+
+            {/* RIGHT SIDE → RESULTS + DATE */}
+            <div className="d-flex align-items-center gap-3">
+              <p className="m-0  " style={{ color: 'var(--color-black)' }}>
+                Showing {displayData.length} results
+              </p>
+
+              <CFormInput
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                style={{
+                  maxWidth: '160px',
+                  borderColor: 'var(--color-black)',
+                  color: 'var(--color-black)',
+                }}
+              />
+            </div>
           </div>
         </div>
+        {/* )} */}
 
         {/* <div
           style={{
@@ -348,15 +406,31 @@ const WidgetsDropdown = () => {
         </CModal>
 
         {/* TABLE */}
-        {displayData.length === 0 ? (
-          <CTableRow
-            className="d-flex justify-content-center"
-            style={{ color: 'var(--color-black)' }}
+        {loading ? (
+          // 🔄 LOADING STATE
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{ height: '300px' }}
           >
-            <CTableDataCell colSpan={8} className="text-center py-4">
+            <div className="d-flex justify-content-center align-items-center vh-100">
+              <CSpinner size="sm" color="primary" />
+            </div>
+            {/* <img
+              src={DermaCareLogo}
+              alt="Loading"
+              style={{
+                width: '120px',
+                animation: 'pulseGlow 1.5s infinite ease-in-out',
+              }}
+            /> */}
+          </div>
+        ) : displayData.length === 0 ? (
+          // ❌ NO DATA STATE (after loading)
+          <div>
+            <div colSpan={8} className="text-center py-4 w-100">
               No appointments found
-            </CTableDataCell>
-          </CTableRow>
+            </div>
+          </div>
         ) : (
           <CTable striped hover responsive className="pink-table">
             <CTableHead>
@@ -366,6 +440,7 @@ const WidgetsDropdown = () => {
                 <CTableHeaderCell>Age</CTableHeaderCell>
                 <CTableHeaderCell>Type</CTableHeaderCell>
                 <CTableHeaderCell>Service</CTableHeaderCell>
+                <CTableHeaderCell>P. Status</CTableHeaderCell>
                 <CTableHeaderCell>Date</CTableHeaderCell>
                 <CTableHeaderCell>Status</CTableHeaderCell>
                 <CTableHeaderCell>Action</CTableHeaderCell>
@@ -382,6 +457,7 @@ const WidgetsDropdown = () => {
 
                   <CTableDataCell>{item.serviceType}</CTableDataCell>
                   <CTableDataCell>{item.serviceName}</CTableDataCell>
+                  <CTableDataCell>{item.paymentStatus}</CTableDataCell>
                   <CTableDataCell>{item.appointmentDate}</CTableDataCell>
 
                   <CTableDataCell>
@@ -429,18 +505,18 @@ const WidgetsDropdown = () => {
           onConfirm={handleConfirmStatusChange}
           onCancel={handleCancelStatusChange}
         />
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(finalFiltered.length / pageSize)}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
-            setCurrentPage(1) // reset page on size change
-          }}
-        />
-
+        {displayData.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(finalFiltered.length / pageSize)}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size)
+              setCurrentPage(1) // reset page on size change
+            }}
+          />
+        )}
       </div>
     </>
   )

@@ -2,7 +2,7 @@ import { wifiUrl } from "../../../baseUrl"
 
 export async function sendSpinReward(mobile, reward) {
   try {
-    const response = await fetch(`${wifiUrl}/api/customer/${mobile}/spin`, {
+    const response = await fetch(`/api/customer/${mobile}/spin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -13,7 +13,10 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
-  CButton, CForm, CCol, CContainer, CRow
+  CButton, CForm, CCol, CContainer, CRow,
+  CNav,
+  CNavItem,
+  CNavLink
 } from "@coreui/react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -81,8 +84,9 @@ const RegistrationCodeManagement = () => {
       );
 
       if (response.data.success) {
-        localStorage.setItem("registration-auth", "true");
+        sessionStorage.setItem("registration-auth", "true");
         setIsAuthenticated(true);
+
         setShowLogin(false);
       } else {
         setLoginError(response.data.message || "Invalid credentials");
@@ -190,295 +194,333 @@ Warm regards,
         toast.error("Failed to copy code");
       });
   };
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem("registration-auth");
+    if (isLoggedIn === "true") {
+      setIsAuthenticated(true);
+      setShowLogin(false);
+    }
+  }, []);
 
   return (
     <>
       <ToastContainer />
       {isAuthenticated && (
-        <CCard className="mt-1">
-          <CCardHeader className="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-              <h4 className="mb-0">Registration Codes</h4>
-              <div style={{ fontSize: "0.9rem", marginTop: "5px" }}>
-                <span
-                  style={{
-                    color: "#198754",
-                    fontWeight: 500,
-                    marginRight: "15px",
-                    cursor: "pointer",
-                    textDecoration: filterType === "unused" ? "underline" : "none",
-                  }}
-                  onClick={() => {
-                    setFilterType("unused");
-                    setCurrentPage(1);
-                  }}
-                >
-                  Unused: {unusedCount}
-                </span>
-                <span
-                  style={{
-                    color: "#dc3545",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    textDecoration: filterType === "used" ? "underline" : "none",
-                  }}
-                  onClick={() => {
-                    setFilterType("used");
-                    setCurrentPage(1);
-                  }}
-                >
-                  Used: {usedCount}
-                </span>
+        <>
+          <CCard className="mb-3 shadow-sm">
+            <CCardBody className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+              <div>
+                <h4 className="mb-0 fw-bold">Registration Codes</h4>
+               
               </div>
-            </div>
-            <CFormInput
-              placeholder="Search by code or rank..."
-              value={searchText}
-              onChange={(e) => {
-                setSearchText(e.target.value);
-                setCurrentPage(1);
-              }}
-              style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa",border: '1px solid var(--color-black)', }}
-            />
-          </CCardHeader>
-          <CCardBody style={{ flex: 1, position: "relative" }}>
-            {loading ? (
-              <p className="text-center">Loading codes...</p>
-            ) : (
-              <>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      currentItems.length > 0
-                        ? "repeat(auto-fit, minmax(160px, 1fr))"
-                        : "1fr",
-                    gap: "15px",
-                    paddingBottom: "120px",
-                  }}
+
+              <div className="d-flex gap-2">
+                <CButton
+                  className="theme-primary-btn"
+                  active
                 >
-                  {currentItems.length > 0 ? (
-                    currentItems.map((item, i) => {
-                      const isUsed = item.used;
-                      return (
-                        <CTooltip
-                          key={i}
-                          content={
-                            isUsed
-                              ? "This code has already been used"
-                              : "This code is unused"
-                          }
-                          placement="top"
-                        >
-                          <div
-                            style={{
-                              background: "#fff",
-                              border: "1px solid #dee2e6",
-                              borderRadius: "10px",
-                              padding: "12px",
-                              height: "110px",
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "space-between", // <-- ensures code at top, button at bottom
-                              alignItems: "center",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                              cursor: isUsed ? "not-allowed" : "pointer",
-                              opacity: isUsed ? 0.45 : 1,
-                            }}
+                  Registration Codes
+                </CButton>
+
+                <CButton
+                  className="theme-outline-btn"
+                  onClick={() => navigate("/Customer-info")}
+                   style={{ border: '1px solid var(--color-black)', }}
+                >
+                  Customer Data
+                </CButton>
+              </div>
+
+            </CCardBody>
+          </CCard>
+
+
+          <CCard className="mt-1">
+            <CCardHeader className="d-flex justify-content-between align-items-center flex-wrap">
+              <div>
+                <h4 className="mb-0">Registration Codes</h4>
+                <div style={{ fontSize: "0.9rem", marginTop: "5px" }}>
+                  <span
+                    style={{
+                      color: "#198754",
+                      fontWeight: 500,
+                      marginRight: "15px",
+                      cursor: "pointer",
+                      textDecoration: filterType === "unused" ? "underline" : "none",
+                    }}
+                    onClick={() => {
+                      setFilterType("unused");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    Unused: {unusedCount}
+                  </span>
+                  <span
+                    style={{
+                      color: "#dc3545",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      textDecoration: filterType === "used" ? "underline" : "none",
+                    }}
+                    onClick={() => {
+                      setFilterType("used");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    Used: {usedCount}
+                  </span>
+                </div>
+              </div>
+              <CFormInput
+                placeholder="Search by code or rank..."
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{ maxWidth: "250px", marginTop: "5px", color: "#aaa", border: '1px solid var(--color-black)', }}
+              />
+            </CCardHeader>
+            <CCardBody style={{ flex: 1, position: "relative" }}>
+              {loading ? (
+                <p className="text-center">Loading codes...</p>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        currentItems.length > 0
+                          ? "repeat(auto-fit, minmax(160px, 1fr))"
+                          : "1fr",
+                      gap: "15px",
+                      paddingBottom: "120px",
+                    }}
+                  >
+                    {currentItems.length > 0 ? (
+                      currentItems.map((item, i) => {
+                        const isUsed = item.used;
+                        return (
+                          <CTooltip
+                            key={i}
+                            content={
+                              isUsed
+                                ? "This code has already been used"
+                                : "This code is unused"
+                            }
+                            placement="top"
                           >
-                            <h6
-                              className="mb-2"
+                            <div
                               style={{
-                                color: isUsed ? "#6c757d" : "var(--color-black)",
-                                fontSize: "1rem",
-                                textAlign: "center",
+                                background: "#fff",
+                                border: "1px solid #dee2e6",
+                                borderRadius: "10px",
+                                padding: "12px",
+                                height: "110px",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between", // <-- ensures code at top, button at bottom
+                                alignItems: "center",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                                cursor: isUsed ? "not-allowed" : "pointer",
+                                opacity: isUsed ? 0.45 : 1,
                               }}
                             >
-                              {item.code}
-                            </h6>
-
-                            {/* BUTTONS FOR UNUSED CODES → SEND + RANK */}
-                            {!isUsed && (
-                              <div
+                              <h6
+                                className="mb-2"
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
+                                  color: isUsed ? "#6c757d" : "var(--color-black)",
+                                  fontSize: "1rem",
+                                  textAlign: "center",
                                 }}
                               >
-                                <button
-                                  style={{
-                                    background: "#adb5bd",
-                                    color: "#000",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    padding: "4px 10px",
-                                    fontSize: "0.7rem",
-                                    fontWeight: 500,
-                                    cursor: "not-allowed",
-                                    opacity: 0.7,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  disabled
-                                >
-                                  Rank ({item.rank ?? 0})
-                                </button>
+                                {item.code}
+                              </h6>
 
-                                <button
-                                  onClick={() => openSendModal(item.code)}
+                              {/* BUTTONS FOR UNUSED CODES → SEND + RANK */}
+                              {!isUsed && (
+                                <div
                                   style={{
-                                    background: "var(--color-bgcolor)",
-                                    color: "var(--color-black)",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    padding: "4px 12px",
-                                    fontSize: "0.75rem",
-                                    fontWeight: 500,
-                                    cursor: "pointer",
-                                    whiteSpace: "nowrap",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
                                   }}
                                 >
-                                  Send
-                                </button>
-
-                                <CTooltip content="Copy code">
-                                  <CIcon
-                                    icon={cilCopy}
-                                    size="sm"
-                                    onClick={() => handleCopyCode(item.code)}
+                                  <button
                                     style={{
-                                      cursor: "pointer",
+                                      background: "#adb5bd",
                                       color: "#000",
-                                      width: "16px",
-                                      height: "16px",
+                                      border: "none",
+                                      borderRadius: "6px",
+                                      padding: "4px 10px",
+                                      fontSize: "0.7rem",
+                                      fontWeight: 500,
+                                      cursor: "not-allowed",
+                                      opacity: 0.7,
+                                      whiteSpace: "nowrap",
                                     }}
-                                  />
-                                </CTooltip>
-                              </div>
-                            )}
+                                    disabled
+                                  >
+                                    Rank ({item.rank ?? 0})
+                                  </button>
+
+                                  <button
+                                    onClick={() => openSendModal(item.code)}
+                                    style={{
+                                      background: "var(--color-bgcolor)",
+                                      color: "var(--color-black)",
+                                      border: "none",
+                                      borderRadius: "6px",
+                                      padding: "4px 12px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: 500,
+                                      cursor: "pointer",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    Send
+                                  </button>
+
+                                  <CTooltip content="Copy code">
+                                    <CIcon
+                                      icon={cilCopy}
+                                      size="sm"
+                                      onClick={() => handleCopyCode(item.code)}
+                                      style={{
+                                        cursor: "pointer",
+                                        color: "#000",
+                                        width: "16px",
+                                        height: "16px",
+                                      }}
+                                    />
+                                  </CTooltip>
+                                </div>
+                              )}
 
 
-                            {/* BUTTONS FOR USED CODES → USED + RANK */}
-                            {isUsed && (
-                              <div style={{ display: "flex", gap: "6px" }}>
-                                <button
-                                  style={{
-                                    background: "#adb5bd",   // gray background
-                                    color: "#000",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    padding: "4px 12px",
-                                    fontSize: "0.75rem",
-                                    fontWeight: 500,
-                                    cursor: "not-allowed",
-                                    opacity: 0.7,
-                                  }}
-                                  disabled
-                                >
-                                  Rank ({item.rank ?? 0})
-                                </button>
-                                <button
-                                  style={{
-                                    background: "#ffe6e6",
-                                    color: "#cc0000",
-                                    border: "1px solid #cc0000",
-                                    borderRadius: "6px",
-                                    padding: "4px 12px",
-                                    fontSize: "0.75rem",
-                                    fontWeight: 500,
-                                    cursor: "not-allowed",
-                                  }}
-                                  disabled
-                                >
-                                  Used
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </CTooltip>
-                      );
-                    })
-                  ) : (
+                              {/* BUTTONS FOR USED CODES → USED + RANK */}
+                              {isUsed && (
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  <button
+                                    style={{
+                                      background: "#adb5bd",   // gray background
+                                      color: "#000",
+                                      border: "none",
+                                      borderRadius: "6px",
+                                      padding: "4px 12px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: 500,
+                                      cursor: "not-allowed",
+                                      opacity: 0.7,
+                                    }}
+                                    disabled
+                                  >
+                                    Rank ({item.rank ?? 0})
+                                  </button>
+                                  <button
+                                    style={{
+                                      background: "#ffe6e6",
+                                      color: "#cc0000",
+                                      border: "1px solid #cc0000",
+                                      borderRadius: "6px",
+                                      padding: "4px 12px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: 500,
+                                      cursor: "not-allowed",
+                                    }}
+                                    disabled
+                                  >
+                                    Used
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </CTooltip>
+                        );
+                      })
+                    ) : (
+                      <div
+                        style={{
+                          textAlign: "center",
+                          padding: "40px",
+                          color: "#6c757d",
+                          fontSize: "1.1rem",
+                        }}
+                      >
+                        No registration codes found.
+                      </div>
+                    )}
+                  </div>
+
+                  {filteredCodes.length > 0 && (
                     <div
-                      style={{
-                        textAlign: "center",
-                        padding: "40px",
-                        color: "#6c757d",
-                        fontSize: "1.1rem",
-                      }}
+                      className="d-flex justify-content-between px-3 pb-3 mt-3"
                     >
-                      No registration codes found.
+                      <div >
+                        <label className="me-2">Rows per page:</label>
+                        <CFormSelect
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          style={{ width: "80px", display: 'inline-block' }}
+                        >
+                          <option value={100}>100</option>
+                          <option value={200}>200</option>
+                          <option value={300}>300</option>
+                          <option value={500}>500</option>
+                        </CFormSelect>
+                      </div>
+
+                      <div >
+                        <div >
+                          Showing {indexOfFirst + 1} to{" "}
+                          {Math.min(indexOfLast, filteredCodes.length)} of{" "}
+                          {filteredCodes.length} entries
+                        </div>
+                        <CPagination align="end" className="mt-2 themed-pagination">
+                          <CPaginationItem
+                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                          >
+                            Previous
+                          </CPaginationItem>
+
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter((page) => {
+                              if (totalPages <= 5) return true;
+                              if (currentPage <= 3) return page <= 5;
+                              if (currentPage >= totalPages - 2)
+                                return page >= totalPages - 4;
+                              return page >= currentPage - 2 && page <= currentPage + 2;
+                            })
+                            .map((page) => (
+                              <CPaginationItem
+                                key={page}
+                                active={page === currentPage}
+                                onClick={() => handlePageChange(page)}
+                              >
+                                {page}
+                              </CPaginationItem>
+                            ))}
+
+                          <CPaginationItem
+                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                          >
+                            Next
+                          </CPaginationItem>
+                        </CPagination>
+                      </div>
                     </div>
                   )}
-                </div>
-
-                {filteredCodes.length > 0 && (
-                  <div
-                    className="d-flex justify-content-between px-3 pb-3 mt-3"
-                  >
-                    <div >
-                      <label className="me-2">Rows per page:</label>
-                      <CFormSelect
-                        value={itemsPerPage}
-                        onChange={(e) => {
-                          setItemsPerPage(Number(e.target.value));
-                          setCurrentPage(1);
-                        }}
-                        style={{ width: "80px", display: 'inline-block' }}
-                      >
-                        <option value={100}>100</option>
-                        <option value={200}>200</option>
-                        <option value={300}>300</option>
-                        <option value={500}>500</option>
-                      </CFormSelect>
-                    </div>
-
-                    <div >
-                      <div >
-                        Showing {indexOfFirst + 1} to{" "}
-                        {Math.min(indexOfLast, filteredCodes.length)} of{" "}
-                        {filteredCodes.length} entries
-                      </div>
-                      <CPagination align="end" className="mt-2 themed-pagination">
-                        <CPaginationItem
-                          disabled={currentPage === 1}
-                          onClick={() => handlePageChange(currentPage - 1)}
-                        >
-                          Previous
-                        </CPaginationItem>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                          .filter((page) => {
-                            if (totalPages <= 5) return true;
-                            if (currentPage <= 3) return page <= 5;
-                            if (currentPage >= totalPages - 2)
-                              return page >= totalPages - 4;
-                            return page >= currentPage - 2 && page <= currentPage + 2;
-                          })
-                          .map((page) => (
-                            <CPaginationItem
-                              key={page}
-                              active={page === currentPage}
-                              onClick={() => handlePageChange(page)}
-                            >
-                              {page}
-                            </CPaginationItem>
-                          ))}
-
-                        <CPaginationItem
-                          disabled={currentPage === totalPages}
-                          onClick={() => handlePageChange(currentPage + 1)}
-                        >
-                          Next
-                        </CPaginationItem>
-                      </CPagination>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </CCardBody>
-        </CCard>
+                </>
+              )}
+            </CCardBody>
+          </CCard>
+        </>
       )}
       {/* SEND CODE MODAL */}
       <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
@@ -558,6 +600,7 @@ Warm regards,
           </CButton>
         </CModalFooter>
       </CModal>
+
 
       {!isAuthenticated && (
         <CContainer fluid className="min-vh-100 d-flex align-items-center justify-content-center">

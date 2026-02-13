@@ -109,33 +109,39 @@ const CustomerManagement = () => {
   }, [fetchCustomers])
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredData(customerData)
-    } else {
-      const trimmedQuery = searchQuery.toLowerCase().trim()
+  if (!searchQuery.trim()) {
+    setFilteredData(customerData)
+    setCurrentPage(1)
+    return
+  }
 
-      const filtered = customerData.filter((customer) => {
-        const customerId = (customer?.customerId || '').toLowerCase()
+  const trimmedQuery = searchQuery.toLowerCase().trim()
+
+  const filtered = customerData.filter((customer) => {
     const fullName = (customer?.fullName || '').toLowerCase()
-        const fullNameMatch = (customer?.fullName || '').toLowerCase().startsWith(trimmedQuery)
-        const mobileMatch = (customer?.mobile || '').toString().startsWith(trimmedQuery)
-        const emailMatch = (customer?.emailId || '').toLowerCase().startsWith(trimmedQuery)
+    const mobile = (customer?.mobile || '').toString()
+    const email = (customer?.emailId || '').toLowerCase()
+    const customerId = (customer?.customerId || '').toLowerCase()
+    const addressPincode = (customer?.address?.pincode || '').toString()
 
-        const addressPincode = customer?.address?.match(/\b\d{6}\b/)?.[0] || ''
-        const pincodeMatch = addressPincode.startsWith(trimmedQuery)
+    const serviceTypeMatch = (customer?.serviceType || []).some((type) =>
+      type.toLowerCase().includes(trimmedQuery)
+    )
 
-        const serviceTypeMatch = (customer?.serviceType || []).some(
-          (type) => type.toLowerCase().startsWith(trimmedQuery)
-        )
+    return (
+      fullName.includes(trimmedQuery) ||
+      mobile.includes(trimmedQuery) ||
+      email.includes(trimmedQuery) ||
+      customerId.includes(trimmedQuery) ||
+      addressPincode.includes(trimmedQuery) ||
+      serviceTypeMatch
+    )
+  })
 
-        return fullNameMatch || mobileMatch || emailMatch || pincodeMatch || serviceTypeMatch||customerId||fullName
-      })
+  setFilteredData(filtered)
+  setCurrentPage(1)
+}, [searchQuery, customerData])
 
-      setFilteredData(filtered)
-    }
-
-    setCurrentPage(1) // ✅ only when SEARCH changes
-  }, [searchQuery])
 
   const handleCustomerViewDetails = (mobile) => {
     navigate(`/customer-management/${mobile}`)
@@ -441,17 +447,19 @@ const CustomerManagement = () => {
 
             {/* 🗑 Delete Selected */}
             <div className="col-md-3 d-flex justify-content-end">
-              <CButton
-                color="secondary"
-                style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
-                disabled={selectedMobiles.length === 0}
-                onClick={() => {
-                  setIsMultiDelete(true)
-                  setIsModalVisible(true)
-                }}
-              >
-                Delete Selected ({selectedMobiles.length})
-              </CButton>
+              {selectedMobiles.length > 0 && (
+                <CButton
+                  color="secondary"
+                  style={{ backgroundColor: 'var(--color-black)', color: COLORS.white }}
+                  disabled={selectedMobiles.length === 0}
+                  onClick={() => {
+                    setIsMultiDelete(true)
+                    setIsModalVisible(true)
+                  }}
+                >
+                  Delete Selected ({selectedMobiles.length})
+                </CButton>
+              )}
             </div>
           </CRow>
 

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -28,7 +29,7 @@ import axios from 'axios'
 
 import { useHospital } from '../../Usecontext/HospitalContext'
 import ResetPassword from '../../../views/Resetpassword'
-import { http, httpPublic } from '../../../Utils/Interceptors'
+import { http } from '../../../Utils/Interceptors'
 import DermaLogo from '../../../assets/images/logoP.png' // adjust path if needed
 import { COLORS, NGK_COLORS } from '../../../Constant/Themes'
 import { toast, ToastContainer } from 'react-toastify'
@@ -75,82 +76,142 @@ const Login = () => {
     localStorage.clear()
   }, [])
 
+  // const handleClinicLogin = async (e) => {
+  //   if (e?.preventDefault) e.preventDefault()
+
+  //   if (!validateForm()) return
+
+  //   setIsLoading(true)
+  //   setErrorMessage('')
+
+  //   try {
+  //     // 🔥 API CALL
+  //     const response = await http.post(
+  //       `/login`,
+  //       { username: userName, password },
+  //       { headers: { 'Content-Type': 'application/json' } },
+  //     )
+
+  //     console.log('Login response:', response.data)
+
+  //     if (!response.data?.success) {
+  //       showCustomToast(response.data?.message || 'Login failed', 'error')
+  //       return
+  //     }
+
+  //     const data = response.data.data
+
+  //     // 🛑 Reject if clinic not VERIFIED
+  //     if (data.status !== 'VERIFIED') {
+  //       showCustomToast('Clinic is not verified. Please contact support.', 'error')
+  //       return
+  //     }
+
+  //     // 🎯 Extract Required Data
+  //     const clinicId = data.clinicId
+  //     const clinicName = data.name
+  //     const permissions = data.permissions || {}
+
+  //     // 🧠 Store Required Data Only
+  //     localStorage.setItem('HospitalId', clinicId)
+  //     localStorage.setItem('permissions', JSON.stringify(permissions))
+  //     localStorage.setItem('HospitalName', clinicName)
+  //     // localStorage.setItem('permissions', JSON.stringify(permissions))
+
+  //     // 🔥 Store user in context
+  //     setUser({
+  //       name: clinicName,
+  //       role: 'clinic',
+  //       permissions,
+  //     })
+
+  //     const hospitalContextData = {
+  //       hospitalId: clinicId,
+  //       hospitalName: clinicName,
+  //       data: data,
+  //     }
+
+  //     // 🔥 Store selected clinic in context
+  //     setSelectedHospital(hospitalContextData)
+
+  //     showCustomToast(`${data.message || 'Login successful!'}`, 'success')
+
+  //     // Redirect
+  //     navigate('/dashboard')
+  //   } catch (err) {
+  //     console.error('Login error:', err)
+
+  //     const msg = err?.response?.data?.message
+
+  //     if (msg) {
+  //       showCustomToast(msg, 'error')
+  //       setErrorMessage(msg)
+  //     } else {
+  //       const generic = 'Unexpected error occurred. Please try again.'
+  //       showCustomToast(generic, 'error')
+  //       setErrorMessage(generic)
+  //     }
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
+
   const handleClinicLogin = async (e) => {
-    if (e?.preventDefault) e.preventDefault()
+    e.preventDefault()
 
     if (!validateForm()) return
 
     setIsLoading(true)
-    setErrorMessage('')
 
     try {
-      // 🔥 API CALL
-      const response = await http.post(
-        `/login`,
-        { username: userName, password },
-        { headers: { 'Content-Type': 'application/json' } },
-      )
+      const loginRes = await http.post(`clinic-admin/login`, {
+        username: userName,
+        password,
+      })
 
-      console.log('Login response:', response.data)
+      const loginData = loginRes.data.data
 
-      if (!response.data?.success) {
-        showCustomToast(response.data?.message || 'Login failed', 'error')
+      if (loginData.status !== 'VERIFIED') {
+        showCustomToast('Clinic is not verified', 'error')
         return
       }
 
-      const data = response.data.data
+      const clinicId = loginData.clinicId
+      const permissions = loginData.permissions || {}
 
-      // 🛑 Reject if clinic not VERIFIED
-      if (data.status !== 'VERIFIED') {
-        showCustomToast('Clinic is not verified. Please contact support.', 'error')
-        return
-      }
-
-      // 🎯 Extract Required Data
-      const clinicId = data.clinicId
-      const clinicName = data.name
-      const permissions = data.permissions || {}
-
-      // 🧠 Store Required Data Only
       localStorage.setItem('HospitalId', clinicId)
       localStorage.setItem('permissions', JSON.stringify(permissions))
-      localStorage.setItem('HospitalName', clinicName)
-      // localStorage.setItem('permissions', JSON.stringify(permissions))
 
-      // 🔥 Store user in context
       setUser({
-        name: clinicName,
+        name: loginData.name,
         role: 'clinic',
         permissions,
       })
 
-      const hospitalContextData = {
-        hospitalId: clinicId,
-        hospitalName: clinicName,
-        data: data,
-      }
+      setHospitalId(clinicId)
 
-      // 🔥 Store selected clinic in context
-      setSelectedHospital(hospitalContextData)
+      // const clinicRes = await http.get(`${MainAdmin_URL}/clinics/get/${clinicId}`)
 
-      showCustomToast(`${data.message || 'Login successful!'}`, 'success')
+      // const clinicData = clinicRes.data.data
 
-      // Redirect
+      // const hospitalContextData = {
+      //   hospitalId: clinicId,
+      //   hospitalName: clinicData.name,
+      //   data: clinicData,
+      // }
+
+      // setSelectedHospital(hospitalContextData)
+      // localStorage.setItem('selectedHospital', JSON.stringify(hospitalContextData))
+
+      // ✅ SUCCESS TOAST — ONLY HERE
+      showCustomToast('✅ Login successful', 'success')
+
       navigate('/dashboard')
     } catch (err) {
-      console.error('Login error:', err)
-
-      const msg = err?.response?.data?.message
-
-      if (msg) {
-        showCustomToast(msg, 'error')
-        setErrorMessage(msg)
-      } else {
-        const generic = 'Unexpected error occurred. Please try again.'
-        showCustomToast(generic, 'error')
-        setErrorMessage(generic)
-      }
+      // ✅ FAILURE TOAST — ONLY HERE
+      showCustomToast(err?.response?.data?.message || '❌ Login failed', 'error')
     } finally {
+      // 🔑 GUARANTEED loader stop
       setIsLoading(false)
     }
   }
@@ -166,7 +227,7 @@ const Login = () => {
     setULoading(true)
 
     try {
-      const response = await axios.put(`${MainAdmin_URL}/${updatePassword}/${form.username}`, {
+      const response = await http.put(`${MainAdmin_URL}/${updatePassword}/${form.username}`, {
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
         confirmPassword: form.confirmPassword,
@@ -387,6 +448,7 @@ const Login = () => {
             href="https://uditcosmetech.com/"
             target="_blank"
             style={{ color: NGK_COLORS.primary }}
+            rel="noreferrer"
           >
             About Uditcosmetech Private Limited
           </a>

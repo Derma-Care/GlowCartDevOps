@@ -4,7 +4,7 @@ import { http } from '../../../Utils/Interceptors'
 
 export const updateStep2 = async (mobile, payload) => {
   try {
-    const response = await axios.post(`${Customer_URL}/${mobile}/complete`, payload)
+    const response = await http.post(`${Customer_URL}/${mobile}/complete`, payload)
     // console.log(addresresponse)
     return response.data
   } catch (error) {

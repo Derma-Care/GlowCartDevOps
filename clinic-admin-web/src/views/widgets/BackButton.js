@@ -4,6 +4,7 @@ import { useNavigation } from '../Usecontext/NavigationProvider'
 import { showCustomToast } from '../../Utils/Toaster'
 import { BASE_URL } from '../../baseUrl'
 import axios from 'axios'
+import { http } from '../../Utils/Interceptors'
 
 const BackButton = ({ initialStatus = true }) => {
   const { goBack } = useNavigation()
@@ -24,41 +25,29 @@ const BackButton = ({ initialStatus = true }) => {
     setLoading(true)
 
     try {
-      const { data } = await axios.put(
-        `${BASE_URL}/clinic/${clinicId}/online-status`,
-        payload
-      )
+      const { data } = await http.put(`${BASE_URL}/clinic/${clinicId}/online-status`, payload)
 
-      console.log("🔍 Server Response:", data)
+      console.log('🔍 Server Response:', data)
 
       if (data?.success === true) {
         setIsOnline(newStatus)
 
         // show backend message
-        const msg = data?.message || (newStatus ? "Clinic is Online" : "Clinic is Offline")
-        showCustomToast(
-          newStatus
-            ? `🟢 ${msg}`
-            : `🔴 ${msg}`
-        )
-      }
-
-      else {
+        const msg = data?.message || (newStatus ? 'Clinic is Online' : 'Clinic is Offline')
+        showCustomToast(newStatus ? `🟢 ${msg}` : `🔴 ${msg}`)
+      } else {
         throw new Error("Backend didn't return success")
       }
-
     } catch (error) {
-      console.error("❌ Error updating status:", error)
-      showCustomToast("❌ Failed to update clinic status")
+      console.error('❌ Error updating status:', error)
+      showCustomToast('❌ Failed to update clinic status')
     } finally {
       setLoading(false)
     }
   }
 
-
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-
       {/* 🔄 Online / Offline Toggle */}
       <div
         onClick={!loading ? toggleStatus : null}
@@ -102,7 +91,8 @@ const BackButton = ({ initialStatus = true }) => {
       </div>
 
       {/* 🔙 Back Button */}
-      <CButton onClick={goBack}
+      <CButton
+        onClick={goBack}
         style={{
           height: '44px',
           padding: '0 22px',
@@ -111,7 +101,8 @@ const BackButton = ({ initialStatus = true }) => {
           borderColor: '#7e57c2',
           color: '#7e57c2',
         }}
-        variant="outline" >
+        variant="outline"
+      >
         Back
       </CButton>
     </div>

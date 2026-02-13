@@ -5,7 +5,7 @@ import { http } from '../../../Utils/Interceptors'
 
 export async function getCustomerByCode(code) {
   try {
-    const response = await axios.get(`${rgCodes}/${code}`)
+    const response = await http.get(`${rgCodes}/${code}`)
     return response.data
   } catch (err) {
     console.error('GET Customer Error:', err)
