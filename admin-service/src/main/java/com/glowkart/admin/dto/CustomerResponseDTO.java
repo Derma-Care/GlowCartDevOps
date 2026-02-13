@@ -1,11 +1,12 @@
 package com.glowkart.admin.dto;
 
-import lombok.Data;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -51,6 +52,8 @@ public class CustomerResponseDTO {
     // Final registration
     private String address;
 
+    private WalletSummaryDTO walletSummary;
+    
     private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
     // Status flags
