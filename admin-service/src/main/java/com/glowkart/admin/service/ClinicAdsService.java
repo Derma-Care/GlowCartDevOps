@@ -18,7 +18,10 @@ import org.springframework.web.server.ResponseStatusException;
 import com.glowkart.admin.config.S3PresignedUrlUtil;
 import com.glowkart.admin.dto.ClinicAdsFileRequestDto;
 import com.glowkart.admin.dto.ClinicAdsResponseDto;
+import com.glowkart.admin.dto.ServiceAdsFileRequestDto;
+import com.glowkart.admin.dto.ServiceAdsResponseDto;
 import com.glowkart.admin.model.ClinicAds;
+import com.glowkart.admin.model.ServiceAds;
 import com.glowkart.admin.repo.ClinicAdsRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -78,26 +81,74 @@ public class ClinicAdsService {
     }
 
     // ----------------- UPDATE -----------------
+//    public ClinicAdsResponseDto updateAd(String id, ClinicAdsFileRequestDto dto) {
+//        ClinicAds existingAd = clinicAdsRepository.findById(id)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+//
+//        deleteFromS3(existingAd.getS3Key());
+//
+//        validateRequest(dto);
+//        byte[] fileBytes = decodeBase64(dto.getData());
+//        String extension = getFileExtension(dto.getFilename(), dto.getType());
+//        String key = generateS3Key(dto.getFilename(), fileBytes);
+//
+//        uploadToS3(key, fileBytes, dto.getType(), extension);
+//
+//        existingAd.setType(dto.getType().toLowerCase());
+//        existingAd.setS3Key(key);
+//        existingAd.setTitle(dto.getTitle());
+//        clinicAdsRepository.save(existingAd);
+//
+//        return createResponse(existingAd);
+//    }
+
     public ClinicAdsResponseDto updateAd(String id, ClinicAdsFileRequestDto dto) {
-        ClinicAds existingAd = clinicAdsRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
 
-        deleteFromS3(existingAd.getS3Key());
+    	ClinicAds existingAd = clinicAdsRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Ad not found"));
 
-        validateRequest(dto);
-        byte[] fileBytes = decodeBase64(dto.getData());
-        String extension = getFileExtension(dto.getFilename(), dto.getType());
-        String key = generateS3Key(dto.getFilename(), fileBytes);
+//        // ----------- Update Clinic (Optional) -----------
+//        if (dto.getClinicId() != null && !dto.getClinicId().isBlank()) {
+//
+//            validateClinicId(dto.getClinicId());
+//
+//            var clinic = clinicAdsRepository.findById(dto.getClinicId())
+//                    .orElseThrow(() -> new ResponseStatusException(
+//                            HttpStatus.NOT_FOUND, "Clinic not found"));
+//
+//            existingAd.setClinicId(dto.getClinicId());
+//            existingAd.setClinicName(clinic.getName());
+//        }
 
-        uploadToS3(key, fileBytes, dto.getType(), extension);
+        // ----------- Update Title (Optional) -----------
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+            existingAd.setTitle(dto.getTitle());
+        }
 
-        existingAd.setType(dto.getType().toLowerCase());
-        existingAd.setS3Key(key);
-        existingAd.setTitle(dto.getTitle());
+        // ----------- Update File (Optional) -----------
+        if (dto.getData() != null && dto.getFilename() != null && dto.getType() != null) {
+
+            validateRequest(dto);
+
+            // delete old file
+            deleteFromS3(existingAd.getS3Key());
+
+            byte[] fileBytes = decodeBase64(dto.getData());
+            String extension = getFileExtension(dto.getFilename(), dto.getType());
+            String key = generateS3Key(dto.getFilename(), fileBytes);
+
+            uploadToS3(key, fileBytes, dto.getType(), extension);
+
+            existingAd.setType(dto.getType().toLowerCase());
+            existingAd.setS3Key(key);
+        }
+
         clinicAdsRepository.save(existingAd);
 
         return createResponse(existingAd);
     }
+
 
     // ----------------- DELETE -----------------
     public void deleteAd(String id) {
