@@ -276,7 +276,7 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .doctorsList(clinic.getDoctorsList())
 
                 // pricing & offers
-                .procedurePricing(pricing)
+//                .procedurePricing(pricing)
                 .maxOfferPercentage(calculateMaxOfferForClinic(clinic.getClinicId()))
 
                 // distance

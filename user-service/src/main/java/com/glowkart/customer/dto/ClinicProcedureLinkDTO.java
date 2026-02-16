@@ -78,7 +78,7 @@ public class ClinicProcedureLinkDTO {
 	    private List<DoctorDTO> doctorsList;  // NEW
 
 	 // ✅ New field for procedure pricing
-	    private ProcedurePricingDTO procedurePricing;
+//	    private ProcedurePricingDTO procedurePricing;
 	    private Double maxOfferPercentage; // For "Upto X% OFF"
 
 	 // After
