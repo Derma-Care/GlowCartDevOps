@@ -33,6 +33,8 @@ public class ProcedurePricingDTO {
     private double consultationFee;
     private double discountedCost;
     private double clinicPay;
+    private double platformFeePercentage; // e.g., 2.5%
+    private double platformFee; // ✅ NEW — editable from UI
     private double finalCost;
 
     private String offerStart;      // <-- frontend sends ISO string

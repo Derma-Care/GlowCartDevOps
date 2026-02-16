@@ -46,7 +46,7 @@ public class PricingDetails {
     public static PricingDetails fromProcedurePricing(ProcedurePricingDTO dto) {
 
         double platformFee = dto.getPlatformFee() > 0 ? dto.getPlatformFee() : 0;
-        double finalAmount = dto.getFinalCost() + platformFee;
+        double finalAmount = dto.getFinalCost();
 
         return PricingDetails.builder()
                 .serviceName(dto.getProcedureName())
@@ -89,7 +89,7 @@ public class PricingDetails {
     public static PricingDetails fromPackagePricing(ProcedurePackageDTO dto) {
 
         double platformFee = dto.getPlatformFee() > 0 ? dto.getPlatformFee() : 0;
-        double finalAmount = dto.getFinalCost() + platformFee;
+        double finalAmount = dto.getFinalCost();
 
         return PricingDetails.builder()
                 .serviceName(dto.getPackageName())
