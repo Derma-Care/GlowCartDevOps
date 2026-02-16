@@ -39,8 +39,8 @@ public interface CustomerClinicSearchService {
      * @param longitude User longitude
      * @return List of packages with clinic details
      */
-    List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
-            double latitude, double longitude, String state);
+//    List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
+//            double latitude, double longitude, String state);
 
     List<ClinicProcedureLinkDTO> findNearbyClinics(
             double latitude, double longitude, String state);
@@ -51,5 +51,8 @@ public interface CustomerClinicSearchService {
     ClinicDetailsDTO getClinicDetails(String clinicId);
 
     ClinicDetailsDTO getClinicOffers(String clinicId);
+
+
+	List<ClinicProcedureLinkDTO> getAllClinics(double latitude, double longitude, String state);
 
 }

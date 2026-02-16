@@ -6,9 +6,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,7 +23,6 @@ import com.glowkart.customer.dto.ProcedurePackageWithClinicsDTO;
 import com.glowkart.customer.dto.ProcedurePricingDTO;
 import com.glowkart.customer.feign.AdminClinicClient;
 import com.glowkart.customer.feign.ProcedureServiceClient;
-import com.glowkart.customer.geo.ReverseGeoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -398,8 +398,31 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
         T get() throws Exception;
     }
 
+//    @Override
+//    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
+//            double latitude, double longitude, String state) {
+//
+//        if (state == null || state.isBlank()) return Collections.emptyList();
+//
+//        List<ClinicPublicDTO> clinics =
+//                adminClinicClient.getClinicsByState(state, true).getData();
+//
+//        if (clinics == null || clinics.isEmpty()) return Collections.emptyList();
+//
+//        List<ProcedurePackageDTO> packages =
+//                procedureServiceClient.getAllPackages().getData();
+//
+//        if (packages == null || packages.isEmpty()) return Collections.emptyList();
+//
+//        // mapping logic stays the same
+//        return packages.stream()
+//                .map(pkg -> mapPackageWithClinics(pkg, clinics, latitude, longitude))
+//                .filter(Objects::nonNull)
+//                .toList();
+//    }
+
     @Override
-    public List<ProcedurePackageWithClinicsDTO> getAllPackagesWithClinics(
+    public List<ClinicProcedureLinkDTO> getAllClinics(
             double latitude, double longitude, String state) {
 
         if (state == null || state.isBlank()) return Collections.emptyList();
@@ -414,13 +437,29 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
 
         if (packages == null || packages.isEmpty()) return Collections.emptyList();
 
-        // mapping logic stays the same
-        return packages.stream()
-                .map(pkg -> mapPackageWithClinics(pkg, clinics, latitude, longitude))
-                .filter(Objects::nonNull)
+        Set<String> allClinicIds = new HashSet<>();
+
+        for (ProcedurePackageDTO pkg : packages) {
+            try {
+                List<String> clinicIds =
+                        procedureServiceClient.getClinicIdsByPackage(pkg.getPackageId()).getData();
+
+                if (clinicIds != null) {
+                    allClinicIds.addAll(clinicIds);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        return clinics.stream()
+                .filter(c -> allClinicIds.contains(c.getClinicId()))
+                .map(c -> mapClinicToDTO(c, latitude, longitude, null))
+                .sorted(Comparator.comparingDouble(c ->
+                        parseDistance(c.getDistanceInKm())))
                 .toList();
     }
 
+    
     private ProcedurePackageWithClinicsDTO mapPackageWithClinics(
             ProcedurePackageDTO pkg,
             List<ClinicPublicDTO> clinics,

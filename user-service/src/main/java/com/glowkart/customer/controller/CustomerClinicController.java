@@ -54,20 +54,35 @@ public class CustomerClinicController {
      * @param longitude user longitude
      * @return list of packages with clinics
      */
+//    @GetMapping("/customer/procedures/packages")
+//    public ResponseEntity<ApiResponse<List<ProcedurePackageWithClinicsDTO>>> getAllPackagesWithClinics(
+//            @RequestParam double latitude,
+//            @RequestParam double longitude,
+//            @RequestParam String state // NEW: state from frontend
+//    ) {
+//        List<ProcedurePackageWithClinicsDTO> packagesWithClinics =
+//                customerClinicSearchService.getAllPackagesWithClinics(latitude, longitude, state);
+//
+//        return ResponseEntity.ok(
+//                new ApiResponse<>(true, "All procedure packages fetched successfully", packagesWithClinics)
+//        );
+//    }
+    
     @GetMapping("/customer/procedures/packages")
-    public ResponseEntity<ApiResponse<List<ProcedurePackageWithClinicsDTO>>> getAllPackagesWithClinics(
+    public ResponseEntity<ApiResponse<List<ClinicProcedureLinkDTO>>> getAllPackagesWithClinics(
             @RequestParam double latitude,
             @RequestParam double longitude,
-            @RequestParam String state // NEW: state from frontend
+            @RequestParam String state
     ) {
-        List<ProcedurePackageWithClinicsDTO> packagesWithClinics =
-                customerClinicSearchService.getAllPackagesWithClinics(latitude, longitude, state);
+
+        List<ClinicProcedureLinkDTO> clinics =
+                customerClinicSearchService.getAllClinics(latitude, longitude, state);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "All procedure packages fetched successfully", packagesWithClinics)
+                new ApiResponse<>(true, "Clinics fetched successfully", clinics)
         );
     }
-    
+
     
     /**
      * Get all clinics near user location
