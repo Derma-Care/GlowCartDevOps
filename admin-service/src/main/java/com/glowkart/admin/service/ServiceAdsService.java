@@ -101,31 +101,78 @@ public class ServiceAdsService {
     }
 
     // ----------------- UPDATE -----------------
+//    public ServiceAdsResponseDto updateAd(String id, ServiceAdsFileRequestDto dto) {
+//
+//        ServiceAds existingAd = serviceAdsRepository.findById(id)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
+//
+//        validateClinicId(dto.getClinicId());
+//
+//        var clinic = clinicRepository.findById(dto.getClinicId())
+//                .orElseThrow(() -> new ResponseStatusException(
+//                        HttpStatus.NOT_FOUND, "Clinic not found"));
+//
+//        deleteFromS3(existingAd.getS3Key());
+//
+//        validateRequest(dto);
+//        byte[] fileBytes = decodeBase64(dto.getData());
+//        String extension = getFileExtension(dto.getFilename(), dto.getType());
+//        String key = generateS3Key(dto.getFilename(), fileBytes);
+//
+//        uploadToS3(key, fileBytes, dto.getType(), extension);
+//
+//        existingAd.setClinicId(dto.getClinicId());     // ✅ UPDATE
+//        existingAd.setClinicName(clinic.getName());    // ✅ UPDATE
+//        existingAd.setType(dto.getType().toLowerCase());
+//        existingAd.setS3Key(key);
+//        existingAd.setTitle(dto.getTitle());
+//
+//        serviceAdsRepository.save(existingAd);
+//
+//        return createResponse(existingAd);
+//    }
+
     public ServiceAdsResponseDto updateAd(String id, ServiceAdsFileRequestDto dto) {
 
         ServiceAds existingAd = serviceAdsRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found"));
-
-        validateClinicId(dto.getClinicId());
-
-        var clinic = clinicRepository.findById(dto.getClinicId())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Clinic not found"));
+                        HttpStatus.NOT_FOUND, "Ad not found"));
 
-        deleteFromS3(existingAd.getS3Key());
+        // ----------- Update Clinic (Optional) -----------
+        if (dto.getClinicId() != null && !dto.getClinicId().isBlank()) {
 
-        validateRequest(dto);
-        byte[] fileBytes = decodeBase64(dto.getData());
-        String extension = getFileExtension(dto.getFilename(), dto.getType());
-        String key = generateS3Key(dto.getFilename(), fileBytes);
+            validateClinicId(dto.getClinicId());
 
-        uploadToS3(key, fileBytes, dto.getType(), extension);
+            var clinic = clinicRepository.findById(dto.getClinicId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Clinic not found"));
 
-        existingAd.setClinicId(dto.getClinicId());     // ✅ UPDATE
-        existingAd.setClinicName(clinic.getName());    // ✅ UPDATE
-        existingAd.setType(dto.getType().toLowerCase());
-        existingAd.setS3Key(key);
-        existingAd.setTitle(dto.getTitle());
+            existingAd.setClinicId(dto.getClinicId());
+            existingAd.setClinicName(clinic.getName());
+        }
+
+        // ----------- Update Title (Optional) -----------
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+            existingAd.setTitle(dto.getTitle());
+        }
+
+        // ----------- Update File (Optional) -----------
+        if (dto.getData() != null && dto.getFilename() != null && dto.getType() != null) {
+
+            validateRequest(dto);
+
+            // delete old file
+            deleteFromS3(existingAd.getS3Key());
+
+            byte[] fileBytes = decodeBase64(dto.getData());
+            String extension = getFileExtension(dto.getFilename(), dto.getType());
+            String key = generateS3Key(dto.getFilename(), fileBytes);
+
+            uploadToS3(key, fileBytes, dto.getType(), extension);
+
+            existingAd.setType(dto.getType().toLowerCase());
+            existingAd.setS3Key(key);
+        }
 
         serviceAdsRepository.save(existingAd);
 

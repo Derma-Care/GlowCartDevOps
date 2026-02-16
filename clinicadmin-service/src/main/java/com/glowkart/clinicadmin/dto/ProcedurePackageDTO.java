@@ -9,8 +9,8 @@ public class ProcedurePackageDTO {
     private String packageId;
     private String packageName;
     private String clinicId;
-    private String clinicName;
-    private String clinicAddress;
+    private String name;
+    private String address;
     private List<ProcedureItemDTO> procedures;
     private int sittings;
 
@@ -28,6 +28,8 @@ public class ProcedurePackageDTO {
 
     private double discountedCost;
     private double clinicPay;
+    private double platformFeePercentage; // e.g., 2.5%
+    private double platformFee; // ✅ NEW — editable from UI
     private double finalCost;
     
     // ⭐ NEW OFFER FIELDS ⭐
