@@ -15,7 +15,7 @@ import com.glowkart.admin.dto.ApiResponse;
 import com.glowkart.admin.dto.ClinicEnquiryDTO;
 
 
-@FeignClient(name = "clinic-admin-service")
+@FeignClient(name = "clinicadmin-service")
 public interface ClinicAdminFeignClient {
 
     @GetMapping("/clinic-admin/clinic-enquiries/getAll")
