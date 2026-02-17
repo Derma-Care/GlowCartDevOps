@@ -96,37 +96,22 @@ public class ClinicEnquiryServiceImpl implements ClinicEnquiryService {
         );
     }
 
-    // ✅ GET BY ID
     @Override
-    public ApiResponse<ClinicEnquiryDTO> getEnquiryById(String id) {
+    public ApiResponse<ClinicEnquiryDTO> getEnquiryById(String enquiryId) {
+        ClinicEnquiry enquiry = repository.findById(enquiryId)
+                .orElseThrow(() -> new RuntimeException("Enquiry not found with id: " + enquiryId));
 
-        ClinicEnquiry enquiry = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Enquiry not found with id: " + id));
-
-        return new ApiResponse<>(
-                true,
-                "Enquiry fetched successfully",
-                mapToDTO(enquiry),
-                HttpStatus.OK.value()
-        );
+        return new ApiResponse<>(true, "Enquiry fetched successfully", mapToDTO(enquiry), HttpStatus.OK.value());
     }
 
-    // ✅ DELETE
     @Override
-    public ApiResponse<Void> deleteEnquiry(String id) {
-
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Enquiry not found with id: " + id);
+    public ApiResponse<Void> deleteEnquiry(String enquiryId) {
+        if (!repository.existsById(enquiryId)) {
+            throw new RuntimeException("Enquiry not found with id: " + enquiryId);
         }
+        repository.deleteById(enquiryId);
 
-        repository.deleteById(id);
-
-        return new ApiResponse<>(
-                true,
-                "Enquiry deleted successfully",
-                null,
-                HttpStatus.OK.value()
-        );
+        return new ApiResponse<>(true, "Enquiry deleted successfully", null, HttpStatus.OK.value());
     }
 
     // ================= PRIVATE METHODS =================

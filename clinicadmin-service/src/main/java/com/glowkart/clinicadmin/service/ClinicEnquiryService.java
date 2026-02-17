@@ -15,7 +15,7 @@ public interface ClinicEnquiryService {
 
     ApiResponse<List<ClinicEnquiryDTO>> getEnquiriesByClinicId(String clinicId);
 
-    ApiResponse<ClinicEnquiryDTO> getEnquiryById(String id);
+    ApiResponse<ClinicEnquiryDTO> getEnquiryById(String enquiryId);
 
-    ApiResponse<Void> deleteEnquiry(String id);
+    ApiResponse<Void> deleteEnquiry(String enquiryId);
 }

@@ -22,8 +22,8 @@ public class AdminClinicEnquiryServiceImpl implements AdminClinicEnquiryService 
     }
 
     @Override
-    public ApiResponse<ClinicEnquiryDTO> getEnquiryById(String id) {
-        return clinicAdminFeignClient.getEnquiryById(id);
+    public ApiResponse<ClinicEnquiryDTO> getEnquiryById(String enquiryId) {
+        return clinicAdminFeignClient.getEnquiryById(enquiryId);
     }
 
     @Override
@@ -37,13 +37,12 @@ public class AdminClinicEnquiryServiceImpl implements AdminClinicEnquiryService 
     }
 
     @Override
-    public ApiResponse<ClinicEnquiryDTO> updateEnquiry(String id, ClinicEnquiryDTO dto) {
-        return clinicAdminFeignClient.updateEnquiry(id, dto);
+    public ApiResponse<ClinicEnquiryDTO> updateEnquiry(String enquiryId, ClinicEnquiryDTO dto) {
+        return clinicAdminFeignClient.updateEnquiry(enquiryId, dto);
     }
 
     @Override
-    public ApiResponse<Void> deleteEnquiry(String id) {
-        return clinicAdminFeignClient.deleteEnquiry(id);
+    public ApiResponse<Void> deleteEnquiry(String enquiryId) {
+        return clinicAdminFeignClient.deleteEnquiry(enquiryId);
     }
 }
-

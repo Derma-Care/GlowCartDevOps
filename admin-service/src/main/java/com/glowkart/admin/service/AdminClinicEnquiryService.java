@@ -1,6 +1,5 @@
 package com.glowkart.admin.service;
 
-
 import java.util.List;
 
 import com.glowkart.admin.dto.ApiResponse;
@@ -10,13 +9,13 @@ public interface AdminClinicEnquiryService {
 
     ApiResponse<List<ClinicEnquiryDTO>> getAllEnquiries();
 
-    ApiResponse<ClinicEnquiryDTO> getEnquiryById(String id);
+    ApiResponse<ClinicEnquiryDTO> getEnquiryById(String enquiryId);
 
     ApiResponse<List<ClinicEnquiryDTO>> getEnquiriesByClinicId(String clinicId);
 
     ApiResponse<ClinicEnquiryDTO> createEnquiry(ClinicEnquiryDTO dto);
 
-    ApiResponse<ClinicEnquiryDTO> updateEnquiry(String id, ClinicEnquiryDTO dto);
+    ApiResponse<ClinicEnquiryDTO> updateEnquiry(String enquiryId, ClinicEnquiryDTO dto);
 
-    ApiResponse<Void> deleteEnquiry(String id);
+    ApiResponse<Void> deleteEnquiry(String enquiryId);
 }
