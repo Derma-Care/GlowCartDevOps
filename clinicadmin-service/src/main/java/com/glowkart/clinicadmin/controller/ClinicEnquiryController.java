@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.glowkart.clinicadmin.dto.ApiResponse;
 import com.glowkart.clinicadmin.dto.ClinicEnquiryDTO;
-import com.glowkart.clinicadmin.model.ClinicEnquiry;
 import com.glowkart.clinicadmin.service.ClinicEnquiryService;
 
 import jakarta.validation.Valid;
@@ -21,102 +20,59 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class ClinicEnquiryController {
 
-	private final ClinicEnquiryService clinicEnquiryService;
+    private final ClinicEnquiryService clinicEnquiryService;
 
-	// --------------------------------------------------
-	// CREATE ENQUIRY
-	// --------------------------------------------------
-	@PostMapping("/clinic-enquiries/create")
-	public ResponseEntity<ApiResponse<ClinicEnquiry>> createEnquiry(@Valid @RequestBody ClinicEnquiryDTO dto) {
-		try {
-			ApiResponse<ClinicEnquiry> response = clinicEnquiryService.createEnquiry(dto);
+    @PostMapping("/clinic-enquiries/create")
+    public ResponseEntity<ApiResponse<ClinicEnquiryDTO>> createEnquiry(
+            @Valid @RequestBody ClinicEnquiryDTO dto) {
 
-			return ResponseEntity.status(response.getStatusCode()).body(response);
+        ApiResponse<ClinicEnquiryDTO> response =
+                clinicEnquiryService.createEnquiry(dto);
 
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(new ApiResponse<>(false, ex.getMessage(), null, HttpStatus.BAD_REQUEST.value()));
-		}
-	}
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
-	// --------------------------------------------------
-	// UPDATE ENQUIRY
-	// --------------------------------------------------
-	@PutMapping("/clinic-enquiries/{enquiryId}")
-	public ResponseEntity<ApiResponse<ClinicEnquiry>> updateEnquiry(@PathVariable String enquiryId,
-			@Valid @RequestBody ClinicEnquiryDTO dto) {
-		try {
-			ApiResponse<ClinicEnquiry> response = clinicEnquiryService.updateEnquiry(enquiryId, dto);
+    @PutMapping("/clinic-enquiries/{id}")
+    public ResponseEntity<ApiResponse<ClinicEnquiryDTO>> updateEnquiry(
+            @PathVariable String id,
+            @Valid @RequestBody ClinicEnquiryDTO dto) {
 
-			return ResponseEntity.status(response.getStatusCode()).body(response);
+        if (dto.getId() != null && !dto.getId().equals(id)) {
+            throw new IllegalArgumentException("Path ID and Body ID do not match");
+        }
 
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(new ApiResponse<>(false, ex.getMessage(), null, HttpStatus.BAD_REQUEST.value()));
-		}
-	}
+        return ResponseEntity.ok(
+                clinicEnquiryService.updateEnquiry(id, dto));
+    }
 
-	// --------------------------------------------------
-	// GET ALL ENQUIRIES
-	// --------------------------------------------------
-	@GetMapping("/clinic-enquiries/getAll")
-	public ResponseEntity<ApiResponse<List<ClinicEnquiry>>> getAllEnquiries() {
-		try {
-			ApiResponse<List<ClinicEnquiry>> response = clinicEnquiryService.getAllEnquiries();
 
-			return ResponseEntity.ok(response);
+    @GetMapping("/clinic-enquiries/getAll")
+    public ResponseEntity<ApiResponse<List<ClinicEnquiryDTO>>> getAllEnquiries() {
 
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new ApiResponse<>(false, ex.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR.value()));
-		}
-	}
+        return ResponseEntity.ok(clinicEnquiryService.getAllEnquiries());
+    }
 
-	// --------------------------------------------------
-	// GET BY CLINIC ID
-	// --------------------------------------------------
-	@GetMapping("/clinic-enquiries/clinic/{clinicId}")
-	public ResponseEntity<ApiResponse<List<ClinicEnquiry>>> getByClinicId(@PathVariable String clinicId) {
-		try {
-			ApiResponse<List<ClinicEnquiry>> response = clinicEnquiryService.getEnquiriesByClinicId(clinicId);
+    @GetMapping("/clinic-enquiries/clinic/{clinicId}")
+    public ResponseEntity<ApiResponse<List<ClinicEnquiryDTO>>> getByClinicId(
+            @PathVariable String clinicId) {
 
-			return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                clinicEnquiryService.getEnquiriesByClinicId(clinicId));
+    }
 
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(new ApiResponse<>(false, ex.getMessage(), null, HttpStatus.BAD_REQUEST.value()));
-		}
-	}
+    @GetMapping("/clinic-enquiries/{id}")
+    public ResponseEntity<ApiResponse<ClinicEnquiryDTO>> getById(
+            @PathVariable String id) {
 
-	// --------------------------------------------------
-	// GET BY ID
-	// --------------------------------------------------
-	@GetMapping("/clinic-enquiries/{id}")
-	public ResponseEntity<ApiResponse<ClinicEnquiry>> getById(@PathVariable String id) {
-		try {
-			ApiResponse<ClinicEnquiry> response = clinicEnquiryService.getEnquiryById(id);
+        return ResponseEntity.ok(
+                clinicEnquiryService.getEnquiryById(id));
+    }
 
-			return ResponseEntity.ok(response);
+    @DeleteMapping("/clinic-enquiries/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteEnquiry(
+            @PathVariable String id) {
 
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND)
-					.body(new ApiResponse<>(false, ex.getMessage(), null, HttpStatus.NOT_FOUND.value()));
-		}
-	}
-
-	// --------------------------------------------------
-	// DELETE ENQUIRY
-	// --------------------------------------------------
-	@DeleteMapping("/clinic-enquiries/{id}")
-	public ResponseEntity<ApiResponse<Void>> deleteEnquiry(@PathVariable String id) {
-		try {
-			ApiResponse<Void> response = clinicEnquiryService.deleteEnquiry(id);
-
-			return ResponseEntity.ok(response);
-
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND)
-					.body(new ApiResponse<>(false, ex.getMessage(), null, HttpStatus.NOT_FOUND.value()));
-		}
-	}
+        return ResponseEntity.ok(
+                clinicEnquiryService.deleteEnquiry(id));
+    }
 }

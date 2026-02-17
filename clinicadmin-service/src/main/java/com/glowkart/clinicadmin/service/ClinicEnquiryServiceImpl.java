@@ -1,6 +1,7 @@
 package com.glowkart.clinicadmin.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,132 +22,101 @@ public class ClinicEnquiryServiceImpl implements ClinicEnquiryService {
     private final ClinicEnquiryRepository repository;
     private final AdminServiceFeignClient adminFeignClient;
 
-    // --------------------------------------------------
-    // CREATE ENQUIRY (Feign Validation)
-    // --------------------------------------------------
+    // ✅ CREATE
     @Override
-    public ApiResponse<ClinicEnquiry> createEnquiry(ClinicEnquiryDTO dto) {
+    public ApiResponse<ClinicEnquiryDTO> createEnquiry(ClinicEnquiryDTO dto) {
 
-        ApiResponse<ClinicResponse> clinicResponse =
-                adminFeignClient.getClinicById(dto.getClinicId());
+        validateClinic(dto.getClinicId());
 
-        if (clinicResponse == null || !clinicResponse.isSuccess()) {
-            throw new RuntimeException("Invalid clinicId. Clinic not found");
-        }
-
-        ClinicEnquiry enquiry = new ClinicEnquiry();
-        enquiry.setClinicId(dto.getClinicId());
-        enquiry.setClinicName(dto.getClinicName());
-        enquiry.setClinicAddress(dto.getClinicAddress());
-        enquiry.setClinicMobile(dto.getClinicMobile());
-        enquiry.setContactName(dto.getContactName());
-        enquiry.setContactMobile(dto.getContactMobile());
-        enquiry.setContactEmail(dto.getContactEmail());
-        enquiry.setMessage(dto.getMessage());
-
+        ClinicEnquiry enquiry = mapToEntity(dto);
         ClinicEnquiry saved = repository.save(enquiry);
 
         return new ApiResponse<>(
                 true,
                 "Enquiry created successfully",
-                saved,
+                mapToDTO(saved),
                 HttpStatus.CREATED.value()
         );
     }
 
-    // --------------------------------------------------
-    // UPDATE ENQUIRY
-    // --------------------------------------------------
+    // ✅ UPDATE
     @Override
-    public ApiResponse<ClinicEnquiry> updateEnquiry(String enquiryId, ClinicEnquiryDTO dto) {
+    public ApiResponse<ClinicEnquiryDTO> updateEnquiry(String enquiryId, ClinicEnquiryDTO dto) {
 
-        ClinicEnquiry enquiry = repository.findById(enquiryId)
-                .orElseThrow(() -> new RuntimeException("Enquiry not found"));
+        ClinicEnquiry existing = repository.findById(enquiryId)
+                .orElseThrow(() -> new RuntimeException("Enquiry not found with id: " + enquiryId));
 
-        // Validate clinicId if changed
-        if (!enquiry.getClinicId().equals(dto.getClinicId())) {
-
-            ApiResponse<ClinicResponse> clinicResponse =
-                    adminFeignClient.getClinicById(dto.getClinicId());
-
-            if (clinicResponse == null || !clinicResponse.isSuccess()) {
-                throw new RuntimeException("Invalid clinicId. Clinic not found");
-            }
-
-            enquiry.setClinicId(dto.getClinicId());
+        if (!existing.getClinicId().equals(dto.getClinicId())) {
+            validateClinic(dto.getClinicId());
         }
 
-        enquiry.setClinicName(dto.getClinicName());
-        enquiry.setClinicAddress(dto.getClinicAddress());
-        enquiry.setClinicMobile(dto.getClinicMobile());
-        enquiry.setContactName(dto.getContactName());
-        enquiry.setContactMobile(dto.getContactMobile());
-        enquiry.setContactEmail(dto.getContactEmail());
-        enquiry.setMessage(dto.getMessage());
+        updateEntity(existing, dto);
 
-        ClinicEnquiry updated = repository.save(enquiry);
+        ClinicEnquiry updated = repository.save(existing);
 
         return new ApiResponse<>(
                 true,
                 "Enquiry updated successfully",
-                updated,
+                mapToDTO(updated),
                 HttpStatus.OK.value()
         );
     }
 
-    // --------------------------------------------------
-    // GET ALL
-    // --------------------------------------------------
+    // ✅ GET ALL
     @Override
-    public ApiResponse<List<ClinicEnquiry>> getAllEnquiries() {
+    public ApiResponse<List<ClinicEnquiryDTO>> getAllEnquiries() {
+
+        List<ClinicEnquiryDTO> list = repository.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
 
         return new ApiResponse<>(
                 true,
                 "Enquiries fetched successfully",
-                repository.findAll(),
+                list,
                 HttpStatus.OK.value()
         );
     }
 
-    // --------------------------------------------------
-    // GET BY CLINIC ID
-    // --------------------------------------------------
+    // ✅ GET BY CLINIC ID
     @Override
-    public ApiResponse<List<ClinicEnquiry>> getEnquiriesByClinicId(String clinicId) {
+    public ApiResponse<List<ClinicEnquiryDTO>> getEnquiriesByClinicId(String clinicId) {
+
+        List<ClinicEnquiryDTO> list = repository.findByClinicId(clinicId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
 
         return new ApiResponse<>(
                 true,
                 "Enquiries fetched successfully",
-                repository.findByClinicId(clinicId),
+                list,
                 HttpStatus.OK.value()
         );
     }
 
-    // --------------------------------------------------
-    // GET BY ID
-    // --------------------------------------------------
+    // ✅ GET BY ID
     @Override
-    public ApiResponse<ClinicEnquiry> getEnquiryById(String id) {
+    public ApiResponse<ClinicEnquiryDTO> getEnquiryById(String id) {
 
         ClinicEnquiry enquiry = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Enquiry not found"));
+                .orElseThrow(() -> new RuntimeException("Enquiry not found with id: " + id));
 
         return new ApiResponse<>(
                 true,
                 "Enquiry fetched successfully",
-                enquiry,
+                mapToDTO(enquiry),
                 HttpStatus.OK.value()
         );
     }
 
-    // --------------------------------------------------
-    // DELETE
-    // --------------------------------------------------
+    // ✅ DELETE
     @Override
     public ApiResponse<Void> deleteEnquiry(String id) {
 
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Enquiry not found");
+            throw new RuntimeException("Enquiry not found with id: " + id);
         }
 
         repository.deleteById(id);
@@ -157,5 +127,47 @@ public class ClinicEnquiryServiceImpl implements ClinicEnquiryService {
                 null,
                 HttpStatus.OK.value()
         );
+    }
+
+    // ================= PRIVATE METHODS =================
+
+    private void validateClinic(String clinicId) {
+        ApiResponse<ClinicResponse> clinicResponse =
+                adminFeignClient.getClinicById(clinicId);
+
+        if (clinicResponse == null || !clinicResponse.isSuccess()) {
+            throw new RuntimeException("Invalid clinicId. Clinic not found");
+        }
+    }
+
+    private ClinicEnquiry mapToEntity(ClinicEnquiryDTO dto) {
+        ClinicEnquiry enquiry = new ClinicEnquiry();
+        updateEntity(enquiry, dto);
+        return enquiry;
+    }
+
+    private void updateEntity(ClinicEnquiry enquiry, ClinicEnquiryDTO dto) {
+        enquiry.setClinicId(dto.getClinicId());
+        enquiry.setClinicName(dto.getClinicName());
+        enquiry.setClinicAddress(dto.getClinicAddress());
+        enquiry.setClinicMobile(dto.getClinicMobile());
+        enquiry.setContactName(dto.getContactName());
+        enquiry.setContactMobile(dto.getContactMobile());
+        enquiry.setContactEmail(dto.getContactEmail());
+        enquiry.setMessage(dto.getMessage());
+    }
+
+    private ClinicEnquiryDTO mapToDTO(ClinicEnquiry enquiry) {
+        ClinicEnquiryDTO dto = new ClinicEnquiryDTO();
+        dto.setId(enquiry.getId());   // ✅ Important
+        dto.setClinicId(enquiry.getClinicId());
+        dto.setClinicName(enquiry.getClinicName());
+        dto.setClinicAddress(enquiry.getClinicAddress());
+        dto.setClinicMobile(enquiry.getClinicMobile());
+        dto.setContactName(enquiry.getContactName());
+        dto.setContactMobile(enquiry.getContactMobile());
+        dto.setContactEmail(enquiry.getContactEmail());
+        dto.setMessage(enquiry.getMessage());
+        return dto;
     }
 }

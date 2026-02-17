@@ -1,4 +1,4 @@
-package com.glowkart.clinicadmin.dto;
+package com.glowkart.admin.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,6 @@ import lombok.Data;
 public class ClinicEnquiryDTO {
 
 	private String id;
-	
     @NotBlank
     private String clinicId;
 
