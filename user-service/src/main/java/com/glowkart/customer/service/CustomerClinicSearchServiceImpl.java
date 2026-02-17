@@ -228,55 +228,55 @@ public class CustomerClinicSearchServiceImpl implements CustomerClinicSearchServ
                 .longitude(clinic.getLongitude())
 
                 // contact
-                .contactNumber(clinic.getContactNumber())
-                .whatsappNumber(clinic.getWhatsappNumber())
-                .email(clinic.getEmail())
-                .alternateContactNumber(clinic.getAlternateContactNumber())
+//                .contactNumber(clinic.getContactNumber())
+//                .whatsappNumber(clinic.getWhatsappNumber())
+//                .email(clinic.getEmail())
+//                .alternateContactNumber(clinic.getAlternateContactNumber())
 
                 // timings
-                .openingTime(clinic.getOpeningTime())
-                .closingTime(clinic.getClosingTime())
+//                .openingTime(clinic.getOpeningTime())
+//                .closingTime(clinic.getClosingTime())
 
                 // media & web
                 .hospitalLogo(clinic.getHospitalLogo())
-                .website(clinic.getWebsite())
-                .walkthrough(clinic.getWalkthrough())
+//                .website(clinic.getWebsite())
+//                .walkthrough(clinic.getWalkthrough())
 
                 // ratings & status
                 .hospitalOverallRating(clinic.getHospitalOverallRating())
-                .online(clinic.isOnline())
-                .recommended(clinic.isRecommended())
-                .subscription(clinic.getSubscription())
-                .status(clinic.getStatus())
-                .username(clinic.getUsername())
-                .role(clinic.getRole())
+//                .online(clinic.isOnline())
+//                .recommended(clinic.isRecommended())
+//                .subscription(clinic.getSubscription())
+//                .status(clinic.getStatus())
+//                .username(clinic.getUsername())
+//                .role(clinic.getRole())
 
                 // license & compliance
-                .licenseNumber(clinic.getLicenseNumber())
-                .issuingAuthority(clinic.getIssuingAuthority())
-                .clinicType(clinic.getClinicType())
-                .medicinesSoldOnSite(clinic.getMedicinesSoldOnSite())
-                .drugLicenseFormType(clinic.getDrugLicenseFormType())
-                .hasPharmacist(clinic.getHasPharmacist())
-                .nabhScore(clinic.getNabhScore())
+//                .licenseNumber(clinic.getLicenseNumber())
+//                .issuingAuthority(clinic.getIssuingAuthority())
+//                .clinicType(clinic.getClinicType())
+//                .medicinesSoldOnSite(clinic.getMedicinesSoldOnSite())
+//                .drugLicenseFormType(clinic.getDrugLicenseFormType())
+//                .hasPharmacist(clinic.getHasPharmacist())
+//                .nabhScore(clinic.getNabhScore())
 
                 // branch & admin
-                .branch(clinic.getBranch())
-                .primaryContactPerson(clinic.getPrimaryContactPerson())
-                .designation(clinic.getDesignation())
-                .clinicManagementSoftwareUsage(clinic.getClinicManagementSoftwareUsage())
-                .createdAt(clinic.getCreatedAt())
+//                .branch(clinic.getBranch())
+//                .primaryContactPerson(clinic.getPrimaryContactPerson())
+//                .designation(clinic.getDesignation())
+//                .clinicManagementSoftwareUsage(clinic.getClinicManagementSoftwareUsage())
+//                .createdAt(clinic.getCreatedAt())
 
                 // social
-                .instagramHandle(clinic.getInstagramHandle())
-                .twitterHandle(clinic.getTwitterHandle())
-                .facebookHandle(clinic.getFacebookHandle())
+//                .instagramHandle(clinic.getInstagramHandle())
+//                .twitterHandle(clinic.getTwitterHandle())
+//                .facebookHandle(clinic.getFacebookHandle())
 
                 // doctors
-                .doctorsList(clinic.getDoctorsList())
+//                .doctorsList(clinic.getDoctorsList())
 
                 // pricing & offers
-//                .procedurePricing(pricing)
+                .procedurePricing(pricing)
                 .maxOfferPercentage(calculateMaxOfferForClinic(clinic.getClinicId()))
 
                 // distance
