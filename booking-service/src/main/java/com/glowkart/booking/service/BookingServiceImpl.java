@@ -52,6 +52,8 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRatingRepository bookingRatingRepository;
     private final CustomerRewardsClient customerRewardsClient;
 
+    private final NotificationProducer notificationProducer;
+
     private final CustomerInfoClient customerInfoClient;
     private final ProcedureServiceClient procedureClient;
     private final ClinicServiceClient clinicClient;
@@ -256,7 +258,22 @@ public class BookingServiceImpl implements BookingService {
         booking.setUpdatedAt(Instant.now().toString());
         bookingRepository.save(booking);
 
+        // 🔔 SEND NOTIFICATION AFTER SUCCESSFUL BOOKING
+        if ("CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+
+            notificationProducer.sendBookingCreated(
+                    booking.getCustomerId(),
+                    customer.getDeviceToken(),
+                    booking.getBookingId(),
+                    clinic.getName(),
+                    clinic.getAddress(),
+                    booking.getAppointmentDate()
+            );
+        }
+
+
         return mapToDTO(booking);
+
     }
 
 
@@ -686,5 +703,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
+   
 }
 

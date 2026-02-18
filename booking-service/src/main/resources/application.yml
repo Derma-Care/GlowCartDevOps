@@ -1,3 +1,11 @@
+# =================== AWS SQS ===================
+aws:
+  access-key: ${AWS_ACCESS_KEY_ID}
+  secret-key: ${AWS_SECRET_ACCESS_KEY}
+  region: ap-south-1
+  sqs:
+    notification-queue-url: ${SQS_NOTIFICATION_QUEUE_URL}
+
 spring:
   application:
     name: booking-service
