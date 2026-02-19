@@ -200,6 +200,7 @@ public class BookingServiceImpl implements BookingService {
                 .status("HOLD")
                 .paymentStatus("PENDING")
                 .isRated(false)
+                .deviceToken(customer.getDeviceToken())   // ✅ Move it here
                 .createdAt(Instant.now().toString())
                 .updatedAt(Instant.now().toString())
                 .build();
