@@ -78,5 +78,55 @@ public class NotificationProducer {
 		}
 		}
 
+    public void sendAppointmentReminder(String customerId,
+            String deviceToken,
+            String bookingId,
+            String clinicName,
+            String clinicAddress,
+            String appointmentDate) {
+
+		try {
+		
+				LocalDate date = LocalDate.parse(appointmentDate);
+				String formattedDate = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
+				
+				String title = "⏰ Appointment Reminder";
+				
+				String message = String.format(
+				"Good morning! 🌞\n\n" +
+				"This is a reminder for your appointment today.\n\n" +
+				"🏥 Clinic: %s\n" +
+				"📍 Address: %s\n" +
+				"🗓 Date: %s\n\n" +
+				"We look forward to seeing you!",
+				clinicName,
+				clinicAddress,
+				formattedDate
+			);
+		
+		NotificationEvent event = NotificationEvent.builder()
+		.eventId(UUID.randomUUID().toString())
+		.customerId(customerId)
+		.deviceToken(deviceToken)
+		.title(title)
+		.message(message)
+		.type("BOOKING_REMINDER")
+		.channels(List.of("PUSH"))
+		.build();
+		
+		sqsClient.sendMessage(
+		SendMessageRequest.builder()
+		.queueUrl(queueUrl)
+		.messageBody(objectMapper.writeValueAsString(event))
+		.build()
+		);
+		
+		log.info("Reminder notification sent for bookingId={}", bookingId);
+		
+		} catch (Exception e) {
+		log.error("Failed to send reminder notification", e);
+		}
+		}
+		
 
 }

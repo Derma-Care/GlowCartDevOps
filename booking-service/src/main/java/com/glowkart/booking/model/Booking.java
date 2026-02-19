@@ -28,6 +28,7 @@ public class Booking {
 
     private String customerId;
     private String mobileNumber;
+    private String deviceToken;
 
     private String fullName;
     private String city;
