@@ -29,8 +29,8 @@ public class BookingReminderScheduler {
 //    @Scheduled(cron = "0 30 12 * * ?", zone = "Asia/Kolkata")
     
  // Runs every day at 3:15 PM IST
- // Runs every day at 3:50 PM IST
-    @Scheduled(cron = "0 50 15 * * ?", zone = "Asia/Kolkata")
+ // Runs every day at 4:10 PM IST
+    @Scheduled(cron = "0 10 16 * * ?", zone = "Asia/Kolkata")
     public void sendTodayAppointmentReminders() {
 
         String today = LocalDate.now(ZoneId.of("Asia/Kolkata"))
