@@ -58,6 +58,8 @@ const CustomerManagement = () => {
   const [selectedMobiles, setSelectedMobiles] = useState([])
   const [isMultiDelete, setIsMultiDelete] = useState(false)
   const [delloading, setDelLoading] = useState(false)
+  const [customerNameToDelete, setCustomerNameToDelete] = useState('')
+
   const [formData, setFormData] = useState({
     fullName: '',
     mobile: '',
@@ -109,38 +111,38 @@ const CustomerManagement = () => {
   }, [fetchCustomers])
 
   useEffect(() => {
-  if (!searchQuery.trim()) {
-    setFilteredData(customerData)
+    if (!searchQuery.trim()) {
+      setFilteredData(customerData)
+      setCurrentPage(1)
+      return
+    }
+
+    const trimmedQuery = searchQuery.toLowerCase().trim()
+
+    const filtered = customerData.filter((customer) => {
+      const fullName = (customer?.fullName || '').toLowerCase()
+      const mobile = (customer?.mobile || '').toString()
+      const registrationCode = (customer?.registrationCode || '').toLowerCase()
+      const customerId = (customer?.customerId || '').toLowerCase()
+      const addressPincode = (customer?.address?.pincode || '').toString()
+
+      const serviceTypeMatch = (customer?.serviceType || []).some((type) =>
+        type.toLowerCase().includes(trimmedQuery)
+      )
+
+      return (
+        fullName.includes(trimmedQuery) ||
+        mobile.includes(trimmedQuery) ||
+        registrationCode.includes(trimmedQuery) ||
+        customerId.includes(trimmedQuery) ||
+        addressPincode.includes(trimmedQuery) ||
+        serviceTypeMatch
+      )
+    })
+
+    setFilteredData(filtered)
     setCurrentPage(1)
-    return
-  }
-
-  const trimmedQuery = searchQuery.toLowerCase().trim()
-
-  const filtered = customerData.filter((customer) => {
-    const fullName = (customer?.fullName || '').toLowerCase()
-    const mobile = (customer?.mobile || '').toString()
-    const registrationCode = (customer?.registrationCode || '').toLowerCase()
-    const customerId = (customer?.customerId || '').toLowerCase()
-    const addressPincode = (customer?.address?.pincode || '').toString()
-
-    const serviceTypeMatch = (customer?.serviceType || []).some((type) =>
-      type.toLowerCase().includes(trimmedQuery)
-    )
-
-    return (
-      fullName.includes(trimmedQuery) ||
-      mobile.includes(trimmedQuery) ||
-      registrationCode.includes(trimmedQuery) ||
-      customerId.includes(trimmedQuery) ||
-      addressPincode.includes(trimmedQuery) ||
-      serviceTypeMatch
-    )
-  })
-
-  setFilteredData(filtered)
-  setCurrentPage(1)
-}, [searchQuery, customerData])
+  }, [searchQuery, customerData])
 
 
   const handleCustomerViewDetails = (mobile) => {
@@ -353,6 +355,7 @@ const CustomerManagement = () => {
       setDelLoading(false)
       setIsModalVisible(false)
       setCustomerIdToDelete(null)
+      setCustomerNameToDelete('')
     }
   }
 
@@ -465,8 +468,8 @@ const CustomerManagement = () => {
 
 
           {loading ? (
-            <CTable striped hover responsive>
-              <CTableHead className="pink-table">
+            <CTable >
+              <CTableHead >
                 <CTableRow className="text-center" >
                   <CTableHeaderCell colSpan={6} className="text-center">
                     <LoadingIndicator message="Loading customer data..." />
@@ -514,7 +517,7 @@ const CustomerManagement = () => {
                       <CTableDataCell>{customer?.mobile || '-'}</CTableDataCell>
                       <CTableDataCell>{customer?.gender || '-'}</CTableDataCell>
                       <CTableDataCell>{customer?.dob || '-'}</CTableDataCell>
-                       <CTableDataCell>{customer?.registrationCode || 'NA'}</CTableDataCell>
+                      <CTableDataCell>{customer?.registrationCode || 'NA'}</CTableDataCell>
 
                       <CTableDataCell>
                         <div className="d-flex justify-content-center align-items-center gap-2">
@@ -531,6 +534,7 @@ const CustomerManagement = () => {
                             className="actionBtn delete"
                             onClick={() => {
                               setCustomerIdToDelete(customer?.mobile)
+                              setCustomerNameToDelete(customer?.fullName || 'this customer')
                               setIsMultiDelete(false)
                               setIsModalVisible(true)
                             }}
@@ -549,16 +553,34 @@ const CustomerManagement = () => {
               <ConfirmationModal
                 isVisible={isModalVisible}
                 message={
-                  isMultiDelete
-                    ? `Are you sure you want to delete ${selectedMobiles.length} customers?`
-                    : 'Are you sure you want to delete this customer?'
+                  <div style={{ lineHeight: 1.6 }}>
+                    <div style={{ fontSize: '16px' }}>
+                      {isMultiDelete ? (
+                        <>
+                          Are you sure you want to delete{' '}
+                          <strong>{selectedMobiles.length} customers</strong>?
+                        </>
+                      ) : (
+                        <>
+                          Are you sure you want to delete{' '}
+                          <strong style={{ color: 'var(--color-black)' }}>
+                            {customerNameToDelete}
+                          </strong>
+                          ?
+                        </>
+                      )}
+                    </div>
+                  </div>
                 }
                 confirmText={
                   delloading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+                    <span className="d-flex align-items-center">
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      />
                       Deleting...
-                    </>
+                    </span>
                   ) : (
                     'Yes, Delete'
                   )
@@ -567,9 +589,12 @@ const CustomerManagement = () => {
                 onCancel={() => {
                   setIsModalVisible(false)
                   setCustomerIdToDelete(null)
+                  setCustomerNameToDelete('')
                   setIsMultiDelete(false)
                 }}
               />
+
+
               {filteredData.length > 0 && (
                 <div className="d-flex justify-content-between px-3 pb-3 mt-3">
                   {/* Rows per page dropdown */}

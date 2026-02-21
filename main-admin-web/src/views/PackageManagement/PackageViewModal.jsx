@@ -23,7 +23,7 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
       className="custom-modal"
     >
       <CModalHeader className="text-white">
-        <CModalTitle className="w-100 text-center fs-5 fw-bold">Procedure Details</CModalTitle>
+        <CModalTitle className="w-100 text-center fs-5 fw-bold">Package Details</CModalTitle>
       </CModalHeader>
 
       <CModalBody className="bg-light text-dark">
@@ -113,13 +113,15 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
-            {/* <CCol sm={4}>
-              <span className="mb-1 fw-semibold">Service Time:</span>
-              <span className="text-muted">
-                {data.minTime ? formatMinutes(data.minTime) : 'N/A'}
-              </span>
-              
-            </CCol> */}
+            <CCol sm={4}>
+              <span className="fw-semibold">Platform Fee:</span>
+              <span className="text-muted"> ₹ {Math.round(data.platformFee || 0)}</span>
+            </CCol>
+
+            <CCol sm={4}>
+              <span className="fw-semibold">Platform Fee Percentage %:</span>
+              <span className="text-muted"> {data.platformFeePercentage ? `${Math.round(data.platformFeePercentage)}%` : 'N/A'}</span>
+            </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Payment Type:</span>
               <span className="text-muted"> {data.paymentType ? data.paymentType : 'N/A'}</span>

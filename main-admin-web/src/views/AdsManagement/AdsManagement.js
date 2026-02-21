@@ -69,7 +69,7 @@ const AdsManagement = () => {
       get: `${BASE_URL_API}/clinic-ads`,
       post: `${BASE_URL_API}/clinic-ads/upload-file-json`,
       update: (id) => `${BASE_URL_API}/clinic-ads/${id}`,
-      delete: (id, clinicId) => `${BASE_URL_API}/clinic-ads/${id}/${clinicId}`,
+      delete: (id) => `${BASE_URL_API}/clinic-ads/${id}`,
     },
   };
   const fetchClinics = async () => {
@@ -159,11 +159,14 @@ const AdsManagement = () => {
 
       if (isEdit) {
         setEditData({
-          ...editData, data: base64Only, // store base64 for API type: fileType, 
-          fileName: file.name, previewUrl, // store blob URL for preview 
-          fileObject: file // store the actual File object (optional) 
+          ...editData,
+          data: base64Only,
+          fileName: file.name,
+          previewUrl,
+          fileObject: file, // this signals a new file is selected
         });
-      } else {
+      }
+      else {
         setFormData({ ...formData, data: base64Only, type: fileType, fileName: file.name, previewUrl, fileObject: file });
       }
     }; reader.readAsDataURL(file);
@@ -249,11 +252,10 @@ const AdsManagement = () => {
       ...(category === "service" && { clinicId: selectedClinic.clinicId }),
     };
 
-    // ✅ Only send data if new file uploaded
-    if (editData.data) {
-      payload.data = editData.data;
+    // ✅ Only include data if a new file is uploaded (Base64)
+    if (editData.fileObject) {
+      payload.data = editData.data; // Base64 string
     }
-
 
     try {
       await axios.put(API[category].update(editData._id), payload);
@@ -264,6 +266,7 @@ const AdsManagement = () => {
       toast.error(err?.response?.data?.message || "Failed to update advertisement");
     }
   };
+
 
   // Delete Ad
   const confirmDelete = async () => {
@@ -294,22 +297,19 @@ const AdsManagement = () => {
     setEditData({
       _id: ad._id,
       title: ad.title || "",
-      data: ad.data || "",
       type: ad.type || "",
       fileName: ad.fileName || "",
-      previewUrl: ad.data || "",  // existing media URL/base64
-      clinicId: ad.clinicId || "", // keep clinic ID for clinic ads
+      previewUrl: ad.data || "", // preview
+      fileObject: null,           // no new file yet
     });
 
     if (category === "service") {
-      // Find the clinic name by clinicId and set selectedClinic
       const clinic = clinics.find((c) => c.clinicId === ad.clinicId);
       setSelectedClinic({
         clinicId: ad.clinicId || "",
         clinicName: clinic?.name || "",
       });
     } else {
-      // Clear selectedClinic for other categories
       setSelectedClinic({ clinicId: "", clinicName: "" });
     }
 

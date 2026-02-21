@@ -180,6 +180,15 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="fw-semibold">Final Cost:</span>
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
             </CCol>
+            <CCol sm={4}>
+              <span className="fw-semibold">Platform Fee:</span>
+              <span className="text-muted"> ₹ {Math.round(data.platformFee || 0)}</span>
+            </CCol>
+
+            <CCol sm={4}>
+              <span className="fw-semibold">Platform Fee Percentage %:</span>
+              <span className="text-muted"> {data.platformFeePercentage ? `${Math.round(data.platformFeePercentage)}%` : 'N/A'}</span>
+            </CCol>
           </CRow>
         </div>
 

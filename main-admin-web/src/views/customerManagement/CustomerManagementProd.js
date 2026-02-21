@@ -62,6 +62,7 @@ const CustomerManagementProd = () => {
     const [selectedMobiles, setSelectedMobiles] = useState([])
     const [isMultiDelete, setIsMultiDelete] = useState(false)
     const [delloading, setDelLoading] = useState(false)
+    const [customerNameToDelete, setCustomerNameToDelete] = useState('')
     const [formData, setFormData] = useState({
         fullName: '',
         mobile: '',
@@ -358,6 +359,7 @@ const CustomerManagementProd = () => {
             setDelLoading(false)
             setIsModalVisible(false)
             setCustomerIdToDelete(null)
+            setCustomerNameToDelete('')
         }
     }
 
@@ -614,6 +616,7 @@ const CustomerManagementProd = () => {
                                                             style={{ padding: '8px 10px', borderRadius: '8px' }}
                                                             onClick={() => {
                                                                 setCustomerIdToDelete(customer?.mobile)
+                                                                setCustomerNameToDelete(customer?.fullName || 'this customer')
                                                                 setIsMultiDelete(false)
                                                                 setIsModalVisible(true)
                                                             }}
@@ -630,16 +633,34 @@ const CustomerManagementProd = () => {
                                 <ConfirmationModal
                                     isVisible={isModalVisible}
                                     message={
-                                        isMultiDelete
-                                            ? `Are you sure you want to delete ${selectedMobiles.length} customers?`
-                                            : 'Are you sure you want to delete this customer?'
+                                        <div style={{ lineHeight: 1.6 }}>
+                                            <div style={{ fontSize: '16px' }}>
+                                                {isMultiDelete ? (
+                                                    <>
+                                                        Are you sure you want to delete{' '}
+                                                        <strong>{selectedMobiles.length} customers</strong>?
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Are you sure you want to delete{' '}
+                                                        <strong style={{ color: 'var(--color-black)' }}>
+                                                            {customerNameToDelete}
+                                                        </strong>
+                                                        ?
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
                                     }
                                     confirmText={
                                         delloading ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2 text-white" role="status" />
+                                            <span className="d-flex align-items-center">
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                />
                                                 Deleting...
-                                            </>
+                                            </span>
                                         ) : (
                                             'Yes, Delete'
                                         )
@@ -648,6 +669,7 @@ const CustomerManagementProd = () => {
                                     onCancel={() => {
                                         setIsModalVisible(false)
                                         setCustomerIdToDelete(null)
+                                        setCustomerNameToDelete('')
                                         setIsMultiDelete(false)
                                     }}
                                 />

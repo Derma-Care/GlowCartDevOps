@@ -621,7 +621,7 @@ const ServiceManagement = () => {
             {/* 🔍 SEARCH FIELD */}
             <input
               type="text"
-              placeholder="Search by name, price, or description..."
+              placeholder="Search by Procedure Name, Discount, or Price..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="form-control"

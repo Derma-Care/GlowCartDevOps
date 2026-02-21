@@ -91,8 +91,8 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
     preProcedureQA: [],
     postProcedureQA: [],
     sittings: 0,
-    procedureLink: '', 
-    
+    procedureLink: '',
+
   })
   const [modalMode, setModalMode] = useState('add') // or 'edit'
   // Open for adding
@@ -120,7 +120,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       platformFeePercentage: 0,
       descriptionQA: [],
       sittings: 0,
-      procedureLink: '', 
+      procedureLink: '',
     })
     setModalVisible(true)
   }
@@ -189,7 +189,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       consultationFee: service.consultationFee || 0,
       taxPercentage: service.taxPercentage || 0,
       minTime: service.minTime || '',
-      procedureLink: service.procedureLink||'', 
+      procedureLink: service.procedureLink || '',
       subServiceImage: rawImage,
       subServiceImageFile: null,
       viewDescription: service.viewDescription || '',
@@ -216,7 +216,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
     viewDescription: '',
     subServiceImage: '',
     bannerImage: '',
-    procedureLink: '', 
+    procedureLink: '',
     sittings: '', // ✅ added for validation
   })
   const fetchData = async () => {
@@ -453,7 +453,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       postProcedureQA: newService.postProcedureQA,
       viewDescription: newService.viewDescription,
       sittings: newService.sittings || 0, // ✅ Default to 0 if not set
-     procedureLink: newService.procedureLink,
+      procedureLink: newService.procedureLink,
     }
 
     console.log('Payload ready to submit:', payload)
@@ -477,7 +477,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       hospitalId: '',
       subServiceId: '',
       subServiceName: '',
-      procedureLink:'',
+      procedureLink: '',
       price: 0,
       discount: 0,
       gst: 0,
@@ -720,13 +720,13 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
                   <CCol sm={4}><strong>Discounted Cost:</strong> ₹ {viewService.discountedCost ? Math.round(viewService.discountedCost) : '—'}</CCol>
                   <CCol sm={4}><strong>Tax %:</strong> {viewService.taxPercentage ? Math.round(viewService.taxPercentage) + '%' : '—'}</CCol>
                   <CCol sm={4}><strong>Tax Amount:</strong> ₹ {viewService.taxAmount ? Math.round(viewService.taxAmount) : '—'}</CCol>
-                  <CCol sm={4}><strong>Platform Fee %:</strong> {viewService.platformFeePercentage ? Math.round(viewService.platformFeePercentage) + '%' : '—'}</CCol>
+                  <CCol sm={4}><strong>platform Fee Percentage %:</strong> {viewService.platformFeePercentage ? Math.round(viewService.platformFeePercentage) + '%' : '—'}</CCol>
                   <CCol sm={4}><strong>Platform Fee:</strong> ₹ {viewService.platformFee ? Math.round(viewService.platformFee) : '—'}</CCol>
                   <CCol sm={4}><strong>Clinic Pay:</strong> ₹ {viewService.clinicPay ? Math.round(viewService.clinicPay) : '—'}</CCol>
                   <CCol sm={4}><strong>GST:</strong> ₹ {viewService.gst ? Math.round(viewService.gst) : '—'}</CCol>
                   <CCol sm={4}><strong>Consultation Fee:</strong> ₹ {viewService.consultationFee ?? '—'}</CCol>
                   <CCol sm={4}><strong>Final Cost:</strong> ₹ {viewService.finalCost ? Math.round(viewService.finalCost) : '—'}</CCol>
-                  <CCol sm={4}><strong>Service Time:</strong> {viewService.minTime ?(viewService.minTime) : '—'}</CCol>
+                  <CCol sm={4}><strong>Service Time:</strong> {viewService.minTime ? (viewService.minTime) : '—'}</CCol>
                   <CCol sm={4}><strong>Sittings:</strong> {viewService.sittings ?? 0}</CCol>
                   <CCol sm={4}><strong>Procedure Link:</strong> {viewService.procedureLink || 'N/A'}</CCol>
 
@@ -793,7 +793,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
                     <strong>View Description:</strong>
                     <div className="mt-2">{viewService.viewDescription || "N/A"}</div>
                   </CCol>
-                  
+
                 </CRow>
               </CCardBody>
             </CCard>

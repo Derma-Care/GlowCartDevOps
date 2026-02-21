@@ -8,6 +8,7 @@ import {
   CButton,
   CSpinner,
 } from '@coreui/react'
+import { BASE_URL_API } from '../../baseUrl'
 
 export default function MembershipViewModal({ member, onClose }) {
   if (!member) return null
@@ -33,7 +34,7 @@ export default function MembershipViewModal({ member, onClose }) {
       try {
         setLoading(true)
         const res = await axios.get(
-          `http://35.154.152.61:8080/admin/customers/${member.mobile}/reward-transactions`
+         `${BASE_URL_API}/customers/${member.mobile}/reward-transactions` 
         )
         setTransactions(res.data?.data || [])
       } catch (error) {

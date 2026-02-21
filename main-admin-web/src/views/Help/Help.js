@@ -20,6 +20,7 @@ import axios from 'axios'
 import { useHospital } from '../../views/Usecontext/HospitalContext'
 import { showCustomToast } from '../../Utils/Toaster'
 import LoadingIndicator from '../../Utils/loader'
+import { BASE_URL_API } from '../../baseUrl'
 
 const Help = () => {
   const { selectedHospital } = useHospital()
@@ -39,7 +40,7 @@ const Help = () => {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`https://glowkartapi.ashokfruit.shop/clinic-admin/clinic-enquiries/getAll`)
+      const res = await axios.get(`${BASE_URL_API}/clinic-enquiries/getAll`)
       setEnquiries(res.data?.data || [])
     } catch {
       showCustomToast('Failed to load enquiries', 'error')
@@ -244,6 +245,7 @@ NGK Support Team`
               <div className="modal-body">
                 {[
                   { label: "ID", value: selectedItem.id },
+                    { label: "Clinic ID", value: selectedItem.clinicId },
                   { label: "Clinic Name", value: selectedItem.clinicName },
                   { label: "Clinic Address", value: selectedItem.clinicAddress },
                   { label: "Clinic Mobile", value: selectedItem.clinicMobile },
@@ -251,12 +253,12 @@ NGK Support Team`
                   { label: "Contact Mobile", value: selectedItem.contactMobile },
                   // 👇 EMAIL WILL ONLY SHOW IF EXISTS
                   ...(selectedItem.contactEmail ? [{ label: "Email", value: selectedItem.contactEmail }] : []),
-                  {
-                    label: "Created At",
-                    value: selectedItem.createdAt
-                      ? new Date(selectedItem.createdAt).toLocaleString('en-GB')
-                      : 'N/A'
-                  },
+                  // {
+                  //   label: "Created At",
+                  //   value: selectedItem.createdAt
+                  //     ? new Date(selectedItem.createdAt).toLocaleString('en-GB')
+                  //     : 'N/A'
+                  // },
                   { label: "Message", value: selectedItem.message },
                 ].map((x, i) => (
                   <div className="mb-2" key={i} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
