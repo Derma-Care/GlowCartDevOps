@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class ProcedurePricingDTO {
     private String procedureId;
-//    private String procedureName;
+    private String procedureName;
 //    @NotBlank(message = "Clinic ID is required")
 //    private String clinicId;
 
@@ -18,7 +18,7 @@ public class ProcedurePricingDTO {
 //    private List<Map<String, List<String>>> procedureQA;
 //    private List<Map<String, List<String>>> postProcedureQA;
 
-//    private int sittings;
+    private int sittings;
 //    private String minTime;
 
     private double price;
