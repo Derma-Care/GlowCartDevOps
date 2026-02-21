@@ -373,16 +373,26 @@ public class BookingServiceImpl implements BookingService {
 
  // ================= FETCH SERVICE PRICING FOR CLINIC =================
     private double fetchServiceFinalCostForClinic(String clinicId, String serviceType, String serviceId) {
+
         if ("PROCEDURE".equalsIgnoreCase(serviceType)) {
-            ProcedurePricingDTO p = procedureClient.getPricingByProcedureAndClinic(serviceId, clinicId).getData();
-            return p.getFinalCost() + Math.max(p.getPlatformFee(), 0);
+            var response = procedureClient.getPricingByProcedureAndClinic(serviceId, clinicId);
+            if (response == null || response.getData() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure pricing not found");
+            }
+            return response.getData().getFinalCost();
         }
+
         if ("PACKAGE".equalsIgnoreCase(serviceType)) {
-            ProcedurePackageDTO p = procedureClient.getPricingByPackageAndClinic(serviceId, clinicId).getData();
-            return p.getFinalCost() + Math.max(p.getPlatformFee(), 0);
+            var response = procedureClient.getPricingByPackageAndClinic(serviceId, clinicId);
+            if (response == null || response.getData() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Package pricing not found");
+            }
+            return response.getData().getFinalCost();
         }
+
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid serviceType");
     }
+
 
     private PricingDetails fetchPricingDetailsForClinic(
             String clinicId,
