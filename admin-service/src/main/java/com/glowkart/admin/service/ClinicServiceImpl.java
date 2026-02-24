@@ -107,7 +107,7 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     // ==========================================================================================
-    // VERIFICATION WORKFLOW
+    // VERIFICATION-WORKFLOW
     // ==========================================================================================
     @Override
     public Clinic startVerificationProcess(String clinicId) {
