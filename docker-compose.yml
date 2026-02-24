@@ -47,7 +47,6 @@ services:
     depends_on:
       - mongodb
       - eureka-server
-      - redis
     networks:
       - app-network
 
@@ -150,14 +149,6 @@ services:
     networks:
       - app-network
 
-  redis:
-    image: redis:7.0
-    container_name: redis_service
-    ports:
-      - "6379:6379"
-    networks:
-      - app-network
-      
   # Clinic Admin Web (Frontend)
   clinic-admin-web:
     build: ./clinic-admin-web

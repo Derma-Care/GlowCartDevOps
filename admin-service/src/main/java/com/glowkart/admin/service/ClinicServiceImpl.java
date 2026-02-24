@@ -8,20 +8,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.glowkart.admin.client.BookingRatingClient;
 import com.glowkart.admin.client.OnboardingClient;
-import com.glowkart.admin.dto.ApiResponse;
-import com.glowkart.admin.dto.ChangePasswordDTO;
-import com.glowkart.admin.dto.ChangePayoutPasswordDTO;
-import com.glowkart.admin.dto.ClinicRatingsResponseDTO;
-import com.glowkart.admin.dto.ClinicRegistrationDTO;
-import com.glowkart.admin.dto.DoctorDTO;
-import com.glowkart.admin.dto.ForgotPasswordRequest;
-import com.glowkart.admin.dto.ResetPasswordRequest;
+import com.glowkart.admin.dto.*;
 import com.glowkart.admin.exception.ProcedureServiceException;
 import com.glowkart.admin.model.Clinic;
 import com.glowkart.admin.model.Doctor;
@@ -119,50 +110,39 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     @Override
-    @CacheEvict(
-        value = { "clinicById", "verifiedClinics", "clinicRatings" },
-        allEntries = true
-    )
     public Clinic verifyClinic(String clinicId) {
-
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("VERIFIED");
-        clinic.setOnline(true);
-
+        clinic.setOnline(true);   // ✅ now visible/active
+        // Generate login credentials if missing
         if (clinic.getUsername() == null || clinic.getPassword() == null) {
             Map<String, String> creds = CredentialGenerator.generateLoginCredentials();
             clinic.setUsername(creds.get("username"));
             clinic.setPassword(creds.get("password"));
         }
 
+        // Generate payout credentials if missing
         if (clinic.getPayoutUsername() == null || clinic.getPayoutPassword() == null) {
             Map<String, String> payoutCreds = CredentialGenerator.generatePayoutCredentials();
             clinic.setPayoutUsername(payoutCreds.get("payoutUsername"));
             clinic.setPayoutPassword(payoutCreds.get("payoutPassword"));
         }
-
+        
+        
         repo.save(clinic);
         asyncVerificationService.sendCredentialsAsync(clinic);
         return clinic;
     }
 
-
     @Override
-    @CacheEvict(
-        value = { "clinicById", "verifiedClinics", "clinicRatings" },
-        allEntries = true
-    )
     public Clinic rejectClinic(String clinicId, String reason) {
-
         Clinic clinic = findClinic(clinicId);
         clinic.setStatus("REJECTED");
-        clinic.setOnline(false);
-
+        clinic.setOnline(false);  // ❌ never online
         repo.save(clinic);
         asyncVerificationService.sendRejectionNotificationAsync(clinic, reason);
         return clinic;
     }
-
 
     // ==========================================================================================
     // CRUD
@@ -173,20 +153,12 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     @Override
-    @Cacheable(value = "clinicById", key = "#clinicId")
     public Clinic getById(String clinicId) {
         return findClinic(clinicId);
     }
 
-
     @Override
-    @Cacheable(
-        value = "clinicRatings",
-        key = "#clinicId",
-        unless = "#result == 0.0"
-    )
     public double getClinicAverageRating(String clinicId) {
-
         try {
             ApiResponse<ClinicRatingsResponseDTO> response =
                     bookingRatingClient.getClinicRatings(clinicId);
@@ -204,12 +176,8 @@ public class ClinicServiceImpl implements ClinicService {
         return 0.0;
     }
 
-
+    
     @Override
-    @CacheEvict(
-        value = { "clinicById", "verifiedClinics", "clinicRatings" },
-        allEntries = true
-    )
     public void deleteClinic(String clinicId) {
         if (!repo.existsById(clinicId)) {
             throw new ProcedureServiceException("Clinic not found", 404, null);
@@ -218,11 +186,9 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     @Override
-    @Cacheable(value = "verifiedClinics")
     public List<Clinic> getVerifiedClinics() {
         return repo.findByStatusIgnoreCase("VERIFIED");
     }
-
 
    
 
@@ -230,10 +196,6 @@ public class ClinicServiceImpl implements ClinicService {
     // UPDATE CLINIC (FULL LOGIC)
     // ==========================================================================================
     @Override
-    @CacheEvict(
-    	    value = { "clinicById", "verifiedClinics", "clinicRatings" },
-    	    allEntries = true
-    	)
     public Clinic updateClinic(String clinicId, ClinicRegistrationDTO dto) {
 
         Clinic clinic = repo.findById(clinicId)
@@ -930,10 +892,6 @@ public class ClinicServiceImpl implements ClinicService {
     }
     
     @Override
-    @CacheEvict(
-    	    value = { "clinicById", "verifiedClinics" },
-    	    allEntries = true
-    	)
     public void updateOnlineStatus(String clinicId, boolean isOnline) {
         Clinic clinic = repo.findById(clinicId)
                 .orElseThrow(() -> new ProcedureServiceException(
