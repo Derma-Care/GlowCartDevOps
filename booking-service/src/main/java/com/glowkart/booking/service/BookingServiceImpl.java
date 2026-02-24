@@ -599,10 +599,21 @@ public class BookingServiceImpl implements BookingService {
 
         // 🔥 NOTIFY CUSTOMER-SERVICE ON COMPLETION
         if ("COMPLETED".equals(newStatus)) {
+
             customerRewardsClient.creditBookingReward(
                     booking.getCustomerId(),
                     booking.getBookingId(),
                     booking.getFinalAmount()
+            );
+
+            // 🔔 SEND COMPLETION NOTIFICATION
+            notificationProducer.sendBookingCompleted(
+                    booking.getCustomerId(),
+                    booking.getDeviceToken(),
+                    booking.getBookingId(),
+                    booking.getClinicName(),
+                    booking.getClinicAddress(),
+                    booking.getAppointmentDate()
             );
         }
 

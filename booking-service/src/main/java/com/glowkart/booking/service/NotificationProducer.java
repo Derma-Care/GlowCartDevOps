@@ -129,4 +129,53 @@ public class NotificationProducer {
 		}
 		
 
+    public void sendBookingCompleted(
+            String customerId,
+            String deviceToken,
+            String bookingId,
+            String clinicName,
+            String clinicAddress,
+            String appointmentDate) {
+
+        try {
+
+            LocalDate date = LocalDate.parse(appointmentDate);
+            String formattedDate = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
+
+            String title = "🎉 Treatment Completed";
+
+            String message = String.format(
+                    "Your appointment has been successfully completed!\n\n" +
+                    "🏥 Clinic: %s\n" +
+                    "📍 Address: %s\n" +
+                    "🗓 Date: %s\n\n" +
+                    "Thank you for choosing GlowKart 💙",
+                    clinicName,
+                    clinicAddress,
+                    formattedDate
+            );
+
+            NotificationEvent event = NotificationEvent.builder()
+                    .eventId(UUID.randomUUID().toString())
+                    .customerId(customerId)
+                    .deviceToken(deviceToken)
+                    .title(title)
+                    .message(message)
+                    .type("BOOKING_COMPLETED")
+                    .channels(List.of("PUSH"))
+                    .build();
+
+            sqsClient.sendMessage(
+                    SendMessageRequest.builder()
+                            .queueUrl(queueUrl)
+                            .messageBody(objectMapper.writeValueAsString(event))
+                            .build()
+            );
+
+            log.info("Booking completed notification sent for bookingId={}", bookingId);
+
+        } catch (Exception e) {
+            log.error("Failed to send completed notification", e);
+        }
+    }
 }
