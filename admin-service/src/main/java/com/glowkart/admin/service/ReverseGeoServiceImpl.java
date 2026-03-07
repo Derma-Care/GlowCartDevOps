@@ -1,5 +1,6 @@
 package com.glowkart.admin.service;
 
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,15 +20,26 @@ public class ReverseGeoServiceImpl implements ReverseGeoService {
                 "&lon=" + longitude +
                 "&format=json&addressdetails=1";
 
-        Map<String, Object> response =
-                restTemplate.getForObject(url, Map.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("User-Agent", "GlowKart-Clinic-Service");
 
-        if (response == null || response.get("address") == null) {
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                Map.class
+        );
+
+        Map<String, Object> body = response.getBody();
+
+        if (body == null || body.get("address") == null) {
             throw new RuntimeException("Unable to fetch state from coordinates");
         }
 
         Map<String, Object> address =
-                (Map<String, Object>) response.get("address");
+                (Map<String, Object>) body.get("address");
 
         return (String) address.get("state");
     }
