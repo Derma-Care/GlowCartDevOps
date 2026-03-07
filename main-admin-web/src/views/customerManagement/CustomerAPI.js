@@ -14,7 +14,7 @@ export const CustomerData = async () => {
   try {
     const url = `${BASE_URL_API}/${CustomerAllData}`
     const response = await axios.get(url)
-    console.log('customer doing ',response)
+    console.log('customer doing ', response)
     // Assuming backend wraps list in response.data.data
     return Array.isArray(response.data.data) ? response.data.data : [response.data.data]
   } catch (error) {
@@ -94,7 +94,7 @@ export const CustomerDataProd = async () => {
   try {
     const url = `${Production_URL_API}/${CustomerAllData}`
     const response = await axios.get(url)
-    console.log('customer doing ',response)
+    console.log('customer doing ', response)
     // Assuming backend wraps list in response.data.data
     return Array.isArray(response.data.data) ? response.data.data : [response.data.data]
   } catch (error) {

@@ -21,17 +21,14 @@ import {
   CForm,
   CInputGroup
 } from '@coreui/react'
-
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-
 import {
   createProcedure,
   getAllProcedures,
   updateProcedure,
   deleteProcedure,
 } from './ProcedureAPI'
-
 import LoadingIndicator from '../../Utils/loader'
 import ConfirmationModal from '../../components/ConfirmationModal'
 import { Edit2, Eye, Trash2 } from 'lucide-react'
@@ -53,7 +50,6 @@ const ProcedureManagement = () => {
   const [deleteId, setDeleteId] = useState(null)
   const [errors, setErrors] = useState({ procedure: '' })
   const [searchTerm, setSearchTerm] = useState('')
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [delloading, setDelLoading] = useState(false)
@@ -81,12 +77,10 @@ const ProcedureManagement = () => {
      =========================== */
   const handleAddToTemp = () => {
     const trimmed = procedureInput.trim()
-
     if (!trimmed) {
       setErrors({ procedure: 'Procedure name is required' })
       return
     }
-
     if (!PROCEDURE_REGEX.test(trimmed)) {
       setErrors({
         procedure:
@@ -118,15 +112,12 @@ const ProcedureManagement = () => {
       const res = await updateProcedure(editProcedureId, {
         procedureName: procedureInput.trim(),
       })
-
       // ✅ Use backend success message
       if (res?.success === false) {
         toast.error(res.message || 'Failed to update procedure')
         return
       }
-
       toast.success(res?.message || 'Procedure updated successfully')
-
       fetchProcedures()
       setShowModal(false)
       setEditMode(false)
@@ -138,8 +129,6 @@ const ProcedureManagement = () => {
       )
     }
   }
-
-
   /* ===========================
       SUBMIT ALL TEMP PROCEDURES
      =========================== */
@@ -193,8 +182,6 @@ const ProcedureManagement = () => {
     setShowModal(false);
   };
 
-
-
   const handleView = (procedure) => {
     setSelectedProcedure(procedure)
     setViewModal(true)
@@ -224,28 +211,28 @@ const ProcedureManagement = () => {
     setDelLoading(false)
     setShowDeleteModal(false)
   }
- const filteredProcedures = procedures.filter((proc) =>
-  proc.name.toLowerCase().includes(searchTerm.toLowerCase())
-)
+  const filteredProcedures = procedures.filter((proc) =>
+    proc.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
 
-const totalPages = Math.max(
-  1,
-  Math.ceil(filteredProcedures.length / itemsPerPage)
-)
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProcedures.length / itemsPerPage)
+  )
 
-const indexOfLastItem = currentPage * itemsPerPage
-const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
 
-const currentItems = filteredProcedures.slice(
-  indexOfFirstItem,
-  indexOfLastItem
-)
-useEffect(() => {
-  if (currentPage > totalPages) {
-    setCurrentPage(totalPages)
-  }
-}, [totalPages])
+  const currentItems = filteredProcedures.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  )
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [totalPages])
 
 
   return (
@@ -302,8 +289,8 @@ useEffect(() => {
           <CTable striped hover responsive >
             <CTableHead className='pink-table'>
               <CTableRow className="text-center">
-                <CTableHeaderCell  style={{ width: "10%" }}>S.No</CTableHeaderCell>
-                <CTableHeaderCell  style={{ width: "60%" }}>Procedure</CTableHeaderCell>
+                <CTableHeaderCell style={{ width: "10%" }}>S.No</CTableHeaderCell>
+                <CTableHeaderCell style={{ width: "60%" }}>Procedure</CTableHeaderCell>
                 <CTableHeaderCell style={{ width: "30%" }}>Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
@@ -333,70 +320,70 @@ useEffect(() => {
 
         )}
         {/* Pagination */}
-     {filteredProcedures.length > 0 && (
-  <div className="d-flex justify-content-between px-3 pb-3 mt-3">
-    
-    {/* Rows Per Page */}
-    <div>
-      <label className="me-2">Rows per page:</label>
-      <CFormSelect
-        value={itemsPerPage}
-        onChange={(e) => {
-          setItemsPerPage(Number(e.target.value))
-          setCurrentPage(1)
-        }}
-        style={{ width: '80px', display: 'inline-block' }}
-      >
-        <option value={5}>5</option>
-        <option value={10}>10</option>
-        <option value={25}>25</option>
-        <option value={50}>50</option>
-      </CFormSelect>
-    </div>
+        {filteredProcedures.length > 0 && (
+          <div className="d-flex justify-content-between px-3 pb-3 mt-3">
 
-    {/* Pagination */}
-    <div>
-      <div>
-        Showing {filteredProcedures.length === 0 ? 0 : indexOfFirstItem + 1} to{" "}
-        {Math.min(indexOfLastItem, filteredProcedures.length)} of{" "}
-        {filteredProcedures.length} entries
-      </div>
+            {/* Rows Per Page */}
+            <div>
+              <label className="me-2">Rows per page:</label>
+              <CFormSelect
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                style={{ width: '80px', display: 'inline-block' }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </CFormSelect>
+            </div>
 
-      <CPagination align="end" className="mt-2 themed-pagination">
-        <CPaginationItem
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(currentPage - 1)}
-        >
-          Prev
-        </CPaginationItem>
+            {/* Pagination */}
+            <div>
+              <div>
+                Showing {filteredProcedures.length === 0 ? 0 : indexOfFirstItem + 1} to{" "}
+                {Math.min(indexOfLastItem, filteredProcedures.length)} of{" "}
+                {filteredProcedures.length} entries
+              </div>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1)
-          .filter((page) => {
-            if (totalPages <= 5) return true
-            if (currentPage <= 3) return page <= 5
-            if (currentPage >= totalPages - 2) return page >= totalPages - 4
-            return page >= currentPage - 2 && page <= currentPage + 2
-          })
-          .map((page) => (
-            <CPaginationItem
-              key={page}
-              active={page === currentPage}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </CPaginationItem>
-          ))}
+              <CPagination align="end" className="mt-2 themed-pagination">
+                <CPaginationItem
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                >
+                  Prev
+                </CPaginationItem>
 
-        <CPaginationItem
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage(currentPage + 1)}
-        >
-          Next
-        </CPaginationItem>
-      </CPagination>
-    </div>
-  </div>
-)}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    if (totalPages <= 5) return true
+                    if (currentPage <= 3) return page <= 5
+                    if (currentPage >= totalPages - 2) return page >= totalPages - 4
+                    return page >= currentPage - 2 && page <= currentPage + 2
+                  })
+                  .map((page) => (
+                    <CPaginationItem
+                      key={page}
+                      active={page === currentPage}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </CPaginationItem>
+                  ))}
+
+                <CPaginationItem
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                >
+                  Next
+                </CPaginationItem>
+              </CPagination>
+            </div>
+          </div>
+        )}
 
       </CCard>
 
@@ -425,7 +412,6 @@ useEffect(() => {
 
           <CButton
             color="secondary"
-
             onClick={handleAddToTemp}
             disabled={editMode}
             style={{
@@ -438,9 +424,6 @@ useEffect(() => {
           >
             Add
           </CButton>
-
-
-
           {tempProcedures.length > 0 && (
             <div className="mt-3">
               <h6>Procedures to be added:</h6>
@@ -472,11 +455,7 @@ useEffect(() => {
               )}
             </>
           )}
-
-
         </CModalFooter>
-
-
       </CModal>
 
       {/* View Modal */}

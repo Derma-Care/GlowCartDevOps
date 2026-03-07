@@ -1,6 +1,6 @@
-// rolePermissions.js
+
 export const roleMenu = {
-  //Admin Permissions
+
   admin: {
 
     Appointments: ['create', 'read', 'update', 'delete'],

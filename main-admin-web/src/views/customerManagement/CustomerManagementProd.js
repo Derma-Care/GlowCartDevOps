@@ -18,19 +18,10 @@ import {
     CTableDataCell,
     CPagination,
     CPaginationItem,
-    CModal,
-    CModalHeader,
-    CModalTitle,
-    CModalBody,
-    CModalFooter,
-    CNav,
-    CNavItem,
-    CNavLink,
-    CCard,
     CCardBody,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { Edit2, Eye, Trash2 } from 'lucide-react'
+import { Eye, Trash2 } from 'lucide-react'
 import { cilSearch } from '@coreui/icons'
 import {
     CustomerDataProd,
@@ -40,7 +31,6 @@ import {
 } from './CustomerAPI'
 import { ToastContainer, toast } from 'react-toastify'
 import ConfirmationModal from '../../components/ConfirmationModal'
-import { COLORS } from '../../Constant/Themes'
 import LoadingIndicator from '../../Utils/loader'
 
 const CustomerManagementProd = () => {
@@ -77,9 +67,6 @@ const CustomerManagementProd = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-
-
-
     const centeredMessageStyle = {
         display: 'flex',
         justifyContent: 'center',
@@ -147,12 +134,9 @@ const CustomerManagementProd = () => {
         setCurrentPage(1)
     }, [searchQuery, customerData])
 
-
-
     const handleCustomerViewDetails = (mobile) => {
         navigate(`/customer-managementProd/${mobile}`)
     }
-
 
     const handlePageChange = (newPage) => {
         setCurrentPage(newPage);
@@ -271,7 +255,6 @@ const CustomerManagementProd = () => {
         }
         setCurrentPage(1)
     }
-
 
     const paginatedData = filteredData.slice(
         (currentPage - 1) * itemsPerPage,
@@ -673,7 +656,7 @@ const CustomerManagementProd = () => {
                                         setIsMultiDelete(false)
                                     }}
                                 />
-                                {/* ================= PAGINATION ================= */}
+
                                 {/* ================= FIXED PAGINATION ================= */}
                                 <div
                                     style={{

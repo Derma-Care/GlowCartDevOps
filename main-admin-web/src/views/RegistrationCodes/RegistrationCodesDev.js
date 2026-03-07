@@ -43,8 +43,6 @@ const RegistrationCodeManagementDev = () => {
     fetchCodes();
   }, []);
 
-
-
   // Scroll page to top whenever page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -75,8 +73,6 @@ const RegistrationCodeManagementDev = () => {
       if (filterType === "unused") return !item.used;
       return true;
     });
-
-
 
   const usedCount = codes.filter((code) => code.used).length;
   const unusedCount = codes.filter((code) => !code.used).length;
@@ -126,8 +122,6 @@ If you need help, feel free to message anytime.
 
 Warm regards,  
 *Neeha’s GlowKart Team*`;
-
-
 
     const encoded = encodeURIComponent(message);
     const url = `https://wa.me/${fullNumber}?text=${encoded}`;

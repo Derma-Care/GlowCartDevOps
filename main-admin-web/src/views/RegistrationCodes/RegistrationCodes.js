@@ -3,9 +3,6 @@ import {
   CCard,
   CCardHeader,
   CCardBody,
-  CPagination,
-  CPaginationItem,
-  CFormSelect,
   CFormInput,
   CTooltip,
   CModal,
@@ -18,9 +15,6 @@ import {
   CCol,
   CContainer,
   CRow,
-  CNav,
-  CNavItem,
-  CNavLink,
   CAccordion,
   CAccordionItem,
   CAccordionHeader,
@@ -29,7 +23,6 @@ import {
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { getAllRegistrationCodes } from './RegistrationCodesApi'
-
 import { cilCopy, cilLockUnlocked } from '@coreui/icons'
 import { useNavigate } from 'react-router-dom'
 import { BASE_URL_API } from '../../baseUrl'
@@ -46,7 +39,6 @@ const RegistrationCodeManagement = () => {
   const [filterType, setFilterType] = useState('all') // <- add this
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(100)
-  // Modal states
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedCode, setSelectedCode] = useState('')
   const [name, setName] = useState('')
@@ -81,6 +73,7 @@ const RegistrationCodeManagement = () => {
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [customLink, setCustomLink] = useState('https://registration.ngkderma.com')
+
   useEffect(() => {
     fetchCodes()
   }, [])
@@ -88,7 +81,6 @@ const RegistrationCodeManagement = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault()
-
     if (!userName || !password) {
       setLoginError('Mobile number and password are required.')
       return
@@ -224,9 +216,6 @@ Warm regards,
         <>
           <CCard className="mb-3 shadow-sm">
             <CCardBody className="d-flex justify-content-end align-items-center flex-wrap gap-2">
-              {/* <div>
-                <h4 className="mb-0 fw-bold">Registration Codes</h4>
-              </div> */}
 
               <div className="d-flex gap-2">
                 <CButton className="theme-primary-btn" active>
@@ -300,19 +289,6 @@ Warm regards,
                 <p className="text-center">Loading codes...</p>
               ) : (
                 <>
-                  {/* {!loading && filteredCodes.length === 0 && (
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        padding: '40px',
-                        color: '#6c757d',
-                        fontSize: '1.1rem',
-                      }}
-                    >
-                      No registration codes found.
-                    </div>
-                  )} */}
-
                   {!loading && filteredCodes.length > 0 && (
                     <>
                       <CAccordion alwaysOpen>
@@ -559,67 +535,6 @@ Warm regards,
                       </CAccordion>
                     </>
                   )}
-
-                  {/* {filteredCodes.length > 0 && (
-                    <div className="d-flex justify-content-between px-3 pb-3 mt-3">
-                      <div>
-                        <label className="me-2">Rows per page:</label>
-                        <CFormSelect
-                          value={itemsPerPage}
-                          onChange={(e) => {
-                            setItemsPerPage(Number(e.target.value))
-                            setCurrentPage(1)
-                          }}
-                          style={{ width: '80px', display: 'inline-block' }}
-                        >
-                          <option value={100}>100</option>
-                          <option value={200}>200</option>
-                          <option value={300}>300</option>
-                          <option value={500}>500</option>
-                        </CFormSelect>
-                      </div>
-
-                      <div>
-                        <div>
-                          Showing {indexOfFirst + 1} to{' '}
-                          {Math.min(indexOfLast, filteredCodes.length)} of {filteredCodes.length}{' '}
-                          entries
-                        </div>
-                        <CPagination align="end" className="mt-2 themed-pagination">
-                          <CPaginationItem
-                            disabled={currentPage === 1}
-                            onClick={() => handlePageChange(currentPage - 1)}
-                          >
-                            Previous
-                          </CPaginationItem>
-
-                          {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter((page) => {
-                              if (totalPages <= 5) return true
-                              if (currentPage <= 3) return page <= 5
-                              if (currentPage >= totalPages - 2) return page >= totalPages - 4
-                              return page >= currentPage - 2 && page <= currentPage + 2
-                            })
-                            .map((page) => (
-                              <CPaginationItem
-                                key={page}
-                                active={page === currentPage}
-                                onClick={() => handlePageChange(page)}
-                              >
-                                {page}
-                              </CPaginationItem>
-                            ))}
-
-                          <CPaginationItem
-                            disabled={currentPage === totalPages}
-                            onClick={() => handlePageChange(currentPage + 1)}
-                          >
-                            Next
-                          </CPaginationItem>
-                        </CPagination>
-                      </div>
-                    </div>
-                  )} */}
                 </>
               )}
             </CCardBody>

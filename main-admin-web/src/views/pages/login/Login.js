@@ -65,12 +65,10 @@ const Login = () => {
 
       if (response.data?.success) {
         const user = response.data.data
-
         localStorage.setItem('authentication', 'true')
         localStorage.setItem('userName', user.userName)
         localStorage.setItem('mobileNumber', user.mobileNumber)
         localStorage.setItem('userId', user.id)
-
         toast.success('Login successful')
         navigate(from, { replace: true })
       } else {
@@ -92,8 +90,6 @@ const Login = () => {
   return (
     <>
       <ToastContainer />
-
-      {/* BACKGROUND */}
       <div
         className="min-vh-100 d-flex flex-column"
         style={{
@@ -107,7 +103,6 @@ const Login = () => {
         <div className="flex-grow-1 d-flex align-items-center">
           <CContainer fluid className="px-3 px-md-5">
             <CRow className="align-items-center justify-content-center">
-
               {/* LEFT INFO – DESKTOP ONLY */}
               <CCol
                 xs={12}
@@ -208,30 +203,27 @@ const Login = () => {
                       >
                         {isLoading ? <CSpinner size="sm" /> : 'Login'}
                       </CButton>
-
                     </CForm>
-
                   </CCardBody>
                 </CCard>
               </CCol>
-
             </CRow>
           </CContainer>
         </div>
 
         {/* FOOTER */}
-      <footer
-  className="
+        <footer
+          className="
     mt-auto
     py-2
     small
     opacity-75
     bg-light
   "
->
-  <CContainer>
-    <div
-      className="
+        >
+          <CContainer>
+            <div
+              className="
         d-flex
         flex-column
         flex-md-row
@@ -241,27 +233,27 @@ const Login = () => {
         text-center
         text-md-start
       "
-      style={{ color: NGK_COLORS.primary }}
-    >
-      <span className="d-inline-flex align-items-center gap-2">
-        <CIcon icon={cilShieldAlt} /> Secure by design
-      </span>
+              style={{ color: NGK_COLORS.primary }}
+            >
+              <span className="d-inline-flex align-items-center gap-2">
+                <CIcon icon={cilShieldAlt} /> Secure by design
+              </span>
 
-      <span>
-        © {new Date().getFullYear()} Uditcosmetech Pvt Ltd
-      </span>
+              <span>
+                © {new Date().getFullYear()} Uditcosmetech Pvt Ltd
+              </span>
 
-      <a
-        href="https://uditcosmetech.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: NGK_COLORS.primary }}
-      >
-        About Uditcosmetech Private Limited
-      </a>
-    </div>
-  </CContainer>
-</footer>
+              <a
+                href="https://uditcosmetech.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: NGK_COLORS.primary }}
+              >
+                About Uditcosmetech Private Limited
+              </a>
+            </div>
+          </CContainer>
+        </footer>
 
 
         {/* MODALS */}

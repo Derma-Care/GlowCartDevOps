@@ -18,8 +18,8 @@ import {
     CTableDataCell
 } from '@coreui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getCustomerByMobile, getCustomerByMobileProd } from './CustomerAPI'
-import { NGK_COLORS } from '../../Constant/Themes'
+import { getCustomerByMobileProd } from './CustomerAPI'
+
 
 const CustomerViewDetailsProd = () => {
     const navigate = useNavigate()

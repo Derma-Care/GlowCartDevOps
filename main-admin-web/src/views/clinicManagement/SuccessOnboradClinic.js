@@ -1,16 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import logo from "../../../src/assets/images/GlowKaart.png"
 import { useLocation, useNavigate } from "react-router-dom";
 export default function ClinicOnboardingSuccess({ onClose }) {
     const { state } = useLocation();
     const navigate = useNavigate();
 
     const clinicName = state?.clinicName;  // ← get clinic name here
-    const clinicId = state?.clinicId;
-    const message = state?.message;
-    const status = state?.status;
+
     return (
         <div style={{
             minHeight: "100vh",
@@ -39,22 +36,6 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                     overflowY: "auto" // enables internal scrolling
                 }}
             >
-                {/* LOGO */}
-                {/* <div className="d-flex justify-content-center align-items-center">
-                    <motion.img
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        src={logo}
-                        alt="Company Logo"
-                        width="10%"
-                        style={{ marginBottom: "25px", filter: "drop-shadow(0px 4px 4px rgba(0,0,0,0.2))" }}
-                    />
-                    <h3 className="mx-3" style={{ fontWeight: "bold", color: "var(--color-black)", marginBottom: "25px" }}>
-                        Neeha's GlowKart
-                    </h3>
-                </div> */}
-
                 {/* HEADER */}
                 <h1 style={{ fontSize: "36px", fontWeight: "800", marginBottom: "10px", color: "#333" }}>
                     🎉 Clinic Onboarding Successful!
@@ -88,18 +69,13 @@ export default function ClinicOnboardingSuccess({ onClose }) {
                         }}
                     >
                         🌐 Explore Website
-                    </button>   
+                    </button>
                 </div>
 
                 {/* COMPANY DETAILS SECTION */}
                 <div style={{ marginTop: "20px", padding: "15px", background: "#f7f7f7", borderRadius: "20px", border: "1px solid #e0e0e0" }}>
-                    {/* Centered Heading */}
-                    {/* <h3 style={{ fontSize: "26px", fontWeight: "700", textAlign: "center", marginBottom: "30px" }}>
-                        📞 Contact Information
-                    </h3> */}
-
                     {/* Two-column layout */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",alignContent:"center" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", alignContent: "center" }}>
                         {/* Left Column: Contact Details */}
                         <div style={{
                             display: "grid",

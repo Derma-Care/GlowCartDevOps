@@ -10,7 +10,6 @@ import {
   CButton
 } from "@coreui/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { NGK_COLORS } from "../../Constant/Themes";
 import PackageManagement from "../PackageManagement/PackageManagement";
 
 // Lazy-load Procedures component

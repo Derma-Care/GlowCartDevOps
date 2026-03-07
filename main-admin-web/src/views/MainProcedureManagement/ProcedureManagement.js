@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { CButton, CForm } from '@coreui/react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-
 import { deleteServiceData, postServiceData, updateServiceData } from './ProcedureManagementAPI'
 import { useGlobalSearch } from '../Usecontext/GlobalSearchContext'
 import { useHospital } from '../Usecontext/HospitalContext'
@@ -23,17 +22,12 @@ const ServiceManagement = () => {
   // ---------- MASTER DATA ----------
   const [isProcedure, setIsProcedure] = useState([]) // All procedures for dropdown
   const [procedurePricing, setProcedurePricing] = useState([]) // Clinic pricing list
-
-  // ---------- UI & STATE ----------
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-
   const [modalVisible, setModalVisible] = useState(false)
   const [modalMode, setModalMode] = useState('add') // 'add' | 'edit'
   const [viewService, setViewService] = useState(null)
-
   const [saveloading, setSaveLoading] = useState(false)
-
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [serviceIdToDelete, setServiceIdToDelete] = useState(null)
   const [delloading, setDelLoading] = useState(false)
@@ -138,9 +132,7 @@ const ServiceManagement = () => {
   // Get clinic pricing by clinicId
   const fetchProcedurePricing = async () => {
     try {
-
       const data = await getProcedurePricingByClinicId(clinicId);
-
       setProcedurePricing(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Failed to load pricing:', err)
@@ -203,10 +195,6 @@ const ServiceManagement = () => {
       if (!newService.offerValidDate) {
         newErrors.offerValidDate = 'Offer Start Date is required when discount is applied.'
       }
-
-      // if (!newService.offerEndDate) {
-      //   newErrors.offerEndDate = 'Offer End Date is required when discount is applied.'
-      // }
     }
     if (newService.offerValidDate && newService.offerEndDate) {
       const start = new Date(newService.offerValidDate)
@@ -309,9 +297,7 @@ const ServiceManagement = () => {
 
   const handleSubServiceChange = (selectedOption) => {
     const selectedId = selectedOption?.value || ''
-
     const selectedItem = isProcedure.find((p) => String(p.procedureId) === String(selectedId))
-
     setNewService((prev) => ({
       ...prev,
       subServiceId: selectedId,
@@ -323,9 +309,6 @@ const ServiceManagement = () => {
       subServiceName: '',
     }))
   }
-
-
-  // ---------- HANDLERS: MODAL OPEN/CLOSE ----------
 
   const resetForm = () => {
     setNewService({
@@ -399,14 +382,10 @@ const ServiceManagement = () => {
       minTimeUnit: timeUnit || '',
       sittings: String(service.sittings ?? ''),
       procedureLink: service.procedureLink,
-      // offerValidDate: service.offerStart || '',
-      // offerEndDate: service.offerValidDate || '',
       offerValidDate: toDateInput(service.offerStart),
       offerEndDate: toDateInput(service.offerValidDate),
-
       serviceImage: fullImage,
       serviceImageFile: null,
-
       viewDescription: service.description || '',
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
@@ -436,7 +415,6 @@ const ServiceManagement = () => {
       const gst = Number(newService.gst || 0)
       const taxPercentage = Number(newService.taxPercentage || 0)
       const consultationFee = Number(newService.consultationFee || 0)
-
       const discountAmount = (price * discount) / 100
       const gstAmount = (price * gst) / 100
       const discountedCost = price - discountAmount
@@ -470,7 +448,6 @@ const ServiceManagement = () => {
         postProcedureQA: newService.postProcedureQA,
         description: newService.viewDescription,
         procedureLink: newService.procedureLink,
-
         ngkDiscountPercentage: newService.ngkDiscountAmount,
         paymentType: newService.paymentType || 'FULL_PAYMENT', // ✅
         partialPaymentPercentage:
@@ -480,7 +457,6 @@ const ServiceManagement = () => {
       }
 
       const response = await postServiceData(payload)
-
       if (response?.data?.success) {
         showCustomToast(response.data.message, 'success')
         handleCloseFormModal()
@@ -509,9 +485,7 @@ const ServiceManagement = () => {
   const handleUpdateService = async () => {
     try {
       setSaveLoading(true)
-
       const hospitalId = clinicId
-
       let base64ImageToSend = ''
       if (newService.serviceImageFile) {
         const fullBase64String = await toBase64(newService.serviceImageFile)
@@ -552,7 +526,6 @@ const ServiceManagement = () => {
       // ❗ Send offer dates ALWAYS (backend will validate)
       updatedService.offerStart = newService.offerValidDate || null
       updatedService.offerValidDate = newService.offerEndDate || null
-
       const response = await updateServiceData(
         newService.subServiceId,
         hospitalId,
@@ -575,8 +548,6 @@ const ServiceManagement = () => {
       setSaveLoading(false)
     }
   }
-
-
 
   const handleServiceDelete = (item) => {
     setServiceIdToDelete(item.procedureId)
@@ -612,7 +583,6 @@ const ServiceManagement = () => {
     <div >
       <ToastContainer />
 
-      {/* Top Right "Add" Button (if needed) */}
       <div>
 
         <div className="w-100 mb-3">
@@ -641,10 +611,8 @@ const ServiceManagement = () => {
             >
               Add Procedure Details
             </CButton>
-
           </div>
         </div>
-
       </div>
 
       {/* View Modal */}

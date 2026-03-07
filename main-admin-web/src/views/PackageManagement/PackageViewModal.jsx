@@ -1,4 +1,4 @@
-// PackageViewModal.jsx
+
 import React from 'react'
 import {
   CModal,
@@ -70,32 +70,26 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Discount: </span>
               <span className="text-muted"> {Math.round(data.discountPercentage || 0)}%</span>
-              {/* <strong>Discount:</strong> {Math.round(data.discountPercentage || 0)}% */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Discount Amount: </span>
               <span className="text-muted"> ₹{Math.round(data.discountAmount || 0)}</span>
-              {/* <strong>Discount Amount:</strong> ₹ {Math.round(data.discountAmount || 0)} */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Discounted Cost: </span>
               <span className="text-muted"> ₹{Math.round(data.discountedCost || 0)}</span>
-              {/* <strong>Discounted Cost:</strong> ₹ {Math.round(data.discountedCost || 0)} */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Tax: </span>
               <span className="text-muted"> {Math.round(data.taxPercentage || 0)}%</span>
-              {/* <strong>Tax:</strong> {Math.round(data.taxPercentage || 0)}% */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Tax Amount: </span>
               <span className="text-muted"> ₹{Math.round(data.taxAmount || 0)}</span>
-              {/* <strong>Tax Amount:</strong> ₹ {Math.round(data.taxAmount || 0)} */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Clinic Pay: </span>
               <span className="text-muted"> ₹{Math.round(data.clinicPay || 0)}</span>
-              {/* <strong>Clinic Pay:</strong> ₹ {Math.round(data.clinicPay || 0)} */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">GST: </span>
@@ -106,12 +100,10 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Consultation Fee: </span>
               <span className="text-muted"> ₹ {data.consultationFee || 0}</span>
-              {/* <strong>Consultation Fee:</strong> ₹ {data.consultationFee || 0} */}
             </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Final Cost: </span>
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
-              {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
             <CCol sm={4}>
               <span className="fw-semibold">Platform Fee:</span>
@@ -125,7 +117,6 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Payment Type:</span>
               <span className="text-muted"> {data.paymentType ? data.paymentType : 'N/A'}</span>
-              {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
             </CCol>
             {data?.partialPaymentPercentage != null && (
               <CCol sm={4}>
@@ -136,7 +127,6 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">No. of Total Sittings: </span>
               <span className="text-muted"> {data.sittings ? data.sittings : 'N/A'}</span>
-              {/* <strong>No. of Sittings:</strong> {data.sittings || 'N/A'} */}
             </CCol>
             {Number(data.ngkDiscountPercentage) > 0 && (
               <CCol sm={4}>
@@ -174,23 +164,7 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
         <div className="p-3 bg-white rounded shadow-sm">
           <h6 className="fw-bold border-bottom pb-2 mb-3">Additional Details</h6>
           <CRow>
-            {/* <CCol sm={6}>
-              <p className="fw-semibold">Service Image:</p>
-              {data.procedureImage ? (
-                <img
-                  src={`data:image/png;base64,${data.procedureImage}`}
-                  alt="Service"
-                  style={{
-                    width: '100%',
-                    maxWidth: '250px',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd',
-                  }}
-                />
-              ) : (
-                <p className="text-muted">No image available</p>
-              )}
-            </CCol> */}
+
             <CCol sm={6}>
               <p className="fw-semibold">Description:</p>
               <p className="text-muted">{data.description || 'N/A'}</p>

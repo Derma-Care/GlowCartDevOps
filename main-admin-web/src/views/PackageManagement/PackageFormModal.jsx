@@ -13,9 +13,8 @@ import {
   CFormText,
   CFormSelect,
   CFormTextarea,
-  CButton,CInputGroup ,CInputGroupText 
+  CButton, CInputGroup, CInputGroupText
 } from '@coreui/react'
-import ProcedureQA from './QASection'
 import SearchableSelect from '../widgets/SearchableSelect'
 
 const PackageFormModal = ({
@@ -56,7 +55,7 @@ const PackageFormModal = ({
                 Package Name <span className="text-danger">*</span>
               </h6>
               <CFormInput
-        
+
                 type="text"
                 placeholder="Package Name"
                 name="packageName"
@@ -126,7 +125,7 @@ const PackageFormModal = ({
                 }}
               />
             </CCol>
- <CCol md={3} className="mb-4">
+            <CCol md={3} className="mb-4">
               <h6>
                 Payment Type <span className="text-danger">*</span>
               </h6>

@@ -16,7 +16,6 @@ import {
   CButton, CInputGroup, CInputGroupText
 } from '@coreui/react'
 
-import { cilChevronBottom } from '@coreui/icons'
 import ProcedureQA from './QASection'
 import CIcon from '@coreui/icons-react'
 import Select from 'react-select'

@@ -5,7 +5,6 @@ import {
   CButton
 } from "@coreui/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { NGK_COLORS } from "../../Constant/Themes";
 import AppointmentsTable from "./AppointmentsTable";
 
 const Appointments_Tabs = () => {

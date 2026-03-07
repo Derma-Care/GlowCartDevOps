@@ -36,6 +36,7 @@ import {
 import {
   getservice,
   BASE_URL,
+  BASE_URL_API,
 } from '../../baseUrl'
 import ProcedureQA from './QASection'
 import { Edit2, Eye, Trash2, View } from 'lucide-react'
@@ -136,7 +137,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
     // 2. Fetch services under this category
     let fetchedServiceOptions = []
     try {
-      const res = await axios.get(`${BASE_URL}/${getservice}/${categoryId}`)
+      const res = await axios.get(`${BASE_URL_API}/${getservice}/${categoryId}`)
       fetchedServiceOptions = res.data?.data || []
       console.log(fetchedServiceOptions)
       setServiceOptions(fetchedServiceOptions)
@@ -234,7 +235,7 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
       } else {
         throw new Error('Invalid category data format')
       }
-      // const hospitalId = localStorage.getItem('HospitalId') // ✅ current hospital
+
       if (clinicId) {
         // console.log("clinic ID SUb ", subServiceId)
         const subServiceData = await GetSubServices_ByClinicId(clinicId)
@@ -619,7 +620,6 @@ const ProcedureManagementDoctor = ({ clinicId }) => {
           [name]: parseFloat(value) || 0,
         }
       }
-
       // Default: just update value
       return {
         ...prev,

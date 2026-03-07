@@ -13,7 +13,7 @@ export const NavigationProvider = ({ children }) => {
     if (stack[stack.length - 1] !== location.pathname) {
       setStack((prev) => [...prev, location.pathname])
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [location.pathname])
 
   const push = (path) => {

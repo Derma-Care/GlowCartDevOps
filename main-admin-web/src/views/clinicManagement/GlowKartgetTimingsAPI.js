@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { BASE_URL, BASE_URL_API } from '../../baseUrl'
+import { BASE_URL_API } from '../../baseUrl'
 
 export const getClinicTimings = async () => {
   try {

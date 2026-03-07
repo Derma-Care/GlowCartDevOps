@@ -12,8 +12,6 @@ import {
   CTabPane
 } from "@coreui/react";
 
-import { COLORS, NGK_COLORS } from "../../Constant/Themes";
-
 const AppointmentDetails = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -139,7 +137,7 @@ const AppointmentDetails = () => {
 
             {/* Patient */}
             <CTabPane visible={activeTab === 0}>
-              {/* <h6 className="fw-bold mb-3">Patient Information</h6> */}
+
               <div className="row mb-2">
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Name:</strong> {state.fullName}</div>
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Gender:</strong> {state.gender}</div>
@@ -156,7 +154,6 @@ const AppointmentDetails = () => {
 
             {/* Clinic */}
             <CTabPane visible={activeTab === 1}>
-              {/* <h6 className="fw-bold mb-3">Clinic Information</h6> */}
               <div className="row mb-2">
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Clinic:</strong> {state.clinicName}</div>
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Booking ID:</strong> {state.bookingId}</div>
@@ -168,7 +165,7 @@ const AppointmentDetails = () => {
 
             {/* Appointment */}
             <CTabPane visible={activeTab === 2}>
-              {/* <h6 className="fw-bold mb-3">Appointment Details</h6> */}
+         
               <div className="row mb-2">
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Date:</strong> {formatDate(state.appointmentDate)}</div>
                 <div className="col-6">
@@ -200,7 +197,7 @@ const AppointmentDetails = () => {
 
             {/* Payment */}
             <CTabPane visible={activeTab === 3}>
-              {/* <h6 className="fw-bold mb-3">Payment Information</h6> */}
+           
               <div className="row mb-2">
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Base Price:</strong> ₹{state.price}</div>
                 <div className="col-6"><strong style={{ color: 'var(--color-black)' }}>Consultation Fee:</strong> ₹{state.consultationFee}</div>

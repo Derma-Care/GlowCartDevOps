@@ -55,13 +55,7 @@ const FCMNotification = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const location = useLocation();
   const clinicId = location.state?.clinicId;   // ⬅️ get clinicId from state
-
-
   const can = (feature, action) => user?.permissions?.[feature]?.includes(action)
-
-  // Pagination
-
-
   const filteredData = sentNotifications
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
   const indexOfLastItem = currentPage * itemsPerPage
@@ -74,8 +68,6 @@ const FCMNotification = () => {
       setCurrentPage(page);
     }
   };
-
-
 
   // 🖼 Handle image
   const handleImageChange = (e) => {
@@ -171,29 +163,23 @@ const FCMNotification = () => {
       showCustomToast(`Title and Body are required!`, 'error');
       return;
     }
-
     const tokens = sendAll ? [] : selectedCustomers.map((c) => c.value);
-
     const payload = {
       clinicId,
-
       title,
       body,
       image,
       sendAll,
       tokens,
     };
-
     try {
       setIsLoading(true);
       let res;
-
       if (isEditing && editId) {
         res = await axios.put(`${PushNotificationBaseUrl}/pricedrop/${editId}`, payload);
       } else {
         res = await axios.post(`${PushNotificationBaseUrl}/pricedrop`, payload);
       }
-
       if (res.data.success) {
         showCustomToast(isEditing ? 'Updated successfully!' : 'Sent successfully!');
         fetchNotifications();
@@ -237,8 +223,6 @@ const FCMNotification = () => {
       setDeleteConfirm(false);
     }
   };
-
-
   // Load notification into form for editing
   const handleEdit = (n) => {
     setTitle(n.title)
@@ -246,7 +230,6 @@ const FCMNotification = () => {
     setImage(n.image || null)
     setSendAll(n.sendAll || false)
     setSelectedCustomers(n.sendAll ? [] : n.selectedCustomers || [])
-
     setIsEditing(true)
     setEditId(n._id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -558,8 +541,6 @@ const FCMNotification = () => {
         onConfirm={handleDelete}
         onCancel={() => setDeleteConfirm(false)}
       />
-
-
     </div>
   )
 }

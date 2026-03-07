@@ -6,14 +6,14 @@ import {
     CTableRow, CTableHeaderCell, CTableBody, CTableDataCell,
     CImage, CButton, CContainer
 } from "@coreui/react";
-import { Eye, Download, Trash2, Edit } from "lucide-react";
+import { Eye, Download, Edit } from "lucide-react";
 import { updateClinic, deleteClinic, AllClinicData } from "../../baseUrl";
 import "./ClinicDetails.css";
 import { toast } from "react-toastify";
 import { getClinicTimings } from "./GlowKartgetTimingsAPI";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import capitalizeWords from "../../Utils/capitalizeWords";
-import { COLORS, NGK_COLORS } from "../../Constant/Themes";
+import { COLORS } from "../../Constant/Themes";
 
 /** ⭐ LABEL MAP FOR PRETTY UI */
 const LABELS = {
@@ -50,7 +50,6 @@ const LABELS = {
     hasPharmacist: "Pharmacist Present",
     medicinesSoldOnSite: "Medicines Sold On Site",
     panNumber: "PAN Number",
-    //   onboardingToken: "Onboarding Token",
     nabhScore: "NABH Score",
     walkthrough: "Walkthrough",
     clinicSpecializationType: "Specialization Type",
@@ -952,8 +951,6 @@ const ClinicDetails = () => {
                                         setDoctorIndexToDelete(null);
                                     }}
                                 />
-
-
                             </div>
                         </CTabPane>
 
@@ -1048,8 +1045,6 @@ const ClinicDetails = () => {
 
                                                     {editMode.other && (
                                                         <div className="d-flex gap-2 mt-2">
-
-
                                                             <label className={`btn ${logoUploaded ? "btn-success" : "btn-warning"} btn-sm flex-fill`}>
                                                                 {logoUploaded ? "✔ Uploaded" : "📤 Upload"}
                                                                 <input
@@ -1083,8 +1078,6 @@ const ClinicDetails = () => {
                                             )}
                                         </div>
                                     </CCol>
-
-
                                 </CRow>
 
                                 <ActionButtons
@@ -1116,7 +1109,6 @@ const ClinicDetails = () => {
                                 setFileKeyToDelete(null);
                             }}
                         />
-
                     </CTabContent>
                 </CCardBody>
             </CCard>

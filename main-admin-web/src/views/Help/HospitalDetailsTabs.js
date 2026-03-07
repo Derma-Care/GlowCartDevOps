@@ -149,20 +149,7 @@ const HospitalDetailsTabs = ({ hospital }) => {
 }
 
 export default HospitalDetailsTabs
-// const DetailCard = ({ title, fields }) => (
-//   <div className="col-12 col-md-4 mt-3 w-100">
-//     <div className="p-3 rounded h-100">
-//       <ul className="list-unstyled mb-0">
-//         {Object.entries(fields).map(([label, value]) => (
-//           <li key={label} className="mb-1 text-secondary">
-//             <strong className="text-dark">{label}:</strong>{' '}
-//             {value || <span className="text-muted">—</span>}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   </div>
-// )
+
 const DetailCard = ({ title, fields }) => {
   return (
     <div className="row g-3 mt-2">

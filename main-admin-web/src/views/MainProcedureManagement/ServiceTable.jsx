@@ -12,9 +12,6 @@ import capitalizeWords from "../../Utils/capitalizeWords";
 
 const ServiceTable = ({
   data = [],
-  canRead = true,
-  canUpdate = true,
-  canDelete = true,
   onView,
   onEdit,
   onDelete,
@@ -22,7 +19,7 @@ const ServiceTable = ({
   return (
     <CTable striped hover responsive>
       <CTableHead className="pink-table w-auto">
-         <CTableRow className="text-center">
+        <CTableRow className="text-center">
           <CTableHeaderCell style={{ paddingLeft: '40px' }}>S.No</CTableHeaderCell>
           <CTableHeaderCell>Procedure Name</CTableHeaderCell>
           <CTableHeaderCell>Discount %</CTableHeaderCell>
@@ -67,29 +64,29 @@ const ServiceTable = ({
 
               <CTableDataCell className="text-end">
                 <div className="d-flex justify-content-center gap-2">
-                 
-                    <button
-                      className="actionBtn"
-                      onClick={() => onView(item)}
-                      title="View"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button
-                      className="actionBtn"
-                      onClick={() => onEdit(item)}
-                      title="Edit"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-        
-                    <button
-                      className="actionBtn"
-                      onClick={() => onDelete(item)}
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+
+                  <button
+                    className="actionBtn"
+                    onClick={() => onView(item)}
+                    title="View"
+                  >
+                    <Eye size={18} />
+                  </button>
+                  <button
+                    className="actionBtn"
+                    onClick={() => onEdit(item)}
+                    title="Edit"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+
+                  <button
+                    className="actionBtn"
+                    onClick={() => onDelete(item)}
+                    title="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </CTableDataCell>
             </CTableRow>

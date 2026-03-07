@@ -123,14 +123,11 @@ const ClinicRegistration = () => {
     primaryContactPerson: '',
     designation: '',
     alternateContactNumber: '',
-    // clinicManagementSoftwareUsage: '',
     bankAccountName: '',
     bankAccountNumber: '',
     ifscCode: '',
     upiId: '',
     panNumber: '',
-
-    // ✅ Add this line
     doctorsList: [], // array of doctor objects
   });
 
@@ -206,7 +203,6 @@ const ClinicRegistration = () => {
     setIsModalVisible(false);
   };
 
-
   const handleEditDoctor = (index) => {
     const doctorToEdit = doctorsList[index];
     setDoctorEntry({ ...doctorToEdit });
@@ -246,7 +242,6 @@ const ClinicRegistration = () => {
   };
 
   const websiteRegex = /^(https?:\/\/)[\w\-]+(\.[\w\-]+)+[/#?]?.*$/
-  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
 
   const validateForm = () => {
     const newErrors = {}
@@ -311,7 +306,6 @@ const ClinicRegistration = () => {
         newErrors.whatsappNumber = 'whatsappNumber must start with a digit between 5 and 9'
       }
     }
-    // Time validation
     // Time validation
     if (!formData.openingTime) {
       newErrors.openingTime = 'Opening time is required'
@@ -390,9 +384,7 @@ const ClinicRegistration = () => {
     if (!formData.fireSafetyCertificate) {
       newErrors.fireSafetyCertificate = 'Please upload at least one document'
     }
-    // if (!formData.professionalIndemnityInsurance) {
-    //   newErrors.professionalIndemnityInsurance = 'Please upload at least one document'
-    // }
+  
     if (!formData.gstRegistrationCertificate) {
       newErrors.gstRegistrationCertificate = 'Please upload at least one document'
     }
@@ -417,7 +409,7 @@ const ClinicRegistration = () => {
       newErrors.subscription = 'Please select a subscription type'
     }
     // Latitude validation
-    // Latitude
+
     if (!formData.latitude) {
       newErrors.latitude = "Latitude is required";
     } else {
@@ -465,11 +457,6 @@ const ClinicRegistration = () => {
       }
     }
 
-    // 🔹 Clinic Management Software
-    // if (!formData.clinicManagementSoftwareUsage?.trim()) {
-    //   newErrors.clinicManagementSoftwareUsage = "Please specify if you use clinic software"
-    // }
-
     // 🔹 Bank Account Name
     if (!formData.bankAccountName?.trim()) {
       newErrors.bankAccountName = "Bank Account Name is required"
@@ -488,8 +475,6 @@ const ClinicRegistration = () => {
     } else if (!/^[A-Z]{3,4}0[A-Z0-9]{6}$/i.test(formData.ifscCode)) {
       newErrors.ifscCode = "Invalid IFSC Code format (Ex: SBIN0001234)";
     }
-
-
     // 🔹 UPI ID (optional)
     if (formData.upiId?.trim()) {
       const upiRegex = /^[\w.-]+@[\w.-]+$/
@@ -513,10 +498,7 @@ const ClinicRegistration = () => {
     if (!doctorsList || doctorsList.length === 0) {
       newErrors.doctorsList = "Please add at least one doctor with all details";
     }
-    // No `else { newErrors.website = '' }`
-
     console.log('Validation errors:', newErrors)
-
     // validate fields and set errors
     setErrors(newErrors)
 
@@ -622,7 +604,6 @@ const ClinicRegistration = () => {
       try {
         const response = await axios.get(`${AllClinicData}`)
         const clinicList = Array.isArray(response.data) // your actual API
-        // const data = await response.json()
         console.log('Fetched doctor data:', response.data) // <-- CHECK THIS STRUCTURE
         setExistingDoctors(response.data.data)
       } catch (err) {
@@ -655,10 +636,8 @@ const ClinicRegistration = () => {
 
         if (response.data.success && response.data.data) {
           const qaList = response.data.data.questionsAndAnswers || [];
-
           // Extract questions
           setNabhQuestions(qaList.map((item) => item.question));
-
           // Extract existing answers (boolean values)
           setNabhAnswers(qaList.map((item) => item.answer));
         }
@@ -669,8 +648,6 @@ const ClinicRegistration = () => {
 
     fetchQuestions();
   }, [savedQuestionId]);
-
-
 
   const handleNabhSubmit = async () => {
     try {
@@ -688,7 +665,6 @@ const ClinicRegistration = () => {
 
       if (response.data.success) {
         const score = response.data.data?.score ?? 0;
-
         setNabhScore(score);
         setFormData(prev => ({
           ...prev,
@@ -704,7 +680,6 @@ const ClinicRegistration = () => {
     }
   };
 
-
   // ✅ Save to localStorage for frontend-only preview/debug
   const formattedConsultationDays = `${formData.consultationExpiration} days`
   // Create preview data
@@ -713,9 +688,6 @@ const ClinicRegistration = () => {
     consultationExpiration: formattedConsultationDays,
   };
 
-
-
-  // ✅ Extract token from URL and store in localStorage
   // Extract from URL and save in localStorage
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -801,7 +773,6 @@ const ClinicRegistration = () => {
 
         website: normalizeWebsite(formData.website?.trim() || "")
       };
-
 
       // API call
       const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
@@ -1255,15 +1226,11 @@ const ClinicRegistration = () => {
                   maxLength={18} // maximum digits
                   onChange={(e) => {
                     let { name, value } = e.target;
-
                     // Remove non-numeric characters
                     value = value.replace(/\D/g, '');
-
                     // Optional: restrict to 18 digits max
                     if (value.length > 18) value = value.slice(0, 18);
-
                     setFormData((prev) => ({ ...prev, [name]: value }));
-
                     let error = "";
                     if (!value.trim()) {
                       error = "Bank Account Number is required";
@@ -1292,12 +1259,9 @@ const ClinicRegistration = () => {
                   maxLength={11} // IFSC is always 11 characters
                   onChange={(e) => {
                     let { name, value } = e.target;
-
                     // Convert input to uppercase automatically
                     value = value.toUpperCase();
-
                     setFormData((prev) => ({ ...prev, [name]: value }));
-
                     // Validation
                     let error = "";
                     if (!value.trim()) {
@@ -1305,12 +1269,10 @@ const ClinicRegistration = () => {
                     } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) {
                       error = "Invalid IFSC Code";
                     }
-
                     setErrors((prev) => ({ ...prev, [name]: error || undefined }));
                   }}
                   invalid={!!errors.ifscCode}
                 />
-
                 {errors.ifscCode && <CFormFeedback invalid>{errors.ifscCode}</CFormFeedback>}
               </CCol>
             </CRow>
@@ -1318,7 +1280,6 @@ const ClinicRegistration = () => {
             <CRow className="mb-3">
               <CCol md={4}>
                 <CFormLabel>UPI ID</CFormLabel>
-
                 <CFormInput
                   type="text"
                   name="upiId"
@@ -1334,7 +1295,6 @@ const ClinicRegistration = () => {
                 <CFormLabel>
                   PAN Number <span style={{ color: 'red' }}>*</span>
                 </CFormLabel>
-
                 <CFormInput
                   type="text"
                   name="panNumber"
@@ -1342,7 +1302,6 @@ const ClinicRegistration = () => {
                   onChange={(e) => {
                     const { name, value } = e.target;
                     setFormData((prev) => ({ ...prev, [name]: value }));
-
                     const error =
                       !value.trim()
                         ? "PAN Number is required"
@@ -1574,8 +1533,6 @@ const ClinicRegistration = () => {
                 inputRef={refs.professionalIndemnityInsurance}
                 required={false}  // <-- makes it optional
               />
-              {/* ---------------- DRUG LICENSE SECTION ---------------- */}
-
 
             </CRow>
 
@@ -1598,7 +1555,7 @@ const ClinicRegistration = () => {
                       try {
                         new URL(value); // still checks URL format
                       } catch {
-                        // ❗ Do nothing — validation stays silent
+                       
                       }
                     }
 

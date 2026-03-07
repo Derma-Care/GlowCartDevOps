@@ -1,4 +1,3 @@
-// src/styles/constants.ts
 
 export const COLORS = {
   primary: '#0061c2',

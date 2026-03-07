@@ -1,16 +1,11 @@
 import React, { Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
 import { CSpinner, useColorModes } from '@coreui/react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-
 import ProtectedRoute from './components/ProtectedRoute'
 import { injectTheme } from './Constant/Themes'
 import './scss/style.scss'
-
-// ✅ IMPORT PUBLIC PAGES DIRECTLY
-
 import ClinicOnboardingSuccess from './views/clinicManagement/SuccessOnboradClinic'
 import RegistrationCodeManagement from './views/RegistrationCodes/RegistrationCodes'
 import ClinicRegistration from './views/clinicManagement/GlowKartClinicRegistration'
@@ -37,20 +32,15 @@ const App = () => {
   return (
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
-
       <Suspense fallback={<CSpinner color="primary" variant="grow" />}>
         <Routes>
-
-          {/* ===== PUBLIC ROUTES ===== */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
           <Route
             path="/clinic-registration"
             element={<ClinicRegistration />}
           />
-
           <Route
             path="/registration-codes"
             element={<RegistrationCodeManagement />}

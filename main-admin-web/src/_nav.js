@@ -7,12 +7,11 @@ import {
   cilList,
   cilSpa,
   cilGroup,
-  cilBullhorn,
   cilBell,
   cilWallet,
   cilTask,
   cibGoogleAds,
-  cilCalendar,cilSettings
+  cilCalendar, cilSettings
 } from '@coreui/icons'
 
 const _nav = [
@@ -76,7 +75,7 @@ const _nav = [
     to: '/Push-Notifications',
     icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
   },
-   {
+  {
     component: CNavItem,
     name: 'Help',
     to: '/Help',

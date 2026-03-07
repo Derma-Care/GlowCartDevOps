@@ -237,8 +237,6 @@ const AdsManagement = () => {
     }
   }
 
-
-  // Update Ad
   // Update Ad
   const handleUpdateAd = async () => {
     if (!validateEditForm()) return;
@@ -266,7 +264,6 @@ const AdsManagement = () => {
       toast.error(err?.response?.data?.message || "Failed to update advertisement");
     }
   };
-
 
   // Delete Ad
   const confirmDelete = async () => {
@@ -449,7 +446,6 @@ const AdsManagement = () => {
         </div>
       </CCardBody>
 
-      {/* Add, Edit, View, Delete Modals */}
       {/* Add Modal */}
       <CModal size="lg" className="custom-modal" visible={showAddModal} onClose={() => setShowAddModal(false)}>
         <CModalHeader>

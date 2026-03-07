@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CButton, CForm } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -24,20 +24,14 @@ import ConfirmationModal from '../../components/ConfirmationModal'
 const PackageManagement = () => {
   const { clinicId } = useParams();
   const { state: clinic } = useLocation();
-  // ---------- MASTER DATA ----------
   const [isProcedure, setIsProcedure] = useState([]) // All procedures for dropdown
   const [procedurePricing, setProcedurePricing] = useState([]) // Clinic pricing list
-
-  // ---------- UI & STATE ----------
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-
   const [modalVisible, setModalVisible] = useState(false)
   const [modalMode, setModalMode] = useState('add') // 'add' | 'edit'
   const [viewService, setViewService] = useState(null)
-
   const [saveloading, setSaveLoading] = useState(false)
-
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [serviceIdToDelete, setServiceIdToDelete] = useState(null)
   const [delloading, setDelLoading] = useState(false)
@@ -66,7 +60,6 @@ const PackageManagement = () => {
     ngkDiscountAmount: '',
     paymentType: 'FULL_PAYMENT',
     partialPaymentPercentage: '',
-    // packageProcedures: [{ procedureId: '', sittings: '' }],
     packageProcedures: [],
   })
 
@@ -78,7 +71,6 @@ const PackageManagement = () => {
     consultationFee: '',
     minTimeValue: '',
     minTimeUnit: '',
-
     viewDescription: '',
     serviceImage: '',
   })
@@ -191,10 +183,6 @@ const PackageManagement = () => {
       if (!newService.offerValidDate) {
         newErrors.offerValidDate = 'Offer Start Date is required when discount is applied.'
       }
-
-      // if (!newService.offerEndDate) {
-      //   newErrors.offerEndDate = 'Offer End Date is required when discount is applied.'
-      // }
     }
     if (newService.offerValidDate && newService.offerEndDate) {
       const start = new Date(newService.offerValidDate)
@@ -209,25 +197,9 @@ const PackageManagement = () => {
       newErrors.discount = 'Discount cannot exceed 100%.'
     }
 
-    // if (!newService.minTimeValue || newService.minTimeValue.trim() === '') {
-    //   newErrors.minTimeValue = 'Enter minimum time.'
-    // } else if (!/^\d+$/.test(newService.minTimeValue)) {
-    //   newErrors.minTimeValue = 'Minimum time must be a number.'
-    // } else if (Number(newService.minTimeValue) <= 0) {
-    //   newErrors.minTimeValue = 'Minimum time must be greater than zero.'
-    // }
-
-    // if (!newService.minTimeUnit) {
-    //   newErrors.minTimeUnit = 'Please select a time unit.'
-    // }
-
     if (!newService.viewDescription || newService.viewDescription.trim() === '') {
       newErrors.viewDescription = 'View description is required.'
     }
-
-    // if (!newService.serviceImage) {
-    //   newErrors.serviceImage = 'Please upload a package image.'
-    // }
 
     // --- Validate at least 2 procedures ---
     if (!newService.packageProcedures || newService.packageProcedures.length < 2) {
@@ -254,10 +226,6 @@ const PackageManagement = () => {
         newErrors[`sittings_${idx}`] = 'Enter valid sittings.'
       }
     })
-
-    // if (!newService.sittings || newService.sittings.trim() === '') {
-    //   newErrors.sittings = 'Number of sittings is required.'
-    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -318,12 +286,6 @@ const PackageManagement = () => {
 
       return
     }
-
-    // // Default field update
-    // setNewService((prev) => ({
-    //   ...prev,
-    //   [name]: value,
-    // }))
 
     if (type === 'file' && files && files[0]) {
       const file = files[0]
@@ -392,10 +354,6 @@ const PackageManagement = () => {
         : {}),
     }))
   }
-
-  // const onChange = (e) => {
-  //   const { name, value, type } = e.target
-  // }
 
   const handleSubServiceChange = (e) => {
     const selectedId = e.target.value
@@ -480,13 +438,8 @@ const PackageManagement = () => {
       minTimeValue: timeValue,
       minTimeUnit: timeUnit || '',
       sittings: String(service.sittings ?? ''),
-
       offerValidDate: service.offerStart || '',
       offerEndDate: service.offerValidDate || '',
-
-      // serviceImage: fullImage,
-      // serviceImageFile: null,
-
       viewDescription: service.description || '',
       procedureQA: service.procedureQA || [],
       preProcedureQA: service.preProcedureQA || [],
@@ -517,7 +470,6 @@ const PackageManagement = () => {
       const gst = Number(newService.gst || 0)
       const taxPercentage = Number(newService.taxPercentage || 0)
       const consultationFee = Number(newService.consultationFee || 0)
-
       const discountAmount = (price * discount) / 100
       const gstAmount = (price * gst) / 100
       const discountedCost = price - discountAmount
@@ -525,17 +477,10 @@ const PackageManagement = () => {
       const clinicPay = discountedCost + taxAmount
       const finalCost = clinicPay + gstAmount + consultationFee
       const formattedMinTime = `${newService.minTimeValue} ${newService.minTimeUnit}`
-
-      // const base64ImageToSend = newService.serviceImage?.startsWith('data:')
-      //   ? newService.serviceImage.split(',')[1]
-      //   : newService.serviceImage
-
       const payload = {
         clinicId: clinicId,
         packageName: newService.packageName,
-
         procedures: newService.packageProcedures.map((p) => ({
-          // procedureId: p.procedureId,
           procedureName:
             isProcedure.find((x) => x.procedureId === p.procedureId)?.procedureName || '',
           noOfSittings: Number(p.sittings),
@@ -548,7 +493,6 @@ const PackageManagement = () => {
         gst: Number(newService.gst),
         platformFeePercentage: 2, // static or dynamic
         consultationFee: Number(newService.consultationFee),
-        // minTime: formattedMinTime,
         offerStart: newService.offerValidDate || '',
         offerValidDate: newService.offerEndDate || '',
         paymentType: newService.paymentType || 'FULL_PAYMENT', // ✅
@@ -568,7 +512,6 @@ const PackageManagement = () => {
       }
     } catch (error) {
       console.error('Error in handleAddService:', error?.response || error)
-      // showCustomToast(error?.response?.data?.message || 'Something went wrong', 'error')
     } finally {
       setSaveLoading(false)
     }
@@ -598,7 +541,6 @@ const PackageManagement = () => {
       const proceduresPayload = newService.packageProcedures.map((p) => {
         const found = isProcedure.find((x) => x.procedureId === p.procedureId)
         return {
-          // procedureId: p.procedureId,
           procedureName: found?.procedureName || '',
           noOfSittings: Number(p.sittings || 0),
         }
@@ -612,12 +554,8 @@ const PackageManagement = () => {
         description: newService.viewDescription || '',
         procedures: proceduresPayload,
         ngkDiscountPercentage: newService.ngkDiscountAmount,
-        // minTime: newService.minTimeValue
-        //   ? `${newService.minTimeValue} ${newService.minTimeUnit}`
-        //   : '',
         offerStart: newService.offerValidDate || '',
         offerValidDate: newService.offerEndDate || '',
-
         price: Number(newService.price || 0),
         discountPercentage: Number(newService.discount || 0),
         taxPercentage: Number(newService.taxPercentage || 0),
@@ -631,12 +569,10 @@ const PackageManagement = () => {
             : 0,
       }
 
-      const response = await updatePackageData(newService.packageId, clinicId, updatedService) // imported from ProcedureManagementAPI
-
+      const response = await updatePackageData(newService.packageId, clinicId, updatedService)
       if (response.success) {
         showCustomToast(`${response.message}` || 'Procedure updated successfully!', 'success')
         handleCloseFormModal()
-
         fetchProcedurePricing()
       } else {
         showCustomToast(`${result.message}`, 'error')
@@ -655,13 +591,11 @@ const PackageManagement = () => {
   }
 
   const handleConfirmDelete = async () => {
-
     try {
       setDelLoading(true)
       const result = await deletePackageData(serviceIdToDelete, clinicId)
       if (result.success) {
         console.log('Service deleted:', result)
-
         showCustomToast(`${result.message}` || 'Package deleted successfully!', 'success')
         fetchProcedurePricing()
       } else {
@@ -682,15 +616,9 @@ const PackageManagement = () => {
   return (
     <div style={{ overflow: 'hidden' }}>
       <ToastContainer />
-
-      {/* Top Right "Add" Button (if needed) */}
       <div>
-
-
         <div className="w-100 mb-3">
           <div className="d-flex justify-content-between align-items-center">
-
-            {/* 🔍 SEARCH FIELD */}
             <input
               type="text"
               placeholder="Search by name, price, or description..."

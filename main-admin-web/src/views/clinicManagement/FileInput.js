@@ -1,4 +1,3 @@
-import React from "react";
 import { CCol, CFormLabel, CFormInput, CButton, CTooltip } from "@coreui/react";
 
 const FileInput = ({

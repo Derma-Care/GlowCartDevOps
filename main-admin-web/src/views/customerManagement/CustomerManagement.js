@@ -18,20 +18,14 @@ import {
   CTableDataCell,
   CPagination,
   CPaginationItem,
-  CModal,
-  CModalHeader,
-  CModalTitle,
-  CModalBody,
-  CModalFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { Edit2, Eye, Trash2 } from 'lucide-react'
+import { Eye, Trash2 } from 'lucide-react'
 import { cilSearch } from '@coreui/icons'
 import {
   CustomerData,
   deleteCustomerData,
   addCustomer,
-  getCustomerByMobile,
   updateCustomerData,
 } from './CustomerAPI'
 import { ToastContainer, toast } from 'react-toastify'

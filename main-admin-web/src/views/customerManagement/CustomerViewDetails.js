@@ -19,7 +19,7 @@ import {
 } from '@coreui/react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCustomerByMobile } from './CustomerAPI'
-import { NGK_COLORS } from '../../Constant/Themes'
+
 
 const CustomerViewDetails = () => {
   const navigate = useNavigate()
