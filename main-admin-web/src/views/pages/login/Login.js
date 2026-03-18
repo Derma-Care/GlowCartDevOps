@@ -45,47 +45,55 @@ const Login = () => {
   useEffect(() => {
     localStorage.clear()
   }, [])
+const handleSubmit = async (e) => {
+  e.preventDefault()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const mobile = userName.trim()
+  const pass = password.trim()
 
-    if (!userName || !password) {
-      toast.error('Mobile number and password are required')
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      const response = await axios.post(
-        `${BASE_URL_API}/login`,
-        { mobileNumber: userName, password },
-        { headers: { 'Content-Type': 'application/json' } }
-      )
-
-      if (response.data?.success) {
-        const user = response.data.data
-        localStorage.setItem('authentication', 'true')
-        localStorage.setItem('userName', user.userName)
-        localStorage.setItem('mobileNumber', user.mobileNumber)
-        localStorage.setItem('userId', user.id)
-        toast.success('Login successful')
-        navigate(from, { replace: true })
-      } else {
-        toast.error(response.data?.message || 'Invalid credentials')
-      }
-    } catch (error) {
-      if (error?.response?.data?.message) {
-        toast.error(error.response.data.message)
-      } else if (!navigator.onLine) {
-        toast.error('No internet connection')
-      } else {
-        toast.error('Server not responding. Try again later.')
-      }
-    } finally {
-      setIsLoading(false)
-    }
+  if (!mobile || !pass) {
+    toast.error('Mobile number and password are required')
+    return
   }
+
+  // Mobile number validation
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    toast.error("Please enter a valid 10 digit mobile number")
+    return
+  }
+
+  setIsLoading(true)
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL_API}/login`,
+      { mobileNumber: mobile, password: pass },
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+
+    if (response.data?.success) {
+      const user = response.data.data
+      localStorage.setItem('authentication', 'true')
+      localStorage.setItem('userName', user.userName)
+      localStorage.setItem('mobileNumber', user.mobileNumber)
+      localStorage.setItem('userId', user.id)
+      toast.success('Login successful')
+      navigate(from, { replace: true })
+    } else {
+      toast.error(response.data?.message || 'Invalid credentials')
+    }
+  } catch (error) {
+    if (error?.response?.data?.message) {
+      toast.error(error.response.data.message)
+    } else if (!navigator.onLine) {
+      toast.error('No internet connection')
+    } else {
+      toast.error('Server not responding. Try again later.')
+    }
+  } finally {
+    setIsLoading(false)
+  }
+}
 
   return (
     <>
@@ -138,13 +146,20 @@ const Login = () => {
                           }} />
                         </CInputGroupText>
                         <CFormInput
+                          type="tel"
                           placeholder="Mobile Number"
                           value={userName}
+                          maxLength={10}
+                          pattern="[0-9]*"
+                          inputMode="numeric"
                           style={{
-                            cursor: 'pointer',
+                            cursor: "pointer",
                             borderColor: NGK_COLORS.borderSoft,
                           }}
-                          onChange={(e) => setUserName(e.target.value)}
+                          onChange={(e) => {
+                             const value = e.target.value.replace(/\D/g, "").trim()
+                            setUserName(value)
+                          }}
                         />
                       </CInputGroup>
 
@@ -165,7 +180,7 @@ const Login = () => {
                             borderColor: NGK_COLORS.borderSoft,
                           }}
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => setPassword(e.target.value.trim())}
                         />
                       </CInputGroup>
 

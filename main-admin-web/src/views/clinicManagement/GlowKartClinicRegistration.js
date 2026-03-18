@@ -79,57 +79,61 @@ const ClinicRegistration = () => {
   const [doctorsList, setDoctorsList] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [doctorIndexToDelete, setDoctorIndexToDelete] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    city: '',
-    contactNumber: '',
-    whatsappNumber: '',
-    openingTime: '',
-    closingTime: '',
-    hospitalLogo: null,
-    email: '',
-    website: '',
-    licenseNumber: '',
-    issuingAuthority: '',
-    recommended: false,
-    clinicSoftware: false,
-    hospitalDocuments: null,
-    contractorDocuments: null,
-    clinicalEstablishmentCertificate: null,
-    businessRegistrationCertificate: null,
-    clinicType: '',
-    medicinesSoldOnSite: false,
-    drugLicenseCertificate: null,
-    drugLicenseFormType: "",
-    hasPharmacist: '',
-    pharmacistCertificate: null,
-    biomedicalWasteManagementAuth: null,
-    tradeLicense: null,
-    fireSafetyCertificate: null,
-    professionalIndemnityInsurance: null,
-    gstRegistrationCertificate: null,
-    others: [],
-    subscription: '',
-    instagramHandle: '',
-    twitterHandle: '',
-    facebookHandle: '',
-    latitude: "",
-    longitude: "",
-    walkthrough: "",
-    branch: "",
-    nabhScore: nabhScore,
-    clinicSpecializationType: '',
-    primaryContactPerson: '',
-    designation: '',
-    alternateContactNumber: '',
-    bankAccountName: '',
-    bankAccountNumber: '',
-    ifscCode: '',
-    upiId: '',
-    panNumber: '',
-    doctorsList: [], // array of doctor objects
-  });
+ const [formData, setFormData] = useState({
+  name: '',
+  address: '',
+  city: '',
+  contactNumber: '',
+  whatsappNumber: '',
+  openingTime: '',
+  closingTime: '',
+  hospitalLogo: null,
+  email: '',
+  website: '',
+  licenseNumber: '',
+  issuingAuthority: '',
+  recommended: false,
+  clinicSoftware: false,
+
+  hospitalDocuments: [],
+  contractorDocuments: [],
+  clinicalEstablishmentCertificate: [],
+  businessRegistrationCertificate: [],
+
+  clinicType: '',
+  medicinesSoldOnSite: false,
+
+  drugLicenseCertificate: [],
+  drugLicenseFormType: "",
+  hasPharmacist: '',
+  pharmacistCertificate: [],
+  biomedicalWasteManagementAuth: [],
+  tradeLicense: [],
+  fireSafetyCertificate: [],
+  professionalIndemnityInsurance: [],
+  gstRegistrationCertificate: [],
+  others: [],
+
+  subscription: '',
+  instagramHandle: '',
+  twitterHandle: '',
+  facebookHandle: '',
+  latitude: "",
+  longitude: "",
+  walkthrough: "",
+  branch: "",
+  nabhScore: nabhScore,
+  clinicSpecializationType: '',
+  primaryContactPerson: '',
+  designation: '',
+  alternateContactNumber: '',
+  bankAccountName: '',
+  bankAccountNumber: '',
+  ifscCode: '',
+  upiId: '',
+  panNumber: '',
+  doctorsList: [],
+});
 
 
   const [doctorEntry, setDoctorEntry] = useState({
@@ -346,48 +350,55 @@ const ClinicRegistration = () => {
     }
 
     // Hospital Logo
-    if (!formData.hospitalLogo) {
-      newErrors.hospitalLogo = 'Hospital logo is required'
-    }
 
-    // Hospital Documents
-    if (!formData.hospitalDocuments) {
-      newErrors.hospitalDocuments = 'Please upload the document'
-    }
-    if (!formData.contractorDocuments) {
-      newErrors.contractorDocuments = 'Please upload the document'
-    }
-    if (!formData.clinicalEstablishmentCertificate) {
-      newErrors.clinicalEstablishmentCertificate = 'Please upload at least one document'
-    }
-    if (!formData.businessRegistrationCertificate) {
-      newErrors.businessRegistrationCertificate = 'Please upload at least one document'
-    }
+    // Hospital Logo
+if (!formData.hospitalLogo) {
+  newErrors.hospitalLogo = 'Hospital logo is required'
+}
 
-    if (!formData.drugLicenseFormType && selectedOption === 'Yes') {
-      newErrors.drugLicenseFormType = 'Please upload at least one document'
-    }
-    if (
-      selectedOption === 'Yes' &&
-      selectedPharmacistOption === 'Yes' &&
-      !formData.pharmacistCertificate
-    ) {
-      newErrors.pharmacistCertificate = 'Please upload at least one document'
-    }
+// Multi-file validations
+if (!Array.isArray(formData.hospitalDocuments) || formData.hospitalDocuments.length === 0) {
+  newErrors.hospitalDocuments = 'Please upload the document'
+}
+if (!Array.isArray(formData.contractorDocuments) || formData.contractorDocuments.length === 0) {
+  newErrors.contractorDocuments = 'Please upload the document'
+}
+if (!Array.isArray(formData.clinicalEstablishmentCertificate) || formData.clinicalEstablishmentCertificate.length === 0) {
+  newErrors.clinicalEstablishmentCertificate = 'Please upload at least one document'
+}
+if (!Array.isArray(formData.businessRegistrationCertificate) || formData.businessRegistrationCertificate.length === 0) {
+  newErrors.businessRegistrationCertificate = 'Please upload at least one document'
+}
 
-    if (!formData.biomedicalWasteManagementAuth) {
-      newErrors.biomedicalWasteManagementAuth = 'Please upload at least one document'
-    }
-    if (!formData.tradeLicense) {
-      newErrors.tradeLicense = 'Please upload at least one document'
-    }
-    if (!formData.fireSafetyCertificate) {
-      newErrors.fireSafetyCertificate = 'Please upload at least one document'
-    }
-  
-    if (!formData.gstRegistrationCertificate) {
-      newErrors.gstRegistrationCertificate = 'Please upload at least one document'
-    }
+if (selectedOption === "Yes") {
+  if (!Array.isArray(formData.drugLicenseCertificate) || formData.drugLicenseCertificate.length === 0) {
+    newErrors.drugLicenseCertificate = "Please upload Drug License Certificate";
+  }
+  if (!formData.drugLicenseFormType?.trim()) {
+    newErrors.drugLicenseFormType = "Please enter Form Type (20/21)";
+  }
+}
+
+if (
+  selectedOption === 'Yes' &&
+  selectedPharmacistOption === 'Yes' &&
+  (!Array.isArray(formData.pharmacistCertificate) || formData.pharmacistCertificate.length === 0)
+) {
+  newErrors.pharmacistCertificate = 'Please upload at least one document'
+}
+
+if (!Array.isArray(formData.biomedicalWasteManagementAuth) || formData.biomedicalWasteManagementAuth.length === 0) {
+  newErrors.biomedicalWasteManagementAuth = 'Please upload at least one document'
+}
+if (!Array.isArray(formData.tradeLicense) || formData.tradeLicense.length === 0) {
+  newErrors.tradeLicense = 'Please upload at least one document'
+}
+if (!Array.isArray(formData.fireSafetyCertificate) || formData.fireSafetyCertificate.length === 0) {
+  newErrors.fireSafetyCertificate = 'Please upload at least one document'
+}
+if (!Array.isArray(formData.gstRegistrationCertificate) || formData.gstRegistrationCertificate.length === 0) {
+  newErrors.gstRegistrationCertificate = 'Please upload at least one document'
+}
 
     if (!formData.clinicType || formData.clinicType.trim() === "") {
       newErrors.clinicType = "Please select a clinic type.";
@@ -718,91 +729,116 @@ const ClinicRegistration = () => {
 
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const isValid = validateForm();
-    if (!isValid) return;
+  const isValid = validateForm();
+  if (!isValid) return;
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      // Convert files to base64
-      const convertIfExists = async (file) => {
-        if (!file) return "";
-        if (file.base64) return file.base64;
-        if (file instanceof Blob) return await convertFileToBase64(file);
-        if (typeof file === "string") return file;
-        return "";
-      };
+  try {
+    const convertIfExists = async (file) => {
+      if (!file) return "";
+      if (file.base64) return file.base64;
+      if (file instanceof Blob) return await convertFileToBase64(file);
+      if (typeof file === "string") return file;
+      return "";
+    };
 
-      const convertMultipleIfExists = async (files) => {
-        if (!Array.isArray(files)) return [];
-        return Promise.all(files.map((file) => convertIfExists(file)));
-      };
+    const convertMultipleIfExists = async (files) => {
+      if (!Array.isArray(files)) return [];
+      return Promise.all(files.map((file) => convertIfExists(file)));
+    };
 
-      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
-      const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
-      const othersBase64 = await convertMultipleIfExists(formData.others);
+    const hospitalLogoBase64 = await convertIfExists(formData.hospitalLogo);
 
-      const onboardingToken = localStorage.getItem("onboardingToken");
-      const onboardingEmail = localStorage.getItem("onboardingEmail");
+    const hospitalDocumentsBase64 = await convertMultipleIfExists(formData.hospitalDocuments);
+    const contractorDocumentsBase64 = await convertMultipleIfExists(formData.contractorDocuments);
+    const clinicalEstablishmentCertificateBase64 = await convertMultipleIfExists(formData.clinicalEstablishmentCertificate);
+    const businessRegistrationCertificateBase64 = await convertMultipleIfExists(formData.businessRegistrationCertificate);
+    const drugLicenseCertificateBase64 = await convertMultipleIfExists(formData.drugLicenseCertificate);
+    const pharmacistCertificateBase64 = await convertMultipleIfExists(formData.pharmacistCertificate);
+    const biomedicalWasteManagementAuthBase64 = await convertMultipleIfExists(formData.biomedicalWasteManagementAuth);
+    const tradeLicenseBase64 = await convertMultipleIfExists(formData.tradeLicense);
+    const fireSafetyCertificateBase64 = await convertMultipleIfExists(formData.fireSafetyCertificate);
+    const professionalIndemnityInsuranceBase64 = await convertMultipleIfExists(formData.professionalIndemnityInsurance);
+    const gstRegistrationCertificateBase64 = await convertMultipleIfExists(formData.gstRegistrationCertificate);
+    const othersBase64 = await convertMultipleIfExists(formData.others);
 
-      const cleanValue = (val) => {
-        if (val === null || val === undefined) return "";
-        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
-          return val;
-        if (val?.value) return val.value;
-        if (Array.isArray(val)) return val.map((v) => cleanValue(v));
-        return "";
-      };
+    const onboardingToken = localStorage.getItem("onboardingToken");
+    const onboardingEmail = localStorage.getItem("onboardingEmail");
 
-      const clinicData = {
-        token: onboardingToken,
-        email: onboardingEmail,
-
-        ...Object.fromEntries(
-          Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])
-        ),
-
-        // ⬇️ THESE MUST COME AFTER SPREAD (so they cannot be overwritten)
-        contractorDocuments: contractorDocumentsBase64,
-        hospitalDocuments: hospitalDocumentsBase64,
-        others: othersBase64,
-        doctorsList: formData.doctorsList,
-
-        website: normalizeWebsite(formData.website?.trim() || "")
-      };
-
-      // API call
-      const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
-      const savedClinicData = response.data;
-
-      console.log(savedClinicData);
-
-      // SUCCESS CHECK (corrected)
-      if (savedClinicData?.success === true) {
-        navigate("/clinic-onboarding-success", {
-          state: {
-            clinicName: formData.name,
-            clinicId: savedClinicData.data?.clinicId,
-            message: savedClinicData.message,
-            status: savedClinicData.data?.status,
-            shouldClose: true,
-          },
-        });
-        return;
-      } else {
-        toast.error(savedClinicData.message || "Something went wrong");
+    const cleanValue = (val) => {
+      if (val === null || val === undefined) return "";
+      if (
+        typeof val === "string" ||
+        typeof val === "number" ||
+        typeof val === "boolean"
+      ) {
+        return val;
       }
+      if (val?.value) return val.value;
+      if (Array.isArray(val)) return val.map((v) => cleanValue(v));
+      return "";
+    };
 
-    } catch (error) {
-      console.error("Error submitting clinic:", error);
-      toast.error(error.message || "Failed to submit clinic");
-    } finally {
-      setIsSubmitting(false);
+    const clinicData = {
+      token: onboardingToken || "",
+      email: onboardingEmail || formData.email || "",
+
+      ...Object.fromEntries(
+        Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])
+      ),
+
+      hospitalLogo: hospitalLogoBase64,
+      hospitalDocuments: hospitalDocumentsBase64,
+      contractorDocuments: contractorDocumentsBase64,
+      clinicalEstablishmentCertificate: clinicalEstablishmentCertificateBase64,
+      businessRegistrationCertificate: businessRegistrationCertificateBase64,
+      drugLicenseCertificate: drugLicenseCertificateBase64,
+      pharmacistCertificate: pharmacistCertificateBase64,
+      biomedicalWasteManagementAuth: biomedicalWasteManagementAuthBase64,
+      tradeLicense: tradeLicenseBase64,
+      fireSafetyCertificate: fireSafetyCertificateBase64,
+      professionalIndemnityInsurance: professionalIndemnityInsuranceBase64,
+      gstRegistrationCertificate: gstRegistrationCertificateBase64,
+      others: othersBase64,
+
+      doctorsList: formData.doctorsList,
+      website: normalizeWebsite(formData.website?.trim() || "")
+    };
+
+    const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
+    const savedClinicData = response.data;
+
+    console.log("Submitted clinic response:", savedClinicData);
+
+    if (savedClinicData?.success === true) {
+      navigate("/clinic-onboarding-success", {
+        state: {
+          clinicName: formData.name,
+          clinicId: savedClinicData.data?.clinicId,
+          message: savedClinicData.message,
+          status: savedClinicData.data?.status,
+          shouldClose: true,
+        },
+      });
+      return;
+    } else {
+      toast.error(savedClinicData?.message || "Something went wrong");
     }
-  };
+  } catch (error) {
+    console.error("Error submitting clinic:", error);
+    toast.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to submit clinic"
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
   return (
@@ -1299,14 +1335,23 @@ const ClinicRegistration = () => {
                   type="text"
                   name="panNumber"
                   value={formData.panNumber || ""}
+                  maxLength={10}
                   onChange={(e) => {
-                    const { name, value } = e.target;
+                    let { name, value } = e.target;
+
+                    // ✅ Convert to uppercase automatically
+                    value = value.toUpperCase();
+
+                    // ✅ Optional: remove spaces
+                    value = value.replace(/\s/g, '');
+
                     setFormData((prev) => ({ ...prev, [name]: value }));
+
                     const error =
                       !value.trim()
                         ? "PAN Number is required"
-                        : !/[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value)
-                          ? "Invalid PAN format"
+                        : !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
+                          ? "Invalid PAN format (Ex: ABCDE1234F)"
                           : "";
 
                     setErrors((prev) => ({ ...prev, [name]: error || undefined }));
@@ -1555,7 +1600,7 @@ const ClinicRegistration = () => {
                       try {
                         new URL(value); // still checks URL format
                       } catch {
-                       
+
                       }
                     }
 
