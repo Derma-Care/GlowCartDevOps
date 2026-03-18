@@ -1,5 +1,5 @@
 import axios from "axios"
-const ipUrl = '65.1.213.233:8080'
+const ipUrl = '3.6.119.57:9090'
 export const BASE_URL = `http://${ipUrl}`
 export const CLINIC_ADMIN_URL = `http://${ipUrl}`
 export const MainAdmin_URL = `${BASE_URL}/admin`
