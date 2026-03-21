@@ -41,7 +41,7 @@ eureka:
     lease-expiration-duration-in-seconds: 30
 
 app:
-  frontend-base-url: ${APP_FRONTEND_BASE_URL:https://glowkartmain.ashokfruit.shop}
+  frontend-base-url: ${APP_FRONTEND_BASE_URL:http://13.235.144.65:4000}
   token-expiry-minutes: ${APP_TOKEN_EXPIRY_MINUTES:60}
   return-token: ${APP_RETURN_TOKEN:true}   # Optional: show token in API responses (dev/testing)
 

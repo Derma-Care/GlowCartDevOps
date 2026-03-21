@@ -2,10 +2,10 @@
 // export let wifiUrl = 'localhost'
 //-------------------------
 // Dev
-// export let wifiUrl = 'http://3.6.119.57:9090'
+export let wifiUrl = 'http://13.235.144.65:8080'
 //----------------------------
 // GlowKart
-export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
+// export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
 //-----------------------------
 // Production
 // export let wifiUrl = 'https://api.aesthetech.life'

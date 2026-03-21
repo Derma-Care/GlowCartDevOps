@@ -1,5 +1,6 @@
 package com.glowkart.admin.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,22 +83,28 @@ public class QuetionsAndAnswerForAddClinicServiceImpl implements QuetionsAndAnsw
 
     @Override
     public Response getQuetions() {
-        QuetionsAndAnswerForAddClinic existing = repository.findAll().stream().findFirst().orElse(null);
+        QuetionsAndAnswerForAddClinic existing = repository.findAll()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
         Response response = new Response();
 
         if (existing == null) {
-            response.setSuccess(false);
-            response.setData(null);
+            response.setSuccess(true);
+            response.setData(Collections.emptyList()); // better than null
             response.setMessage("No questions found");
-            response.setStatus(404);
+            response.setStatus(200);
             return response;
         }
 
         QuetionsAndAnswerForAddClinicDTO dto = convertToDTO(existing);
+
         response.setSuccess(true);
         response.setData(dto);
         response.setMessage("Questions fetched successfully");
         response.setStatus(200);
+
         return response;
     }
 

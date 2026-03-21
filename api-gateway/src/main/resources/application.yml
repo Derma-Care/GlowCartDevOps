@@ -61,6 +61,8 @@ spring:
           '[/**]':
             allowedOrigins:
               - "http://localhost:3000"
+              - "http://13.235.144.65:4000"
+              - "http://13.235.144.65:3000"
               - "https://glowkartclinic.ashokfruit.shop"
               - "https://glowkartmain.ashokfruit.shop"
               - "https://glowkartdoctor.ashokfruit.shop"

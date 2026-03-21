@@ -156,7 +156,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - HOST=35.154.152.61
+      - HOST=13.235.144.65
       - PORT=3000
       - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:
@@ -172,7 +172,7 @@ services:
     ports:
       - "4000:80"
     environment:
-      - HOST=35.154.152.61
+      - HOST=13.235.144.65
       - PORT=4000
       - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:
