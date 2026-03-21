@@ -1,5 +1,5 @@
 import axios from "axios"
-const ipUrl = '3.6.119.57:9090'
+const ipUrl = '65.1.213.233:8080'
 export const BASE_URL = `http://${ipUrl}`
 export const CLINIC_ADMIN_URL = `http://${ipUrl}`
 export const MainAdmin_URL = `${BASE_URL}/admin`
@@ -92,10 +92,10 @@ export const getSubService = 'admin/getSubService'
 
 
 // GlowKart API's
-export const BASE_URL_API = "https://glowkartapi.ashokfruit.shop/admin";
+export const BASE_URL_API = "http://65.1.213.233:8080/admin";
 export const Production_URL_API = "https://api.ngkderma.com/admin";
 
-export const NGkRegistrationBaseUrl='https://glowkartapi.ashokfruit.shop'
+export const NGkRegistrationBaseUrl='http://65.1.213.233:8080'
 // Clinic
 export const CLINIC_REGISTRATION_URL = `${BASE_URL_API}/clinics/register`;
 // UPDATE CLINIC
@@ -132,7 +132,7 @@ export const statusapi = {
 };
 
 export const NGkRegistrationLink = `${NGkRegistrationBaseUrl}/onboard/request-link`
-export const getAllQuestions = '/clinicQuestions/getAll'
+export const getAllQuestions = 'clinicQuestions/getAll'
 export const postAllQuestionsAndAnswers = '/clinicQA/postQuestionsAndAnswer'
 export const REGISTRATION_CODE_GET_ALL_URL_DEV=`${BASE_URL_API}/registration/all`
 export const REGISTRATION_CODE_GET_ALL_URL=`https://api.ngkderma.com/admin/api/registration/all`
