@@ -26,7 +26,7 @@ import {
 import { AllClinicData, BASE_URL, BASE_URL_API, CLINIC_REGISTRATION_URL, ClinicAllData, getAllQuestions, postAllQuestionsAndAnswers } from '../../baseUrl'
 import { CategoryData } from '../categoryManagement/CategoryAPI'
 import sendDermaCareOnboardingEmail from '../../Utils/Emailjs'
-import { ToastContainer, toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { getClinicTimings } from './GlowKartgetTimingsAPI'
 import ClinicOnboardingSuccess from './SuccessOnboradClinic'
@@ -36,12 +36,9 @@ import { Edit2, Trash2 } from 'lucide-react'
 import { ConfirmationModal } from '../../Utils/ConfirmationDelete'
 
 const ClinicRegistration = () => {
-
-  // -------------------- REFS --------------------
   const refs = {
-    hospitalLogo: useRef(),
-    hospitalDocuments: useRef(),
     contractorDocuments: useRef(),
+    hospitalDocuments: useRef(),
     clinicalEstablishmentCertificate: useRef(),
     businessRegistrationCertificate: useRef(),
     pharmacistCertificate: useRef(),
@@ -49,29 +46,39 @@ const ClinicRegistration = () => {
     fireSafetyCertificate: useRef(),
     professionalIndemnityInsurance: useRef(),
     gstRegistrationCertificate: useRef(),
+    hospitalLogo: useRef(),
+    clinicContract: useRef(),
+    drugLicenceCertificate: useRef(),
+    drugLicenceFormType20_21: useRef(),
+    tradeLicence: useRef(),
     drugLicenseCertificate: useRef(),
-    tradeLicense: useRef(),
+    drugLicenseFormType: useRef(),
   };
 
-  const navigate = useNavigate();
   const savedQuestionId = localStorage.getItem("savedQuestionId");
+  const navigate = useNavigate(); // ✅ add this
 
-  // -------------------- STATE --------------------
-  const [errors, setErrors] = useState({});
-  const [timings, setTimings] = useState([]);
-  const [loadingTimings, setLoadingTimings] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [selectedOption, setSelectedOption] = useState('');
-  const [selectedPharmacistOption, setSelectedPharmacistOption] = useState('');
-
-  const [doctorsList, setDoctorsList] = useState([]);
+  const [errors, setErrors] = useState({})
+  const [categories, setCategories] = useState([])
+  const [selectedOption, setSelectedOption] = useState('')
+  const [selectedPharmacistOption, setSelectedPharmacistOption] = useState('')
+  const [clinicTypeOption, setClinicTypeOption] = useState('')
   const [editDoctorIndex, setEditDoctorIndex] = useState(null);
-
+  const [timings, setTimings] = useState([])
+  const [loadingTimings, setLoadingTimings] = useState(false)
   const [nabhQuestions, setNabhQuestions] = useState([]);
   const [nabhAnswers, setNabhAnswers] = useState([]);
+  const [showNabhModal, setShowNabhModal] = useState(false);
   const [nabhScore, setNabhScore] = useState(null);
-
+  const [nabhSubmitted, setNabhSubmitted] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successResponse, setSuccessResponse] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false)
+  // Doctors list
+  const [doctorsList, setDoctorsList] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [doctorIndexToDelete, setDoctorIndexToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -85,42 +92,45 @@ const ClinicRegistration = () => {
     website: '',
     licenseNumber: '',
     issuingAuthority: '',
-
-    hospitalDocuments: [],
-    contractorDocuments: [],
-    clinicalEstablishmentCertificate: [],
-    businessRegistrationCertificate: [],
-
-    drugLicenseCertificate: [],
-    drugLicenseFormType: "",
-    pharmacistCertificate: [],
-    biomedicalWasteManagementAuth: [],
-    tradeLicense: [],
-    fireSafetyCertificate: [],
-    professionalIndemnityInsurance: [],
-    gstRegistrationCertificate: [],
-    others: [],
-
+    recommended: false,
+    clinicSoftware: false,
+    hospitalDocuments: null,
+    contractorDocuments: null,
+    clinicalEstablishmentCertificate: null,
+    businessRegistrationCertificate: null,
     clinicType: '',
+    medicinesSoldOnSite: false,
+    drugLicenseCertificate: null,
+    drugLicenseFormType: "",
+    hasPharmacist: '',
+    pharmacistCertificate: null,
+    biomedicalWasteManagementAuth: null,
+    tradeLicense: null,
+    fireSafetyCertificate: null,
+    professionalIndemnityInsurance: null,
+    gstRegistrationCertificate: null,
+    others: [],
     subscription: '',
+    instagramHandle: '',
+    twitterHandle: '',
+    facebookHandle: '',
     latitude: "",
     longitude: "",
-
+    walkthrough: "",
+    branch: "",
+    nabhScore: nabhScore,
     clinicSpecializationType: '',
     primaryContactPerson: '',
     designation: '',
     alternateContactNumber: '',
-
     bankAccountName: '',
     bankAccountNumber: '',
     ifscCode: '',
     upiId: '',
     panNumber: '',
-
-    branch: '',
-    doctorsList: [],
-    nabhScore: null
+    doctorsList: [], // array of doctor objects
   });
+
 
   const [doctorEntry, setDoctorEntry] = useState({
     doctorName: "",
@@ -129,172 +139,675 @@ const ClinicRegistration = () => {
     associationNumber: "",
     associationName: ""
   });
-
-  // -------------------- EFFECTS --------------------
+  //get timings
   useEffect(() => {
     const fetchTimings = async () => {
-      setLoadingTimings(true);
-      const res = await getClinicTimings();
-      res.success ? setTimings(res.data) : toast.error(res.message);
-      setLoadingTimings(false);
-    };
-    fetchTimings();
-  }, []);
+      setLoadingTimings(true)
+      const result = await getClinicTimings()
+      if (result.success) {
+        setTimings(result.data)
+      } else {
+        toast.error(result.message || 'Failed to fetch clinic timings')
+      }
+      setLoadingTimings(false)
+    }
 
-  useEffect(() => {
-    setFormData(prev => ({ ...prev, doctorsList }));
-  }, [doctorsList]);
+    fetchTimings()
+  }, [])
 
-  // -------------------- HELPERS --------------------
-  const normalizeWebsite = (url) =>
-    /^https?:\/\//i.test(url) ? url : `https://${url}`;
-
-  const convertFileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
+  // FILE TO BASE64
+  const convertIfExists = async (file) => {
+    if (!file) return null;
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result.split(',')[1]);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-
-  const convertFiles = async (files) => {
-    if (!Array.isArray(files)) return [];
-    return Promise.all(
-      files.map(async f => {
-        if (f?.base64) return f.base64;
-        if (f instanceof Blob) return await convertFileToBase64(f);
-        return f || "";
-      })
-    );
   };
-
-  // -------------------- DOCTOR --------------------
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      doctorsList: doctorsList
+    }));
+  }, [doctorsList]);
   const handleDoctorChange = (e) => {
     const { name, value } = e.target;
-    setDoctorEntry(prev => ({ ...prev, [name]: value }));
-  };
 
-  const handleAddDoctor = () => {
-    if (Object.values(doctorEntry).some(v => !v)) {
-      return setErrors(prev => ({ ...prev, doctorsList: "Fill all doctor fields" }));
-    }
-
-    if (editDoctorIndex !== null) {
-      const updated = [...doctorsList];
-      updated[editDoctorIndex] = doctorEntry;
-      setDoctorsList(updated);
-      setEditDoctorIndex(null);
-    } else {
-      setDoctorsList(prev => [...prev, doctorEntry]);
-    }
-
-    setDoctorEntry({
-      doctorName: "", specialization: "",
-      registrationNumber: "", associationNumber: "", associationName: ""
-    });
-  };
-
-  // -------------------- VALIDATION --------------------
-  const validateForm = () => {
-    const err = {};
-    const phoneRegex = /^[5-9]\d{9}$/;
-
-    if (!formData.name?.trim()) err.name = "Clinic name required";
-    if (!formData.address?.match(/\b\d{6}\b/)) err.address = "Valid pincode required";
-    if (!formData.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) err.email = "Invalid email";
-
-    if (!phoneRegex.test(formData.contactNumber)) err.contactNumber = "Invalid phone";
-    if (!phoneRegex.test(formData.whatsappNumber)) err.whatsappNumber = "Invalid WhatsApp";
-
-    if (!formData.openingTime || !formData.closingTime)
-      err.time = "Opening & closing required";
-
-    if (!formData.hospitalLogo) err.hospitalLogo = "Logo required";
-
-    if (!formData.website?.trim()) err.website = "Website required";
-
-    if (!formData.latitude || !formData.longitude)
-      err.location = "Lat & Long required";
-
-    if (!doctorsList.length)
-      err.doctorsList = "Add at least one doctor";
-
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
-
-  // -------------------- INPUT --------------------
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => ({ ...prev, [name]: "" }));
-  };
-
-  // -------------------- FILE --------------------
-  const handleAppendFiles = async (e, field) => {
-    const files = Array.from(e.target.files || []);
-    const base64Files = await Promise.all(
-      files.map(async file => ({
-        name: file.name,
-        base64: await convertFileToBase64(file)
-      }))
-    );
-
-    setFormData(prev => ({
+    setDoctorEntry(prev => ({
       ...prev,
-      [field]: [...(prev[field] || []), ...base64Files]
+      [name]: value
+    }));
+
+    // Clear error for this field as user types
+    setErrors(prevErrors => ({
+      ...prevErrors,
+      [name]: ''
     }));
   };
 
-  // -------------------- SUBMIT --------------------
+  const preventNumberInput = (e) => {
+    const isNumber = /[0-9]/.test(e.key)
+    if (isNumber) {
+      e.preventDefault()
+    }
+
+  }
+  const confirmDeleteDoctor = () => {
+    if (doctorIndexToDelete !== null) {
+      setDoctorsList((prev) =>
+        prev.filter((_, index) => index !== doctorIndexToDelete)
+      );
+      setDoctorIndexToDelete(null);
+    }
+    setIsModalVisible(false);
+  };
+
+  const handleEditDoctor = (index) => {
+    const doctorToEdit = doctorsList[index];
+    setDoctorEntry({ ...doctorToEdit });
+    setEditDoctorIndex(index);
+  };
+
+
+  const handleAddDoctor = () => {
+    const { doctorName, specialization, registrationNumber, associationNumber, associationName } = doctorEntry;
+
+    if (!doctorName || !specialization || !registrationNumber || !associationNumber || !associationName) {
+      setErrors(prev => ({
+        ...prev,
+        doctorsList: "Please fill all doctor fields before adding"
+      }));
+      return;
+    }
+
+    if (editDoctorIndex !== null) {
+      const updatedDoctors = [...doctorsList];
+      updatedDoctors[editDoctorIndex] = { ...doctorEntry };
+      setDoctorsList(updatedDoctors);
+      setEditDoctorIndex(null);
+    } else {
+      setDoctorsList(prev => [...prev, { ...doctorEntry }]);
+    }
+
+    setDoctorEntry({
+      doctorName: "",
+      specialization: "",
+      registrationNumber: "",
+      associationNumber: "",
+      associationName: ""
+    });
+
+    setErrors(prev => ({ ...prev, doctorsList: "" }));
+  };
+
+  const websiteRegex = /^(https?:\/\/)[\w\-]+(\.[\w\-]+)+[/#?]?.*$/
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Clinic name is required'
+    } else if (!/^[a-zA-Z\s.&'-]{2,100}$/.test(formData.name)) {
+      newErrors.name = 'Clinic name can include letters, spaces, &, ., -, and apostrophe'
+    }
+
+
+    // Address validation
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address with pincode is required'
+    } else if (!/\b\d{6}\b/.test(formData.address)) {
+      newErrors.address = 'Please include a valid 6-digit pincode in the address'
+    }
+
+    if (selectedOption === "Yes") {
+      if (!formData.drugLicenseCertificate) {
+        newErrors.drugLicenseCertificate = "Please upload Drug License Certificate";
+      }
+      if (!formData.drugLicenseFormType) {
+        newErrors.drugLicenseFormType = "Please enter Form Type (20/21)";
+      }
+    }
+    // City validation
+    if (!formData.city?.trim()) {
+      newErrors.city = 'City is required'
+    } else if (!/^[a-zA-Z\s]{2,30}$/.test(formData.city)) {
+      newErrors.city = 'City name must contain only letters'
+    }
+    // Email validation-
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (formData.email.includes(' ')) {
+      newErrors.email = 'Email cannot contain spaces';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email must contain "@" and "." in a valid format';
+    }
+
+    // Contact Number
+    const phoneRegex = /^[5-9][0-9]{9}$/ // This regex checks if the number starts with 5-9 and is followed by 9 digits
+
+    if (!formData.contactNumber?.trim()) {
+      newErrors.contactNumber = 'Contact number is required'
+    } else {
+      const contactNumber = formData.contactNumber.trim()
+      if (contactNumber.length !== 10) {
+        newErrors.contactNumber = 'Contact number must be exactly 10 digits long'
+      } else if (!phoneRegex.test(contactNumber)) {
+        newErrors.contactNumber = 'Contact number must start with a digit between 5 and 9'
+      }
+    }
+    if (!formData.whatsappNumber?.trim()) {
+      newErrors.whatsappNumber = 'whatsappNumber is required'
+    } else {
+      const whatsappNumber = formData.whatsappNumber.trim()
+      if (whatsappNumber.length !== 10) {
+        newErrors.whatsappNumber = 'whatsappNumber must be exactly 10 digits long'
+      } else if (!phoneRegex.test(whatsappNumber)) {
+        newErrors.whatsappNumber = 'whatsappNumber must start with a digit between 5 and 9'
+      }
+    }
+    // Time validation
+    if (!formData.openingTime) {
+      newErrors.openingTime = 'Opening time is required'
+    }
+
+    if (!formData.closingTime) {
+      newErrors.closingTime = 'Closing time is required'
+    } else if (formData.openingTime && formData.closingTime) {
+      const parseTime = (timeStr) => {
+        const [time, modifier] = timeStr.split(' ')
+        let [hours, minutes] = time.split(':').map(Number)
+
+        if (modifier === 'PM' && hours !== 12) {
+          hours += 12
+        } else if (modifier === 'AM' && hours === 12) {
+          hours = 0
+        }
+
+        return new Date(0, 0, 0, hours, minutes)
+      }
+
+      const openingDate = parseTime(formData.openingTime)
+      const closingDate = parseTime(formData.closingTime)
+
+      if (closingDate <= openingDate) {
+        newErrors.closingTime = 'Closing time must be after opening time'
+      }
+    }
+
+    // License Number
+    if (!formData.licenseNumber.trim()) {
+      newErrors.licenseNumber = 'License number is required'
+    }
+
+    // Issuing Authority
+    if (!formData.issuingAuthority.trim()) {
+      newErrors.issuingAuthority = 'Issuing Authority is required'
+    }
+
+    // Hospital Logo
+    if (!formData.hospitalLogo) {
+      newErrors.hospitalLogo = 'Hospital logo is required'
+    }
+
+    // Hospital Documents
+    if (!formData.hospitalDocuments) {
+      newErrors.hospitalDocuments = 'Please upload the document'
+    }
+    if (!formData.contractorDocuments) {
+      newErrors.contractorDocuments = 'Please upload the document'
+    }
+    if (!formData.clinicalEstablishmentCertificate) {
+      newErrors.clinicalEstablishmentCertificate = 'Please upload at least one document'
+    }
+    if (!formData.businessRegistrationCertificate) {
+      newErrors.businessRegistrationCertificate = 'Please upload at least one document'
+    }
+
+    if (!formData.drugLicenseFormType && selectedOption === 'Yes') {
+      newErrors.drugLicenseFormType = 'Please upload at least one document'
+    }
+    if (
+      selectedOption === 'Yes' &&
+      selectedPharmacistOption === 'Yes' &&
+      !formData.pharmacistCertificate
+    ) {
+      newErrors.pharmacistCertificate = 'Please upload at least one document'
+    }
+
+    if (!formData.biomedicalWasteManagementAuth) {
+      newErrors.biomedicalWasteManagementAuth = 'Please upload at least one document'
+    }
+    if (!formData.tradeLicense) {
+      newErrors.tradeLicense = 'Please upload at least one document'
+    }
+    if (!formData.fireSafetyCertificate) {
+      newErrors.fireSafetyCertificate = 'Please upload at least one document'
+    }
+
+    if (!formData.gstRegistrationCertificate) {
+      newErrors.gstRegistrationCertificate = 'Please upload at least one document'
+    }
+
+    if (!formData.clinicType || formData.clinicType.trim() === "") {
+      newErrors.clinicType = "Please select a clinic type.";
+    }
+    if (!selectedPharmacistOption || selectedPharmacistOption.trim() === '') {
+      newErrors.hasPharmacist = 'Please select whether clinic has a valid pharmacist.';
+    }
+
+    if (!formData.website.trim()) {
+      newErrors.website = 'Website is required.'
+    } else {
+      const cleanedWebsite = formData.website.replace(/\s+/g, '') // remove all spaces
+      if (!websiteRegex.test(normalizeWebsite(cleanedWebsite))) {
+        newErrors.website = 'Website must start with http:// or https:// and be a valid URL'
+      }
+    }
+
+    if (!formData.subscription || formData.subscription.trim() === '') {
+      newErrors.subscription = 'Please select a subscription type'
+    }
+    // Latitude validation
+
+    if (!formData.latitude) {
+      newErrors.latitude = "Latitude is required";
+    } else {
+      const lat = parseFloat(formData.latitude);
+      if (isNaN(lat) || lat < -90 || lat > 90) {
+        newErrors.latitude = "Latitude must be between -90 and 90";
+      } else {
+        delete newErrors.latitude; // ✅ clear error if valid
+      }
+    }
+
+    // Longitude
+    if (!formData.longitude) {
+      newErrors.longitude = "Longitude is required";
+    } else {
+      const lng = parseFloat(formData.longitude);
+      if (isNaN(lng) || lng < -180 || lng > 180) {
+        newErrors.longitude = "Longitude must be between -180 and 180";
+      } else {
+        delete newErrors.longitude; // ✅ clear error if valid
+      }
+    }
+    // 🔹 Clinic Specialization Type
+    if (!formData.clinicSpecializationType?.trim()) {
+      newErrors.clinicSpecializationType = "Clinic Specialization Type is required"
+    }
+
+    // 🔹 Primary Contact Person
+    if (!formData.primaryContactPerson?.trim()) {
+      newErrors.primaryContactPerson = "Primary contact person is required"
+    } else if (!/^[a-zA-Z\s]{2,50}$/.test(formData.primaryContactPerson)) {
+      newErrors.primaryContactPerson = "Name must contain only letters"
+    }
+
+    // 🔹 Designation
+    if (!formData.designation?.trim()) {
+      newErrors.designation = "Designation is required"
+    }
+
+    // 🔹 Alternate Contact Number (optional)
+    if (formData.alternateContactNumber?.trim()) {
+      const alt = formData.alternateContactNumber.trim()
+      if (alt.length !== 10 || !/^[5-9][0-9]{9}$/.test(alt)) {
+        newErrors.alternateContactNumber = "Alternate number must be 10 digits & start with 5-9"
+      }
+    }
+
+    // 🔹 Bank Account Name
+    if (!formData.bankAccountName?.trim()) {
+      newErrors.bankAccountName = "Bank Account Name is required"
+    }
+
+    // 🔹 Bank Account Number
+    if (!formData.bankAccountNumber?.trim()) {
+      newErrors.bankAccountNumber = "Bank Account Number is required"
+    } else if (!/^[0-9]{9,18}$/.test(formData.bankAccountNumber)) {
+      newErrors.bankAccountNumber = "Bank Account Number must be 9–18 digits"
+    }
+
+    // 🔹 IFSC Code
+    if (!formData.ifscCode?.trim()) {
+      newErrors.ifscCode = "IFSC Code is required";
+    } else if (!/^[A-Z]{3,4}0[A-Z0-9]{6}$/i.test(formData.ifscCode)) {
+      newErrors.ifscCode = "Invalid IFSC Code format (Ex: SBIN0001234)";
+    }
+    // 🔹 UPI ID (optional)
+    if (formData.upiId?.trim()) {
+      const upiRegex = /^[\w.-]+@[\w.-]+$/
+      if (!upiRegex.test(formData.upiId)) {
+        newErrors.upiId = "Invalid UPI ID"
+      }
+    }
+
+    // 🔹 PAN Number
+    if (!formData.panNumber?.trim()) {
+      newErrors.panNumber = "PAN Number is required";
+    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(formData.panNumber)) {
+      newErrors.panNumber = "Invalid PAN format (Ex: ABCDE1234F)";
+    }
+
+
+    if (!formData.branch?.trim()) {
+      newErrors.branch = "Branch name is required"
+    }
+    // ✅ At least one doctor
+    if (!doctorsList || doctorsList.length === 0) {
+      newErrors.doctorsList = "Please add at least one doctor with all details";
+    }
+    console.log('Validation errors:', newErrors)
+    // validate fields and set errors
+    setErrors(newErrors)
+
+    if (Object.keys(newErrors).length > 0) {
+      toast.error('Please fill all required fields', { position: 'top-right' })
+      return false // stop form submit
+    }
+
+    return true // all good
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    // Clear the error once the field is updated
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: '',
+    }))
+  }
+
+  const handleAppendFiles = async (e, fieldName, maxFiles = 6) => {
+    const selectedFiles = Array.from(e.target.files || [])
+    if (!selectedFiles.length) return
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'application/zip',
+    ]
+
+    const MAX_SIZE_BYTES = 500 * 1024 // 500 KB
+
+    // Validate each selected file
+    for (let file of selectedFiles) {
+      if (!allowedTypes.includes(file.type)) {
+        setErrors(prev => ({ ...prev, [fieldName]: 'Invalid file type' }))
+        return
+      }
+      if (file.size > MAX_SIZE_BYTES) {
+        setErrors(prev => ({ ...prev, [fieldName]: 'File size must be less than or equal to 500 KB' }))
+        return
+      }
+    }
+
+    // Convert files to raw Base64
+    const base64Files = await Promise.all(
+      selectedFiles.slice(0, maxFiles).map(file =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(file)
+          reader.onload = () => {
+            const rawBase64 = reader.result.split(',')[1] // Remove "data:application/pdf;base64,"
+            resolve({ name: file.name, base64: rawBase64 })
+          }
+          reader.onerror = err => reject(err)
+        })
+      )
+    )
+
+    // Append to existing files in state
+    setFormData(prev => {
+      const existingFiles = Array.isArray(prev[fieldName]) ? prev[fieldName] : []
+      const combinedFiles = [...existingFiles, ...base64Files].slice(0, maxFiles)
+      return { ...prev, [fieldName]: combinedFiles }
+    })
+
+    setErrors(prev => ({ ...prev, [fieldName]: '' }))
+  }
+
+  const normalizeWebsite = (url) => {
+    // If starts with www. or does not have protocol, prepend https://
+    if (!/^https?:\/\//i.test(url)) {
+      return 'https://' + url
+    }
+    return url
+  }
+  console.log('submit button clicked')
+
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => {
+        // Only keep the part after comma (raw Base64)
+        const base64 = reader.result.split(',')[1]
+        resolve(base64)
+      }
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
+  const [existingDoctors, setExistingDoctors] = useState([])
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await axios.get(`${AllClinicData}`)
+        const clinicList = Array.isArray(response.data) // your actual API
+        console.log('Fetched doctor data:', response.data) // <-- CHECK THIS STRUCTURE
+        setExistingDoctors(response.data.data)
+      } catch (err) {
+        console.error('Failed to load existing doctor data', err)
+      }
+    }
+
+    fetchDoctors()
+  }, [])
+
+  useEffect(() => {
+    const storedConsultation = localStorage.getItem('consultationExpiration')
+    if (storedConsultation) {
+      const onlyNumber = storedConsultation.replace(/\D/g, '')
+      setFormData((prev) => ({
+        ...prev,
+        consultationExpiration: onlyNumber,
+      }))
+    }
+  }, [])
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL_API}/${getAllQuestions}`, {
+          params: { id: savedQuestionId }
+        });
+
+        console.log("Fetched data:", response.data);
+
+        if (response.data.success && response.data.data) {
+          const qaList = response.data.data.questionsAndAnswers || [];
+          // Extract questions
+          setNabhQuestions(qaList.map((item) => item.question));
+          // Extract existing answers (boolean values)
+          setNabhAnswers(qaList.map((item) => item.answer));
+        }
+      } catch (err) {
+        console.error("Error fetching NABH questions:", err);
+      }
+    };
+
+    fetchQuestions();
+  }, [savedQuestionId]);
+
+  const handleNabhSubmit = async () => {
+    try {
+      const payload = {
+        questionsAndAnswers: nabhQuestions.map((q, index) => ({
+          question: q,
+          answer: nabhAnswers[index] === true,
+        })),
+      };
+
+      const response = await axios.post(
+        `${BASE_URL_API}/${postAllQuestionsAndAnswers}`,
+        payload
+      );
+
+      if (response.data.success) {
+        const score = response.data.data?.score ?? 0;
+        setNabhScore(score);
+        setFormData(prev => ({
+          ...prev,
+          nabhScore: score,
+        }));
+        setNabhSubmitted(true);
+        setShowNabhModal(false);
+        setErrors(prev => ({ ...prev, nabhScore: '' }));
+
+      }
+    } catch (error) {
+      console.error("Error saving NABH answers:", error);
+    }
+  };
+
+  // ✅ Save to localStorage for frontend-only preview/debug
+  const formattedConsultationDays = `${formData.consultationExpiration} days`
+  // Create preview data
+  const previewData = {
+    ...formData,
+    consultationExpiration: formattedConsultationDays,
+  };
+
+  // Extract from URL and save in localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
+    const token = params.get("token");
+
+    if (token) {
+      localStorage.setItem("onboardingToken", token);
+    }
+
+    if (email) {
+      const decoded = decodeURIComponent(email);
+      localStorage.setItem("onboardingEmail", decoded);
+    }
+  }, []);
+
+  // Pre-fill the form field automatically
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("onboardingEmail");
+
+    if (savedEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: savedEmail,
+      }));
+    }
+  }, []);
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+
+    const isValid = validateForm();
+    if (!isValid) return;
 
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        ...formData,
-        website: normalizeWebsite(formData.website),
-        hospitalLogo: await convertFileToBase64(formData.hospitalLogo),
-
-        hospitalDocuments: await convertFiles(formData.hospitalDocuments),
-        contractorDocuments: await convertFiles(formData.contractorDocuments),
-        clinicalEstablishmentCertificate: await convertFiles(formData.clinicalEstablishmentCertificate),
-        businessRegistrationCertificate: await convertFiles(formData.businessRegistrationCertificate),
-        drugLicenseCertificate: await convertFiles(formData.drugLicenseCertificate),
-        pharmacistCertificate: await convertFiles(formData.pharmacistCertificate),
-        biomedicalWasteManagementAuth: await convertFiles(formData.biomedicalWasteManagementAuth),
-        tradeLicense: await convertFiles(formData.tradeLicense),
-        fireSafetyCertificate: await convertFiles(formData.fireSafetyCertificate),
-        professionalIndemnityInsurance: await convertFiles(formData.professionalIndemnityInsurance),
-        gstRegistrationCertificate: await convertFiles(formData.gstRegistrationCertificate),
+      // Convert files to base64
+      const convertIfExists = async (file) => {
+        if (!file) return "";
+        if (file.base64) return file.base64;
+        if (file instanceof Blob) return await convertFileToBase64(file);
+        if (typeof file === "string") return file;
+        return "";
       };
 
-      const res = await axios.post(CLINIC_REGISTRATION_URL, payload);
+      const convertMultipleIfExists = async (files) => {
+        if (!Array.isArray(files)) return [];
+        return Promise.all(files.map((file) => convertIfExists(file)));
+      };
 
-      if (res.data?.success) {
+      const contractorDocumentsBase64 = await convertIfExists(formData.contractorDocuments);
+      const hospitalDocumentsBase64 = await convertIfExists(formData.hospitalDocuments);
+      const othersBase64 = await convertMultipleIfExists(formData.others);
+
+      const onboardingToken = localStorage.getItem("onboardingToken");
+      const onboardingEmail = localStorage.getItem("onboardingEmail");
+
+      const cleanValue = (val) => {
+        if (val === null || val === undefined) return "";
+        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
+          return val;
+        if (val?.value) return val.value;
+        if (Array.isArray(val)) return val.map((v) => cleanValue(v));
+        return "";
+      };
+
+      const clinicData = {
+        token: onboardingToken,
+        email: onboardingEmail,
+
+        ...Object.fromEntries(
+          Object.entries(formData).map(([k, v]) => [k, cleanValue(v)])
+        ),
+
+        // ⬇️ THESE MUST COME AFTER SPREAD (so they cannot be overwritten)
+        contractorDocuments: contractorDocumentsBase64,
+        hospitalDocuments: hospitalDocumentsBase64,
+        others: othersBase64,
+        doctorsList: formData.doctorsList,
+
+        website: normalizeWebsite(formData.website?.trim() || "")
+      };
+
+      // API call
+      const response = await axios.post(CLINIC_REGISTRATION_URL, clinicData);
+      const savedClinicData = response.data;
+
+      console.log(savedClinicData);
+
+      // SUCCESS CHECK (corrected)
+      if (savedClinicData?.success === true) {
         navigate("/clinic-onboarding-success", {
           state: {
             clinicName: formData.name,
-            clinicId: res.data.data?.clinicId,
-          }
+            clinicId: savedClinicData.data?.clinicId,
+            message: savedClinicData.message,
+            status: savedClinicData.data?.status,
+            shouldClose: true,
+          },
         });
+        return;
       } else {
-        toast.error(res.data?.message);
+        toast.error(savedClinicData.message || "Something went wrong");
       }
 
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Submission failed");
+    } catch (error) {
+      console.error("Error submitting clinic:", error);
+      toast.error(error.message || "Failed to submit clinic");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   return (
     <div className="container mt-4">
-      <ToastContainer />
+      {/* <ToastContainer /> */}
       <CCard className="shadow-sm border-0 rounded-3">
         <CCardHeader className="text-center" style={{ backgroundColor: NGK_COLORS.primary, color: COLORS.white }}>
           <h3 className="mb-0">Clinic Registration</h3>
