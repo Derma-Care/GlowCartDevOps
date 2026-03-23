@@ -85,4 +85,16 @@ public class OnboardingController {
                 new ApiResponse<>(true, "Token marked as used", null)
         );
     }
+    
+    @DeleteMapping("/delete-by-contact")
+    public ResponseEntity<ApiResponse<Void>> deleteTokens(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String whatsappNumber) {
+
+        service.deleteTokensByContact(email, whatsappNumber);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Tokens deleted successfully", null)
+        );
+    }
 }

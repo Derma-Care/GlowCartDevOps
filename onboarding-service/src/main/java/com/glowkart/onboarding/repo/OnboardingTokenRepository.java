@@ -25,4 +25,9 @@ public interface OnboardingTokenRepository extends MongoRepository<OnboardingTok
 
     // Optional: check if WhatsApp number already completed onboarding
     Optional<OnboardingToken> findByWhatsappNumberAndUsedTrue(String whatsappNumber);
+    
+    // 🔥 ADD THESE
+    void deleteByEmail(String email);
+
+    void deleteByWhatsappNumber(String whatsappNumber);
 }

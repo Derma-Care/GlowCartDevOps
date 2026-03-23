@@ -135,4 +135,21 @@ public class OnboardingServiceImpl implements OnboardingService {
         t.setUsed(true);
         repo.save(t);
     }
+
+    @Override
+    public void deleteTokensByContact(String email, String whatsappNumber) {
+
+        if ((email == null || email.isBlank()) &&
+            (whatsappNumber == null || whatsappNumber.isBlank())) {
+            throw new BadRequestException("Provide email or WhatsApp number");
+        }
+
+        if (email != null && !email.isBlank()) {
+            repo.deleteByEmail(email);
+        }
+
+        if (whatsappNumber != null && !whatsappNumber.isBlank()) {
+            repo.deleteByWhatsappNumber(whatsappNumber);
+        }
+    }
 }

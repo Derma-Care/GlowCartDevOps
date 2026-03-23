@@ -6,4 +6,5 @@ public interface OnboardingService {
 	  String createAndSendToken(String whatsappNumber, String email, String name);
     OnboardingToken validateToken(String token);
     void markUsed(String token);
+	void deleteTokensByContact(String email, String whatsappNumber);
 }
