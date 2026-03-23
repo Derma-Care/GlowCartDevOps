@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com.glowkart.admin.client.BookingRatingClient;
 import com.glowkart.admin.client.OnboardingClient;
+import com.glowkart.admin.client.ProcedurePackageProcedureServiceClient;
+import com.glowkart.admin.client.ProcedurePricingProcedureServiceClient;
 import com.glowkart.admin.dto.*;
 import com.glowkart.admin.exception.ProcedureServiceException;
 import com.glowkart.admin.model.Clinic;
@@ -30,7 +32,9 @@ public class ClinicServiceImpl implements ClinicService {
     private final AsyncVerificationService asyncVerificationService;
     private final ReverseGeoService reverseGeoService;
     private final BookingRatingClient bookingRatingClient;
-
+    private final ProcedurePricingProcedureServiceClient pricingClient;
+    private final ProcedurePackageProcedureServiceClient packageClient;
+    private final ServiceAdsService serviceAdsService; // ✅ add this
 
     private static final String CLINIC_PASSWORD_RESET = "CLINIC_PASSWORD_RESET";
     private static final String PAYOUT_PASSWORD_RESET = "PAYOUT_PASSWORD_RESET";
@@ -40,19 +44,25 @@ public class ClinicServiceImpl implements ClinicService {
             OnboardingClient onboardingClient,
             AsyncVerificationService asyncVerificationService,
             ReverseGeoService reverseGeoService,
-            BookingRatingClient bookingRatingClient) {
+            BookingRatingClient bookingRatingClient,
+            ProcedurePricingProcedureServiceClient pricingClient,
+            ProcedurePackageProcedureServiceClient packageClient,
+            ServiceAdsService serviceAdsService) {
 
         this.repo = repo;
         this.onboardingClient = onboardingClient;
         this.asyncVerificationService = asyncVerificationService;
         this.reverseGeoService = reverseGeoService;
         this.bookingRatingClient = bookingRatingClient;
+        this.pricingClient = pricingClient;
+        this.packageClient = packageClient;
+        this.serviceAdsService = serviceAdsService; // ✅ assign it
     }
 
 
-    // ==========================================================================================
-    // REGISTER CLINIC
-    // ==========================================================================================
+//    // ==========================================================================================
+//    // REGISTER CLINIC
+//    // ==========================================================================================
     @Override
     public Clinic registerClinic(ClinicRegistrationDTO dto) {
 
@@ -96,54 +106,138 @@ public class ClinicServiceImpl implements ClinicService {
 
         return saved;
     }
+//
+//    // ==========================================================================================
+//    // VERIFICATION WORKFLOW
+//    // ==========================================================================================
+//    @Override
+//    public Clinic startVerificationProcess(String clinicId) {
+//        Clinic clinic = findClinic(clinicId);
+//        clinic.setStatus("VERIFICATION_IN_PROGRESS");
+//        repo.save(clinic);
+//        asyncVerificationService.sendVerificationStartedAsync(clinic);
+//        return clinic;
+//    }
+//
+//    @Override
+//    public Clinic verifyClinic(String clinicId) {
+//        Clinic clinic = findClinic(clinicId);
+//        clinic.setStatus("VERIFIED");
+//        clinic.setOnline(true);   // ✅ now visible/active
+//        // Generate login credentials if missing
+//        if (clinic.getUsername() == null || clinic.getPassword() == null) {
+//            Map<String, String> creds = CredentialGenerator.generateLoginCredentials();
+//            clinic.setUsername(creds.get("username"));
+//            clinic.setPassword(creds.get("password"));
+//        }
+//
+//        // Generate payout credentials if missing
+//        if (clinic.getPayoutUsername() == null || clinic.getPayoutPassword() == null) {
+//            Map<String, String> payoutCreds = CredentialGenerator.generatePayoutCredentials();
+//            clinic.setPayoutUsername(payoutCreds.get("payoutUsername"));
+//            clinic.setPayoutPassword(payoutCreds.get("payoutPassword"));
+//        }
+//        
+//        
+//        repo.save(clinic);
+//        asyncVerificationService.sendCredentialsAsync(clinic);
+//        return clinic;
+//    }
+//
+//    @Override
+//    public Clinic rejectClinic(String clinicId, String reason) {
+//        Clinic clinic = findClinic(clinicId);
+//        clinic.setStatus("REJECTED");
+//        clinic.setOnline(false);  // ❌ never online
+//        repo.save(clinic);
+//        asyncVerificationService.sendRejectionNotificationAsync(clinic, reason);
+//        return clinic;
+//    }
 
-    // ==========================================================================================
-    // VERIFICATION WORKFLOW
-    // ==========================================================================================
-    @Override
-    public Clinic startVerificationProcess(String clinicId) {
-        Clinic clinic = findClinic(clinicId);
-        clinic.setStatus("VERIFICATION_IN_PROGRESS");
-        repo.save(clinic);
-        asyncVerificationService.sendVerificationStartedAsync(clinic);
-        return clinic;
-    }
+    
+ // ==========================================================================================
+ // START VERIFICATION PROCESS
+ // ==========================================================================================
+ @Override
+ public Clinic startVerificationProcess(String clinicId) {
+     Clinic clinic = findClinic(clinicId);
 
-    @Override
-    public Clinic verifyClinic(String clinicId) {
-        Clinic clinic = findClinic(clinicId);
-        clinic.setStatus("VERIFIED");
-        clinic.setOnline(true);   // ✅ now visible/active
-        // Generate login credentials if missing
-        if (clinic.getUsername() == null || clinic.getPassword() == null) {
-            Map<String, String> creds = CredentialGenerator.generateLoginCredentials();
-            clinic.setUsername(creds.get("username"));
-            clinic.setPassword(creds.get("password"));
-        }
+     // Prevent VERIFIED clinic from being re-verified
+     if ("VERIFIED".equals(clinic.getStatus())) {
+         throw new ProcedureServiceException(
+             "Clinic is already verified and cannot start verification again",
+             400,
+             null
+         );
+     }
 
-        // Generate payout credentials if missing
-        if (clinic.getPayoutUsername() == null || clinic.getPayoutPassword() == null) {
-            Map<String, String> payoutCreds = CredentialGenerator.generatePayoutCredentials();
-            clinic.setPayoutUsername(payoutCreds.get("payoutUsername"));
-            clinic.setPayoutPassword(payoutCreds.get("payoutPassword"));
-        }
-        
-        
-        repo.save(clinic);
-        asyncVerificationService.sendCredentialsAsync(clinic);
-        return clinic;
-    }
+     clinic.setStatus("VERIFICATION_IN_PROGRESS");
+     repo.save(clinic);
+     asyncVerificationService.sendVerificationStartedAsync(clinic);
+     return clinic;
+ }
 
-    @Override
-    public Clinic rejectClinic(String clinicId, String reason) {
-        Clinic clinic = findClinic(clinicId);
-        clinic.setStatus("REJECTED");
-        clinic.setOnline(false);  // ❌ never online
-        repo.save(clinic);
-        asyncVerificationService.sendRejectionNotificationAsync(clinic, reason);
-        return clinic;
-    }
+ // ==========================================================================================
+ // VERIFY CLINIC
+ // ==========================================================================================
+ @Override
+ public Clinic verifyClinic(String clinicId) {
+     Clinic clinic = findClinic(clinicId);
 
+     // Prevent VERIFIED clinic from being re-verified
+     if ("VERIFIED".equals(clinic.getStatus())) {
+         throw new ProcedureServiceException(
+             "Clinic is already verified and cannot be verified again",
+             400,
+             null
+         );
+     }
+
+     clinic.setStatus("VERIFIED");
+     clinic.setOnline(true); // now visible/active
+
+     // Generate login credentials if missing
+     if (clinic.getUsername() == null || clinic.getPassword() == null) {
+         Map<String, String> creds = CredentialGenerator.generateLoginCredentials();
+         clinic.setUsername(creds.get("username"));
+         clinic.setPassword(creds.get("password"));
+     }
+
+     // Generate payout credentials if missing
+     if (clinic.getPayoutUsername() == null || clinic.getPayoutPassword() == null) {
+         Map<String, String> payoutCreds = CredentialGenerator.generatePayoutCredentials();
+         clinic.setPayoutUsername(payoutCreds.get("payoutUsername"));
+         clinic.setPayoutPassword(payoutCreds.get("payoutPassword"));
+     }
+
+     repo.save(clinic);
+     asyncVerificationService.sendCredentialsAsync(clinic);
+     return clinic;
+ }
+
+ // ==========================================================================================
+ // REJECT CLINIC
+ // ==========================================================================================
+ @Override
+ public Clinic rejectClinic(String clinicId, String reason) {
+     Clinic clinic = findClinic(clinicId);
+
+     // Prevent VERIFIED clinic from being rejected
+     if ("VERIFIED".equals(clinic.getStatus())) {
+         throw new ProcedureServiceException(
+             "Clinic is already verified and cannot be rejected",
+             400,
+             null
+         );
+     }
+
+     clinic.setStatus("REJECTED");
+     clinic.setOnline(false);
+     repo.save(clinic);
+     asyncVerificationService.sendRejectionNotificationAsync(clinic, reason);
+     return clinic;
+ }
+    
     // ==========================================================================================
     // CRUD
     // ==========================================================================================
@@ -177,27 +271,132 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     
+//    @Override
+//    public void deleteClinic(String clinicId) {
+//
+//        Clinic clinic = repo.findById(clinicId)
+//                .orElseThrow(() -> new ProcedureServiceException("Clinic not found", 404, null));
+//
+//        // 🔥 Step 1: Delete all procedure pricing for this clinic
+//        try {
+//            ApiResponse<List<ProcedurePricingDTO>> pricingResponse =
+//                    pricingClient.getPricingByClinic(clinicId);
+//
+//            if (pricingResponse != null && pricingResponse.isSuccess() && pricingResponse.getData() != null) {
+//                for (ProcedurePricingDTO pricing : pricingResponse.getData()) {
+//                    try {
+//                        pricingClient.deletePricing(pricing.getProcedureId(), clinicId);
+//                    } catch (FeignException e) {
+//                        System.out.println("Failed to delete pricing for procedure: " + pricing.getProcedureId());
+//                    }
+//                }
+//            }
+//        } catch (FeignException e) {
+//            System.out.println("Failed to fetch pricing for clinic: " + clinicId);
+//        }
+//
+//        // 🔥 Step 2: Delete all procedure packages for this clinic
+//        try {
+//            ApiResponse<List<ProcedurePackageDTO>> packageResponse =
+//                    packageClient.getByClinic(clinicId);  // <-- your package client
+//
+//            if (packageResponse != null && packageResponse.isSuccess() && packageResponse.getData() != null) {
+//                for (ProcedurePackageDTO pkg : packageResponse.getData()) {
+//                    try {
+//                        packageClient.deletePackage(pkg.getPackageId(), clinicId);
+//                    } catch (FeignException e) {
+//                        System.out.println("Failed to delete package: " + pkg.getPackageId());
+//                    }
+//                }
+//            }
+//        } catch (FeignException e) {
+//            System.out.println("Failed to fetch packages for clinic: " + clinicId);
+//        }
+//
+//        // 🔥 Step 3: Delete onboarding tokens
+//        try {
+//            onboardingClient.deleteTokens(
+//                    clinic.getEmail(),
+//                    clinic.getWhatsappNumber()
+//            );
+//        } catch (Exception e) {
+//            System.out.println("Failed to delete onboarding tokens: " + e.getMessage());
+//        }
+//
+//        // 🔥 Step 4: Delete clinic
+//        repo.deleteById(clinicId);
+//    }
+    
     @Override
     public void deleteClinic(String clinicId) {
 
         Clinic clinic = repo.findById(clinicId)
                 .orElseThrow(() -> new ProcedureServiceException("Clinic not found", 404, null));
 
-        // 🔥 Call onboarding service BEFORE delete
+        // 🔥 Step 1: Delete all procedure pricing for this clinic
+        try {
+            ApiResponse<List<ProcedurePricingDTO>> pricingResponse =
+                    pricingClient.getPricingByClinic(clinicId);
+
+            if (pricingResponse != null && pricingResponse.isSuccess() && pricingResponse.getData() != null) {
+                for (ProcedurePricingDTO pricing : pricingResponse.getData()) {
+                    try {
+                        pricingClient.deletePricing(pricing.getProcedureId(), clinicId);
+                    } catch (FeignException e) {
+                        System.out.println("Failed to delete pricing for procedure: " + pricing.getProcedureId());
+                    }
+                }
+            }
+        } catch (FeignException e) {
+            System.out.println("Failed to fetch pricing for clinic: " + clinicId);
+        }
+
+        // 🔥 Step 2: Delete all procedure packages for this clinic
+        try {
+            ApiResponse<List<ProcedurePackageDTO>> packageResponse =
+                    packageClient.getByClinic(clinicId);
+
+            if (packageResponse != null && packageResponse.isSuccess() && packageResponse.getData() != null) {
+                for (ProcedurePackageDTO pkg : packageResponse.getData()) {
+                    try {
+                        packageClient.deletePackage(pkg.getPackageId(), clinicId);
+                    } catch (FeignException e) {
+                        System.out.println("Failed to delete package: " + pkg.getPackageId());
+                    }
+                }
+            }
+        } catch (FeignException e) {
+            System.out.println("Failed to fetch packages for clinic: " + clinicId);
+        }
+
+        // 🔥 Step 3: Delete all service ads for this clinic
+        try {
+            List<ServiceAdsResponseDto> ads = serviceAdsService.getAdsByClinicId(clinicId);
+            for (ServiceAdsResponseDto ad : ads) {
+                try {
+                    serviceAdsService.deleteAd(ad.getId(), clinicId);
+                } catch (Exception e) {
+                    System.out.println("Failed to delete service ad: " + ad.getId());
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to fetch service ads for clinic: " + clinicId);
+        }
+
+        // 🔥 Step 4: Delete onboarding tokens
         try {
             onboardingClient.deleteTokens(
                     clinic.getEmail(),
                     clinic.getWhatsappNumber()
             );
         } catch (Exception e) {
-            // Don't fail deletion if onboarding service is down
-            // but log it
             System.out.println("Failed to delete onboarding tokens: " + e.getMessage());
         }
 
+        // 🔥 Step 5: Delete clinic
         repo.deleteById(clinicId);
     }
-
+    
     @Override
     public List<Clinic> getVerifiedClinics() {
         return repo.findByStatusIgnoreCase("VERIFIED");

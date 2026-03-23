@@ -57,23 +57,29 @@ const ClinicManagement = ({ service }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
+  // Reject modal
   const [modalVisible, setModalVisible] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [selectedClinicId, setSelectedClinicId] = useState(null)
+  const [previousStatus, setPreviousStatus] = useState("")
 
-  const [previousStatus, setPreviousStatus] = useState("")   // <<<<< FIX
+  // Confirmation modal
+  const [confirmModal, setConfirmModal] = useState(false)
+  const [pendingStatusChange, setPendingStatusChange] = useState(null) // { clinicId, newStatus, oldStatus }
 
+  // Send link modal
   const [isLink, setIsLink] = useState(false)
   const [loadingLink, setLoadingLink] = useState(false)
-  // NEW: Name field states
+
+  // Name & email field states
   const [nameInput, setNameInput] = useState("")
   const [nameError, setNameError] = useState("")
-
   const [emailError, setEmailError] = useState("")
+
   // Validation for Name field
   const handleNameChange = (e) => {
     const value = e.target.value
-    const regex = /^[A-Za-z\s]*$/ // letters & spaces only
+    const regex = /^[A-Za-z\s]*$/
 
     if (!regex.test(value)) {
       setNameError("Only alphabets are allowed")
@@ -88,12 +94,12 @@ const ClinicManagement = ({ service }) => {
 
     setNameInput(value)
   }
+
   const handleEmailChange = (e) => {
     const value = e.target.value
     setLinkInputValue(value)
 
-    const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
     if (!value) {
       setEmailError("Email is required")
@@ -103,6 +109,7 @@ const ClinicManagement = ({ service }) => {
       setEmailError("")
     }
   }
+
   useEffect(() => {
     fetchClinics()
     if (location.state?.newClinic) {
@@ -125,25 +132,28 @@ const ClinicManagement = ({ service }) => {
     }
   }
 
-  // 🔥 FIXED STATUS HANDLER
-  const handleStatusChange = async (newStatus, clinicId) => {
+  // Step 1: User selects a status → show confirmation modal
+  const handleStatusChange = (newStatus, clinicId) => {
     const clinic = clinics.find(c => c.clinicId === clinicId)
     const oldStatus = clinic?.status
+
+    setPendingStatusChange({ clinicId, newStatus, oldStatus })
+    setConfirmModal(true)
+  }
+
+  // Step 2: User confirms → apply status or open reject modal
+  const handleConfirmStatusChange = async () => {
+    const { clinicId, newStatus, oldStatus } = pendingStatusChange
     const backendStatus = mapUIStatusToBackend(newStatus)
 
-    setPreviousStatus(oldStatus)
+    setConfirmModal(false)
 
-    // --- IF REJECT IS CLICKED ---
+    // If rejected, open rejection reason modal
     if (newStatus === "rejected") {
       setModalVisible(true)
       setSelectedClinicId(clinicId)
-
-      // ❗ Revert UI dropdown to previous status immediately
-      setClinics(prev =>
-        prev.map(c =>
-          c.clinicId === clinicId ? { ...c, status: oldStatus } : c
-        )
-      )
+      setPreviousStatus(oldStatus)
+      setPendingStatusChange(null)
       return
     }
 
@@ -160,7 +170,6 @@ const ClinicManagement = ({ service }) => {
         toast.success("Clinic verified successfully!")
       }
 
-      // Update UI
       setClinics(prev =>
         prev.map(c =>
           c.clinicId === clinicId ? { ...c, status: backendStatus } : c
@@ -170,14 +179,21 @@ const ClinicManagement = ({ service }) => {
       console.error(err)
       toast.error("Failed to update status")
     }
+
+    setPendingStatusChange(null)
   }
 
-  // 🔥 FIXED REJECTION SUBMISSION
+  // Step 2 (cancel): revert dropdown, close modal
+  const handleCancelConfirm = () => {
+    setConfirmModal(false)
+    setPendingStatusChange(null)
+  }
+
+  // Rejection submission
   const handleSubmitModal = async () => {
     try {
       await statusapi.rejectClinic(selectedClinicId, inputValue)
 
-      // Update UI to show rejected
       setClinics(prev =>
         prev.map(c =>
           c.clinicId === selectedClinicId
@@ -203,51 +219,59 @@ const ClinicManagement = ({ service }) => {
   )
 
   useEffect(() => { setCurrentPage(1) }, [searchTerm])
+
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredClinics.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredClinics.length / itemsPerPage)
 
-const sendNGKRegistrationLink = async (email) => {
-  if (nameError || emailError || !nameInput.trim() || !email.trim()) {
-    toast.error("Please fix validation errors")
-    return
-  }
-
-  setLoadingLink(true)
-
-  try {
-    const res = await fetch(NGkRegistrationLink, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name: nameInput.trim() })
-    })
-
-    const data = await res.json()
-
-    if (!res.ok || !data.success) {
-      toast.error(data?.message ?? "Failed to send link")
+  const sendNGKRegistrationLink = async (email) => {
+    if (nameError || emailError || !nameInput.trim() || !email.trim()) {
+      toast.error("Please fix validation errors")
       return
     }
 
-    toast.success(data?.message ?? "Link sent successfully!")
+    setLoadingLink(true)
 
-    // success case reset
-    setIsLink(false)
-    setLinkInputValue("")
-    setNameInput("")
-    setNameError("")
-    setEmailError("")
-    
-  } catch (err) {
-    toast.error("Something went wrong")
-  } finally {
-    setLoadingLink(false)
+    try {
+      const res = await fetch(NGkRegistrationLink, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: nameInput.trim() })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        toast.error(data?.message ?? "Failed to send link")
+        return
+      }
+
+      toast.success(data?.message ?? "Link sent successfully!")
+
+      setIsLink(false)
+      setLinkInputValue("")
+      setNameInput("")
+      setNameError("")
+      setEmailError("")
+
+    } catch (err) {
+      toast.error("Something went wrong")
+    } finally {
+      setLoadingLink(false)
+    }
   }
-}
 
-
-
+  // Label helper for confirm modal
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "pending": return "Pending"
+      case "start": return "Started"
+      case "verified": return "Verified"
+      case "rejected": return "Rejected"
+      default: return status
+    }
+  }
 
   return (
     <div className="d-flex justify-content-center mt-4">
@@ -273,7 +297,7 @@ const sendNGKRegistrationLink = async (email) => {
                 <CFormInput
                   type="text"
                   autoComplete="off"
-                  style={{ border: '1px solid var(--color-black)', }}
+                  style={{ border: '1px solid var(--color-black)' }}
                   placeholder="Search by Clinic Name, Mobile, or Email"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -291,14 +315,13 @@ const sendNGKRegistrationLink = async (email) => {
                 <CTable striped hover responsive>
                   <CTableHead className="pink-table">
                     <CTableRow className="text-center">
-                      <CTableHeaderCell >S.No</CTableHeaderCell>
-                      <CTableHeaderCell >Clinic Name</CTableHeaderCell>
-                      <CTableHeaderCell >Contact Number</CTableHeaderCell>
-                      <CTableHeaderCell >Email</CTableHeaderCell>
-                      <CTableHeaderCell >City</CTableHeaderCell>
-                      <CTableHeaderCell >Status</CTableHeaderCell>
+                      <CTableHeaderCell>S.No</CTableHeaderCell>
+                      <CTableHeaderCell>Clinic Name</CTableHeaderCell>
+                      <CTableHeaderCell>Contact Number</CTableHeaderCell>
+                      <CTableHeaderCell>Email</CTableHeaderCell>
+                      <CTableHeaderCell>City</CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
                       <CTableHeaderCell>Actions</CTableHeaderCell>
-                      
                     </CTableRow>
                   </CTableHead>
 
@@ -311,7 +334,7 @@ const sendNGKRegistrationLink = async (email) => {
                           <CTableDataCell>{clinic?.contactNumber}</CTableDataCell>
                           <CTableDataCell>{clinic?.email}</CTableDataCell>
                           <CTableDataCell>{capitalizeWords(clinic?.city || "N/A")}</CTableDataCell>
-                           {/* FIXED STATUS DROPDOWN */}
+
                           <CTableDataCell>
                             <CFormSelect
                               value={mapBackendStatusToUI(clinic?.status)}
@@ -328,15 +351,19 @@ const sendNGKRegistrationLink = async (email) => {
                               <option value="verified">Verified</option>
                               <option value="rejected">Rejected</option>
                             </CFormSelect>
-
                           </CTableDataCell>
+
                           <CTableDataCell>
-                            <button className="actionBtn" title="View" onClick={() =>
-                              navigate(`/clinic-details/${clinic.clinicId}`, { state: clinic })
-                            }>View</button>
+                            <button
+                              className="actionBtn"
+                              title="View"
+                              onClick={() =>
+                                navigate(`/clinic-details/${clinic.clinicId}`, { state: clinic })
+                              }
+                            >
+                              View
+                            </button>
                           </CTableDataCell>
-
-                         
                         </CTableRow>
                       ))
                     ) : (
@@ -406,7 +433,30 @@ const sendNGKRegistrationLink = async (email) => {
           </CCardBody>
         </CCard>
 
-        {/* REJECT MODAL */}
+        {/* ── CONFIRMATION MODAL ── */}
+        <CModal visible={confirmModal} onClose={handleCancelConfirm} alignment="center">
+          <CModalHeader>
+            <CModalTitle>Confirm Status Change</CModalTitle>
+          </CModalHeader>
+
+          <CModalBody>
+            <p style={{ margin: 0 }}>
+              Are you sure you want to change the status to{" "}
+              <strong>{getStatusLabel(pendingStatusChange?.newStatus)}</strong>?
+            </p>
+          </CModalBody>
+
+          <CModalFooter>
+            <CButton color="secondary" onClick={handleCancelConfirm}>
+              Cancel
+            </CButton>
+            <CButton color="primary" onClick={handleConfirmStatusChange}>
+              Confirm
+            </CButton>
+          </CModalFooter>
+        </CModal>
+
+        {/* ── REJECT REASON MODAL ── */}
         <CModal visible={modalVisible} onClose={() => setModalVisible(false)} alignment="center">
           <CModalHeader>
             <CModalTitle>Reject Clinic</CModalTitle>
@@ -432,15 +482,13 @@ const sendNGKRegistrationLink = async (email) => {
           </CModalFooter>
         </CModal>
 
-        {/* LINK MODAL */}
+        {/* ── SEND LINK MODAL ── */}
         <CModal visible={isLink} onClose={() => setIsLink(false)} alignment="center">
           <CModalHeader>
             <CModalTitle>Send Registration Link</CModalTitle>
           </CModalHeader>
 
           <CModalBody>
-
-            {/* NEW NAME FIELD */}
             <CFormInput
               type="text"
               label="Name"
@@ -448,7 +496,6 @@ const sendNGKRegistrationLink = async (email) => {
               placeholder="Enter Name"
               onChange={handleNameChange}
             />
-
             {nameError && (
               <p style={{ color: "red", fontSize: "14px", marginTop: "5px" }}>
                 {nameError}
@@ -457,7 +504,6 @@ const sendNGKRegistrationLink = async (email) => {
 
             <br />
 
-            {/* EMAIL / MOBILE FIELD */}
             <CFormInput
               type="text"
               autoComplete="email"
@@ -466,13 +512,11 @@ const sendNGKRegistrationLink = async (email) => {
               onChange={handleEmailChange}
               placeholder="Enter Email Id"
             />
-
             {emailError && (
               <p style={{ color: "red", fontSize: "14px", marginTop: "5px" }}>
                 {emailError}
               </p>
             )}
-
           </CModalBody>
 
           <CModalFooter>
@@ -489,33 +533,30 @@ const sendNGKRegistrationLink = async (email) => {
               Cancel
             </CButton>
 
-
             <CButton
               color="primary"
               disabled={
                 loadingLink ||
                 nameInput.trim() === "" ||
                 linkInputValue.trim() === "" ||
-                nameError ||
-                emailError
+                !!nameError ||
+                !!emailError
               }
-
-              onClick={() => {
-                sendNGKRegistrationLink(linkInputValue)
-              }}
+              onClick={() => sendNGKRegistrationLink(linkInputValue)}
             >
               {loadingLink ? "Sending..." : "Send"}
             </CButton>
-
           </CModalFooter>
         </CModal>
+
       </div>
     </div>
   )
 }
 
 export default ClinicManagement
-// 🔥 STATUS BASED STYLES
+
+// STATUS BASED STYLES
 const statusStyles = {
   pending: {
     backgroundColor: "#FFE4B5",
@@ -537,5 +578,4 @@ const statusStyles = {
     color: "#822727",
     fontWeight: "600",
   },
-};
-
+}

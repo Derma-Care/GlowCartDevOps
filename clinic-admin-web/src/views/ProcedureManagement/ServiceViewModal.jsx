@@ -135,6 +135,17 @@ const ServiceViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
+           
+            <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Partial Amount:</span>
+              <span className="text-muted"> ₹ {Math.round(data.partialAmount || 0)}</span>
+              {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
+            </CCol>
+             <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Due Amount:</span>
+              <span className="text-muted"> ₹ {Math.round(data.dueAmount || 0)}</span>
+              {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
+            </CCol>
             <CCol sm={4}>
               <span className="mb-1 fw-semibold">Service Time: </span>
               <span className="text-muted">{data.minTime ? data.minTime : 'N/A'}</span>

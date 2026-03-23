@@ -92,10 +92,10 @@ export const getSubService = 'admin/getSubService'
 
 
 // GlowKart API's
-export const BASE_URL_API = "http://13.235.144.65:8080/admin";
+export const BASE_URL_API = `${BASE_URL}/admin`;
 export const Production_URL_API = "https://api.ngkderma.com/admin";
 
-export const NGkRegistrationBaseUrl='http://13.235.144.65:8080'
+export const NGkRegistrationBaseUrl=`${BASE_URL}`
 // Clinic
 export const CLINIC_REGISTRATION_URL = `${BASE_URL_API}/clinics/register`;
 // UPDATE CLINIC

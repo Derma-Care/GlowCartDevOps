@@ -171,8 +171,6 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         calculatePricing(p);
     }
 
-
-    // ========================= PRICING CALCULATION =========================
     private void calculatePricing(ProcedurePricing p) {
 
         double price = p.getPrice();
@@ -203,14 +201,17 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
                 ? round(clinicPay * ngkDiscountPercent / 100.0)
                 : 0.0;
 
-        // ---------------- FINAL COST ----------------
-        double finalCost = round(clinicPay - ngkDiscountAmount);
+        // ---------------- BASE FINAL COST (before platform fee) ----------------
+        double baseFinalCost = round(clinicPay - ngkDiscountAmount);
+
+        // ---------------- PLATFORM FEE (calculated but NOT stored separately) ----------------
+        double platformFee = round(price * platformFeePercentage / 100.0);
+
+        // ---------------- FINAL COST (including platform fee) ----------------
+        double finalCost = round(baseFinalCost + platformFee);
 
         // ---------------- TOTAL DISCOUNTS ----------------
-        // percentage = CONFIGURED (even if offer inactive)
         double totalDiscountPercentage = clinicDiscountPercent + ngkDiscountPercent;
-
-        // amount = APPLIED (only when active)
         double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
 
         // ---------------- SET VALUES ----------------
@@ -234,6 +235,69 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         calculatePaymentAmounts(p);
         p.setUpdatedAt(Instant.now());
     }
+//
+//    // ========================= PRICING CALCULATION =========================
+//    private void calculatePricing(ProcedurePricing p) {
+//
+//        double price = p.getPrice();
+//
+//        // ---------------- CONFIGURED DISCOUNTS ----------------
+//        double clinicDiscountPercent = Optional.ofNullable(p.getDiscountPercentage()).orElse(0.0);
+//        double ngkDiscountPercent = Optional.ofNullable(p.getNgkDiscountPercentage()).orElse(0.0);
+//
+//        // ---------------- APPLIED DISCOUNTS ----------------
+//        double clinicDiscountAmount = p.isOfferActive()
+//                ? round(price * clinicDiscountPercent / 100.0)
+//                : 0.0;
+//
+//        // discounted price after clinic discount
+//        double discountedCost = p.isOfferActive()
+//                ? round(price - clinicDiscountAmount)
+//                : round(price);
+//
+//        // ---------------- TAX & GST ----------------
+//        double taxAmount = round(discountedCost * p.getTaxPercentage() / 100.0);
+//        double gstAmount = round(discountedCost * p.getGst() / 100.0);
+//
+//        double consultationFee = p.getConsultationFee();
+//        double clinicPay = round(discountedCost + taxAmount + gstAmount + consultationFee);
+//
+//        // ---------------- NGK DISCOUNT (APPLIED ONLY IF ACTIVE) ----------------
+//        double ngkDiscountAmount = (p.isOfferActive() && ngkDiscountPercent > 0)
+//                ? round(clinicPay * ngkDiscountPercent / 100.0)
+//                : 0.0;
+//
+//        // ---------------- FINAL COST ----------------
+//        double finalCost = round(clinicPay - ngkDiscountAmount);
+//
+//        // ---------------- TOTAL DISCOUNTS ----------------
+//        // percentage = CONFIGURED (even if offer inactive)
+//        double totalDiscountPercentage = clinicDiscountPercent + ngkDiscountPercent;
+//
+//        // amount = APPLIED (only when active)
+//        double totalDiscountAmount = round(clinicDiscountAmount + ngkDiscountAmount);
+//
+//        // ---------------- SET VALUES ----------------
+//        p.setDiscountAmount(clinicDiscountAmount);
+//        p.setDiscountedCost(discountedCost);
+//
+//        p.setTaxAmount(taxAmount);
+//        p.setGstAmount(gstAmount);
+//
+//        p.setClinicPay(clinicPay);
+//        p.setNgkDiscountAmount(ngkDiscountAmount);
+//
+//        p.setFinalCost(finalCost);
+//
+//        p.setTotalDiscountPercentage(totalDiscountPercentage);
+//        p.setTotalDiscountAmount(totalDiscountAmount);
+//
+//        // total discounted amount = original price − applied discount
+//        p.setTotalDiscountedAmount(round(price - totalDiscountAmount));
+//
+//        calculatePaymentAmounts(p);
+//        p.setUpdatedAt(Instant.now());
+//    }
 
 
 
@@ -436,15 +500,15 @@ public class ProcedurePricingServiceImpl implements ProcedurePricingService {
         dto.setOfferStart(p.getOfferStart());
         dto.setOfferValidDate(p.getOfferValidDate());
 
-        // dynamically calculate platform fee (based on PRICE as you are doing)
+        // still expose platform fee separately (for UI visibility)
         double platformFee = round(p.getPrice() * platformFeePercentage / 100.0);
         dto.setPlatformFee(platformFee);
 
-        // include the percentage
+        // include percentage
         dto.setPlatformFeePercentage(platformFeePercentage);
 
-        // ✅ JUST ADD platform fee to finalCost for response
-        dto.setFinalCost(round(p.getFinalCost() + platformFee));
+        // ✅ DO NOT add again (already included in DB)
+        dto.setFinalCost(p.getFinalCost());
 
         return dto;
     }

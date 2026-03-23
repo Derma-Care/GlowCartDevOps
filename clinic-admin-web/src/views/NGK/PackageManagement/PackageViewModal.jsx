@@ -129,9 +129,20 @@ const PackageViewModal = ({ visible, data, onClose, formatMinutes }) => {
               <span className="text-muted"> ₹ {data.consultationFee || 0}</span>
               {/* <strong>Consultation Fee:</strong> ₹ {data.consultationFee || 0} */}
             </CCol>
-            <CCol sm={4}>
+            {/* <CCol sm={4}>
               <span className="mb-1 fw-semibold">Final Cost:</span>
               <span className="text-muted"> ₹ {Math.round(data.finalCost || 0)}</span>
+              
+            </CCol> */}
+
+             <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Partial Amount:</span>
+              <span className="text-muted"> ₹ {Math.round(data.partialAmount || 0)}</span>
+              {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
+            </CCol>
+                <CCol sm={4}>
+              <span className="mb-1 fw-semibold">Due Amount:</span>
+              <span className="text-muted"> ₹ {Math.round(data.dueAmount || 0)}</span>
               {/* <strong>Final Cost:</strong> ₹ {Math.round(data.finalCost || 0)} */}
             </CCol>
             {/* <CCol sm={4}>

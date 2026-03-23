@@ -60,8 +60,41 @@ public class ProcedurePackageServiceImpl implements ProcedurePackageService {
 
     @Override
     public List<ProcedurePackageDTO> getByClinic(String clinicId) {
-        ResponseEntity<ApiResponse<List<ProcedurePackageDTO>>> response = client.getByClinic(clinicId);
-        return response.getBody().getData();
+
+        ResponseEntity<ApiResponse<List<ProcedurePackageDTO>>> response =
+                client.getByClinic(clinicId);
+
+        List<ProcedurePackageDTO> data = response.getBody().getData();
+
+        if (data != null) {
+            data.forEach(dto -> {
+
+                // ✅ Step 1: Adjust final cost (exclude platform fee)
+                double adjustedFinalCost = dto.getFinalCost() - dto.getPlatformFee();
+                dto.setFinalCost(adjustedFinalCost);
+
+                // ✅ Step 2: Handle payment types properly
+                if ("PARTIAL_PAYMENT".equalsIgnoreCase(dto.getPaymentType())) {
+
+                    double clinicPay = dto.getClinicPay();
+                    double percentage = dto.getPartialPaymentPercentage();
+
+                    double partialAmount = (clinicPay * percentage) / 100;
+                    double dueAmount = clinicPay - partialAmount;
+
+                    dto.setPartialAmount(Math.round(partialAmount));
+                    dto.setDueAmount(Math.round(dueAmount));
+
+                } else if ("FULL_PAYMENT".equalsIgnoreCase(dto.getPaymentType())) {
+
+                    // ✅ No partial payment in full payment
+                    dto.setPartialAmount(0);
+                    dto.setDueAmount(0);
+                }
+            });
+        }
+
+        return data;
     }
 
     @Override
