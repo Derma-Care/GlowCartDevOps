@@ -98,7 +98,7 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     // ==========================================================================================
-    // VERIFICATION-WORKFLOW
+    // VERIFICATION WORKFLOW
     // ==========================================================================================
     @Override
     public Clinic startVerificationProcess(String clinicId) {
@@ -179,9 +179,22 @@ public class ClinicServiceImpl implements ClinicService {
     
     @Override
     public void deleteClinic(String clinicId) {
-        if (!repo.existsById(clinicId)) {
-            throw new ProcedureServiceException("Clinic not found", 404, null);
+
+        Clinic clinic = repo.findById(clinicId)
+                .orElseThrow(() -> new ProcedureServiceException("Clinic not found", 404, null));
+
+        // 🔥 Call onboarding service BEFORE delete
+        try {
+            onboardingClient.deleteTokens(
+                    clinic.getEmail(),
+                    clinic.getWhatsappNumber()
+            );
+        } catch (Exception e) {
+            // Don't fail deletion if onboarding service is down
+            // but log it
+            System.out.println("Failed to delete onboarding tokens: " + e.getMessage());
         }
+
         repo.deleteById(clinicId);
     }
 

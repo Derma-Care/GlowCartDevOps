@@ -16,4 +16,10 @@ public interface OnboardingClient {
 
     @PostMapping("/onboard/mark-used")
     void markUsed(@RequestBody Map<String, String> body);
+    
+    @DeleteMapping("/onboard/delete-by-contact")
+    void deleteTokens(
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "whatsappNumber", required = false) String whatsappNumber
+    );
 }

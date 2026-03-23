@@ -15,4 +15,13 @@ public class OnboardingClientFallback implements OnboardingClient {
     public void markUsed(Map<String, String> body) {
         System.out.println("[Fallback] Unable to mark token as used. Service unavailable.");
     }
+
+	@Override
+	public void deleteTokens(String email, String whatsappNumber) {
+		// TODO Auto-generated method stub
+        System.out.println("[Fallback] Failed to delete onboarding tokens. Service unavailable. "
+                + "email=" + email + ", whatsapp=" + whatsappNumber);
+
+		
+	}
 }
